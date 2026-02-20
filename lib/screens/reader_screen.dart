@@ -10,12 +10,24 @@ import '../data/providers/database_providers.dart';
 class ReaderScreen extends ConsumerStatefulWidget {
   const ReaderScreen({
     super.key,
+    this.mode,
+    this.page,
     this.targetSurah,
     this.targetAyah,
+    this.highlightStartSurah,
+    this.highlightStartAyah,
+    this.highlightEndSurah,
+    this.highlightEndAyah,
   });
 
+  final String? mode;
+  final int? page;
   final int? targetSurah;
   final int? targetAyah;
+  final int? highlightStartSurah;
+  final int? highlightStartAyah;
+  final int? highlightEndSurah;
+  final int? highlightEndAyah;
 
   @override
   ConsumerState<ReaderScreen> createState() => _ReaderScreenState();
@@ -27,13 +39,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     (index) => 'Surah ${index + 1}',
   );
 
+  _ReaderMode _mode = _ReaderMode.surah;
   int _selectedSurah = 1;
+  int? _selectedPage;
+  Future<List<int>>? _availablePagesFuture;
   Future<List<AyahData>>? _ayahsFuture;
   String? _hoveredAyahKey;
+  String? _tappedAyahKey;
   String? _jumpHighlightedAyahKey;
-  int? _pendingJumpSurah;
-  int? _pendingJumpAyah;
+  _VerseJumpTarget? _pendingJumpTarget;
+  _VerseRange? _rangeHighlight;
   bool _jumpScheduled = false;
+  int _pageLoadGeneration = 0;
 
   final ScrollController _ayahScrollController = ScrollController();
   final Map<String, GlobalKey> _ayahRowKeys = <String, GlobalKey>{};
@@ -42,46 +59,19 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   @override
   void initState() {
     super.initState();
-
-    final initialTarget = _normalizeTarget(
-      surah: widget.targetSurah,
-      ayah: widget.targetAyah,
-    );
-    if (initialTarget != null) {
-      _selectedSurah = initialTarget.surah;
-      _pendingJumpSurah = initialTarget.surah;
-      _pendingJumpAyah = initialTarget.ayah;
-    }
-
-    _ayahsFuture = _loadAyahs(_selectedSurah);
+    _applyWidgetInputs();
   }
 
   @override
   void didUpdateWidget(covariant ReaderScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.targetSurah == widget.targetSurah &&
-        oldWidget.targetAyah == widget.targetAyah) {
-      return;
-    }
-
-    final target = _normalizeTarget(
-      surah: widget.targetSurah,
-      ayah: widget.targetAyah,
-    );
-    if (target == null) {
+    if (!_didInputsChange(oldWidget)) {
       return;
     }
 
     setState(() {
-      _pendingJumpSurah = target.surah;
-      _pendingJumpAyah = target.ayah;
-      _hoveredAyahKey = null;
-
-      if (_selectedSurah != target.surah) {
-        _selectedSurah = target.surah;
-      }
-      _ayahsFuture = _loadAyahs(_selectedSurah);
+      _applyWidgetInputs();
     });
   }
 
@@ -92,8 +82,195 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     super.dispose();
   }
 
-  Future<List<AyahData>> _loadAyahs(int surah) {
+  bool _didInputsChange(ReaderScreen oldWidget) {
+    return oldWidget.mode != widget.mode ||
+        oldWidget.page != widget.page ||
+        oldWidget.targetSurah != widget.targetSurah ||
+        oldWidget.targetAyah != widget.targetAyah ||
+        oldWidget.highlightStartSurah != widget.highlightStartSurah ||
+        oldWidget.highlightStartAyah != widget.highlightStartAyah ||
+        oldWidget.highlightEndSurah != widget.highlightEndSurah ||
+        oldWidget.highlightEndAyah != widget.highlightEndAyah;
+  }
+
+  void _applyWidgetInputs() {
+    final resolvedMode = _resolveMode(
+      mode: widget.mode,
+      page: widget.page,
+    );
+    final target = _normalizeTarget(
+      surah: widget.targetSurah,
+      ayah: widget.targetAyah,
+    );
+
+    _mode = resolvedMode;
+    _rangeHighlight = _normalizeRange();
+    _pendingJumpTarget = target;
+    _clearInteractiveHighlights();
+    _jumpScheduled = false;
+
+    if (_mode == _ReaderMode.surah) {
+      _pageLoadGeneration += 1;
+      _selectedPage = null;
+      _availablePagesFuture = null;
+      if (target != null) {
+        _selectedSurah = target.surah;
+      }
+      _ayahsFuture = _loadAyahsBySurah(_selectedSurah);
+      return;
+    }
+
+    _selectedPage = null;
+    _ayahsFuture = Future.value(const <AyahData>[]);
+    _availablePagesFuture = _loadAvailablePages();
+    _resolvePageSelection(
+      requestedPage: widget.page,
+      target: target,
+      showMissingTargetMessage: true,
+    );
+  }
+
+  _ReaderMode _resolveMode({
+    required String? mode,
+    required int? page,
+  }) {
+    final normalized = mode?.toLowerCase().trim();
+    if (normalized == 'page') {
+      return _ReaderMode.page;
+    }
+    if (normalized == 'surah') {
+      return _ReaderMode.surah;
+    }
+    if (page != null && page > 0) {
+      return _ReaderMode.page;
+    }
+    return _ReaderMode.surah;
+  }
+
+  Future<List<int>> _loadAvailablePages() {
+    return ref.read(quranRepoProvider).getPagesAvailable();
+  }
+
+  Future<List<AyahData>> _loadAyahsBySurah(int surah) {
     return ref.read(quranRepoProvider).getAyahsBySurah(surah);
+  }
+
+  Future<List<AyahData>> _loadAyahsByPage(int page) {
+    return ref.read(quranRepoProvider).getAyahsByPage(page);
+  }
+
+  Future<void> _resolvePageSelection({
+    required int? requestedPage,
+    required _VerseJumpTarget? target,
+    required bool showMissingTargetMessage,
+  }) async {
+    final generation = ++_pageLoadGeneration;
+    final pages = await (_availablePagesFuture ?? _loadAvailablePages());
+
+    if (!mounted ||
+        generation != _pageLoadGeneration ||
+        _mode != _ReaderMode.page) {
+      return;
+    }
+
+    if (pages.isEmpty) {
+      setState(() {
+        _selectedPage = null;
+        _pendingJumpTarget = null;
+        _ayahsFuture = Future.value(const <AyahData>[]);
+      });
+      return;
+    }
+
+    _VerseJumpTarget? targetForJump = target;
+    int? pageToSelect;
+
+    if (target != null) {
+      final targetAyah = await ref.read(quranRepoProvider).getAyah(
+            target.surah,
+            target.ayah,
+          );
+
+      if (!mounted ||
+          generation != _pageLoadGeneration ||
+          _mode != _ReaderMode.page) {
+        return;
+      }
+
+      final targetPage = targetAyah?.pageMadina;
+      if (targetPage == null) {
+        if (showMissingTargetMessage) {
+          _showSnackBar('Target ayah has no page metadata yet.');
+        }
+        targetForJump = null;
+      } else if (!pages.contains(targetPage)) {
+        if (showMissingTargetMessage) {
+          _showSnackBar('Target ayah page is not available in imported metadata.');
+        }
+        targetForJump = null;
+      } else {
+        pageToSelect = targetPage;
+      }
+    }
+
+    if (pageToSelect == null &&
+        requestedPage != null &&
+        pages.contains(requestedPage)) {
+      pageToSelect = requestedPage;
+    }
+
+    pageToSelect ??= pages.first;
+
+    if (!mounted ||
+        generation != _pageLoadGeneration ||
+        _mode != _ReaderMode.page) {
+      return;
+    }
+
+    setState(() {
+      _selectedPage = pageToSelect;
+      _pendingJumpTarget = targetForJump;
+      _ayahsFuture = _loadAyahsByPage(pageToSelect!);
+    });
+  }
+
+  void _clearInteractiveHighlights() {
+    _hoveredAyahKey = null;
+    _tappedAyahKey = null;
+    _jumpHighlightedAyahKey = null;
+    _jumpHighlightTimer?.cancel();
+  }
+
+  void _switchMode(_ReaderMode mode) {
+    if (mode == _mode) {
+      return;
+    }
+
+    setState(() {
+      _mode = mode;
+      _pendingJumpTarget = null;
+      _clearInteractiveHighlights();
+      _jumpScheduled = false;
+
+      if (_mode == _ReaderMode.surah) {
+        _pageLoadGeneration += 1;
+        _selectedPage = null;
+        _availablePagesFuture = null;
+        _ayahsFuture = _loadAyahsBySurah(_selectedSurah);
+      } else {
+        _selectedPage = null;
+        _ayahsFuture = Future.value(const <AyahData>[]);
+        _availablePagesFuture = _loadAvailablePages();
+      }
+    });
+
+    if (mode == _ReaderMode.page) {
+      _resolvePageSelection(
+        requestedPage: null,
+        target: null,
+        showMissingTargetMessage: false,
+      );
+    }
   }
 
   void _selectSurah(int surah) {
@@ -102,19 +279,49 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
     setState(() {
       _selectedSurah = surah;
-      _hoveredAyahKey = null;
-      _pendingJumpSurah = null;
-      _pendingJumpAyah = null;
-      _jumpHighlightedAyahKey = null;
-      _ayahsFuture = _loadAyahs(surah);
+      _pendingJumpTarget = null;
+      _clearInteractiveHighlights();
+      _jumpScheduled = false;
+      _ayahsFuture = _loadAyahsBySurah(surah);
     });
-    _jumpHighlightTimer?.cancel();
   }
 
-  void _refreshSurah() {
+  void _selectPage(int page) {
+    if (page == _selectedPage) {
+      return;
+    }
     setState(() {
-      _ayahsFuture = _loadAyahs(_selectedSurah);
+      _selectedPage = page;
+      _pendingJumpTarget = null;
+      _clearInteractiveHighlights();
+      _jumpScheduled = false;
+      _ayahsFuture = _loadAyahsByPage(page);
     });
+  }
+
+  void _refreshCurrentView() {
+    setState(() {
+      _clearInteractiveHighlights();
+      _jumpScheduled = false;
+      if (_mode == _ReaderMode.surah) {
+        _ayahsFuture = _loadAyahsBySurah(_selectedSurah);
+      } else {
+        _availablePagesFuture = _loadAvailablePages();
+        if (_selectedPage != null) {
+          _ayahsFuture = _loadAyahsByPage(_selectedPage!);
+        } else {
+          _ayahsFuture = Future.value(const <AyahData>[]);
+        }
+      }
+    });
+
+    if (_mode == _ReaderMode.page && _selectedPage == null) {
+      _resolvePageSelection(
+        requestedPage: widget.page,
+        target: null,
+        showMissingTargetMessage: false,
+      );
+    }
   }
 
   String _ayahKey(AyahData ayah) => '${ayah.surah}:${ayah.ayah}';
@@ -139,11 +346,60 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return _VerseJumpTarget(surah: surah, ayah: ayah);
   }
 
-  void _queuePendingJump(List<AyahData> ayahs) {
-    if (_jumpScheduled || _pendingJumpAyah == null || _pendingJumpSurah == null) {
-      return;
+  _VerseRange? _normalizeRange() {
+    final startSurah = widget.highlightStartSurah;
+    final startAyah = widget.highlightStartAyah;
+    final endSurah = widget.highlightEndSurah;
+    final endAyah = widget.highlightEndAyah;
+
+    if (startSurah == null ||
+        startAyah == null ||
+        endSurah == null ||
+        endAyah == null) {
+      return null;
     }
-    if (_pendingJumpSurah != _selectedSurah) {
+    if (startSurah < 1 ||
+        startSurah > 114 ||
+        endSurah < 1 ||
+        endSurah > 114 ||
+        startAyah < 1 ||
+        endAyah < 1) {
+      return null;
+    }
+
+    var start = _VersePosition(
+      surah: startSurah,
+      ayah: startAyah,
+    );
+    var end = _VersePosition(
+      surah: endSurah,
+      ayah: endAyah,
+    );
+
+    if (start.compareTo(end) > 0) {
+      final temp = start;
+      start = end;
+      end = temp;
+    }
+
+    return _VerseRange(start: start, end: end);
+  }
+
+  bool _isRangeHighlighted(AyahData ayah) {
+    final range = _rangeHighlight;
+    if (range == null) {
+      return false;
+    }
+    final position = _VersePosition(
+      surah: ayah.surah,
+      ayah: ayah.ayah,
+    );
+    return position.compareTo(range.start) >= 0 &&
+        position.compareTo(range.end) <= 0;
+  }
+
+  void _queuePendingJump(List<AyahData> ayahs) {
+    if (_jumpScheduled || _pendingJumpTarget == null) {
       return;
     }
 
@@ -155,18 +411,25 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _performPendingJump(List<AyahData> ayahs) async {
-    final pendingAyah = _pendingJumpAyah;
-    if (!mounted || pendingAyah == null || _pendingJumpSurah != _selectedSurah) {
+    final pendingTarget = _pendingJumpTarget;
+    if (!mounted || pendingTarget == null) {
       return;
     }
 
-    final targetIndex = ayahs.indexWhere((row) => row.ayah == pendingAyah);
+    final targetIndex = ayahs.indexWhere(
+      (row) => row.surah == pendingTarget.surah && row.ayah == pendingTarget.ayah,
+    );
     if (targetIndex < 0) {
       setState(() {
-        _pendingJumpAyah = null;
-        _pendingJumpSurah = null;
+        _pendingJumpTarget = null;
       });
-      _showSnackBar('Ayah $pendingAyah was not found in Surah $_selectedSurah.');
+      if (_mode == _ReaderMode.page) {
+        _showSnackBar('Target ayah is not visible on the selected page.');
+      } else {
+        _showSnackBar(
+          'Ayah ${pendingTarget.ayah} was not found in Surah ${pendingTarget.surah}.',
+        );
+      }
       return;
     }
 
@@ -208,8 +471,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
     _jumpHighlightTimer?.cancel();
     setState(() {
-      _pendingJumpAyah = null;
-      _pendingJumpSurah = null;
+      _pendingJumpTarget = null;
       _jumpHighlightedAyahKey = targetKey;
     });
 
@@ -430,7 +692,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) {
+      return;
+    }
+    messenger.showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
@@ -457,7 +723,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 const SizedBox(height: 8),
                 OutlinedButton(
                   key: const ValueKey('reader_retry_button'),
-                  onPressed: _refreshSurah,
+                  onPressed: _refreshCurrentView,
                   child: const Text('Retry'),
                 ),
               ],
@@ -467,8 +733,19 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
         final ayahs = snapshot.data ?? const <AyahData>[];
         if (ayahs.isEmpty) {
+          if (_mode == _ReaderMode.page && _selectedPage == null) {
+            return const Center(
+              child: Text(
+                'No page metadata found. Import Page Metadata in Settings.',
+              ),
+            );
+          }
           return Center(
-            child: Text('No ayahs found for Surah $_selectedSurah.'),
+            child: Text(
+              _mode == _ReaderMode.surah
+                  ? 'No ayahs found for Surah $_selectedSurah.'
+                  : 'No ayahs found for Page $_selectedPage.',
+            ),
           );
         }
         _queuePendingJump(ayahs);
@@ -484,7 +761,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               rowKey: _ayahRowKey(key),
               ayah: ayah,
               hovered: _hoveredAyahKey == key,
+              tappedHighlighted: _tappedAyahKey == key,
               jumpHighlighted: _jumpHighlightedAyahKey == key,
+              rangeHighlighted: _isRangeHighlighted(ayah),
               onHoverChanged: (isHovered) {
                 setState(() {
                   if (isHovered) {
@@ -494,7 +773,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   }
                 });
               },
-              onTap: () => _showAyahActions(ayah),
+              onTap: () async {
+                setState(() {
+                  _tappedAyahKey = key;
+                });
+                await _showAyahActions(ayah);
+              },
             );
           },
           separatorBuilder: (_, __) => const SizedBox(height: 10),
@@ -504,53 +788,183 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Row(
+  Widget _buildModeToggle() {
+    return SegmentedButton<_ReaderMode>(
+      key: const ValueKey('reader_mode_toggle'),
+      segments: const [
+        ButtonSegment<_ReaderMode>(
+          value: _ReaderMode.surah,
+          label: Text('Surah Mode'),
+          icon: Icon(Icons.menu_book_outlined),
+        ),
+        ButtonSegment<_ReaderMode>(
+          value: _ReaderMode.page,
+          label: Text('Page Mode'),
+          icon: Icon(Icons.filter_1_outlined),
+        ),
+      ],
+      selected: <_ReaderMode>{_mode},
+      onSelectionChanged: (selection) {
+        if (selection.isEmpty) {
+          return;
+        }
+        _switchMode(selection.first);
+      },
+    );
+  }
+
+  Widget _buildSurahSelectorPanel(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 220,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Text(
-                      'Surahs',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: ListView.builder(
-                      key: const ValueKey('reader_surah_list'),
-                      itemCount: _surahLabels.length,
-                      itemBuilder: (context, index) {
-                        final surahNumber = index + 1;
-                        final selected = surahNumber == _selectedSurah;
-                        return ListTile(
-                          selected: selected,
-                          title: Text(_surahLabels[index]),
-                          onTap: () => _selectSurah(surahNumber),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Surahs',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
-          const VerticalDivider(width: 1),
-          Expanded(child: _buildAyahPanel()),
+          const Divider(height: 1),
+          Expanded(
+            child: ListView.builder(
+              key: const ValueKey('reader_surah_list'),
+              itemCount: _surahLabels.length,
+              itemBuilder: (context, index) {
+                final surahNumber = index + 1;
+                final selected = surahNumber == _selectedSurah;
+                return ListTile(
+                  selected: selected,
+                  title: Text(_surahLabels[index]),
+                  onTap: () => _selectSurah(surahNumber),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
   }
+
+  Widget _buildPageSelectorPanel(BuildContext context) {
+    final pagesFuture = _availablePagesFuture;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'Pages',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: FutureBuilder<List<int>>(
+              future: pagesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Failed to load pages.'),
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          key: const ValueKey('reader_page_retry_button'),
+                          onPressed: _refreshCurrentView,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final pages = snapshot.data ?? const <int>[];
+                if (pages.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text(
+                        'No page metadata found. Import Page Metadata in Settings.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  key: const ValueKey('reader_page_list'),
+                  itemCount: pages.length,
+                  itemBuilder: (context, index) {
+                    final page = pages[index];
+                    final selected = page == _selectedPage;
+                    return ListTile(
+                      key: ValueKey('reader_page_$page'),
+                      selected: selected,
+                      title: Text('Page $page'),
+                      onTap: () => _selectPage(page),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeftPanel(BuildContext context) {
+    if (_mode == _ReaderMode.page) {
+      return _buildPageSelectorPanel(context);
+    }
+    return _buildSurahSelectorPanel(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _buildModeToggle(),
+            ),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 240,
+                  child: _buildLeftPanel(context),
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: _buildAyahPanel()),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _ReaderMode {
+  surah,
+  page,
 }
 
 enum _AyahAction {
@@ -574,7 +988,9 @@ class _AyahRow extends StatelessWidget {
     required this.rowKey,
     required this.ayah,
     required this.hovered,
+    required this.tappedHighlighted,
     required this.jumpHighlighted,
+    required this.rangeHighlighted,
     required this.onHoverChanged,
     required this.onTap,
   });
@@ -582,7 +998,9 @@ class _AyahRow extends StatelessWidget {
   final GlobalKey rowKey;
   final AyahData ayah;
   final bool hovered;
+  final bool tappedHighlighted;
   final bool jumpHighlighted;
+  final bool rangeHighlighted;
   final ValueChanged<bool> onHoverChanged;
   final VoidCallback onTap;
 
@@ -590,11 +1008,15 @@ class _AyahRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final ayahKey = '${ayah.surah}:${ayah.ayah}';
     final colorScheme = Theme.of(context).colorScheme;
-    final background = jumpHighlighted
-        ? colorScheme.secondaryContainer.withOpacity(0.7)
-        : hovered
-            ? colorScheme.primary.withOpacity(0.08)
-            : Colors.transparent;
+    final background = rangeHighlighted
+        ? colorScheme.tertiaryContainer.withOpacity(0.85)
+        : jumpHighlighted
+            ? colorScheme.secondaryContainer.withOpacity(0.7)
+            : tappedHighlighted
+                ? colorScheme.primaryContainer.withOpacity(0.7)
+                : hovered
+                    ? colorScheme.primary.withOpacity(0.08)
+                    : Colors.transparent;
 
     return KeyedSubtree(
       key: rowKey,
@@ -666,4 +1088,32 @@ class _VerseJumpTarget {
 
   final int surah;
   final int ayah;
+}
+
+class _VerseRange {
+  const _VerseRange({
+    required this.start,
+    required this.end,
+  });
+
+  final _VersePosition start;
+  final _VersePosition end;
+}
+
+class _VersePosition implements Comparable<_VersePosition> {
+  const _VersePosition({
+    required this.surah,
+    required this.ayah,
+  });
+
+  final int surah;
+  final int ayah;
+
+  @override
+  int compareTo(_VersePosition other) {
+    if (surah != other.surah) {
+      return surah.compareTo(other.surah);
+    }
+    return ayah.compareTo(other.ayah);
+  }
 }

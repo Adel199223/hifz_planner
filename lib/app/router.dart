@@ -29,15 +29,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/reader',
             builder: (context, state) {
-              final surah = int.tryParse(
-                state.uri.queryParameters['surah'] ?? '',
+              final params = state.uri.queryParameters;
+              final mode = params['mode'];
+              final page = int.tryParse(params['page'] ?? '');
+
+              final targetSurah = int.tryParse(
+                params['targetSurah'] ?? params['surah'] ?? '',
               );
-              final ayah = int.tryParse(
-                state.uri.queryParameters['ayah'] ?? '',
+              final targetAyah = int.tryParse(
+                params['targetAyah'] ?? params['ayah'] ?? '',
               );
+
+              final highlightStartSurah = int.tryParse(
+                params['highlightStartSurah'] ?? '',
+              );
+              final highlightStartAyah = int.tryParse(
+                params['highlightStartAyah'] ?? '',
+              );
+              final highlightEndSurah = int.tryParse(
+                params['highlightEndSurah'] ?? '',
+              );
+              final highlightEndAyah = int.tryParse(
+                params['highlightEndAyah'] ?? '',
+              );
+
               return ReaderScreen(
-                targetSurah: surah,
-                targetAyah: ayah,
+                mode: mode,
+                page: page,
+                targetSurah: targetSurah,
+                targetAyah: targetAyah,
+                highlightStartSurah: highlightStartSurah,
+                highlightStartAyah: highlightStartAyah,
+                highlightEndSurah: highlightEndSurah,
+                highlightEndAyah: highlightEndAyah,
               );
             },
           ),

@@ -7,10 +7,33 @@ class QuranRepo {
 
   final AppDatabase _db;
 
+  Future<List<int>> getPagesAvailable() async {
+    final query = _db.selectOnly(
+      _db.ayah,
+      distinct: true,
+    )
+      ..addColumns([_db.ayah.pageMadina])
+      ..where(_db.ayah.pageMadina.isNotNull())
+      ..orderBy([OrderingTerm.asc(_db.ayah.pageMadina)]);
+
+    final rows = await query.get();
+    return rows.map((row) => row.read(_db.ayah.pageMadina)).whereType<int>().toList();
+  }
+
   Future<List<AyahData>> getAyahsBySurah(int surah) {
     final query = _db.select(_db.ayah)
       ..where((tbl) => tbl.surah.equals(surah))
       ..orderBy([(tbl) => OrderingTerm.asc(tbl.ayah)]);
+    return query.get();
+  }
+
+  Future<List<AyahData>> getAyahsByPage(int page) {
+    final query = _db.select(_db.ayah)
+      ..where((tbl) => tbl.pageMadina.equals(page))
+      ..orderBy([
+        (tbl) => OrderingTerm.asc(tbl.surah),
+        (tbl) => OrderingTerm.asc(tbl.ayah),
+      ]);
     return query.get();
   }
 
