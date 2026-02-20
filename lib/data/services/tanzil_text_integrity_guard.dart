@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 const String tanzilUthmaniAssetPath = 'assets/quran/tanzil_uthmani.txt';
 const String expectedTanzilUthmaniSha256 = 'REPLACE_ME';
+const int expectedTanzilUthmaniAyahCount = -1; // REPLACE_ME_COUNT
 
 class TanzilLineRecord {
   const TanzilLineRecord({
