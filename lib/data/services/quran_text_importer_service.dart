@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart';
 import 'package:flutter/services.dart';
 
 import '../database/app_database.dart';
+import 'tanzil_text_integrity_guard.dart';
 
 typedef QuranTextImportProgressCallback = void Function(
   QuranTextImportProgress progress,
@@ -129,11 +128,20 @@ class QuranTextImporterService {
           ? start + batchSize
           : rows.length;
       final chunk = rows.sublist(start, end);
+      final companions = [
+        for (final row in chunk)
+          AyahCompanion.insert(
+            surah: row.surah,
+            ayah: row.ayah,
+            textUthmani: row.text,
+            pageMadina: const Value.absent(),
+          ),
+      ];
 
       await _db.batch((batch) {
         batch.insertAll(
           _db.ayah,
-          chunk,
+          companions,
           mode: InsertMode.insertOrIgnore,
         );
       });
@@ -179,55 +187,8 @@ class QuranTextImporterService {
     return row.read<int>('c');
   }
 
-  List<AyahCompanion> _parseTanzilLines(String rawText) {
-    final lines = const LineSplitter().convert(rawText);
-    final rows = <AyahCompanion>[];
-
-    for (var index = 0; index < lines.length; index++) {
-      var line = lines[index];
-      final lineNumber = index + 1;
-
-      if (index == 0 && line.startsWith('\ufeff')) {
-        line = line.substring(1);
-      }
-
-      if (line.trim().isEmpty) {
-        continue;
-      }
-
-      final firstPipe = line.indexOf('|');
-      final secondPipe = line.indexOf('|', firstPipe + 1);
-
-      if (firstPipe <= 0 || secondPipe <= firstPipe + 1) {
-        throw FormatException(
-          'Invalid Tanzil format at line $lineNumber. Expected sura|ayah|text.',
-        );
-      }
-
-      final surahText = line.substring(0, firstPipe).trim();
-      final ayahText = line.substring(firstPipe + 1, secondPipe).trim();
-      final text = line.substring(secondPipe + 1);
-
-      final surah = int.tryParse(surahText);
-      final ayah = int.tryParse(ayahText);
-      if (surah == null || ayah == null) {
-        throw FormatException(
-          'Invalid numeric surah/ayah at line $lineNumber.',
-        );
-      }
-
-      rows.add(
-        AyahCompanion.insert(
-          surah: surah,
-          ayah: ayah,
-          textUthmani: text,
-          pageMadina: const Value.absent(),
-        ),
-      );
-    }
-
-    return rows;
-  }
+  List<TanzilLineRecord> _parseTanzilLines(String rawText) =>
+      parseTanzilText(rawText);
 
   void _emitProgress(
     QuranTextImportProgressCallback? onProgress,

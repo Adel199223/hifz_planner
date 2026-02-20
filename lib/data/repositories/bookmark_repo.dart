@@ -7,6 +7,16 @@ class BookmarkRepo {
 
   final AppDatabase _db;
 
+  Future<BookmarkData?> getBookmarkByAyah({
+    required int surah,
+    required int ayah,
+  }) {
+    final query = _db.select(_db.bookmark)
+      ..where((tbl) => tbl.surah.equals(surah) & tbl.ayah.equals(ayah))
+      ..limit(1);
+    return query.getSingleOrNull();
+  }
+
   Future<int> addBookmark({
     required int surah,
     required int ayah,

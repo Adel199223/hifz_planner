@@ -33,6 +33,18 @@ void main() {
     );
   });
 
+  test('getBookmarkByAyah returns matching row or null', () async {
+    await repo.addBookmark(surah: 1, ayah: 5);
+
+    final found = await repo.getBookmarkByAyah(surah: 1, ayah: 5);
+    final missing = await repo.getBookmarkByAyah(surah: 1, ayah: 6);
+
+    expect(found, isNotNull);
+    expect(found!.surah, 1);
+    expect(found.ayah, 5);
+    expect(missing, isNull);
+  });
+
   test('watchBookmarks emits new values', () async {
     final stream = repo.watchBookmarks();
     final pending = stream.firstWhere((items) => items.isNotEmpty);
