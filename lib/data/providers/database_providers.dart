@@ -4,6 +4,7 @@ import '../database/app_database.dart';
 import '../repositories/bookmark_repo.dart';
 import '../repositories/note_repo.dart';
 import '../repositories/quran_repo.dart';
+import '../services/page_metadata_importer_service.dart';
 import '../services/quran_text_importer_service.dart';
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
@@ -33,3 +34,10 @@ final quranTextImporterServiceProvider = Provider<QuranTextImporterService>((
   final db = ref.watch(appDatabaseProvider);
   return QuranTextImporterService(db);
 });
+
+final pageMetadataImporterServiceProvider = Provider<PageMetadataImporterService>(
+  (ref) {
+    final db = ref.watch(appDatabaseProvider);
+    return PageMetadataImporterService(db);
+  },
+);
