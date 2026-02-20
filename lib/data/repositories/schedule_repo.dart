@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
+import '../services/spaced_repetition_scheduler.dart';
 
 class DueUnitRow {
   const DueUnitRow({
@@ -115,5 +116,47 @@ class ScheduleRepo {
       ),
     );
     return rows > 0;
+  }
+
+  Future<bool> applyReviewWithScheduler({
+    required int unitId,
+    required int todayDay,
+    required int gradeQ,
+  }) async {
+    final current = await (_db.select(_db.scheduleState)
+          ..where((tbl) => tbl.unitId.equals(unitId))
+          ..limit(1))
+        .getSingleOrNull();
+
+    if (current == null) {
+      return false;
+    }
+
+    final computed = computeNextSchedule(
+      currentState: _toSchedulerInput(current),
+      todayDay: todayDay,
+      gradeQ: gradeQ,
+    );
+
+    return updateAfterReview(
+      unitId: unitId,
+      ef: computed.ef,
+      reps: computed.reps,
+      intervalDays: computed.intervalDays,
+      dueDay: computed.dueDay,
+      reviewDay: computed.lastReviewDay,
+      gradeQ: computed.lastGradeQ,
+      lapseCount: computed.lapseCount,
+    );
+  }
+
+  SchedulerStateInput _toSchedulerInput(ScheduleStateData row) {
+    return SchedulerStateInput(
+      ef: row.ef,
+      reps: row.reps,
+      intervalDays: row.intervalDays,
+      dueDay: row.dueDay,
+      lapseCount: row.lapseCount,
+    );
   }
 }

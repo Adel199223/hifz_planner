@@ -179,4 +179,46 @@ void main() {
     expect(row.isSuspended, 0);
     expect(row.suspendedAtDay, isNull);
   });
+
+  test('applyReviewWithScheduler computes and persists next state', () async {
+    final unitId = await createUnit('schedule:apply-wrapper');
+    await repo.upsertInitialStateForNewUnit(
+      unitId: unitId,
+      dueDay: 10,
+      ef: 2.5,
+      reps: 0,
+      intervalDays: 0,
+    );
+
+    final updated = await repo.applyReviewWithScheduler(
+      unitId: unitId,
+      todayDay: 50,
+      gradeQ: 5,
+    );
+    final row = await (db.select(db.scheduleState)
+          ..where((tbl) => tbl.unitId.equals(unitId)))
+        .getSingle();
+
+    expect(updated, isTrue);
+    expect(row.ef, 2.6);
+    expect(row.reps, 1);
+    expect(row.intervalDays, 1);
+    expect(row.dueDay, 51);
+    expect(row.lastReviewDay, 50);
+    expect(row.lastGradeQ, 5);
+    expect(row.lapseCount, 0);
+  });
+
+  test('applyReviewWithScheduler returns false when state row is missing',
+      () async {
+    final unitId = await createUnit('schedule:no-state');
+
+    final updated = await repo.applyReviewWithScheduler(
+      unitId: unitId,
+      todayDay: 50,
+      gradeQ: 5,
+    );
+
+    expect(updated, isFalse);
+  });
 }
