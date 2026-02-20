@@ -8,6 +8,8 @@ import 'package:hifz_planner/data/repositories/bookmark_repo.dart';
 import 'package:hifz_planner/main.dart';
 import 'package:hifz_planner/screens/bookmarks_screen.dart';
 
+import 'helpers/pump_until_found.dart';
+
 void main() {
   testWidgets('loads Today screen with NavigationRail', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -28,9 +30,14 @@ void main() {
       ),
     );
     await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_screen_root')),
+    );
 
     expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.text('TodayScreen'), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_screen_root')), findsOneWidget);
+    expect(find.text('Planned Reviews'), findsOneWidget);
   });
 
   testWidgets('navigates to Bookmarks from rail', (tester) async {
