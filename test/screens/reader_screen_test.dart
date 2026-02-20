@@ -308,6 +308,33 @@ void main() {
       expect(clearedMaterial.color, Colors.transparent);
     },
   );
+
+  testWidgets(
+    'page mode target jump highlights row then clears',
+    (tester) async {
+      await _pumpReader(
+        tester,
+        db,
+        screen: const ReaderScreen(
+          mode: 'page',
+          page: 2,
+          targetSurah: 1,
+          targetAyah: 3,
+        ),
+      );
+
+      final materialFinder = find.byKey(const ValueKey('ayah_material_1:3'));
+      expect(materialFinder, findsOneWidget);
+
+      final highlightedMaterial = tester.widget<Material>(materialFinder);
+      expect(highlightedMaterial.color, isNot(Colors.transparent));
+
+      await tester.pump(const Duration(milliseconds: 1700));
+
+      final clearedMaterial = tester.widget<Material>(materialFinder);
+      expect(clearedMaterial.color, Colors.transparent);
+    },
+  );
 }
 
 Future<void> _seedAyahs(AppDatabase db) async {

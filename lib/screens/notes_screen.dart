@@ -11,6 +11,7 @@ class NotesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final noteRepo = ref.watch(noteRepoProvider);
+    final quranRepo = ref.watch(quranRepoProvider);
 
     return SafeArea(
       child: Padding(
@@ -51,33 +52,45 @@ class NotesScreen extends ConsumerWidget {
                       final title = (note.title ?? '').trim();
                       final displayTitle = title.isEmpty ? 'Untitled' : title;
 
-                      return ListTile(
-                        key: ValueKey('note_row_${note.id}'),
-                        title: Text(displayTitle),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                note.body,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                      return FutureBuilder<AyahData?>(
+                        future: quranRepo.getAyah(note.surah, note.ayah),
+                        builder: (context, snapshot) {
+                          final page = snapshot.data?.pageMadina;
+
+                          return ListTile(
+                            key: ValueKey('note_row_${note.id}'),
+                            title: Text(displayTitle),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    note.body,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text('Surah ${note.surah}, Ayah ${note.ayah}'),
+                                  if (page != null)
+                                    Text(
+                                      'Page $page',
+                                      key: ValueKey('note_page_${note.id}'),
+                                    ),
+                                ],
                               ),
-                              const SizedBox(height: 4),
-                              Text('Surah ${note.surah}, Ayah ${note.ayah}'),
-                            ],
-                          ),
-                        ),
-                        trailing: Text(
-                          _formatDateTime(note.updatedAt),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        onTap: () => _openNoteEditor(
-                          context: context,
-                          ref: ref,
-                          note: note,
-                        ),
+                            ),
+                            trailing: Text(
+                              _formatDateTime(note.updatedAt),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            onTap: () => _openNoteEditor(
+                              context: context,
+                              ref: ref,
+                              note: note,
+                            ),
+                          );
+                        },
                       );
                     },
                   );
@@ -95,6 +108,14 @@ class NotesScreen extends ConsumerWidget {
     required WidgetRef ref,
     required NoteData note,
   }) async {
+    final page = (await ref
+            .read(quranRepoProvider)
+            .getAyah(note.surah, note.ayah))
+        ?.pageMadina;
+    if (!context.mounted) {
+      return;
+    }
+
     final titleController = TextEditingController(text: note.title ?? '');
     final bodyController = TextEditingController(text: note.body);
     String? errorMessage;
@@ -140,16 +161,37 @@ class NotesScreen extends ConsumerWidget {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    Text('Linked verse: Surah ${note.surah}, Ayah ${note.ayah}'),
+                    Text(
+                      page == null
+                          ? 'Linked verse: Surah ${note.surah}, Ayah ${note.ayah}'
+                          : 'Linked verse: Surah ${note.surah}, Ayah ${note.ayah} (Page $page)',
+                    ),
                     const SizedBox(height: 8),
-                    OutlinedButton(
-                      key: const ValueKey('notes_editor_go_button'),
-                      onPressed: () {
-                        Navigator.of(dialogContext).pop(
-                          const _NoteEditorResult.goToVerse(),
-                        );
-                      },
-                      child: const Text('Go to verse'),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OutlinedButton(
+                          key: const ValueKey('notes_editor_go_button'),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop(
+                              const _NoteEditorResult.goToVerse(),
+                            );
+                          },
+                          child: const Text('Go to verse'),
+                        ),
+                        OutlinedButton(
+                          key: const ValueKey('notes_editor_go_page_button'),
+                          onPressed: page == null
+                              ? null
+                              : () {
+                                  Navigator.of(dialogContext).pop(
+                                    const _NoteEditorResult.goToPage(),
+                                  );
+                                },
+                          child: const Text('Go to page'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -195,7 +237,26 @@ class NotesScreen extends ConsumerWidget {
     }
 
     if (result.action == _NoteEditorAction.goToVerse) {
-      context.go('/reader?surah=${note.surah}&ayah=${note.ayah}');
+      context.go(
+        _buildGoToVerseRoute(
+          surah: note.surah,
+          ayah: note.ayah,
+          page: page,
+        ),
+      );
+      return;
+    }
+
+    if (result.action == _NoteEditorAction.goToPage) {
+      if (page != null) {
+        context.go(
+          _buildGoToPageRoute(
+            surah: note.surah,
+            ayah: note.ayah,
+            page: page,
+          ),
+        );
+      }
       return;
     }
 
@@ -231,11 +292,35 @@ class NotesScreen extends ConsumerWidget {
     final minute = timestamp.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
   }
+
+  String _buildGoToVerseRoute({
+    required int surah,
+    required int ayah,
+    required int? page,
+  }) {
+    if (page != null) {
+      return _buildGoToPageRoute(
+        surah: surah,
+        ayah: ayah,
+        page: page,
+      );
+    }
+    return '/reader?targetSurah=$surah&targetAyah=$ayah';
+  }
+
+  String _buildGoToPageRoute({
+    required int surah,
+    required int ayah,
+    required int page,
+  }) {
+    return '/reader?mode=page&page=$page&targetSurah=$surah&targetAyah=$ayah';
+  }
 }
 
 enum _NoteEditorAction {
   save,
   goToVerse,
+  goToPage,
 }
 
 class _NoteEditorResult {
@@ -246,6 +331,11 @@ class _NoteEditorResult {
 
   const _NoteEditorResult.goToVerse()
       : action = _NoteEditorAction.goToVerse,
+        title = null,
+        body = null;
+
+  const _NoteEditorResult.goToPage()
+      : action = _NoteEditorAction.goToPage,
         title = null,
         body = null;
 

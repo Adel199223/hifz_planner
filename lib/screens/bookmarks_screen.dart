@@ -11,6 +11,7 @@ class BookmarksScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookmarkRepo = ref.watch(bookmarkRepoProvider);
+    final quranRepo = ref.watch(quranRepoProvider);
 
     return SafeArea(
       child: Padding(
@@ -50,23 +51,78 @@ class BookmarksScreen extends ConsumerWidget {
                       final bookmark = bookmarks[index];
                       final ayahKey = '${bookmark.surah}:${bookmark.ayah}';
 
-                      return ListTile(
-                        key: ValueKey('bookmark_row_$ayahKey'),
-                        title: Text(
-                          'Surah ${bookmark.surah}, Ayah ${bookmark.ayah}',
+                      return FutureBuilder<AyahData?>(
+                        future: quranRepo.getAyah(
+                          bookmark.surah,
+                          bookmark.ayah,
                         ),
-                        subtitle: Text(
-                          'Saved ${_formatDateTime(bookmark.createdAt)}',
-                        ),
-                        trailing: OutlinedButton(
-                          key: ValueKey('bookmark_go_$ayahKey'),
-                          onPressed: () {
-                            context.go(
-                              '/reader?surah=${bookmark.surah}&ayah=${bookmark.ayah}',
-                            );
-                          },
-                          child: const Text('Go to verse'),
-                        ),
+                        builder: (context, snapshot) {
+                          final page = snapshot.data?.pageMadina;
+
+                          return ListTile(
+                            key: ValueKey('bookmark_row_$ayahKey'),
+                            isThreeLine: true,
+                            title: Text(
+                              'Surah ${bookmark.surah}, Ayah ${bookmark.ayah}',
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Saved ${_formatDateTime(bookmark.createdAt)}',
+                                ),
+                                if (page != null)
+                                  Text(
+                                    'Page $page',
+                                    key: ValueKey('bookmark_page_$ayahKey'),
+                                  ),
+                              ],
+                            ),
+                            trailing: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                OutlinedButton(
+                                  key: ValueKey('bookmark_go_$ayahKey'),
+                                  onPressed: () async {
+                                    final resolvedPage = (await quranRepo.getAyah(
+                                      bookmark.surah,
+                                      bookmark.ayah,
+                                    ))
+                                        ?.pageMadina;
+                                    if (!context.mounted) {
+                                      return;
+                                    }
+                                    context.go(
+                                      _buildGoToVerseRoute(
+                                        surah: bookmark.surah,
+                                        ayah: bookmark.ayah,
+                                        page: resolvedPage,
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Go to verse'),
+                                ),
+                                const SizedBox(height: 8),
+                                OutlinedButton(
+                                  key: ValueKey('bookmark_go_page_$ayahKey'),
+                                  onPressed: page == null
+                                      ? null
+                                      : () {
+                                          context.go(
+                                            _buildGoToPageRoute(
+                                              surah: bookmark.surah,
+                                              ayah: bookmark.ayah,
+                                              page: page,
+                                            ),
+                                          );
+                                        },
+                                  child: const Text('Go to page'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       );
                     },
                   );
@@ -86,5 +142,28 @@ class BookmarksScreen extends ConsumerWidget {
     final hour = timestamp.hour.toString().padLeft(2, '0');
     final minute = timestamp.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
+  }
+
+  String _buildGoToVerseRoute({
+    required int surah,
+    required int ayah,
+    required int? page,
+  }) {
+    if (page != null) {
+      return _buildGoToPageRoute(
+        surah: surah,
+        ayah: ayah,
+        page: page,
+      );
+    }
+    return '/reader?targetSurah=$surah&targetAyah=$ayah';
+  }
+
+  String _buildGoToPageRoute({
+    required int surah,
+    required int ayah,
+    required int page,
+  }) {
+    return '/reader?mode=page&page=$page&targetSurah=$surah&targetAyah=$ayah';
   }
 }
