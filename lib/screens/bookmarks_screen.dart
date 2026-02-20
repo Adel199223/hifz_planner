@@ -61,7 +61,6 @@ class BookmarksScreen extends ConsumerWidget {
 
                           return ListTile(
                             key: ValueKey('bookmark_row_$ayahKey'),
-                            isThreeLine: true,
                             title: Text(
                               'Surah ${bookmark.surah}, Ayah ${bookmark.ayah}',
                             ),
@@ -76,48 +75,50 @@ class BookmarksScreen extends ConsumerWidget {
                                     'Page $page',
                                     key: ValueKey('bookmark_page_$ayahKey'),
                                   ),
-                              ],
-                            ),
-                            trailing: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                OutlinedButton(
-                                  key: ValueKey('bookmark_go_$ayahKey'),
-                                  onPressed: () async {
-                                    final resolvedPage = (await quranRepo.getAyah(
-                                      bookmark.surah,
-                                      bookmark.ayah,
-                                    ))
-                                        ?.pageMadina;
-                                    if (!context.mounted) {
-                                      return;
-                                    }
-                                    context.go(
-                                      _buildGoToVerseRoute(
-                                        surah: bookmark.surah,
-                                        ayah: bookmark.ayah,
-                                        page: resolvedPage,
-                                      ),
-                                    );
-                                  },
-                                  child: const Text('Go to verse'),
-                                ),
                                 const SizedBox(height: 8),
-                                OutlinedButton(
-                                  key: ValueKey('bookmark_go_page_$ayahKey'),
-                                  onPressed: page == null
-                                      ? null
-                                      : () {
-                                          context.go(
-                                            _buildGoToPageRoute(
-                                              surah: bookmark.surah,
-                                              ayah: bookmark.ayah,
-                                              page: page,
-                                            ),
-                                          );
-                                        },
-                                  child: const Text('Go to page'),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    OutlinedButton(
+                                      key: ValueKey('bookmark_go_$ayahKey'),
+                                      onPressed: () async {
+                                        final resolvedPage =
+                                            (await quranRepo.getAyah(
+                                          bookmark.surah,
+                                          bookmark.ayah,
+                                        ))
+                                                ?.pageMadina;
+                                        if (!context.mounted) {
+                                          return;
+                                        }
+                                        context.go(
+                                          _buildGoToVerseRoute(
+                                            surah: bookmark.surah,
+                                            ayah: bookmark.ayah,
+                                            page: resolvedPage,
+                                          ),
+                                        );
+                                      },
+                                      child: const Text('Go to verse'),
+                                    ),
+                                    OutlinedButton(
+                                      key:
+                                          ValueKey('bookmark_go_page_$ayahKey'),
+                                      onPressed: page == null
+                                          ? null
+                                          : () {
+                                              context.go(
+                                                _buildGoToPageRoute(
+                                                  surah: bookmark.surah,
+                                                  ayah: bookmark.ayah,
+                                                  page: page,
+                                                ),
+                                              );
+                                            },
+                                      child: const Text('Go to page'),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

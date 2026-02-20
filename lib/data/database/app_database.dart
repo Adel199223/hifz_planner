@@ -19,8 +19,8 @@ class Ayah extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {surah, ayah},
-  ];
+        {surah, ayah},
+      ];
 }
 
 class Bookmark extends Table {

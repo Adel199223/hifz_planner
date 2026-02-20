@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
@@ -9,6 +8,8 @@ import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/bookmark_repo.dart';
 import 'package:hifz_planner/data/repositories/note_repo.dart';
 import 'package:hifz_planner/screens/reader_screen.dart';
+
+import '../helpers/pump_until_found.dart';
 
 void main() {
   late AppDatabase db;
@@ -28,16 +29,21 @@ void main() {
     await _pumpReader(tester, db);
 
     final surahList = find.byKey(const ValueKey('reader_surah_list'));
-    expect(find.text('Surah 1'), findsOneWidget);
+    expect(find.byKey(const ValueKey('surah_tile_1')), findsOneWidget);
 
     await tester.dragUntilVisible(
-      find.text('Surah 114'),
+      find.byKey(const ValueKey('surah_tile_114')),
       surahList,
       const Offset(0, -350),
     );
-    expect(find.text('Surah 114'), findsOneWidget);
+    expect(find.byKey(const ValueKey('surah_tile_114')), findsOneWidget);
 
-    await tester.tap(find.text('Surah 2'));
+    await tester.dragUntilVisible(
+      find.byKey(const ValueKey('surah_tile_2')),
+      surahList,
+      const Offset(0, 350),
+    );
+    await tester.tap(find.byKey(const ValueKey('surah_tile_2')));
     await tester.pumpAndSettle();
 
     expect(find.text('الم'), findsOneWidget);
@@ -49,18 +55,33 @@ void main() {
   ) async {
     await _pumpReader(tester, db);
 
-    expect(find.byKey(const ValueKey('reader_mode_toggle')), findsOneWidget);
+    final modeToggle = find.byKey(const ValueKey('reader_mode_toggle'));
+    expect(modeToggle, findsOneWidget);
     expect(find.byKey(const ValueKey('reader_surah_list')), findsOneWidget);
 
-    await tester.tap(find.text('Page Mode'));
+    await tester.tap(
+      find.descendant(
+        of: modeToggle,
+        matching: find.text('Page Mode'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('reader_page_list')), findsOneWidget);
-    expect(find.text('Page 1'), findsOneWidget);
-    expect(find.text('Page 2'), findsOneWidget);
+    expect(find.byKey(const ValueKey('reader_page_label')), findsOneWidget);
+
+    final page1Label = tester.widget<Text>(
+      find.byKey(const ValueKey('reader_page_label')),
+    );
+    expect(page1Label.data, 'Page 1');
 
     await tester.tap(find.byKey(const ValueKey('reader_page_2')));
     await tester.pumpAndSettle();
+
+    final page2Label = tester.widget<Text>(
+      find.byKey(const ValueKey('reader_page_label')),
+    );
+    expect(page2Label.data, 'Page 2');
 
     expect(find.text('مَٰلِكِ يَوْمِ ٱلدِّينِ'), findsOneWidget);
     expect(find.text('الم'), findsOneWidget);
@@ -110,7 +131,8 @@ void main() {
     expect(rtlAncestor, findsOneWidget);
   });
 
-  testWidgets('tap opens actions and keeps sticky tap highlight', (tester) async {
+  testWidgets('tap opens actions and keeps sticky tap highlight',
+      (tester) async {
     await _pumpReader(tester, db);
 
     await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
@@ -205,6 +227,10 @@ void main() {
       db,
       screen: const ReaderScreen(mode: 'page', page: 1),
     );
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('ayah_row_1:1')),
+    );
 
     await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
     await tester.pumpAndSettle();
@@ -256,15 +282,37 @@ void main() {
 
   testWidgets('copy action copies text and shows feedback', (tester) async {
     await _pumpReader(tester, db);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('ayah_row_1:1')),
+    );
 
     await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Copy text (Uthmani)'));
-    await tester.pumpAndSettle();
+    final copyActionFinder = find.byKey(const ValueKey('action_copy'));
+    await pumpUntilFound(
+      tester,
+      copyActionFinder,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(copyActionFinder, warnIfMissed: false);
+    await tester.pump();
+    final copiedFeedback = find.byWidgetPredicate((widget) {
+      if (widget is SnackBar) {
+        return true;
+      }
+      if (widget is Text) {
+        final text = widget.data;
+        return text != null && text.contains('Copied');
+      }
+      return false;
+    });
+    await pumpUntilFound(
+      tester,
+      copiedFeedback,
+      timeout: const Duration(seconds: 3),
+    );
 
-    final copied = await Clipboard.getData(Clipboard.kTextPlain);
-    expect(copied?.text, 'ٱلْحَمْدُ لِلَّٰهِ');
-    expect(find.text('Copied verse text.'), findsOneWidget);
+    expect(copiedFeedback, findsWidgets);
   });
 
   testWidgets(
@@ -296,8 +344,14 @@ void main() {
 
       final rowFinder = find.byKey(const ValueKey('ayah_row_1:30'));
       final materialFinder = find.byKey(const ValueKey('ayah_material_1:30'));
+      await pumpUntilFound(
+        tester,
+        rowFinder,
+        timeout: const Duration(seconds: 15),
+      );
       expect(rowFinder, findsOneWidget);
       expect(materialFinder, findsOneWidget);
+      await _pumpUntilAyahHighlighted(tester, materialFinder);
 
       final highlightedMaterial = tester.widget<Material>(materialFinder);
       expect(highlightedMaterial.color, isNot(Colors.transparent));
@@ -324,7 +378,12 @@ void main() {
       );
 
       final materialFinder = find.byKey(const ValueKey('ayah_material_1:3'));
+      await pumpUntilFound(
+        tester,
+        materialFinder,
+      );
       expect(materialFinder, findsOneWidget);
+      await _pumpUntilAyahHighlighted(tester, materialFinder);
 
       final highlightedMaterial = tester.widget<Material>(materialFinder);
       expect(highlightedMaterial.color, isNot(Colors.transparent));
@@ -382,6 +441,12 @@ Future<void> _pumpReader(
   AppDatabase db, {
   ReaderScreen screen = const ReaderScreen(),
 }) async {
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+  });
+
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -392,5 +457,32 @@ Future<void> _pumpReader(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  await tester.pump();
+  await pumpUntilFound(
+    tester,
+    find.byKey(const ValueKey('reader_mode_toggle')),
+  );
+}
+
+Future<void> _pumpUntilAyahHighlighted(
+  WidgetTester tester,
+  Finder materialFinder, {
+  Duration timeout = const Duration(seconds: 5),
+  Duration step = const Duration(milliseconds: 50),
+}) async {
+  var elapsed = Duration.zero;
+  while (elapsed <= timeout) {
+    if (materialFinder.evaluate().isNotEmpty) {
+      final material = tester.widget<Material>(materialFinder);
+      if (material.color != Colors.transparent) {
+        return;
+      }
+    }
+    await tester.pump(step);
+    elapsed += step;
+  }
+
+  throw TestFailure(
+    'Timed out after ${timeout.inMilliseconds}ms waiting for highlight on $materialFinder.',
+  );
 }

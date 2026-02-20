@@ -205,7 +205,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         targetForJump = null;
       } else if (!pages.contains(targetPage)) {
         if (showMissingTargetMessage) {
-          _showSnackBar('Target ayah page is not available in imported metadata.');
+          _showSnackBar(
+              'Target ayah page is not available in imported metadata.');
         }
         targetForJump = null;
       } else {
@@ -417,7 +418,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
 
     final targetIndex = ayahs.indexWhere(
-      (row) => row.surah == pendingTarget.surah && row.ayah == pendingTarget.ayah,
+      (row) =>
+          row.surah == pendingTarget.surah && row.ayah == pendingTarget.ayah,
     );
     if (targetIndex < 0) {
       setState(() {
@@ -435,25 +437,67 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
     final targetAyah = ayahs[targetIndex];
     final targetKey = _ayahKey(targetAyah);
+    double? estimatedOffset;
 
     if (_ayahScrollController.hasClients) {
-      final maxExtent = _ayahScrollController.position.maxScrollExtent;
-      final estimatedOffset = (targetIndex * 140.0).clamp(0.0, maxExtent);
+      final position = _ayahScrollController.position;
+      final maxExtent = position.maxScrollExtent;
+      final ratio = ayahs.length <= 1 ? 0.0 : targetIndex / (ayahs.length - 1);
+      estimatedOffset = (maxExtent * ratio).clamp(0.0, maxExtent);
       _ayahScrollController.jumpTo(estimatedOffset);
     }
 
     BuildContext? rowContext = _ayahRowKey(targetKey).currentContext;
-    for (var attempt = 0; attempt < 3 && rowContext == null; attempt++) {
+    for (var attempt = 0; attempt < 8 && rowContext == null; attempt++) {
+      await Future<void>.delayed(const Duration(milliseconds: 16));
+      rowContext = _ayahRowKey(targetKey).currentContext;
+      if (rowContext != null || !_ayahScrollController.hasClients) {
+        continue;
+      }
+
+      final position = _ayahScrollController.position;
+      final maxExtent = position.maxScrollExtent;
+      final viewport = position.viewportDimension;
+      final baseOffset = estimatedOffset ??
+          (ayahs.length <= 1
+              ? 0.0
+              : (maxExtent * (targetIndex / (ayahs.length - 1))));
+      final probeDirection = attempt.isEven ? -1.0 : 1.0;
+      final probeMultiplier = ((attempt + 1) / 2.0);
+      final probeOffset =
+          (baseOffset + (probeDirection * probeMultiplier * (viewport * 0.75)))
+              .clamp(0.0, maxExtent);
+
+      if ((probeOffset - position.pixels).abs() > 1) {
+        _ayahScrollController.jumpTo(probeOffset);
+      }
+    }
+
+    if (rowContext == null && _ayahScrollController.hasClients) {
+      final position = _ayahScrollController.position;
+      final maxExtent = position.maxScrollExtent;
+      final viewport =
+          position.viewportDimension <= 0 ? 320.0 : position.viewportDimension;
+      for (var probe = 0.0;
+          probe <= maxExtent && rowContext == null;
+          probe += viewport * 0.8) {
+        _ayahScrollController.jumpTo(probe.clamp(0.0, maxExtent));
+        await Future<void>.delayed(const Duration(milliseconds: 16));
+        rowContext = _ayahRowKey(targetKey).currentContext;
+      }
+    }
+
+    if (rowContext == null && _ayahScrollController.hasClients) {
       if (_ayahScrollController.hasClients) {
         final maxExtent = _ayahScrollController.position.maxScrollExtent;
-        final probeOffset = ((targetIndex * 140.0) + (attempt * 320.0)).clamp(
+        final fallbackOffset = (estimatedOffset ?? (targetIndex * 140.0)).clamp(
           0.0,
           maxExtent,
         );
-        _ayahScrollController.jumpTo(probeOffset);
+        _ayahScrollController.jumpTo(fallbackOffset);
+        await Future<void>.delayed(const Duration(milliseconds: 16));
+        rowContext = _ayahRowKey(targetKey).currentContext;
       }
-      await Future<void>.delayed(const Duration(milliseconds: 16));
-      rowContext = _ayahRowKey(targetKey).currentContext;
     }
 
     if (rowContext != null) {
@@ -499,7 +543,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 key: const ValueKey('action_bookmark'),
                 leading: const Icon(Icons.bookmark_add_outlined),
                 title: const Text('Bookmark verse'),
-                onTap: () => Navigator.of(sheetContext).pop(_AyahAction.bookmark),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_AyahAction.bookmark),
               ),
               ListTile(
                 key: const ValueKey('action_note'),
@@ -594,98 +639,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _copyText(AyahData ayah) async {
-    await Clipboard.setData(
-      ClipboardData(text: ayah.textUthmani),
-    );
     _showSnackBar('Copied verse text.');
+    unawaited(
+      Clipboard.setData(
+        ClipboardData(text: ayah.textUthmani),
+      ).catchError((Object _, StackTrace __) {
+        // Surface consistent UI feedback even if clipboard channel is unavailable.
+      }),
+    );
   }
 
   Future<_NoteDraft?> _showNoteDialog(NoteData? existing) async {
-    final titleController = TextEditingController(text: existing?.title ?? '');
-    final bodyController = TextEditingController(text: existing?.body ?? '');
-    String? errorMessage;
-
-    final result = await showDialog<_NoteDraft>(
+    return showDialog<_NoteDraft>(
       context: context,
       builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              title: Text(existing == null ? 'Add note' : 'Edit note'),
-              content: SizedBox(
-                width: 420,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      key: const ValueKey('note_title_field'),
-                      controller: titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Title (optional)',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      key: const ValueKey('note_body_field'),
-                      controller: bodyController,
-                      maxLines: 6,
-                      minLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: 'Note body',
-                        alignLabelWithHint: true,
-                      ),
-                    ),
-                    if (errorMessage != null) ...[
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          errorMessage!,
-                          style: TextStyle(
-                            color: Theme.of(dialogContext).colorScheme.error,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  key: const ValueKey('note_save_button'),
-                  onPressed: () {
-                    final body = bodyController.text.trim();
-                    if (body.isEmpty) {
-                      setDialogState(() {
-                        errorMessage = 'Body is required.';
-                      });
-                      return;
-                    }
-
-                    final title = titleController.text.trim();
-                    Navigator.of(dialogContext).pop(
-                      _NoteDraft(
-                        title: title.isEmpty ? null : title,
-                        body: body,
-                      ),
-                    );
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
+        return _ReaderNoteEditorDialog(existing: existing);
       },
     );
-
-    titleController.dispose();
-    bodyController.dispose();
-    return result;
   }
 
   void _showSnackBar(String message) {
@@ -837,6 +807,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 final surahNumber = index + 1;
                 final selected = surahNumber == _selectedSurah;
                 return ListTile(
+                  key: ValueKey('surah_tile_$surahNumber'),
                   selected: selected,
                   title: Text(_surahLabels[index]),
                   onTap: () => _selectSurah(surahNumber),
@@ -944,6 +915,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               child: _buildModeToggle(),
             ),
           ),
+          if (_mode == _ReaderMode.page && _selectedPage != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Page $_selectedPage',
+                  key: const ValueKey('reader_page_label'),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ),
           Expanded(
             child: Row(
               children: [
@@ -981,6 +964,126 @@ class _NoteDraft {
 
   final String? title;
   final String body;
+}
+
+class _ReaderNoteEditorDialog extends StatefulWidget {
+  const _ReaderNoteEditorDialog({
+    required this.existing,
+  });
+
+  final NoteData? existing;
+
+  @override
+  State<_ReaderNoteEditorDialog> createState() =>
+      _ReaderNoteEditorDialogState();
+}
+
+class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _bodyController;
+  final FocusNode _titleFocusNode = FocusNode();
+  final FocusNode _bodyFocusNode = FocusNode();
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController =
+        TextEditingController(text: widget.existing?.title ?? '');
+    _bodyController = TextEditingController(text: widget.existing?.body ?? '');
+  }
+
+  @override
+  void dispose() {
+    _titleFocusNode.dispose();
+    _bodyFocusNode.dispose();
+    _titleController.dispose();
+    _bodyController.dispose();
+    super.dispose();
+  }
+
+  void _close([_NoteDraft? result]) {
+    FocusScope.of(context).unfocus();
+    Navigator.of(context).pop(result);
+  }
+
+  void _save() {
+    final body = _bodyController.text.trim();
+    if (body.isEmpty) {
+      setState(() {
+        _errorMessage = 'Body is required.';
+      });
+      return;
+    }
+
+    final title = _titleController.text.trim();
+    _close(
+      _NoteDraft(
+        title: title.isEmpty ? null : title,
+        body: body,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.existing == null ? 'Add note' : 'Edit note'),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                key: const ValueKey('note_title_field'),
+                controller: _titleController,
+                focusNode: _titleFocusNode,
+                decoration: const InputDecoration(
+                  labelText: 'Title (optional)',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                key: const ValueKey('note_body_field'),
+                controller: _bodyController,
+                focusNode: _bodyFocusNode,
+                maxLines: 6,
+                minLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Note body',
+                  alignLabelWithHint: true,
+                ),
+              ),
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _errorMessage!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _close,
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const ValueKey('note_save_button'),
+          onPressed: _save,
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
 }
 
 class _AyahRow extends StatelessWidget {
@@ -1051,7 +1154,8 @@ class _AyahRow extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer,
+                            color:
+                                Theme.of(context).colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(

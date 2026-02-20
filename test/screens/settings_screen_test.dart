@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,8 @@ import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/services/page_metadata_importer_service.dart';
 import 'package:hifz_planner/data/services/quran_text_importer_service.dart';
 import 'package:hifz_planner/screens/settings_screen.dart';
+
+import '../helpers/pump_until_found.dart';
 
 void main() {
   testWidgets('renders both import buttons', (tester) async {
@@ -27,7 +30,8 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           quranTextImporterServiceProvider.overrideWithValue(textService),
-          pageMetadataImporterServiceProvider.overrideWithValue(metadataService),
+          pageMetadataImporterServiceProvider
+              .overrideWithValue(metadataService),
         ],
         child: const MaterialApp(
           home: Scaffold(body: SettingsScreen()),
@@ -65,7 +69,8 @@ void main() {
           overrides: [
             appDatabaseProvider.overrideWithValue(db),
             quranTextImporterServiceProvider.overrideWithValue(textService),
-            pageMetadataImporterServiceProvider.overrideWithValue(metadataService),
+            pageMetadataImporterServiceProvider
+                .overrideWithValue(metadataService),
           ],
           child: const MaterialApp(
             home: Scaffold(body: SettingsScreen()),
@@ -78,7 +83,10 @@ void main() {
 
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
 
-      await tester.pumpAndSettle();
+      await pumpUntilFound(
+        tester,
+        find.textContaining('Import complete'),
+      );
 
       expect(find.textContaining('Import complete'), findsWidgets);
       expect(find.textContaining('completed'), findsWidgets);
@@ -111,7 +119,8 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           quranTextImporterServiceProvider.overrideWithValue(textService),
-          pageMetadataImporterServiceProvider.overrideWithValue(metadataService),
+          pageMetadataImporterServiceProvider
+              .overrideWithValue(metadataService),
         ],
         child: const MaterialApp(
           home: Scaffold(body: SettingsScreen()),
@@ -120,7 +129,10 @@ void main() {
     );
 
     await tester.tap(find.text('Import Qur\'an Text'));
-    await tester.pumpAndSettle();
+    await pumpUntilFound(
+      tester,
+      find.textContaining('Import skipped: ayah table already has data.'),
+    );
 
     expect(
       find.textContaining('Import skipped: ayah table already has data.'),
@@ -162,7 +174,8 @@ surah,ayah,page_madina
           overrides: [
             appDatabaseProvider.overrideWithValue(db),
             quranTextImporterServiceProvider.overrideWithValue(textService),
-            pageMetadataImporterServiceProvider.overrideWithValue(metadataService),
+            pageMetadataImporterServiceProvider
+                .overrideWithValue(metadataService),
           ],
           child: const MaterialApp(
             home: Scaffold(body: SettingsScreen()),
@@ -175,9 +188,13 @@ surah,ayah,page_madina
 
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
 
-      await tester.pumpAndSettle();
+      await pumpUntilFound(
+        tester,
+        find.textContaining('Page metadata import complete'),
+      );
 
-      expect(find.textContaining('Page metadata import complete'), findsWidgets);
+      expect(
+          find.textContaining('Page metadata import complete'), findsWidgets);
 
       final ayah = await (db.select(db.ayah)
             ..where((tbl) => tbl.surah.equals(1) & tbl.ayah.equals(1)))

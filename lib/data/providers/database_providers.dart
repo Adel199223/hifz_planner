@@ -35,7 +35,8 @@ final quranTextImporterServiceProvider = Provider<QuranTextImporterService>((
   return QuranTextImporterService(db);
 });
 
-final pageMetadataImporterServiceProvider = Provider<PageMetadataImporterService>(
+final pageMetadataImporterServiceProvider =
+    Provider<PageMetadataImporterService>(
   (ref) {
     final db = ref.watch(appDatabaseProvider);
     return PageMetadataImporterService(db);

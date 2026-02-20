@@ -59,7 +59,8 @@ surah,ayah,page_madina
     expect(second.unchangedRows, 1);
   });
 
-  test('handles header, blank lines, and duplicate keys with last row winning', () async {
+  test('handles header, blank lines, and duplicate keys with last row winning',
+      () async {
     await _seedAyah(db, surah: 1, ayah: 1, text: 'x', pageMadina: 2);
 
     final service = PageMetadataImporterService(
@@ -81,7 +82,8 @@ surah,ayah,page_madina
     expect(ayah?.pageMadina, 8);
   });
 
-  test('throws FormatException with line number for malformed CSV rows', () async {
+  test('throws FormatException with line number for malformed CSV rows',
+      () async {
     final service = PageMetadataImporterService(
       db,
       loadAssetText: (_) async => '''
@@ -102,7 +104,8 @@ surah,ayah,page_madina
     );
   });
 
-  test('emits progress callbacks for loading/parsing/updating/completed', () async {
+  test('emits progress callbacks for loading/parsing/updating/completed',
+      () async {
     await _seedAyah(db, surah: 1, ayah: 1, text: 'a');
     await _seedAyah(db, surah: 1, ayah: 2, text: 'b');
 
@@ -162,7 +165,8 @@ Future<void> _seedAyah(
           surah: surah,
           ayah: ayah,
           textUthmani: text,
-          pageMadina: pageMadina == null ? const Value.absent() : Value(pageMadina),
+          pageMadina:
+              pageMadina == null ? const Value.absent() : Value(pageMadina),
         ),
       );
 }

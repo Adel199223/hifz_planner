@@ -8,73 +8,48 @@ class $AyahTable extends Ayah with TableInfo<$AyahTable, AyahData> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $AyahTable(this.attachedDatabase, [this._alias]);
-
-  static const VerificationMeta _idMeta = VerificationMeta('id');
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _surahMeta = VerificationMeta('surah');
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _surahMeta = const VerificationMeta('surah');
   @override
   late final GeneratedColumn<int> surah = GeneratedColumn<int>(
-    'surah',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _ayahMeta = VerificationMeta('ayah');
+      'surah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _ayahMeta = const VerificationMeta('ayah');
   @override
   late final GeneratedColumn<int> ayah = GeneratedColumn<int>(
-    'ayah',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
+      'ayah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _textUthmaniMeta =
-      VerificationMeta('textUthmani');
+      const VerificationMeta('textUthmani');
   @override
   late final GeneratedColumn<String> textUthmani = GeneratedColumn<String>(
-    'text_uthmani',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'text_uthmani', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _pageMadinaMeta =
-      VerificationMeta('pageMadina');
+      const VerificationMeta('pageMadina');
   @override
   late final GeneratedColumn<int> pageMadina = GeneratedColumn<int>(
-    'page_madina',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-
+      'page_madina', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
-  List<GeneratedColumn> get $columns => [id, surah, ayah, textUthmani, pageMadina];
-
+  List<GeneratedColumn> get $columns =>
+      [id, surah, ayah, textUthmani, pageMadina];
   @override
   String get aliasedName => _alias ?? actualTableName;
-
   @override
-  String get actualTableName => 'ayah';
-
+  String get actualTableName => $name;
+  static const String $name = 'ayah';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<AyahData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<AyahData> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -82,64 +57,53 @@ class $AyahTable extends Ayah with TableInfo<$AyahTable, AyahData> {
     }
     if (data.containsKey('surah')) {
       context.handle(
-        _surahMeta,
-        surah.isAcceptableOrUnknown(data['surah']!, _surahMeta),
-      );
+          _surahMeta, surah.isAcceptableOrUnknown(data['surah']!, _surahMeta));
     } else if (isInserting) {
       context.missing(_surahMeta);
     }
     if (data.containsKey('ayah')) {
       context.handle(
-        _ayahMeta,
-        ayah.isAcceptableOrUnknown(data['ayah']!, _ayahMeta),
-      );
+          _ayahMeta, ayah.isAcceptableOrUnknown(data['ayah']!, _ayahMeta));
     } else if (isInserting) {
       context.missing(_ayahMeta);
     }
     if (data.containsKey('text_uthmani')) {
       context.handle(
-        _textUthmaniMeta,
-        textUthmani.isAcceptableOrUnknown(data['text_uthmani']!, _textUthmaniMeta),
-      );
+          _textUthmaniMeta,
+          textUthmani.isAcceptableOrUnknown(
+              data['text_uthmani']!, _textUthmaniMeta));
     } else if (isInserting) {
       context.missing(_textUthmaniMeta);
     }
     if (data.containsKey('page_madina')) {
       context.handle(
-        _pageMadinaMeta,
-        pageMadina.isAcceptableOrUnknown(data['page_madina']!, _pageMadinaMeta),
-      );
+          _pageMadinaMeta,
+          pageMadina.isAcceptableOrUnknown(
+              data['page_madina']!, _pageMadinaMeta));
     }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
-
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {surah, ayah},
+      ];
   @override
   AyahData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AyahData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      surah: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}surah'],
-      )!,
-      ayah: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}ayah'],
-      )!,
-      textUthmani: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}text_uthmani'],
-      )!,
-      pageMadina: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}page_madina'],
-      ),
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      surah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}surah'])!,
+      ayah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ayah'])!,
+      textUthmani: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}text_uthmani'])!,
+      pageMadina: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}page_madina']),
     );
   }
 
@@ -155,23 +119,19 @@ class AyahData extends DataClass implements Insertable<AyahData> {
   final int ayah;
   final String textUthmani;
   final int? pageMadina;
-
-  const AyahData({
-    required this.id,
-    required this.surah,
-    required this.ayah,
-    required this.textUthmani,
-    this.pageMadina,
-  });
-
+  const AyahData(
+      {required this.id,
+      required this.surah,
+      required this.ayah,
+      required this.textUthmani,
+      this.pageMadina});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{
-      'id': Variable<int>(id),
-      'surah': Variable<int>(surah),
-      'ayah': Variable<int>(ayah),
-      'text_uthmani': Variable<String>(textUthmani),
-    };
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['surah'] = Variable<int>(surah);
+    map['ayah'] = Variable<int>(ayah);
+    map['text_uthmani'] = Variable<String>(textUthmani);
     if (!nullToAbsent || pageMadina != null) {
       map['page_madina'] = Variable<int>(pageMadina);
     }
@@ -190,10 +150,8 @@ class AyahData extends DataClass implements Insertable<AyahData> {
     );
   }
 
-  factory AyahData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory AyahData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AyahData(
       id: serializer.fromJson<int>(json['id']),
@@ -203,7 +161,6 @@ class AyahData extends DataClass implements Insertable<AyahData> {
       pageMadina: serializer.fromJson<int?>(json['pageMadina']),
     );
   }
-
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
@@ -216,19 +173,28 @@ class AyahData extends DataClass implements Insertable<AyahData> {
     };
   }
 
-  AyahData copyWith({
-    int? id,
-    int? surah,
-    int? ayah,
-    String? textUthmani,
-    Value<int?> pageMadina = const Value.absent(),
-  }) {
+  AyahData copyWith(
+          {int? id,
+          int? surah,
+          int? ayah,
+          String? textUthmani,
+          Value<int?> pageMadina = const Value.absent()}) =>
+      AyahData(
+        id: id ?? this.id,
+        surah: surah ?? this.surah,
+        ayah: ayah ?? this.ayah,
+        textUthmani: textUthmani ?? this.textUthmani,
+        pageMadina: pageMadina.present ? pageMadina.value : this.pageMadina,
+      );
+  AyahData copyWithCompanion(AyahCompanion data) {
     return AyahData(
-      id: id ?? this.id,
-      surah: surah ?? this.surah,
-      ayah: ayah ?? this.ayah,
-      textUthmani: textUthmani ?? this.textUthmani,
-      pageMadina: pageMadina.present ? pageMadina.value : this.pageMadina,
+      id: data.id.present ? data.id.value : this.id,
+      surah: data.surah.present ? data.surah.value : this.surah,
+      ayah: data.ayah.present ? data.ayah.value : this.ayah,
+      textUthmani:
+          data.textUthmani.present ? data.textUthmani.value : this.textUthmani,
+      pageMadina:
+          data.pageMadina.present ? data.pageMadina.value : this.pageMadina,
     );
   }
 
@@ -246,17 +212,15 @@ class AyahData extends DataClass implements Insertable<AyahData> {
 
   @override
   int get hashCode => Object.hash(id, surah, ayah, textUthmani, pageMadina);
-
   @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is AyahData &&
-            other.id == id &&
-            other.surah == surah &&
-            other.ayah == ayah &&
-            other.textUthmani == textUthmani &&
-            other.pageMadina == pageMadina);
-  }
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AyahData &&
+          other.id == this.id &&
+          other.surah == this.surah &&
+          other.ayah == this.ayah &&
+          other.textUthmani == this.textUthmani &&
+          other.pageMadina == this.pageMadina);
 }
 
 class AyahCompanion extends UpdateCompanion<AyahData> {
@@ -265,7 +229,6 @@ class AyahCompanion extends UpdateCompanion<AyahData> {
   final Value<int> ayah;
   final Value<String> textUthmani;
   final Value<int?> pageMadina;
-
   const AyahCompanion({
     this.id = const Value.absent(),
     this.surah = const Value.absent(),
@@ -273,7 +236,6 @@ class AyahCompanion extends UpdateCompanion<AyahData> {
     this.textUthmani = const Value.absent(),
     this.pageMadina = const Value.absent(),
   });
-
   AyahCompanion.insert({
     this.id = const Value.absent(),
     required int surah,
@@ -283,7 +245,6 @@ class AyahCompanion extends UpdateCompanion<AyahData> {
   })  : surah = Value(surah),
         ayah = Value(ayah),
         textUthmani = Value(textUthmani);
-
   static Insertable<AyahData> custom({
     Expression<int>? id,
     Expression<int>? surah,
@@ -300,13 +261,12 @@ class AyahCompanion extends UpdateCompanion<AyahData> {
     });
   }
 
-  AyahCompanion copyWith({
-    Value<int>? id,
-    Value<int>? surah,
-    Value<int>? ayah,
-    Value<String>? textUthmani,
-    Value<int?>? pageMadina,
-  }) {
+  AyahCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? surah,
+      Value<int>? ayah,
+      Value<String>? textUthmani,
+      Value<int?>? pageMadina}) {
     return AyahCompanion(
       id: id ?? this.id,
       surah: surah ?? this.surah,
@@ -350,68 +310,49 @@ class AyahCompanion extends UpdateCompanion<AyahData> {
   }
 }
 
-class $BookmarkTable extends Bookmark with TableInfo<$BookmarkTable, BookmarkData> {
+class $BookmarkTable extends Bookmark
+    with TableInfo<$BookmarkTable, BookmarkData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $BookmarkTable(this.attachedDatabase, [this._alias]);
-
-  static const VerificationMeta _idMeta = VerificationMeta('id');
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _surahMeta = VerificationMeta('surah');
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _surahMeta = const VerificationMeta('surah');
   @override
   late final GeneratedColumn<int> surah = GeneratedColumn<int>(
-    'surah',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _ayahMeta = VerificationMeta('ayah');
+      'surah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _ayahMeta = const VerificationMeta('ayah');
   @override
   late final GeneratedColumn<int> ayah = GeneratedColumn<int>(
-    'ayah',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _createdAtMeta = VerificationMeta('createdAt');
+      'ayah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
   @override
   List<GeneratedColumn> get $columns => [id, surah, ayah, createdAt];
-
   @override
   String get aliasedName => _alias ?? actualTableName;
-
   @override
-  String get actualTableName => 'bookmark';
-
+  String get actualTableName => $name;
+  static const String $name = 'bookmark';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<BookmarkData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<BookmarkData> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -419,52 +360,37 @@ class $BookmarkTable extends Bookmark with TableInfo<$BookmarkTable, BookmarkDat
     }
     if (data.containsKey('surah')) {
       context.handle(
-        _surahMeta,
-        surah.isAcceptableOrUnknown(data['surah']!, _surahMeta),
-      );
+          _surahMeta, surah.isAcceptableOrUnknown(data['surah']!, _surahMeta));
     } else if (isInserting) {
       context.missing(_surahMeta);
     }
     if (data.containsKey('ayah')) {
       context.handle(
-        _ayahMeta,
-        ayah.isAcceptableOrUnknown(data['ayah']!, _ayahMeta),
-      );
+          _ayahMeta, ayah.isAcceptableOrUnknown(data['ayah']!, _ayahMeta));
     } else if (isInserting) {
       context.missing(_ayahMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
-
   @override
   BookmarkData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return BookmarkData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      surah: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}surah'],
-      )!,
-      ayah: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}ayah'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      surah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}surah'])!,
+      ayah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ayah'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
   }
 
@@ -479,22 +405,19 @@ class BookmarkData extends DataClass implements Insertable<BookmarkData> {
   final int surah;
   final int ayah;
   final DateTime createdAt;
-
-  const BookmarkData({
-    required this.id,
-    required this.surah,
-    required this.ayah,
-    required this.createdAt,
-  });
-
+  const BookmarkData(
+      {required this.id,
+      required this.surah,
+      required this.ayah,
+      required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
-    return <String, Expression>{
-      'id': Variable<int>(id),
-      'surah': Variable<int>(surah),
-      'ayah': Variable<int>(ayah),
-      'created_at': Variable<DateTime>(createdAt),
-    };
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['surah'] = Variable<int>(surah);
+    map['ayah'] = Variable<int>(ayah);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
   }
 
   BookmarkCompanion toCompanion(bool nullToAbsent) {
@@ -506,10 +429,8 @@ class BookmarkData extends DataClass implements Insertable<BookmarkData> {
     );
   }
 
-  factory BookmarkData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory BookmarkData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return BookmarkData(
       id: serializer.fromJson<int>(json['id']),
@@ -518,7 +439,6 @@ class BookmarkData extends DataClass implements Insertable<BookmarkData> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
-
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
@@ -530,17 +450,20 @@ class BookmarkData extends DataClass implements Insertable<BookmarkData> {
     };
   }
 
-  BookmarkData copyWith({
-    int? id,
-    int? surah,
-    int? ayah,
-    DateTime? createdAt,
-  }) {
+  BookmarkData copyWith(
+          {int? id, int? surah, int? ayah, DateTime? createdAt}) =>
+      BookmarkData(
+        id: id ?? this.id,
+        surah: surah ?? this.surah,
+        ayah: ayah ?? this.ayah,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  BookmarkData copyWithCompanion(BookmarkCompanion data) {
     return BookmarkData(
-      id: id ?? this.id,
-      surah: surah ?? this.surah,
-      ayah: ayah ?? this.ayah,
-      createdAt: createdAt ?? this.createdAt,
+      id: data.id.present ? data.id.value : this.id,
+      surah: data.surah.present ? data.surah.value : this.surah,
+      ayah: data.ayah.present ? data.ayah.value : this.ayah,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
 
@@ -557,16 +480,14 @@ class BookmarkData extends DataClass implements Insertable<BookmarkData> {
 
   @override
   int get hashCode => Object.hash(id, surah, ayah, createdAt);
-
   @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is BookmarkData &&
-            other.id == id &&
-            other.surah == surah &&
-            other.ayah == ayah &&
-            other.createdAt == createdAt);
-  }
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BookmarkData &&
+          other.id == this.id &&
+          other.surah == this.surah &&
+          other.ayah == this.ayah &&
+          other.createdAt == this.createdAt);
 }
 
 class BookmarkCompanion extends UpdateCompanion<BookmarkData> {
@@ -574,14 +495,12 @@ class BookmarkCompanion extends UpdateCompanion<BookmarkData> {
   final Value<int> surah;
   final Value<int> ayah;
   final Value<DateTime> createdAt;
-
   const BookmarkCompanion({
     this.id = const Value.absent(),
     this.surah = const Value.absent(),
     this.ayah = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
-
   BookmarkCompanion.insert({
     this.id = const Value.absent(),
     required int surah,
@@ -589,7 +508,6 @@ class BookmarkCompanion extends UpdateCompanion<BookmarkData> {
     this.createdAt = const Value.absent(),
   })  : surah = Value(surah),
         ayah = Value(ayah);
-
   static Insertable<BookmarkData> custom({
     Expression<int>? id,
     Expression<int>? surah,
@@ -604,12 +522,11 @@ class BookmarkCompanion extends UpdateCompanion<BookmarkData> {
     });
   }
 
-  BookmarkCompanion copyWith({
-    Value<int>? id,
-    Value<int>? surah,
-    Value<int>? ayah,
-    Value<DateTime>? createdAt,
-  }) {
+  BookmarkCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? surah,
+      Value<int>? ayah,
+      Value<DateTime>? createdAt}) {
     return BookmarkCompanion(
       id: id ?? this.id,
       surah: surah ?? this.surah,
@@ -653,99 +570,62 @@ class $NoteTable extends Note with TableInfo<$NoteTable, NoteData> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $NoteTable(this.attachedDatabase, [this._alias]);
-
-  static const VerificationMeta _idMeta = VerificationMeta('id');
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _surahMeta = VerificationMeta('surah');
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _surahMeta = const VerificationMeta('surah');
   @override
   late final GeneratedColumn<int> surah = GeneratedColumn<int>(
-    'surah',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _ayahMeta = VerificationMeta('ayah');
+      'surah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _ayahMeta = const VerificationMeta('ayah');
   @override
   late final GeneratedColumn<int> ayah = GeneratedColumn<int>(
-    'ayah',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _titleMeta = VerificationMeta('title');
+      'ayah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
-    'title',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _bodyMeta = VerificationMeta('body');
+      'title', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
   @override
   late final GeneratedColumn<String> body = GeneratedColumn<String>(
-    'body',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _createdAtMeta = VerificationMeta('createdAt');
+      'body', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = VerificationMeta('updatedAt');
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
   @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        surah,
-        ayah,
-        title,
-        body,
-        createdAt,
-        updatedAt,
-      ];
-
+  List<GeneratedColumn> get $columns =>
+      [id, surah, ayah, title, body, createdAt, updatedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
-
   @override
-  String get actualTableName => 'note';
-
+  String get actualTableName => $name;
+  static const String $name = 'note';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<NoteData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<NoteData> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -753,84 +633,57 @@ class $NoteTable extends Note with TableInfo<$NoteTable, NoteData> {
     }
     if (data.containsKey('surah')) {
       context.handle(
-        _surahMeta,
-        surah.isAcceptableOrUnknown(data['surah']!, _surahMeta),
-      );
+          _surahMeta, surah.isAcceptableOrUnknown(data['surah']!, _surahMeta));
     } else if (isInserting) {
       context.missing(_surahMeta);
     }
     if (data.containsKey('ayah')) {
       context.handle(
-        _ayahMeta,
-        ayah.isAcceptableOrUnknown(data['ayah']!, _ayahMeta),
-      );
+          _ayahMeta, ayah.isAcceptableOrUnknown(data['ayah']!, _ayahMeta));
     } else if (isInserting) {
       context.missing(_ayahMeta);
     }
     if (data.containsKey('title')) {
       context.handle(
-        _titleMeta,
-        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
-      );
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
     }
     if (data.containsKey('body')) {
       context.handle(
-        _bodyMeta,
-        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
-      );
+          _bodyMeta, body.isAcceptableOrUnknown(data['body']!, _bodyMeta));
     } else if (isInserting) {
       context.missing(_bodyMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
-
   @override
   NoteData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return NoteData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      surah: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}surah'],
-      )!,
-      ayah: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}ayah'],
-      )!,
-      title: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}title'],
-      ),
-      body: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}body'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      surah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}surah'])!,
+      ayah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ayah'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title']),
+      body: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}body'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
     );
   }
 
@@ -848,30 +701,26 @@ class NoteData extends DataClass implements Insertable<NoteData> {
   final String body;
   final DateTime createdAt;
   final DateTime updatedAt;
-
-  const NoteData({
-    required this.id,
-    required this.surah,
-    required this.ayah,
-    this.title,
-    required this.body,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-
+  const NoteData(
+      {required this.id,
+      required this.surah,
+      required this.ayah,
+      this.title,
+      required this.body,
+      required this.createdAt,
+      required this.updatedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{
-      'id': Variable<int>(id),
-      'surah': Variable<int>(surah),
-      'ayah': Variable<int>(ayah),
-      'body': Variable<String>(body),
-      'created_at': Variable<DateTime>(createdAt),
-      'updated_at': Variable<DateTime>(updatedAt),
-    };
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['surah'] = Variable<int>(surah);
+    map['ayah'] = Variable<int>(ayah);
     if (!nullToAbsent || title != null) {
       map['title'] = Variable<String>(title);
     }
+    map['body'] = Variable<String>(body);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
@@ -880,19 +729,16 @@ class NoteData extends DataClass implements Insertable<NoteData> {
       id: Value(id),
       surah: Value(surah),
       ayah: Value(ayah),
-      title: title == null && nullToAbsent
-          ? const Value.absent()
-          : Value(title),
+      title:
+          title == null && nullToAbsent ? const Value.absent() : Value(title),
       body: Value(body),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
   }
 
-  factory NoteData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory NoteData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return NoteData(
       id: serializer.fromJson<int>(json['id']),
@@ -904,7 +750,6 @@ class NoteData extends DataClass implements Insertable<NoteData> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
-
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
@@ -919,23 +764,32 @@ class NoteData extends DataClass implements Insertable<NoteData> {
     };
   }
 
-  NoteData copyWith({
-    int? id,
-    int? surah,
-    int? ayah,
-    Value<String?> title = const Value.absent(),
-    String? body,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
+  NoteData copyWith(
+          {int? id,
+          int? surah,
+          int? ayah,
+          Value<String?> title = const Value.absent(),
+          String? body,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      NoteData(
+        id: id ?? this.id,
+        surah: surah ?? this.surah,
+        ayah: ayah ?? this.ayah,
+        title: title.present ? title.value : this.title,
+        body: body ?? this.body,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  NoteData copyWithCompanion(NoteCompanion data) {
     return NoteData(
-      id: id ?? this.id,
-      surah: surah ?? this.surah,
-      ayah: ayah ?? this.ayah,
-      title: title.present ? title.value : this.title,
-      body: body ?? this.body,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      id: data.id.present ? data.id.value : this.id,
+      surah: data.surah.present ? data.surah.value : this.surah,
+      ayah: data.ayah.present ? data.ayah.value : this.ayah,
+      title: data.title.present ? data.title.value : this.title,
+      body: data.body.present ? data.body.value : this.body,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -956,19 +810,17 @@ class NoteData extends DataClass implements Insertable<NoteData> {
   @override
   int get hashCode =>
       Object.hash(id, surah, ayah, title, body, createdAt, updatedAt);
-
   @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is NoteData &&
-            other.id == id &&
-            other.surah == surah &&
-            other.ayah == ayah &&
-            other.title == title &&
-            other.body == body &&
-            other.createdAt == createdAt &&
-            other.updatedAt == updatedAt);
-  }
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NoteData &&
+          other.id == this.id &&
+          other.surah == this.surah &&
+          other.ayah == this.ayah &&
+          other.title == this.title &&
+          other.body == this.body &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class NoteCompanion extends UpdateCompanion<NoteData> {
@@ -979,7 +831,6 @@ class NoteCompanion extends UpdateCompanion<NoteData> {
   final Value<String> body;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
-
   const NoteCompanion({
     this.id = const Value.absent(),
     this.surah = const Value.absent(),
@@ -989,7 +840,6 @@ class NoteCompanion extends UpdateCompanion<NoteData> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
-
   NoteCompanion.insert({
     this.id = const Value.absent(),
     required int surah,
@@ -1001,7 +851,6 @@ class NoteCompanion extends UpdateCompanion<NoteData> {
   })  : surah = Value(surah),
         ayah = Value(ayah),
         body = Value(body);
-
   static Insertable<NoteData> custom({
     Expression<int>? id,
     Expression<int>? surah,
@@ -1022,15 +871,14 @@ class NoteCompanion extends UpdateCompanion<NoteData> {
     });
   }
 
-  NoteCompanion copyWith({
-    Value<int>? id,
-    Value<int>? surah,
-    Value<int>? ayah,
-    Value<String?>? title,
-    Value<String>? body,
-    Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
-  }) {
+  NoteCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? surah,
+      Value<int>? ayah,
+      Value<String?>? title,
+      Value<String>? body,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt}) {
     return NoteCompanion(
       id: id ?? this.id,
       surah: surah ?? this.surah,
@@ -1086,16 +934,511 @@ class NoteCompanion extends UpdateCompanion<NoteData> {
 
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
-
+  $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $AyahTable ayah = $AyahTable(this);
   late final $BookmarkTable bookmark = $BookmarkTable(this);
   late final $NoteTable note = $NoteTable(this);
-
   @override
-  Iterable<TableInfo<Table, Object?>> get allTables => [ayah, bookmark, note];
-
+  Iterable<TableInfo<Table, Object?>> get allTables =>
+      allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [ayah, bookmark, note];
 }
 
+typedef $$AyahTableCreateCompanionBuilder = AyahCompanion Function({
+  Value<int> id,
+  required int surah,
+  required int ayah,
+  required String textUthmani,
+  Value<int?> pageMadina,
+});
+typedef $$AyahTableUpdateCompanionBuilder = AyahCompanion Function({
+  Value<int> id,
+  Value<int> surah,
+  Value<int> ayah,
+  Value<String> textUthmani,
+  Value<int?> pageMadina,
+});
 
+class $$AyahTableFilterComposer extends Composer<_$AppDatabase, $AyahTable> {
+  $$AyahTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get textUthmani => $composableBuilder(
+      column: $table.textUthmani, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get pageMadina => $composableBuilder(
+      column: $table.pageMadina, builder: (column) => ColumnFilters(column));
+}
+
+class $$AyahTableOrderingComposer extends Composer<_$AppDatabase, $AyahTable> {
+  $$AyahTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get textUthmani => $composableBuilder(
+      column: $table.textUthmani, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get pageMadina => $composableBuilder(
+      column: $table.pageMadina, builder: (column) => ColumnOrderings(column));
+}
+
+class $$AyahTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AyahTable> {
+  $$AyahTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get surah =>
+      $composableBuilder(column: $table.surah, builder: (column) => column);
+
+  GeneratedColumn<int> get ayah =>
+      $composableBuilder(column: $table.ayah, builder: (column) => column);
+
+  GeneratedColumn<String> get textUthmani => $composableBuilder(
+      column: $table.textUthmani, builder: (column) => column);
+
+  GeneratedColumn<int> get pageMadina => $composableBuilder(
+      column: $table.pageMadina, builder: (column) => column);
+}
+
+class $$AyahTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AyahTable,
+    AyahData,
+    $$AyahTableFilterComposer,
+    $$AyahTableOrderingComposer,
+    $$AyahTableAnnotationComposer,
+    $$AyahTableCreateCompanionBuilder,
+    $$AyahTableUpdateCompanionBuilder,
+    (AyahData, BaseReferences<_$AppDatabase, $AyahTable, AyahData>),
+    AyahData,
+    PrefetchHooks Function()> {
+  $$AyahTableTableManager(_$AppDatabase db, $AyahTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AyahTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AyahTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AyahTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> surah = const Value.absent(),
+            Value<int> ayah = const Value.absent(),
+            Value<String> textUthmani = const Value.absent(),
+            Value<int?> pageMadina = const Value.absent(),
+          }) =>
+              AyahCompanion(
+            id: id,
+            surah: surah,
+            ayah: ayah,
+            textUthmani: textUthmani,
+            pageMadina: pageMadina,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int surah,
+            required int ayah,
+            required String textUthmani,
+            Value<int?> pageMadina = const Value.absent(),
+          }) =>
+              AyahCompanion.insert(
+            id: id,
+            surah: surah,
+            ayah: ayah,
+            textUthmani: textUthmani,
+            pageMadina: pageMadina,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$AyahTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AyahTable,
+    AyahData,
+    $$AyahTableFilterComposer,
+    $$AyahTableOrderingComposer,
+    $$AyahTableAnnotationComposer,
+    $$AyahTableCreateCompanionBuilder,
+    $$AyahTableUpdateCompanionBuilder,
+    (AyahData, BaseReferences<_$AppDatabase, $AyahTable, AyahData>),
+    AyahData,
+    PrefetchHooks Function()>;
+typedef $$BookmarkTableCreateCompanionBuilder = BookmarkCompanion Function({
+  Value<int> id,
+  required int surah,
+  required int ayah,
+  Value<DateTime> createdAt,
+});
+typedef $$BookmarkTableUpdateCompanionBuilder = BookmarkCompanion Function({
+  Value<int> id,
+  Value<int> surah,
+  Value<int> ayah,
+  Value<DateTime> createdAt,
+});
+
+class $$BookmarkTableFilterComposer
+    extends Composer<_$AppDatabase, $BookmarkTable> {
+  $$BookmarkTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$BookmarkTableOrderingComposer
+    extends Composer<_$AppDatabase, $BookmarkTable> {
+  $$BookmarkTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$BookmarkTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BookmarkTable> {
+  $$BookmarkTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get surah =>
+      $composableBuilder(column: $table.surah, builder: (column) => column);
+
+  GeneratedColumn<int> get ayah =>
+      $composableBuilder(column: $table.ayah, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$BookmarkTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $BookmarkTable,
+    BookmarkData,
+    $$BookmarkTableFilterComposer,
+    $$BookmarkTableOrderingComposer,
+    $$BookmarkTableAnnotationComposer,
+    $$BookmarkTableCreateCompanionBuilder,
+    $$BookmarkTableUpdateCompanionBuilder,
+    (BookmarkData, BaseReferences<_$AppDatabase, $BookmarkTable, BookmarkData>),
+    BookmarkData,
+    PrefetchHooks Function()> {
+  $$BookmarkTableTableManager(_$AppDatabase db, $BookmarkTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BookmarkTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BookmarkTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BookmarkTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> surah = const Value.absent(),
+            Value<int> ayah = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              BookmarkCompanion(
+            id: id,
+            surah: surah,
+            ayah: ayah,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int surah,
+            required int ayah,
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              BookmarkCompanion.insert(
+            id: id,
+            surah: surah,
+            ayah: ayah,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$BookmarkTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $BookmarkTable,
+    BookmarkData,
+    $$BookmarkTableFilterComposer,
+    $$BookmarkTableOrderingComposer,
+    $$BookmarkTableAnnotationComposer,
+    $$BookmarkTableCreateCompanionBuilder,
+    $$BookmarkTableUpdateCompanionBuilder,
+    (BookmarkData, BaseReferences<_$AppDatabase, $BookmarkTable, BookmarkData>),
+    BookmarkData,
+    PrefetchHooks Function()>;
+typedef $$NoteTableCreateCompanionBuilder = NoteCompanion Function({
+  Value<int> id,
+  required int surah,
+  required int ayah,
+  Value<String?> title,
+  required String body,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+typedef $$NoteTableUpdateCompanionBuilder = NoteCompanion Function({
+  Value<int> id,
+  Value<int> surah,
+  Value<int> ayah,
+  Value<String?> title,
+  Value<String> body,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+});
+
+class $$NoteTableFilterComposer extends Composer<_$AppDatabase, $NoteTable> {
+  $$NoteTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get body => $composableBuilder(
+      column: $table.body, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$NoteTableOrderingComposer extends Composer<_$AppDatabase, $NoteTable> {
+  $$NoteTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get body => $composableBuilder(
+      column: $table.body, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$NoteTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NoteTable> {
+  $$NoteTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get surah =>
+      $composableBuilder(column: $table.surah, builder: (column) => column);
+
+  GeneratedColumn<int> get ayah =>
+      $composableBuilder(column: $table.ayah, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$NoteTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $NoteTable,
+    NoteData,
+    $$NoteTableFilterComposer,
+    $$NoteTableOrderingComposer,
+    $$NoteTableAnnotationComposer,
+    $$NoteTableCreateCompanionBuilder,
+    $$NoteTableUpdateCompanionBuilder,
+    (NoteData, BaseReferences<_$AppDatabase, $NoteTable, NoteData>),
+    NoteData,
+    PrefetchHooks Function()> {
+  $$NoteTableTableManager(_$AppDatabase db, $NoteTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NoteTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NoteTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NoteTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> surah = const Value.absent(),
+            Value<int> ayah = const Value.absent(),
+            Value<String?> title = const Value.absent(),
+            Value<String> body = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              NoteCompanion(
+            id: id,
+            surah: surah,
+            ayah: ayah,
+            title: title,
+            body: body,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int surah,
+            required int ayah,
+            Value<String?> title = const Value.absent(),
+            required String body,
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              NoteCompanion.insert(
+            id: id,
+            surah: surah,
+            ayah: ayah,
+            title: title,
+            body: body,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$NoteTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $NoteTable,
+    NoteData,
+    $$NoteTableFilterComposer,
+    $$NoteTableOrderingComposer,
+    $$NoteTableAnnotationComposer,
+    $$NoteTableCreateCompanionBuilder,
+    $$NoteTableUpdateCompanionBuilder,
+    (NoteData, BaseReferences<_$AppDatabase, $NoteTable, NoteData>),
+    NoteData,
+    PrefetchHooks Function()>;
+
+class $AppDatabaseManager {
+  final _$AppDatabase _db;
+  $AppDatabaseManager(this._db);
+  $$AyahTableTableManager get ayah => $$AyahTableTableManager(_db, _db.ayah);
+  $$BookmarkTableTableManager get bookmark =>
+      $$BookmarkTableTableManager(_db, _db.bookmark);
+  $$NoteTableTableManager get note => $$NoteTableTableManager(_db, _db.note);
+}

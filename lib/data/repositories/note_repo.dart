@@ -65,8 +65,8 @@ class NoteRepo {
     String? title,
     required String body,
   }) async {
-    final rows = await (_db.update(_db.note)..where((tbl) => tbl.id.equals(id)))
-        .write(
+    final rows =
+        await (_db.update(_db.note)..where((tbl) => tbl.id.equals(id))).write(
       NoteCompanion(
         title: Value(title),
         body: Value(body),

@@ -64,7 +64,8 @@ class QuranTextImporterService {
     QuranTextImportProgressCallback? onProgress,
   }) async {
     if (batchSize <= 0) {
-      throw ArgumentError.value(batchSize, 'batchSize', 'Must be greater than 0');
+      throw ArgumentError.value(
+          batchSize, 'batchSize', 'Must be greater than 0');
     }
 
     final existingBefore = await _getAyahCount();
@@ -124,9 +125,8 @@ class QuranTextImporterService {
 
     var processed = 0;
     for (var start = 0; start < rows.length; start += batchSize) {
-      final end = (start + batchSize < rows.length)
-          ? start + batchSize
-          : rows.length;
+      final end =
+          (start + batchSize < rows.length) ? start + batchSize : rows.length;
       final chunk = rows.sublist(start, end);
       final companions = [
         for (final row in chunk)

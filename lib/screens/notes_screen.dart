@@ -71,7 +71,8 @@ class NotesScreen extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 4),
-                                  Text('Surah ${note.surah}, Ayah ${note.ayah}'),
+                                  Text(
+                                      'Surah ${note.surah}, Ayah ${note.ayah}'),
                                   if (page != null)
                                     Text(
                                       'Page $page',
@@ -108,154 +109,55 @@ class NotesScreen extends ConsumerWidget {
     required WidgetRef ref,
     required NoteData note,
   }) async {
-    final page = (await ref
-            .read(quranRepoProvider)
-            .getAyah(note.surah, note.ayah))
-        ?.pageMadina;
+    final page =
+        (await ref.read(quranRepoProvider).getAyah(note.surah, note.ayah))
+            ?.pageMadina;
     if (!context.mounted) {
       return;
     }
 
-    final titleController = TextEditingController(text: note.title ?? '');
-    final bodyController = TextEditingController(text: note.body);
-    String? errorMessage;
-
     final result = await showDialog<_NoteEditorResult>(
       context: context,
       builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              title: const Text('Edit note'),
-              content: SizedBox(
-                width: 460,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      key: const ValueKey('notes_editor_title_field'),
-                      controller: titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Title (optional)',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      key: const ValueKey('notes_editor_body_field'),
-                      controller: bodyController,
-                      minLines: 4,
-                      maxLines: 8,
-                      decoration: const InputDecoration(
-                        labelText: 'Body',
-                        alignLabelWithHint: true,
-                      ),
-                    ),
-                    if (errorMessage != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        errorMessage!,
-                        style: TextStyle(
-                          color: Theme.of(dialogContext).colorScheme.error,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    Text(
-                      page == null
-                          ? 'Linked verse: Surah ${note.surah}, Ayah ${note.ayah}'
-                          : 'Linked verse: Surah ${note.surah}, Ayah ${note.ayah} (Page $page)',
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        OutlinedButton(
-                          key: const ValueKey('notes_editor_go_button'),
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop(
-                              const _NoteEditorResult.goToVerse(),
-                            );
-                          },
-                          child: const Text('Go to verse'),
-                        ),
-                        OutlinedButton(
-                          key: const ValueKey('notes_editor_go_page_button'),
-                          onPressed: page == null
-                              ? null
-                              : () {
-                                  Navigator.of(dialogContext).pop(
-                                    const _NoteEditorResult.goToPage(),
-                                  );
-                                },
-                          child: const Text('Go to page'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  key: const ValueKey('notes_editor_save_button'),
-                  onPressed: () {
-                    final body = bodyController.text.trim();
-                    if (body.isEmpty) {
-                      setDialogState(() {
-                        errorMessage = 'Body is required.';
-                      });
-                      return;
-                    }
-
-                    final title = titleController.text.trim();
-                    Navigator.of(dialogContext).pop(
-                      _NoteEditorResult.save(
-                        title: title.isEmpty ? null : title,
-                        body: body,
-                      ),
-                    );
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
+        return _NotesEditorDialog(
+          note: note,
+          page: page,
         );
       },
     );
-
-    titleController.dispose();
-    bodyController.dispose();
 
     if (result == null || !context.mounted) {
       return;
     }
 
     if (result.action == _NoteEditorAction.goToVerse) {
-      context.go(
-        _buildGoToVerseRoute(
-          surah: note.surah,
-          ayah: note.ayah,
-          page: page,
-        ),
+      final route = _buildGoToVerseRoute(
+        surah: note.surah,
+        ayah: note.ayah,
+        page: page,
       );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) {
+          return;
+        }
+        context.go(route);
+      });
       return;
     }
 
     if (result.action == _NoteEditorAction.goToPage) {
       if (page != null) {
-        context.go(
-          _buildGoToPageRoute(
-            surah: note.surah,
-            ayah: note.ayah,
-            page: page,
-          ),
+        final route = _buildGoToPageRoute(
+          surah: note.surah,
+          ayah: note.ayah,
+          page: page,
         );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) {
+            return;
+          }
+          context.go(route);
+        });
       }
       return;
     }
@@ -321,6 +223,158 @@ enum _NoteEditorAction {
   save,
   goToVerse,
   goToPage,
+}
+
+class _NotesEditorDialog extends StatefulWidget {
+  const _NotesEditorDialog({
+    required this.note,
+    required this.page,
+  });
+
+  final NoteData note;
+  final int? page;
+
+  @override
+  State<_NotesEditorDialog> createState() => _NotesEditorDialogState();
+}
+
+class _NotesEditorDialogState extends State<_NotesEditorDialog> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _bodyController;
+  final FocusNode _titleFocusNode = FocusNode();
+  final FocusNode _bodyFocusNode = FocusNode();
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.note.title ?? '');
+    _bodyController = TextEditingController(text: widget.note.body);
+  }
+
+  @override
+  void dispose() {
+    _titleFocusNode.dispose();
+    _bodyFocusNode.dispose();
+    _titleController.dispose();
+    _bodyController.dispose();
+    super.dispose();
+  }
+
+  void _popWithResult([_NoteEditorResult? result]) {
+    FocusScope.of(context).unfocus();
+    Navigator.of(context).pop(result);
+  }
+
+  void _onSave() {
+    final body = _bodyController.text.trim();
+    if (body.isEmpty) {
+      setState(() {
+        _errorMessage = 'Body is required.';
+      });
+      return;
+    }
+
+    final title = _titleController.text.trim();
+    _popWithResult(
+      _NoteEditorResult.save(
+        title: title.isEmpty ? null : title,
+        body: body,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final page = widget.page;
+
+    return AlertDialog(
+      title: const Text('Edit note'),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: 460,
+          maxHeight: 420,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                key: const ValueKey('notes_editor_title_field'),
+                controller: _titleController,
+                focusNode: _titleFocusNode,
+                decoration: const InputDecoration(
+                  labelText: 'Title (optional)',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                key: const ValueKey('notes_editor_body_field'),
+                controller: _bodyController,
+                focusNode: _bodyFocusNode,
+                minLines: 4,
+                maxLines: 8,
+                decoration: const InputDecoration(
+                  labelText: 'Body',
+                  alignLabelWithHint: true,
+                ),
+              ),
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                page == null
+                    ? 'Linked verse: Surah ${widget.note.surah}, Ayah ${widget.note.ayah}'
+                    : 'Linked verse: Surah ${widget.note.surah}, Ayah ${widget.note.ayah} (Page $page)',
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton(
+                    key: const ValueKey('notes_editor_go_button'),
+                    onPressed: () {
+                      _popWithResult(const _NoteEditorResult.goToVerse());
+                    },
+                    child: const Text('Go to verse'),
+                  ),
+                  OutlinedButton(
+                    key: const ValueKey('notes_editor_go_page_button'),
+                    onPressed: page == null
+                        ? null
+                        : () {
+                            _popWithResult(const _NoteEditorResult.goToPage());
+                          },
+                    child: const Text('Go to page'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _popWithResult,
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const ValueKey('notes_editor_save_button'),
+          onPressed: _onSave,
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
 }
 
 class _NoteEditorResult {

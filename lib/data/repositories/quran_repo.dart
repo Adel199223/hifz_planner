@@ -17,7 +17,10 @@ class QuranRepo {
       ..orderBy([OrderingTerm.asc(_db.ayah.pageMadina)]);
 
     final rows = await query.get();
-    return rows.map((row) => row.read(_db.ayah.pageMadina)).whereType<int>().toList();
+    return rows
+        .map((row) => row.read(_db.ayah.pageMadina))
+        .whereType<int>()
+        .toList();
   }
 
   Future<List<AyahData>> getAyahsBySurah(int surah) {
@@ -50,7 +53,7 @@ class QuranRepo {
     final pattern = '%$escaped%';
 
     final selectQuery = _db.select(_db.ayah)
-      ..where((tbl) => tbl.textUthmani.like(pattern, escape: '\\'))
+      ..where((tbl) => tbl.textUthmani.like(pattern, escapeChar: '\\'))
       ..orderBy([
         (tbl) => OrderingTerm.asc(tbl.surah),
         (tbl) => OrderingTerm.asc(tbl.ayah),

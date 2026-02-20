@@ -30,7 +30,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         onProgress: (progress) {
           _updateProgress(
             fraction: progress.total > 0 ? progress.fraction : null,
-            details: '${progress.phase}: ${progress.processed}/${progress.total}',
+            details:
+                '${progress.phase}: ${progress.processed}/${progress.total}',
             statusMessage: progress.message,
           );
         },
@@ -67,7 +68,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         onProgress: (progress) {
           _updateProgress(
             fraction: progress.total > 0 ? progress.fraction : null,
-            details: '${progress.phase}: ${progress.processed}/${progress.total}',
+            details:
+                '${progress.phase}: ${progress.processed}/${progress.total}',
             statusMessage: progress.message,
           );
         },

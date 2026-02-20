@@ -5,7 +5,8 @@ import 'package:flutter/services.dart';
 
 import '../database/app_database.dart';
 
-const String tanzilPageMetadataAssetPath = 'assets/quran/tanzil_page_metadata.csv';
+const String tanzilPageMetadataAssetPath =
+    'assets/quran/tanzil_page_metadata.csv';
 
 typedef PageMetadataImportProgressCallback = void Function(
   PageMetadataImportProgress progress,
@@ -65,7 +66,8 @@ class PageMetadataImporterService {
     PageMetadataImportProgressCallback? onProgress,
   }) async {
     if (batchSize <= 0) {
-      throw ArgumentError.value(batchSize, 'batchSize', 'Must be greater than 0');
+      throw ArgumentError.value(
+          batchSize, 'batchSize', 'Must be greater than 0');
     }
 
     _emitProgress(
