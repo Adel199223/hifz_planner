@@ -9,6 +9,8 @@ import '../repositories/quran_repo.dart';
 import '../repositories/review_log_repo.dart';
 import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
+import '../services/daily_planner.dart';
+import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
 import '../services/quran_text_importer_service.dart';
 
@@ -56,6 +58,36 @@ final settingsRepoProvider = Provider<SettingsRepo>((ref) {
 final progressRepoProvider = Provider<ProgressRepo>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return ProgressRepo(db);
+});
+
+final newUnitGeneratorProvider = Provider<NewUnitGenerator>((ref) {
+  final quranRepo = ref.watch(quranRepoProvider);
+  final memUnitRepo = ref.watch(memUnitRepoProvider);
+  final scheduleRepo = ref.watch(scheduleRepoProvider);
+  return NewUnitGenerator(
+    quranRepo,
+    memUnitRepo,
+    scheduleRepo,
+  );
+});
+
+final dailyPlannerProvider = Provider<DailyPlanner>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final settingsRepo = ref.watch(settingsRepoProvider);
+  final progressRepo = ref.watch(progressRepoProvider);
+  final scheduleRepo = ref.watch(scheduleRepoProvider);
+  final quranRepo = ref.watch(quranRepoProvider);
+  final memUnitRepo = ref.watch(memUnitRepoProvider);
+  final newUnitGenerator = ref.watch(newUnitGeneratorProvider);
+  return DailyPlanner(
+    db,
+    settingsRepo,
+    progressRepo,
+    scheduleRepo,
+    quranRepo,
+    memUnitRepo,
+    newUnitGenerator,
+  );
 });
 
 final quranTextImporterServiceProvider = Provider<QuranTextImporterService>((

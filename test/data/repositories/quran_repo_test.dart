@@ -96,4 +96,51 @@ void main() {
     expect(pageRows[1].surah, 2);
     expect(pageRows[1].ayah, 1);
   });
+
+  test('getAyahsFromCursor includes cursor ayah in canonical order', () async {
+    final rows = await repo.getAyahsFromCursor(
+      startSurah: 1,
+      startAyah: 2,
+    );
+    final limited = await repo.getAyahsFromCursor(
+      startSurah: 1,
+      startAyah: 2,
+      limit: 2,
+    );
+
+    expect(
+      rows.map((row) => '${row.surah}:${row.ayah}').toList(),
+      ['1:2', '1:3', '2:1', '2:2'],
+    );
+    expect(
+      limited.map((row) => '${row.surah}:${row.ayah}').toList(),
+      ['1:2', '1:3'],
+    );
+  });
+
+  test('countAyahsInRange returns inclusive range count', () async {
+    final count = await repo.countAyahsInRange(
+      startSurah: 1,
+      startAyah: 2,
+      endSurah: 2,
+      endAyah: 1,
+    );
+    final reversed = await repo.countAyahsInRange(
+      startSurah: 2,
+      startAyah: 2,
+      endSurah: 1,
+      endAyah: 1,
+    );
+
+    expect(count, 3);
+    expect(reversed, 0);
+  });
+
+  test('getLastAyah returns highest surah/ayah pair', () async {
+    final last = await repo.getLastAyah();
+
+    expect(last, isNotNull);
+    expect(last!.surah, 2);
+    expect(last.ayah, 2);
+  });
 }

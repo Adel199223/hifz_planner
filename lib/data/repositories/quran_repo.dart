@@ -68,4 +68,66 @@ class QuranRepo {
       ..where((tbl) => tbl.surah.equals(surah) & tbl.ayah.equals(ayah));
     return query.getSingleOrNull();
   }
+
+  Future<List<AyahData>> getAyahsFromCursor({
+    required int startSurah,
+    required int startAyah,
+    int? limit,
+  }) {
+    final query = _db.select(_db.ayah)
+      ..where(
+        (tbl) =>
+            tbl.surah.isBiggerThanValue(startSurah) |
+            (tbl.surah.equals(startSurah) &
+                tbl.ayah.isBiggerOrEqualValue(startAyah)),
+      )
+      ..orderBy([
+        (tbl) => OrderingTerm.asc(tbl.surah),
+        (tbl) => OrderingTerm.asc(tbl.ayah),
+      ]);
+
+    if (limit != null) {
+      query.limit(limit);
+    }
+
+    return query.get();
+  }
+
+  Future<int> countAyahsInRange({
+    required int startSurah,
+    required int startAyah,
+    required int endSurah,
+    required int endAyah,
+  }) async {
+    final startsAfterEnd = (startSurah > endSurah) ||
+        (startSurah == endSurah && startAyah > endAyah);
+    if (startsAfterEnd) {
+      return 0;
+    }
+
+    final countExp = _db.ayah.id.count();
+    final query = _db.selectOnly(_db.ayah)
+      ..addColumns([countExp])
+      ..where(
+        (_db.ayah.surah.isBiggerThanValue(startSurah) |
+                (_db.ayah.surah.equals(startSurah) &
+                    _db.ayah.ayah.isBiggerOrEqualValue(startAyah))) &
+            (_db.ayah.surah.isSmallerThanValue(endSurah) |
+                (_db.ayah.surah.equals(endSurah) &
+                    _db.ayah.ayah.isSmallerOrEqualValue(endAyah))),
+      );
+
+    final row = await query.getSingle();
+    return row.read(countExp) ?? 0;
+  }
+
+  Future<AyahData?> getLastAyah() {
+    final query = _db.select(_db.ayah)
+      ..orderBy([
+        (tbl) => OrderingTerm.desc(tbl.surah),
+        (tbl) => OrderingTerm.desc(tbl.ayah),
+      ])
+      ..limit(1);
+    return query.getSingleOrNull();
+  }
 }
