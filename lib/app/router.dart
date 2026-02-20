@@ -28,7 +28,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/reader',
-            builder: (context, state) => const ReaderScreen(),
+            builder: (context, state) {
+              final surah = int.tryParse(
+                state.uri.queryParameters['surah'] ?? '',
+              );
+              final ayah = int.tryParse(
+                state.uri.queryParameters['ayah'] ?? '',
+              );
+              return ReaderScreen(
+                targetSurah: surah,
+                targetAyah: ayah,
+              );
+            },
           ),
           GoRoute(
             path: '/bookmarks',

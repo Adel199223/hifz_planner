@@ -19,6 +19,6 @@ void main() {
     await tester.tap(find.text('Bookmarks'));
     await tester.pumpAndSettle();
 
-    expect(find.text('BookmarksScreen'), findsOneWidget);
+    expect(find.text('No bookmarks yet.'), findsOneWidget);
   });
 }

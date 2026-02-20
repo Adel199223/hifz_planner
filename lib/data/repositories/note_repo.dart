@@ -7,6 +7,18 @@ class NoteRepo {
 
   final AppDatabase _db;
 
+  Future<List<NoteData>> getAllNotes() {
+    final query = _db.select(_db.note)
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)]);
+    return query.get();
+  }
+
+  Stream<List<NoteData>> watchAllNotes() {
+    final query = _db.select(_db.note)
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)]);
+    return query.watch();
+  }
+
   Future<int> createNote({
     required int surah,
     required int ayah,

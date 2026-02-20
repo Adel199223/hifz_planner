@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +8,14 @@ import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 
 class ReaderScreen extends ConsumerStatefulWidget {
-  const ReaderScreen({super.key});
+  const ReaderScreen({
+    super.key,
+    this.targetSurah,
+    this.targetAyah,
+  });
+
+  final int? targetSurah;
+  final int? targetAyah;
 
   @override
   ConsumerState<ReaderScreen> createState() => _ReaderScreenState();
@@ -21,11 +30,66 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   int _selectedSurah = 1;
   Future<List<AyahData>>? _ayahsFuture;
   String? _hoveredAyahKey;
+  String? _jumpHighlightedAyahKey;
+  int? _pendingJumpSurah;
+  int? _pendingJumpAyah;
+  bool _jumpScheduled = false;
+
+  final ScrollController _ayahScrollController = ScrollController();
+  final Map<String, GlobalKey> _ayahRowKeys = <String, GlobalKey>{};
+  Timer? _jumpHighlightTimer;
 
   @override
   void initState() {
     super.initState();
+
+    final initialTarget = _normalizeTarget(
+      surah: widget.targetSurah,
+      ayah: widget.targetAyah,
+    );
+    if (initialTarget != null) {
+      _selectedSurah = initialTarget.surah;
+      _pendingJumpSurah = initialTarget.surah;
+      _pendingJumpAyah = initialTarget.ayah;
+    }
+
     _ayahsFuture = _loadAyahs(_selectedSurah);
+  }
+
+  @override
+  void didUpdateWidget(covariant ReaderScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.targetSurah == widget.targetSurah &&
+        oldWidget.targetAyah == widget.targetAyah) {
+      return;
+    }
+
+    final target = _normalizeTarget(
+      surah: widget.targetSurah,
+      ayah: widget.targetAyah,
+    );
+    if (target == null) {
+      return;
+    }
+
+    setState(() {
+      _pendingJumpSurah = target.surah;
+      _pendingJumpAyah = target.ayah;
+      _hoveredAyahKey = null;
+
+      if (_selectedSurah != target.surah) {
+        _selectedSurah = target.surah;
+      }
+      _ayahsFuture = _loadAyahs(_selectedSurah);
+    });
+  }
+
+  @override
+  void dispose() {
+    _jumpHighlightTimer?.cancel();
+    _ayahScrollController.dispose();
+    super.dispose();
   }
 
   Future<List<AyahData>> _loadAyahs(int surah) {
@@ -39,8 +103,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     setState(() {
       _selectedSurah = surah;
       _hoveredAyahKey = null;
+      _pendingJumpSurah = null;
+      _pendingJumpAyah = null;
+      _jumpHighlightedAyahKey = null;
       _ayahsFuture = _loadAyahs(surah);
     });
+    _jumpHighlightTimer?.cancel();
   }
 
   void _refreshSurah() {
@@ -50,6 +118,112 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   String _ayahKey(AyahData ayah) => '${ayah.surah}:${ayah.ayah}';
+
+  GlobalKey _ayahRowKey(String ayahKey) {
+    return _ayahRowKeys.putIfAbsent(
+      ayahKey,
+      () => GlobalKey(debugLabel: 'ayah_row_key_$ayahKey'),
+    );
+  }
+
+  _VerseJumpTarget? _normalizeTarget({
+    required int? surah,
+    required int? ayah,
+  }) {
+    if (surah == null || ayah == null) {
+      return null;
+    }
+    if (surah < 1 || surah > 114 || ayah < 1) {
+      return null;
+    }
+    return _VerseJumpTarget(surah: surah, ayah: ayah);
+  }
+
+  void _queuePendingJump(List<AyahData> ayahs) {
+    if (_jumpScheduled || _pendingJumpAyah == null || _pendingJumpSurah == null) {
+      return;
+    }
+    if (_pendingJumpSurah != _selectedSurah) {
+      return;
+    }
+
+    _jumpScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _jumpScheduled = false;
+      await _performPendingJump(ayahs);
+    });
+  }
+
+  Future<void> _performPendingJump(List<AyahData> ayahs) async {
+    final pendingAyah = _pendingJumpAyah;
+    if (!mounted || pendingAyah == null || _pendingJumpSurah != _selectedSurah) {
+      return;
+    }
+
+    final targetIndex = ayahs.indexWhere((row) => row.ayah == pendingAyah);
+    if (targetIndex < 0) {
+      setState(() {
+        _pendingJumpAyah = null;
+        _pendingJumpSurah = null;
+      });
+      _showSnackBar('Ayah $pendingAyah was not found in Surah $_selectedSurah.');
+      return;
+    }
+
+    final targetAyah = ayahs[targetIndex];
+    final targetKey = _ayahKey(targetAyah);
+
+    if (_ayahScrollController.hasClients) {
+      final maxExtent = _ayahScrollController.position.maxScrollExtent;
+      final estimatedOffset = (targetIndex * 140.0).clamp(0.0, maxExtent);
+      _ayahScrollController.jumpTo(estimatedOffset);
+    }
+
+    BuildContext? rowContext = _ayahRowKey(targetKey).currentContext;
+    for (var attempt = 0; attempt < 3 && rowContext == null; attempt++) {
+      if (_ayahScrollController.hasClients) {
+        final maxExtent = _ayahScrollController.position.maxScrollExtent;
+        final probeOffset = ((targetIndex * 140.0) + (attempt * 320.0)).clamp(
+          0.0,
+          maxExtent,
+        );
+        _ayahScrollController.jumpTo(probeOffset);
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 16));
+      rowContext = _ayahRowKey(targetKey).currentContext;
+    }
+
+    if (rowContext != null) {
+      await Scrollable.ensureVisible(
+        rowContext,
+        duration: const Duration(milliseconds: 300),
+        alignment: 0.2,
+        curve: Curves.easeOut,
+      );
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    _jumpHighlightTimer?.cancel();
+    setState(() {
+      _pendingJumpAyah = null;
+      _pendingJumpSurah = null;
+      _jumpHighlightedAyahKey = targetKey;
+    });
+
+    _jumpHighlightTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        if (_jumpHighlightedAyahKey == targetKey) {
+          _jumpHighlightedAyahKey = null;
+        }
+      });
+    });
+  }
 
   Future<void> _showAyahActions(AyahData ayah) async {
     final action = await showModalBottomSheet<_AyahAction>(
@@ -297,16 +471,20 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             child: Text('No ayahs found for Surah $_selectedSurah.'),
           );
         }
+        _queuePendingJump(ayahs);
 
         return ListView.separated(
           key: const ValueKey('reader_ayah_list'),
+          controller: _ayahScrollController,
           padding: const EdgeInsets.all(16),
           itemBuilder: (context, index) {
             final ayah = ayahs[index];
             final key = _ayahKey(ayah);
             return _AyahRow(
+              rowKey: _ayahRowKey(key),
               ayah: ayah,
               hovered: _hoveredAyahKey == key,
+              jumpHighlighted: _jumpHighlightedAyahKey == key,
               onHoverChanged: (isHovered) {
                 setState(() {
                   if (isHovered) {
@@ -393,78 +571,99 @@ class _NoteDraft {
 
 class _AyahRow extends StatelessWidget {
   const _AyahRow({
+    required this.rowKey,
     required this.ayah,
     required this.hovered,
+    required this.jumpHighlighted,
     required this.onHoverChanged,
     required this.onTap,
   });
 
+  final GlobalKey rowKey;
   final AyahData ayah;
   final bool hovered;
+  final bool jumpHighlighted;
   final ValueChanged<bool> onHoverChanged;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final ayahKey = '${ayah.surah}:${ayah.ayah}';
-    final background = hovered
-        ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-        : Colors.transparent;
+    final colorScheme = Theme.of(context).colorScheme;
+    final background = jumpHighlighted
+        ? colorScheme.secondaryContainer.withOpacity(0.7)
+        : hovered
+            ? colorScheme.primary.withOpacity(0.08)
+            : Colors.transparent;
 
-    return MouseRegion(
-      key: ValueKey('ayah_mouse_$ayahKey'),
-      onEnter: (_) => onHoverChanged(true),
-      onExit: (_) => onHoverChanged(false),
-      child: Material(
-        color: background,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          key: ValueKey('ayah_row_$ayahKey'),
+    return KeyedSubtree(
+      key: rowKey,
+      child: MouseRegion(
+        key: ValueKey('ayah_mouse_$ayahKey'),
+        onEnter: (_) => onHoverChanged(true),
+        onExit: (_) => onHoverChanged(false),
+        child: Material(
+          key: ValueKey('ayah_material_$ayahKey'),
+          color: background,
           borderRadius: BorderRadius.circular(8),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      '${ayah.surah}:${ayah.ayah}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(width: 8),
-                    if (ayah.pageMadina != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          'Page ${ayah.pageMadina}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
+          child: InkWell(
+            key: ValueKey('ayah_row_$ayahKey'),
+            borderRadius: BorderRadius.circular(8),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        '${ayah.surah}:${ayah.ayah}',
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Text(
-                    ayah.textUthmani,
-                    textAlign: TextAlign.right,
-                    style: Theme.of(context).textTheme.titleLarge,
+                      const SizedBox(width: 8),
+                      if (ayah.pageMadina != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Page ${ayah.pageMadina}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Text(
+                      ayah.textUthmani,
+                      textAlign: TextAlign.right,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class _VerseJumpTarget {
+  const _VerseJumpTarget({
+    required this.surah,
+    required this.ayah,
+  });
+
+  final int surah;
+  final int ayah;
 }

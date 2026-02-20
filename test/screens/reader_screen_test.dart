@@ -146,6 +146,48 @@ void main() {
     expect(copied?.text, 'ٱلْحَمْدُ لِلَّٰهِ');
     expect(find.text('Copied verse text.'), findsOneWidget);
   });
+
+  testWidgets(
+    'route target loads surah, jumps to ayah, and clears jump highlight',
+    (tester) async {
+      await db.batch((batch) {
+        batch.insertAll(
+          db.ayah,
+          [
+            for (var i = 3; i <= 40; i++)
+              AyahCompanion.insert(
+                surah: 1,
+                ayah: i,
+                textUthmani: 'ayah $i',
+              ),
+          ],
+          mode: InsertMode.insertOrIgnore,
+        );
+      });
+
+      await _pumpReader(
+        tester,
+        db,
+        screen: const ReaderScreen(
+          targetSurah: 1,
+          targetAyah: 30,
+        ),
+      );
+
+      final rowFinder = find.byKey(const ValueKey('ayah_row_1:30'));
+      final materialFinder = find.byKey(const ValueKey('ayah_material_1:30'));
+      expect(rowFinder, findsOneWidget);
+      expect(materialFinder, findsOneWidget);
+
+      final highlightedMaterial = tester.widget<Material>(materialFinder);
+      expect(highlightedMaterial.color, isNot(Colors.transparent));
+
+      await tester.pump(const Duration(milliseconds: 1700));
+
+      final clearedMaterial = tester.widget<Material>(materialFinder);
+      expect(clearedMaterial.color, Colors.transparent);
+    },
+  );
 }
 
 Future<void> _seedAyahs(AppDatabase db) async {
@@ -175,14 +217,18 @@ Future<void> _seedAyahs(AppDatabase db) async {
   });
 }
 
-Future<void> _pumpReader(WidgetTester tester, AppDatabase db) async {
+Future<void> _pumpReader(
+  WidgetTester tester,
+  AppDatabase db, {
+  ReaderScreen screen = const ReaderScreen(),
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
       ],
-      child: const MaterialApp(
-        home: Scaffold(body: ReaderScreen()),
+      child: MaterialApp(
+        home: Scaffold(body: screen),
       ),
     ),
   );
