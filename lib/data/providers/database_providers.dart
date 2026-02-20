@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../database/app_database.dart';
 import '../repositories/bookmark_repo.dart';
+import '../repositories/calibration_repo.dart';
 import '../repositories/mem_unit_repo.dart';
 import '../repositories/note_repo.dart';
 import '../repositories/progress_repo.dart';
@@ -9,6 +10,7 @@ import '../repositories/quran_repo.dart';
 import '../repositories/review_log_repo.dart';
 import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
+import '../services/calibration_service.dart';
 import '../services/daily_planner.dart';
 import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
@@ -50,6 +52,11 @@ final reviewLogRepoProvider = Provider<ReviewLogRepo>((ref) {
   return ReviewLogRepo(db);
 });
 
+final calibrationRepoProvider = Provider<CalibrationRepo>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return CalibrationRepo(db);
+});
+
 final settingsRepoProvider = Provider<SettingsRepo>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return SettingsRepo(db);
@@ -88,6 +95,12 @@ final dailyPlannerProvider = Provider<DailyPlanner>((ref) {
     memUnitRepo,
     newUnitGenerator,
   );
+});
+
+final calibrationServiceProvider = Provider<CalibrationService>((ref) {
+  final calibrationRepo = ref.watch(calibrationRepoProvider);
+  final settingsRepo = ref.watch(settingsRepoProvider);
+  return CalibrationService(calibrationRepo, settingsRepo);
 });
 
 final quranTextImporterServiceProvider = Provider<QuranTextImporterService>((

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/progress_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
+import 'package:hifz_planner/data/time/local_day_time.dart';
 import 'package:hifz_planner/screens/plan_screen.dart';
 
 void main() {
@@ -28,6 +30,15 @@ void main() {
     expect(find.byKey(const ValueKey('plan_max_new_pages')), findsOneWidget);
     expect(find.byKey(const ValueKey('plan_max_new_units')), findsOneWidget);
     expect(find.text('Suggested Plan (Editable)'), findsOneWidget);
+    expect(find.text('Calibration Mode (Optional)'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_calibration_new_duration')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_calibration_review_duration')),
+        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('plan_apply_calibration_button')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('weekly mode computes weekday chips from weekly minutes',
@@ -153,7 +164,8 @@ void main() {
     );
     await tester.pump();
 
-    await _tapVisible(tester, find.byKey(const ValueKey('plan_activate_button')));
+    await _tapVisible(
+        tester, find.byKey(const ValueKey('plan_activate_button')));
 
     final settings = await SettingsRepo(db).getSettings();
     expect(settings.profile, 'standard');
@@ -184,7 +196,8 @@ void main() {
     );
     await _pumpPlan(tester, db);
 
-    await _tapVisible(tester, find.byKey(const ValueKey('plan_activate_button')));
+    await _tapVisible(
+        tester, find.byKey(const ValueKey('plan_activate_button')));
 
     final cursor = await progressRepo.getCursor();
     expect(cursor.nextSurah, 2);
@@ -204,7 +217,8 @@ void main() {
     );
 
     await _tapVisible(tester, forceSwitch);
-    await _tapVisible(tester, find.byKey(const ValueKey('plan_activate_button')));
+    await _tapVisible(
+        tester, find.byKey(const ValueKey('plan_activate_button')));
 
     final settings = await SettingsRepo(db).getSettings();
     expect(settings.forceRevisionOnly, 0);
@@ -224,10 +238,219 @@ void main() {
     );
 
     await _tapVisible(tester, metadataSwitch);
-    await _tapVisible(tester, find.byKey(const ValueKey('plan_activate_button')));
+    await _tapVisible(
+        tester, find.byKey(const ValueKey('plan_activate_button')));
 
     final settings = await SettingsRepo(db).getSettings();
     expect(settings.requirePageMetadata, 0);
+  });
+
+  testWidgets('adding calibration samples persists rows and refreshes preview',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await _pumpPlan(tester, db);
+
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_new_duration')),
+      '2',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_new_ayah_count')),
+      '1',
+    );
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_add_new')),
+    );
+
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_review_duration')),
+      '1',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_review_ayah_count')),
+      '2',
+    );
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_add_review')),
+    );
+
+    final rows = await (db.select(db.calibrationSample)
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+        .get();
+    expect(rows.length, 2);
+    expect(rows.first.sampleKind, 'new_memorization');
+    expect(rows.last.sampleKind, 'review');
+
+    final newPreview = tester
+        .widget<Text>(
+            find.byKey(const ValueKey('plan_calibration_preview_new')))
+        .data!;
+    final reviewPreview = tester
+        .widget<Text>(
+          find.byKey(const ValueKey('plan_calibration_preview_review')),
+        )
+        .data!;
+    expect(newPreview.contains('New samples: 1'), isTrue);
+    expect(reviewPreview.contains('Review samples: 1'), isTrue);
+  });
+
+  testWidgets('apply calibration now updates settings and grade distribution',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await _pumpPlan(tester, db);
+
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_new_duration')),
+      '2',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_new_ayah_count')),
+      '1',
+    );
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_add_new')),
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_review_duration')),
+      '1',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_review_ayah_count')),
+      '2',
+    );
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_add_review')),
+    );
+
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q5')), '40');
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q4')), '30');
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q3')), '20');
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q2')), '8');
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q0')), '2');
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_apply_calibration_button')),
+    );
+
+    final settings = await SettingsRepo(db).getSettings();
+    final pending = await SettingsRepo(db).getPendingCalibrationUpdate();
+
+    expect(settings.avgNewMinutesPerAyah, 2.0);
+    expect(settings.avgReviewMinutesPerAyah, 0.5);
+    expect(settings.typicalGradeDistributionJson, isNotNull);
+    final decoded = jsonDecode(settings.typicalGradeDistributionJson!);
+    expect(decoded['5'], 40);
+    expect(decoded['0'], 2);
+    expect(pending, isNull);
+  });
+
+  testWidgets(
+      'apply calibration from tomorrow creates pending update and keeps active settings',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final settingsRepo = SettingsRepo(db);
+
+    await settingsRepo.updateSettings(
+      avgNewMinutesPerAyah: 2.2,
+      avgReviewMinutesPerAyah: 0.9,
+      updatedAtDay: 12345,
+    );
+    await _pumpPlan(tester, db);
+
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_new_duration')),
+      '3',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_new_ayah_count')),
+      '1',
+    );
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_add_new')),
+    );
+
+    await _tapVisible(tester, find.text('Apply from tomorrow'));
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_apply_calibration_button')),
+    );
+
+    final today = localDayIndex(DateTime.now().toLocal());
+    final settings = await settingsRepo.getSettings(todayDayOverride: today);
+    final pending = await settingsRepo.getPendingCalibrationUpdate();
+
+    expect(settings.avgNewMinutesPerAyah, 2.2);
+    expect(settings.avgReviewMinutesPerAyah, 0.9);
+    expect(pending, isNotNull);
+    expect(pending!.effectiveDay, today + 1);
+    expect(pending.avgNewMinutesPerAyah, 3.0);
+  });
+
+  testWidgets('invalid grade distribution blocks calibration apply',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final settingsRepo = SettingsRepo(db);
+    await _pumpPlan(tester, db);
+
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_new_duration')),
+      '2',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_new_ayah_count')),
+      '1',
+    );
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_calibration_add_new')),
+    );
+
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q5')), '50');
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q4')), '20');
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q3')), '20');
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q2')), '5');
+    await _enterTextVisible(
+        tester, find.byKey(const ValueKey('plan_grade_q0')), '1');
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_apply_calibration_button')),
+    );
+
+    final settings = await settingsRepo.getSettings();
+    final pending = await settingsRepo.getPendingCalibrationUpdate();
+    expect(settings.typicalGradeDistributionJson, isNull);
+    expect(pending, isNull);
   });
 }
 

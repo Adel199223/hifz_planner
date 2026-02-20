@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
@@ -31,6 +31,8 @@ void main() {
     expect(tableNames.contains('review_log'), isTrue);
     expect(tableNames.contains('app_settings'), isTrue);
     expect(tableNames.contains('mem_progress'), isTrue);
+    expect(tableNames.contains('calibration_sample'), isTrue);
+    expect(tableNames.contains('pending_calibration_update'), isTrue);
   });
 
   test('enforces unique(surah, ayah) on ayah table', () async {
@@ -94,6 +96,7 @@ void main() {
     expect(settings.avgNewMinutesPerAyah, 2.0);
     expect(settings.avgReviewMinutesPerAyah, 0.8);
     expect(settings.requirePageMetadata, 1);
+    expect(settings.typicalGradeDistributionJson, isNull);
     expect(settings.updatedAtDay, localDayIndex(DateTime.now().toLocal()));
 
     expect(progress.id, 1);
@@ -112,6 +115,19 @@ void main() {
     expect(indexNames.contains('idx_schedule_state_due_day'), isTrue);
     expect(indexNames.contains('idx_schedule_state_is_suspended'), isTrue);
     expect(indexNames.contains('idx_review_log_unit_id_ts_day'), isTrue);
+    expect(indexNames.contains('idx_calibration_sample_kind_day_id'), isTrue);
+  });
+
+  test('app_settings includes typical_grade_distribution_json column',
+      () async {
+    final rows = await db
+        .customSelect(
+          "PRAGMA table_info('app_settings')",
+        )
+        .get();
+    final names = rows.map((row) => row.read<String>('name')).toSet();
+
+    expect(names.contains('typical_grade_distribution_json'), isTrue);
   });
 
   test('deleting mem_unit cascades schedule_state and review_log rows',

@@ -1,22 +1,37 @@
-# APP_KNOWLEDGE — Hifz Planner (Desktop first, Mobile/Web later)
-
 ## 0. How to use this knowledge pack (for the Codex/AI agent)
-- Primary source of truth for project Q&A: `docs/assistant/APP_KNOWLEDGE.md` (this file).
-- Always answer with file-path-grounded facts, then suggest a command to verify.
-- If a claim cannot be proven from files/grep output, label it `Uncertain` and provide a command to verify.
-- Assistant routing hint:
-  - If asked “where does X live?”, inspect **Section J. Where is X? index** first, then verify with:
-    - `rg -n "symbol_or_keyword" lib test tooling`
-- Keep changes small and localized. Avoid rewriting unrelated files.
 
-## 0b. How we work / Workflow (token-efficient)
-- Safe change flow:
-  1) Snapshot: `git status -sb`, `git diff --stat`, `flutter --version`
-  2) Run tests: `flutter test`
-  3) Make a focused change
-  4) Re-run relevant tests
-  5) Commit with a descriptive message
-- AI agent rule: when asked to implement a change, first identify the owning file(s) from Section J and verify with `rg`.
+**Read order (keep token usage low):**
+1) `agent.md` (Codex entrypoint / operating rules)
+2) `docs/assistant/APP_KNOWLEDGE.md` (this file: repo map + commands + pointers)
+3) Only open other docs when relevant (examples: testing, DB, assets, UI)
+
+**Rules:**
+- Prefer file-path-grounded answers. When unsure, say `Uncertain` and give a command to verify.
+- Before implementing changes, locate the owning file(s) using Section J and verify with ripgrep:
+  - `rg -n "symbol_or_keyword" lib test tooling`
+- Keep diffs small and localized; avoid repo-wide rewrites.
+- Prefer adding small helpers/tests over fragile test sleeps/timeouts.
+
+## 0b. How we work / Workflow (token-efficient, Windows-friendly)
+
+**Safe change flow:**
+1) Snapshot:
+   - `git status --short`
+   - `git diff --name-only`
+   - `flutter --version`
+2) Verify (default):
+   - `dart format .`
+   - `flutter analyze`
+   - `flutter test -j 1 -r expanded`
+3) Make a focused change.
+4) Re-run the smallest relevant test target(s), then the full suite if practical.
+5) Commit with a descriptive message.
+
+**Windows notes that prevent common failures:**
+- `flutter format` is not a Flutter command → use `dart format .`
+- Prefer `flutter test -j 1` on Windows to avoid occasional build/test cache file conflicts.
+- If `flutter` is not on PATH in the current shell, run it via the absolute path:
+  - `& "C:\dev\tools\flutter\bin\flutter.bat" <command>`
 
 ---
 
@@ -63,3 +78,32 @@ Primary user workflows:
 ```powershell
 flutter pub get
 flutter run -d windows
+
+Run (PATH-safe / PowerShell-safe)
+Use this when flutter isn’t recognized in the current terminal/session:
+& "C:\dev\tools\flutter\bin\flutter.bat" pub get
+& "C:\dev\tools\flutter\bin\flutter.bat" run -d windows
+
+Verify (default, Windows-safe)
+dart format .
+flutter analyze
+flutter test -j 1 -r expanded
+
+Targeted tests (run the smallest thing that proves the change)
+flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
+flutter test -j 1 -r expanded test/screens/notes_screen_test.dart
+flutter test -j 1 -r expanded test/screens/bookmarks_screen_test.dart
+flutter test -j 1 -r expanded test/screens/settings_screen_test.dart
+flutter test -j 1 -r expanded test/widget_test.dart
+
+Widget test stability rule (important)
+Avoid unbounded pumpAndSettle() when dialogs/animations/timers exist.
+Prefer the bounded helper:
+test/helpers/pump_until_found.dart → pumpUntilFound(...)
+
+Assets policy (Tanzil)
+The repo may contain only assets/quran/.gitkeep during development.
+If assets/quran/tanzil_uthmani.txt is not present locally, integrity tests should skip (expected).
+When you later decide to bundle the Tanzil text in the repo, place it at:
+assets/quran/tanzil_uthmani.txt
+

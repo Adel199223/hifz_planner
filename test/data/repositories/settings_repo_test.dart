@@ -30,6 +30,7 @@ void main() {
     expect(settings.avgNewMinutesPerAyah, 2.0);
     expect(settings.avgReviewMinutesPerAyah, 0.8);
     expect(settings.requirePageMetadata, 1);
+    expect(settings.typicalGradeDistributionJson, isNull);
   });
 
   test('updateSettings partially updates fields and updates updated_at_day',
@@ -56,5 +57,55 @@ void main() {
 
     expect(refreshed.maxNewPagesPerDay, 2);
     expect(refreshed.updatedAtDay, currentDay);
+  });
+
+  test('getSettings auto-applies due pending calibration updates', () async {
+    await repo.upsertPendingCalibrationUpdate(
+      avgNewMinutesPerAyah: 1.7,
+      avgReviewMinutesPerAyah: 0.6,
+      typicalGradeDistributionJson: '{"5":40,"4":30,"3":20,"2":8,"0":2}',
+      effectiveDay: 12000,
+      createdAtDay: 11999,
+    );
+
+    final settings = await repo.getSettings(todayDayOverride: 12000);
+    final pending = await repo.getPendingCalibrationUpdate();
+
+    expect(settings.avgNewMinutesPerAyah, 1.7);
+    expect(settings.avgReviewMinutesPerAyah, 0.6);
+    expect(
+      settings.typicalGradeDistributionJson,
+      '{"5":40,"4":30,"3":20,"2":8,"0":2}',
+    );
+    expect(settings.updatedAtDay, 12000);
+    expect(pending, isNull);
+  });
+
+  test('future pending calibration update does not apply early', () async {
+    await repo.updateSettings(
+      avgNewMinutesPerAyah: 2.2,
+      avgReviewMinutesPerAyah: 0.9,
+      typicalGradeDistributionJson: '{"5":30,"4":30,"3":20,"2":10,"0":10}',
+      updatedAtDay: 10000,
+    );
+    await repo.upsertPendingCalibrationUpdate(
+      avgNewMinutesPerAyah: 1.5,
+      avgReviewMinutesPerAyah: 0.5,
+      typicalGradeDistributionJson: '{"5":50,"4":25,"3":15,"2":7,"0":3}',
+      effectiveDay: 20000,
+      createdAtDay: 15000,
+    );
+
+    final settings = await repo.getSettings(todayDayOverride: 19999);
+    final pending = await repo.getPendingCalibrationUpdate();
+
+    expect(settings.avgNewMinutesPerAyah, 2.2);
+    expect(settings.avgReviewMinutesPerAyah, 0.9);
+    expect(
+      settings.typicalGradeDistributionJson,
+      '{"5":30,"4":30,"3":20,"2":10,"0":10}',
+    );
+    expect(pending, isNotNull);
+    expect(pending!.effectiveDay, 20000);
   });
 }

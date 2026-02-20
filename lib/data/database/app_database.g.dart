@@ -2604,6 +2604,13 @@ class $AppSettingsTable extends AppSettings
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(1));
+  static const VerificationMeta _typicalGradeDistributionJsonMeta =
+      const VerificationMeta('typicalGradeDistributionJson');
+  @override
+  late final GeneratedColumn<String> typicalGradeDistributionJson =
+      GeneratedColumn<String>(
+          'typical_grade_distribution_json', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _updatedAtDayMeta =
       const VerificationMeta('updatedAtDay');
   @override
@@ -2622,6 +2629,7 @@ class $AppSettingsTable extends AppSettings
         avgNewMinutesPerAyah,
         avgReviewMinutesPerAyah,
         requirePageMetadata,
+        typicalGradeDistributionJson,
         updatedAtDay
       ];
   @override
@@ -2704,6 +2712,13 @@ class $AppSettingsTable extends AppSettings
           requirePageMetadata.isAcceptableOrUnknown(
               data['require_page_metadata']!, _requirePageMetadataMeta));
     }
+    if (data.containsKey('typical_grade_distribution_json')) {
+      context.handle(
+          _typicalGradeDistributionJsonMeta,
+          typicalGradeDistributionJson.isAcceptableOrUnknown(
+              data['typical_grade_distribution_json']!,
+              _typicalGradeDistributionJsonMeta));
+    }
     if (data.containsKey('updated_at_day')) {
       context.handle(
           _updatedAtDayMeta,
@@ -2744,6 +2759,9 @@ class $AppSettingsTable extends AppSettings
           data['${effectivePrefix}avg_review_minutes_per_ayah'])!,
       requirePageMetadata: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}require_page_metadata'])!,
+      typicalGradeDistributionJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}typical_grade_distribution_json']),
       updatedAtDay: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}updated_at_day'])!,
     );
@@ -2766,6 +2784,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final double avgNewMinutesPerAyah;
   final double avgReviewMinutesPerAyah;
   final int requirePageMetadata;
+  final String? typicalGradeDistributionJson;
   final int updatedAtDay;
   const AppSetting(
       {required this.id,
@@ -2778,6 +2797,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       required this.avgNewMinutesPerAyah,
       required this.avgReviewMinutesPerAyah,
       required this.requirePageMetadata,
+      this.typicalGradeDistributionJson,
       required this.updatedAtDay});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2795,6 +2815,10 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['avg_review_minutes_per_ayah'] =
         Variable<double>(avgReviewMinutesPerAyah);
     map['require_page_metadata'] = Variable<int>(requirePageMetadata);
+    if (!nullToAbsent || typicalGradeDistributionJson != null) {
+      map['typical_grade_distribution_json'] =
+          Variable<String>(typicalGradeDistributionJson);
+    }
     map['updated_at_day'] = Variable<int>(updatedAtDay);
     return map;
   }
@@ -2813,6 +2837,10 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       avgNewMinutesPerAyah: Value(avgNewMinutesPerAyah),
       avgReviewMinutesPerAyah: Value(avgReviewMinutesPerAyah),
       requirePageMetadata: Value(requirePageMetadata),
+      typicalGradeDistributionJson:
+          typicalGradeDistributionJson == null && nullToAbsent
+              ? const Value.absent()
+              : Value(typicalGradeDistributionJson),
       updatedAtDay: Value(updatedAtDay),
     );
   }
@@ -2836,6 +2864,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           serializer.fromJson<double>(json['avgReviewMinutesPerAyah']),
       requirePageMetadata:
           serializer.fromJson<int>(json['requirePageMetadata']),
+      typicalGradeDistributionJson:
+          serializer.fromJson<String?>(json['typicalGradeDistributionJson']),
       updatedAtDay: serializer.fromJson<int>(json['updatedAtDay']),
     );
   }
@@ -2854,6 +2884,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'avgReviewMinutesPerAyah':
           serializer.toJson<double>(avgReviewMinutesPerAyah),
       'requirePageMetadata': serializer.toJson<int>(requirePageMetadata),
+      'typicalGradeDistributionJson':
+          serializer.toJson<String?>(typicalGradeDistributionJson),
       'updatedAtDay': serializer.toJson<int>(updatedAtDay),
     };
   }
@@ -2869,6 +2901,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           double? avgNewMinutesPerAyah,
           double? avgReviewMinutesPerAyah,
           int? requirePageMetadata,
+          Value<String?> typicalGradeDistributionJson = const Value.absent(),
           int? updatedAtDay}) =>
       AppSetting(
         id: id ?? this.id,
@@ -2884,6 +2917,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
         avgReviewMinutesPerAyah:
             avgReviewMinutesPerAyah ?? this.avgReviewMinutesPerAyah,
         requirePageMetadata: requirePageMetadata ?? this.requirePageMetadata,
+        typicalGradeDistributionJson: typicalGradeDistributionJson.present
+            ? typicalGradeDistributionJson.value
+            : this.typicalGradeDistributionJson,
         updatedAtDay: updatedAtDay ?? this.updatedAtDay,
       );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
@@ -2914,6 +2950,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       requirePageMetadata: data.requirePageMetadata.present
           ? data.requirePageMetadata.value
           : this.requirePageMetadata,
+      typicalGradeDistributionJson: data.typicalGradeDistributionJson.present
+          ? data.typicalGradeDistributionJson.value
+          : this.typicalGradeDistributionJson,
       updatedAtDay: data.updatedAtDay.present
           ? data.updatedAtDay.value
           : this.updatedAtDay,
@@ -2933,6 +2972,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('avgNewMinutesPerAyah: $avgNewMinutesPerAyah, ')
           ..write('avgReviewMinutesPerAyah: $avgReviewMinutesPerAyah, ')
           ..write('requirePageMetadata: $requirePageMetadata, ')
+          ..write(
+              'typicalGradeDistributionJson: $typicalGradeDistributionJson, ')
           ..write('updatedAtDay: $updatedAtDay')
           ..write(')'))
         .toString();
@@ -2950,6 +2991,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       avgNewMinutesPerAyah,
       avgReviewMinutesPerAyah,
       requirePageMetadata,
+      typicalGradeDistributionJson,
       updatedAtDay);
   @override
   bool operator ==(Object other) =>
@@ -2965,6 +3007,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.avgNewMinutesPerAyah == this.avgNewMinutesPerAyah &&
           other.avgReviewMinutesPerAyah == this.avgReviewMinutesPerAyah &&
           other.requirePageMetadata == this.requirePageMetadata &&
+          other.typicalGradeDistributionJson ==
+              this.typicalGradeDistributionJson &&
           other.updatedAtDay == this.updatedAtDay);
 }
 
@@ -2979,6 +3023,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<double> avgNewMinutesPerAyah;
   final Value<double> avgReviewMinutesPerAyah;
   final Value<int> requirePageMetadata;
+  final Value<String?> typicalGradeDistributionJson;
   final Value<int> updatedAtDay;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
@@ -2991,6 +3036,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.avgNewMinutesPerAyah = const Value.absent(),
     this.avgReviewMinutesPerAyah = const Value.absent(),
     this.requirePageMetadata = const Value.absent(),
+    this.typicalGradeDistributionJson = const Value.absent(),
     this.updatedAtDay = const Value.absent(),
   });
   AppSettingsCompanion.insert({
@@ -3004,6 +3050,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     required double avgNewMinutesPerAyah,
     required double avgReviewMinutesPerAyah,
     this.requirePageMetadata = const Value.absent(),
+    this.typicalGradeDistributionJson = const Value.absent(),
     required int updatedAtDay,
   })  : profile = Value(profile),
         forceRevisionOnly = Value(forceRevisionOnly),
@@ -3024,6 +3071,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<double>? avgNewMinutesPerAyah,
     Expression<double>? avgReviewMinutesPerAyah,
     Expression<int>? requirePageMetadata,
+    Expression<String>? typicalGradeDistributionJson,
     Expression<int>? updatedAtDay,
   }) {
     return RawValuesInsertable({
@@ -3042,6 +3090,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
         'avg_review_minutes_per_ayah': avgReviewMinutesPerAyah,
       if (requirePageMetadata != null)
         'require_page_metadata': requirePageMetadata,
+      if (typicalGradeDistributionJson != null)
+        'typical_grade_distribution_json': typicalGradeDistributionJson,
       if (updatedAtDay != null) 'updated_at_day': updatedAtDay,
     });
   }
@@ -3057,6 +3107,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       Value<double>? avgNewMinutesPerAyah,
       Value<double>? avgReviewMinutesPerAyah,
       Value<int>? requirePageMetadata,
+      Value<String?>? typicalGradeDistributionJson,
       Value<int>? updatedAtDay}) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -3070,6 +3121,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       avgReviewMinutesPerAyah:
           avgReviewMinutesPerAyah ?? this.avgReviewMinutesPerAyah,
       requirePageMetadata: requirePageMetadata ?? this.requirePageMetadata,
+      typicalGradeDistributionJson:
+          typicalGradeDistributionJson ?? this.typicalGradeDistributionJson,
       updatedAtDay: updatedAtDay ?? this.updatedAtDay,
     );
   }
@@ -3110,6 +3163,10 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (requirePageMetadata.present) {
       map['require_page_metadata'] = Variable<int>(requirePageMetadata.value);
     }
+    if (typicalGradeDistributionJson.present) {
+      map['typical_grade_distribution_json'] =
+          Variable<String>(typicalGradeDistributionJson.value);
+    }
     if (updatedAtDay.present) {
       map['updated_at_day'] = Variable<int>(updatedAtDay.value);
     }
@@ -3129,6 +3186,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('avgNewMinutesPerAyah: $avgNewMinutesPerAyah, ')
           ..write('avgReviewMinutesPerAyah: $avgReviewMinutesPerAyah, ')
           ..write('requirePageMetadata: $requirePageMetadata, ')
+          ..write(
+              'typicalGradeDistributionJson: $typicalGradeDistributionJson, ')
           ..write('updatedAtDay: $updatedAtDay')
           ..write(')'))
         .toString();
@@ -3395,6 +3454,783 @@ class MemProgressCompanion extends UpdateCompanion<MemProgressData> {
   }
 }
 
+class $CalibrationSampleTable extends CalibrationSample
+    with TableInfo<$CalibrationSampleTable, CalibrationSampleData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CalibrationSampleTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _sampleKindMeta =
+      const VerificationMeta('sampleKind');
+  @override
+  late final GeneratedColumn<String> sampleKind = GeneratedColumn<String>(
+      'sample_kind', aliasedName, false,
+      check: () => sampleKind.isIn(const ['new_memorization', 'review']),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _durationSecondsMeta =
+      const VerificationMeta('durationSeconds');
+  @override
+  late final GeneratedColumn<int> durationSeconds = GeneratedColumn<int>(
+      'duration_seconds', aliasedName, false,
+      check: () => ComparableExpr(durationSeconds).isBiggerThanValue(0),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  static const VerificationMeta _ayahCountMeta =
+      const VerificationMeta('ayahCount');
+  @override
+  late final GeneratedColumn<int> ayahCount = GeneratedColumn<int>(
+      'ayah_count', aliasedName, false,
+      check: () => ComparableExpr(ayahCount).isBiggerThanValue(0),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  static const VerificationMeta _createdAtDayMeta =
+      const VerificationMeta('createdAtDay');
+  @override
+  late final GeneratedColumn<int> createdAtDay = GeneratedColumn<int>(
+      'created_at_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtSecondsMeta =
+      const VerificationMeta('createdAtSeconds');
+  @override
+  late final GeneratedColumn<int> createdAtSeconds = GeneratedColumn<int>(
+      'created_at_seconds', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        sampleKind,
+        durationSeconds,
+        ayahCount,
+        createdAtDay,
+        createdAtSeconds
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'calibration_sample';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CalibrationSampleData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('sample_kind')) {
+      context.handle(
+          _sampleKindMeta,
+          sampleKind.isAcceptableOrUnknown(
+              data['sample_kind']!, _sampleKindMeta));
+    } else if (isInserting) {
+      context.missing(_sampleKindMeta);
+    }
+    if (data.containsKey('duration_seconds')) {
+      context.handle(
+          _durationSecondsMeta,
+          durationSeconds.isAcceptableOrUnknown(
+              data['duration_seconds']!, _durationSecondsMeta));
+    } else if (isInserting) {
+      context.missing(_durationSecondsMeta);
+    }
+    if (data.containsKey('ayah_count')) {
+      context.handle(_ayahCountMeta,
+          ayahCount.isAcceptableOrUnknown(data['ayah_count']!, _ayahCountMeta));
+    } else if (isInserting) {
+      context.missing(_ayahCountMeta);
+    }
+    if (data.containsKey('created_at_day')) {
+      context.handle(
+          _createdAtDayMeta,
+          createdAtDay.isAcceptableOrUnknown(
+              data['created_at_day']!, _createdAtDayMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtDayMeta);
+    }
+    if (data.containsKey('created_at_seconds')) {
+      context.handle(
+          _createdAtSecondsMeta,
+          createdAtSeconds.isAcceptableOrUnknown(
+              data['created_at_seconds']!, _createdAtSecondsMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CalibrationSampleData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CalibrationSampleData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      sampleKind: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sample_kind'])!,
+      durationSeconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}duration_seconds'])!,
+      ayahCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ayah_count'])!,
+      createdAtDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at_day'])!,
+      createdAtSeconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at_seconds']),
+    );
+  }
+
+  @override
+  $CalibrationSampleTable createAlias(String alias) {
+    return $CalibrationSampleTable(attachedDatabase, alias);
+  }
+}
+
+class CalibrationSampleData extends DataClass
+    implements Insertable<CalibrationSampleData> {
+  final int id;
+  final String sampleKind;
+  final int durationSeconds;
+  final int ayahCount;
+  final int createdAtDay;
+  final int? createdAtSeconds;
+  const CalibrationSampleData(
+      {required this.id,
+      required this.sampleKind,
+      required this.durationSeconds,
+      required this.ayahCount,
+      required this.createdAtDay,
+      this.createdAtSeconds});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['sample_kind'] = Variable<String>(sampleKind);
+    map['duration_seconds'] = Variable<int>(durationSeconds);
+    map['ayah_count'] = Variable<int>(ayahCount);
+    map['created_at_day'] = Variable<int>(createdAtDay);
+    if (!nullToAbsent || createdAtSeconds != null) {
+      map['created_at_seconds'] = Variable<int>(createdAtSeconds);
+    }
+    return map;
+  }
+
+  CalibrationSampleCompanion toCompanion(bool nullToAbsent) {
+    return CalibrationSampleCompanion(
+      id: Value(id),
+      sampleKind: Value(sampleKind),
+      durationSeconds: Value(durationSeconds),
+      ayahCount: Value(ayahCount),
+      createdAtDay: Value(createdAtDay),
+      createdAtSeconds: createdAtSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAtSeconds),
+    );
+  }
+
+  factory CalibrationSampleData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CalibrationSampleData(
+      id: serializer.fromJson<int>(json['id']),
+      sampleKind: serializer.fromJson<String>(json['sampleKind']),
+      durationSeconds: serializer.fromJson<int>(json['durationSeconds']),
+      ayahCount: serializer.fromJson<int>(json['ayahCount']),
+      createdAtDay: serializer.fromJson<int>(json['createdAtDay']),
+      createdAtSeconds: serializer.fromJson<int?>(json['createdAtSeconds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'sampleKind': serializer.toJson<String>(sampleKind),
+      'durationSeconds': serializer.toJson<int>(durationSeconds),
+      'ayahCount': serializer.toJson<int>(ayahCount),
+      'createdAtDay': serializer.toJson<int>(createdAtDay),
+      'createdAtSeconds': serializer.toJson<int?>(createdAtSeconds),
+    };
+  }
+
+  CalibrationSampleData copyWith(
+          {int? id,
+          String? sampleKind,
+          int? durationSeconds,
+          int? ayahCount,
+          int? createdAtDay,
+          Value<int?> createdAtSeconds = const Value.absent()}) =>
+      CalibrationSampleData(
+        id: id ?? this.id,
+        sampleKind: sampleKind ?? this.sampleKind,
+        durationSeconds: durationSeconds ?? this.durationSeconds,
+        ayahCount: ayahCount ?? this.ayahCount,
+        createdAtDay: createdAtDay ?? this.createdAtDay,
+        createdAtSeconds: createdAtSeconds.present
+            ? createdAtSeconds.value
+            : this.createdAtSeconds,
+      );
+  CalibrationSampleData copyWithCompanion(CalibrationSampleCompanion data) {
+    return CalibrationSampleData(
+      id: data.id.present ? data.id.value : this.id,
+      sampleKind:
+          data.sampleKind.present ? data.sampleKind.value : this.sampleKind,
+      durationSeconds: data.durationSeconds.present
+          ? data.durationSeconds.value
+          : this.durationSeconds,
+      ayahCount: data.ayahCount.present ? data.ayahCount.value : this.ayahCount,
+      createdAtDay: data.createdAtDay.present
+          ? data.createdAtDay.value
+          : this.createdAtDay,
+      createdAtSeconds: data.createdAtSeconds.present
+          ? data.createdAtSeconds.value
+          : this.createdAtSeconds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalibrationSampleData(')
+          ..write('id: $id, ')
+          ..write('sampleKind: $sampleKind, ')
+          ..write('durationSeconds: $durationSeconds, ')
+          ..write('ayahCount: $ayahCount, ')
+          ..write('createdAtDay: $createdAtDay, ')
+          ..write('createdAtSeconds: $createdAtSeconds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, sampleKind, durationSeconds, ayahCount,
+      createdAtDay, createdAtSeconds);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CalibrationSampleData &&
+          other.id == this.id &&
+          other.sampleKind == this.sampleKind &&
+          other.durationSeconds == this.durationSeconds &&
+          other.ayahCount == this.ayahCount &&
+          other.createdAtDay == this.createdAtDay &&
+          other.createdAtSeconds == this.createdAtSeconds);
+}
+
+class CalibrationSampleCompanion
+    extends UpdateCompanion<CalibrationSampleData> {
+  final Value<int> id;
+  final Value<String> sampleKind;
+  final Value<int> durationSeconds;
+  final Value<int> ayahCount;
+  final Value<int> createdAtDay;
+  final Value<int?> createdAtSeconds;
+  const CalibrationSampleCompanion({
+    this.id = const Value.absent(),
+    this.sampleKind = const Value.absent(),
+    this.durationSeconds = const Value.absent(),
+    this.ayahCount = const Value.absent(),
+    this.createdAtDay = const Value.absent(),
+    this.createdAtSeconds = const Value.absent(),
+  });
+  CalibrationSampleCompanion.insert({
+    this.id = const Value.absent(),
+    required String sampleKind,
+    required int durationSeconds,
+    required int ayahCount,
+    required int createdAtDay,
+    this.createdAtSeconds = const Value.absent(),
+  })  : sampleKind = Value(sampleKind),
+        durationSeconds = Value(durationSeconds),
+        ayahCount = Value(ayahCount),
+        createdAtDay = Value(createdAtDay);
+  static Insertable<CalibrationSampleData> custom({
+    Expression<int>? id,
+    Expression<String>? sampleKind,
+    Expression<int>? durationSeconds,
+    Expression<int>? ayahCount,
+    Expression<int>? createdAtDay,
+    Expression<int>? createdAtSeconds,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sampleKind != null) 'sample_kind': sampleKind,
+      if (durationSeconds != null) 'duration_seconds': durationSeconds,
+      if (ayahCount != null) 'ayah_count': ayahCount,
+      if (createdAtDay != null) 'created_at_day': createdAtDay,
+      if (createdAtSeconds != null) 'created_at_seconds': createdAtSeconds,
+    });
+  }
+
+  CalibrationSampleCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? sampleKind,
+      Value<int>? durationSeconds,
+      Value<int>? ayahCount,
+      Value<int>? createdAtDay,
+      Value<int?>? createdAtSeconds}) {
+    return CalibrationSampleCompanion(
+      id: id ?? this.id,
+      sampleKind: sampleKind ?? this.sampleKind,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      ayahCount: ayahCount ?? this.ayahCount,
+      createdAtDay: createdAtDay ?? this.createdAtDay,
+      createdAtSeconds: createdAtSeconds ?? this.createdAtSeconds,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (sampleKind.present) {
+      map['sample_kind'] = Variable<String>(sampleKind.value);
+    }
+    if (durationSeconds.present) {
+      map['duration_seconds'] = Variable<int>(durationSeconds.value);
+    }
+    if (ayahCount.present) {
+      map['ayah_count'] = Variable<int>(ayahCount.value);
+    }
+    if (createdAtDay.present) {
+      map['created_at_day'] = Variable<int>(createdAtDay.value);
+    }
+    if (createdAtSeconds.present) {
+      map['created_at_seconds'] = Variable<int>(createdAtSeconds.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalibrationSampleCompanion(')
+          ..write('id: $id, ')
+          ..write('sampleKind: $sampleKind, ')
+          ..write('durationSeconds: $durationSeconds, ')
+          ..write('ayahCount: $ayahCount, ')
+          ..write('createdAtDay: $createdAtDay, ')
+          ..write('createdAtSeconds: $createdAtSeconds')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PendingCalibrationUpdateTable extends PendingCalibrationUpdate
+    with
+        TableInfo<$PendingCalibrationUpdateTable,
+            PendingCalibrationUpdateData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingCalibrationUpdateTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      check: () => id.equals(1),
+      type: DriftSqlType.int,
+      requiredDuringInsert: false);
+  static const VerificationMeta _avgNewMinutesPerAyahMeta =
+      const VerificationMeta('avgNewMinutesPerAyah');
+  @override
+  late final GeneratedColumn<double> avgNewMinutesPerAyah =
+      GeneratedColumn<double>('avg_new_minutes_per_ayah', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _avgReviewMinutesPerAyahMeta =
+      const VerificationMeta('avgReviewMinutesPerAyah');
+  @override
+  late final GeneratedColumn<double> avgReviewMinutesPerAyah =
+      GeneratedColumn<double>('avg_review_minutes_per_ayah', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _typicalGradeDistributionJsonMeta =
+      const VerificationMeta('typicalGradeDistributionJson');
+  @override
+  late final GeneratedColumn<String> typicalGradeDistributionJson =
+      GeneratedColumn<String>(
+          'typical_grade_distribution_json', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _effectiveDayMeta =
+      const VerificationMeta('effectiveDay');
+  @override
+  late final GeneratedColumn<int> effectiveDay = GeneratedColumn<int>(
+      'effective_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtDayMeta =
+      const VerificationMeta('createdAtDay');
+  @override
+  late final GeneratedColumn<int> createdAtDay = GeneratedColumn<int>(
+      'created_at_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        avgNewMinutesPerAyah,
+        avgReviewMinutesPerAyah,
+        typicalGradeDistributionJson,
+        effectiveDay,
+        createdAtDay
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_calibration_update';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PendingCalibrationUpdateData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('avg_new_minutes_per_ayah')) {
+      context.handle(
+          _avgNewMinutesPerAyahMeta,
+          avgNewMinutesPerAyah.isAcceptableOrUnknown(
+              data['avg_new_minutes_per_ayah']!, _avgNewMinutesPerAyahMeta));
+    }
+    if (data.containsKey('avg_review_minutes_per_ayah')) {
+      context.handle(
+          _avgReviewMinutesPerAyahMeta,
+          avgReviewMinutesPerAyah.isAcceptableOrUnknown(
+              data['avg_review_minutes_per_ayah']!,
+              _avgReviewMinutesPerAyahMeta));
+    }
+    if (data.containsKey('typical_grade_distribution_json')) {
+      context.handle(
+          _typicalGradeDistributionJsonMeta,
+          typicalGradeDistributionJson.isAcceptableOrUnknown(
+              data['typical_grade_distribution_json']!,
+              _typicalGradeDistributionJsonMeta));
+    }
+    if (data.containsKey('effective_day')) {
+      context.handle(
+          _effectiveDayMeta,
+          effectiveDay.isAcceptableOrUnknown(
+              data['effective_day']!, _effectiveDayMeta));
+    } else if (isInserting) {
+      context.missing(_effectiveDayMeta);
+    }
+    if (data.containsKey('created_at_day')) {
+      context.handle(
+          _createdAtDayMeta,
+          createdAtDay.isAcceptableOrUnknown(
+              data['created_at_day']!, _createdAtDayMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtDayMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PendingCalibrationUpdateData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingCalibrationUpdateData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      avgNewMinutesPerAyah: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}avg_new_minutes_per_ayah']),
+      avgReviewMinutesPerAyah: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}avg_review_minutes_per_ayah']),
+      typicalGradeDistributionJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}typical_grade_distribution_json']),
+      effectiveDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}effective_day'])!,
+      createdAtDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at_day'])!,
+    );
+  }
+
+  @override
+  $PendingCalibrationUpdateTable createAlias(String alias) {
+    return $PendingCalibrationUpdateTable(attachedDatabase, alias);
+  }
+}
+
+class PendingCalibrationUpdateData extends DataClass
+    implements Insertable<PendingCalibrationUpdateData> {
+  final int id;
+  final double? avgNewMinutesPerAyah;
+  final double? avgReviewMinutesPerAyah;
+  final String? typicalGradeDistributionJson;
+  final int effectiveDay;
+  final int createdAtDay;
+  const PendingCalibrationUpdateData(
+      {required this.id,
+      this.avgNewMinutesPerAyah,
+      this.avgReviewMinutesPerAyah,
+      this.typicalGradeDistributionJson,
+      required this.effectiveDay,
+      required this.createdAtDay});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || avgNewMinutesPerAyah != null) {
+      map['avg_new_minutes_per_ayah'] = Variable<double>(avgNewMinutesPerAyah);
+    }
+    if (!nullToAbsent || avgReviewMinutesPerAyah != null) {
+      map['avg_review_minutes_per_ayah'] =
+          Variable<double>(avgReviewMinutesPerAyah);
+    }
+    if (!nullToAbsent || typicalGradeDistributionJson != null) {
+      map['typical_grade_distribution_json'] =
+          Variable<String>(typicalGradeDistributionJson);
+    }
+    map['effective_day'] = Variable<int>(effectiveDay);
+    map['created_at_day'] = Variable<int>(createdAtDay);
+    return map;
+  }
+
+  PendingCalibrationUpdateCompanion toCompanion(bool nullToAbsent) {
+    return PendingCalibrationUpdateCompanion(
+      id: Value(id),
+      avgNewMinutesPerAyah: avgNewMinutesPerAyah == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avgNewMinutesPerAyah),
+      avgReviewMinutesPerAyah: avgReviewMinutesPerAyah == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avgReviewMinutesPerAyah),
+      typicalGradeDistributionJson:
+          typicalGradeDistributionJson == null && nullToAbsent
+              ? const Value.absent()
+              : Value(typicalGradeDistributionJson),
+      effectiveDay: Value(effectiveDay),
+      createdAtDay: Value(createdAtDay),
+    );
+  }
+
+  factory PendingCalibrationUpdateData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingCalibrationUpdateData(
+      id: serializer.fromJson<int>(json['id']),
+      avgNewMinutesPerAyah:
+          serializer.fromJson<double?>(json['avgNewMinutesPerAyah']),
+      avgReviewMinutesPerAyah:
+          serializer.fromJson<double?>(json['avgReviewMinutesPerAyah']),
+      typicalGradeDistributionJson:
+          serializer.fromJson<String?>(json['typicalGradeDistributionJson']),
+      effectiveDay: serializer.fromJson<int>(json['effectiveDay']),
+      createdAtDay: serializer.fromJson<int>(json['createdAtDay']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'avgNewMinutesPerAyah': serializer.toJson<double?>(avgNewMinutesPerAyah),
+      'avgReviewMinutesPerAyah':
+          serializer.toJson<double?>(avgReviewMinutesPerAyah),
+      'typicalGradeDistributionJson':
+          serializer.toJson<String?>(typicalGradeDistributionJson),
+      'effectiveDay': serializer.toJson<int>(effectiveDay),
+      'createdAtDay': serializer.toJson<int>(createdAtDay),
+    };
+  }
+
+  PendingCalibrationUpdateData copyWith(
+          {int? id,
+          Value<double?> avgNewMinutesPerAyah = const Value.absent(),
+          Value<double?> avgReviewMinutesPerAyah = const Value.absent(),
+          Value<String?> typicalGradeDistributionJson = const Value.absent(),
+          int? effectiveDay,
+          int? createdAtDay}) =>
+      PendingCalibrationUpdateData(
+        id: id ?? this.id,
+        avgNewMinutesPerAyah: avgNewMinutesPerAyah.present
+            ? avgNewMinutesPerAyah.value
+            : this.avgNewMinutesPerAyah,
+        avgReviewMinutesPerAyah: avgReviewMinutesPerAyah.present
+            ? avgReviewMinutesPerAyah.value
+            : this.avgReviewMinutesPerAyah,
+        typicalGradeDistributionJson: typicalGradeDistributionJson.present
+            ? typicalGradeDistributionJson.value
+            : this.typicalGradeDistributionJson,
+        effectiveDay: effectiveDay ?? this.effectiveDay,
+        createdAtDay: createdAtDay ?? this.createdAtDay,
+      );
+  PendingCalibrationUpdateData copyWithCompanion(
+      PendingCalibrationUpdateCompanion data) {
+    return PendingCalibrationUpdateData(
+      id: data.id.present ? data.id.value : this.id,
+      avgNewMinutesPerAyah: data.avgNewMinutesPerAyah.present
+          ? data.avgNewMinutesPerAyah.value
+          : this.avgNewMinutesPerAyah,
+      avgReviewMinutesPerAyah: data.avgReviewMinutesPerAyah.present
+          ? data.avgReviewMinutesPerAyah.value
+          : this.avgReviewMinutesPerAyah,
+      typicalGradeDistributionJson: data.typicalGradeDistributionJson.present
+          ? data.typicalGradeDistributionJson.value
+          : this.typicalGradeDistributionJson,
+      effectiveDay: data.effectiveDay.present
+          ? data.effectiveDay.value
+          : this.effectiveDay,
+      createdAtDay: data.createdAtDay.present
+          ? data.createdAtDay.value
+          : this.createdAtDay,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingCalibrationUpdateData(')
+          ..write('id: $id, ')
+          ..write('avgNewMinutesPerAyah: $avgNewMinutesPerAyah, ')
+          ..write('avgReviewMinutesPerAyah: $avgReviewMinutesPerAyah, ')
+          ..write(
+              'typicalGradeDistributionJson: $typicalGradeDistributionJson, ')
+          ..write('effectiveDay: $effectiveDay, ')
+          ..write('createdAtDay: $createdAtDay')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      avgNewMinutesPerAyah,
+      avgReviewMinutesPerAyah,
+      typicalGradeDistributionJson,
+      effectiveDay,
+      createdAtDay);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingCalibrationUpdateData &&
+          other.id == this.id &&
+          other.avgNewMinutesPerAyah == this.avgNewMinutesPerAyah &&
+          other.avgReviewMinutesPerAyah == this.avgReviewMinutesPerAyah &&
+          other.typicalGradeDistributionJson ==
+              this.typicalGradeDistributionJson &&
+          other.effectiveDay == this.effectiveDay &&
+          other.createdAtDay == this.createdAtDay);
+}
+
+class PendingCalibrationUpdateCompanion
+    extends UpdateCompanion<PendingCalibrationUpdateData> {
+  final Value<int> id;
+  final Value<double?> avgNewMinutesPerAyah;
+  final Value<double?> avgReviewMinutesPerAyah;
+  final Value<String?> typicalGradeDistributionJson;
+  final Value<int> effectiveDay;
+  final Value<int> createdAtDay;
+  const PendingCalibrationUpdateCompanion({
+    this.id = const Value.absent(),
+    this.avgNewMinutesPerAyah = const Value.absent(),
+    this.avgReviewMinutesPerAyah = const Value.absent(),
+    this.typicalGradeDistributionJson = const Value.absent(),
+    this.effectiveDay = const Value.absent(),
+    this.createdAtDay = const Value.absent(),
+  });
+  PendingCalibrationUpdateCompanion.insert({
+    this.id = const Value.absent(),
+    this.avgNewMinutesPerAyah = const Value.absent(),
+    this.avgReviewMinutesPerAyah = const Value.absent(),
+    this.typicalGradeDistributionJson = const Value.absent(),
+    required int effectiveDay,
+    required int createdAtDay,
+  })  : effectiveDay = Value(effectiveDay),
+        createdAtDay = Value(createdAtDay);
+  static Insertable<PendingCalibrationUpdateData> custom({
+    Expression<int>? id,
+    Expression<double>? avgNewMinutesPerAyah,
+    Expression<double>? avgReviewMinutesPerAyah,
+    Expression<String>? typicalGradeDistributionJson,
+    Expression<int>? effectiveDay,
+    Expression<int>? createdAtDay,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (avgNewMinutesPerAyah != null)
+        'avg_new_minutes_per_ayah': avgNewMinutesPerAyah,
+      if (avgReviewMinutesPerAyah != null)
+        'avg_review_minutes_per_ayah': avgReviewMinutesPerAyah,
+      if (typicalGradeDistributionJson != null)
+        'typical_grade_distribution_json': typicalGradeDistributionJson,
+      if (effectiveDay != null) 'effective_day': effectiveDay,
+      if (createdAtDay != null) 'created_at_day': createdAtDay,
+    });
+  }
+
+  PendingCalibrationUpdateCompanion copyWith(
+      {Value<int>? id,
+      Value<double?>? avgNewMinutesPerAyah,
+      Value<double?>? avgReviewMinutesPerAyah,
+      Value<String?>? typicalGradeDistributionJson,
+      Value<int>? effectiveDay,
+      Value<int>? createdAtDay}) {
+    return PendingCalibrationUpdateCompanion(
+      id: id ?? this.id,
+      avgNewMinutesPerAyah: avgNewMinutesPerAyah ?? this.avgNewMinutesPerAyah,
+      avgReviewMinutesPerAyah:
+          avgReviewMinutesPerAyah ?? this.avgReviewMinutesPerAyah,
+      typicalGradeDistributionJson:
+          typicalGradeDistributionJson ?? this.typicalGradeDistributionJson,
+      effectiveDay: effectiveDay ?? this.effectiveDay,
+      createdAtDay: createdAtDay ?? this.createdAtDay,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (avgNewMinutesPerAyah.present) {
+      map['avg_new_minutes_per_ayah'] =
+          Variable<double>(avgNewMinutesPerAyah.value);
+    }
+    if (avgReviewMinutesPerAyah.present) {
+      map['avg_review_minutes_per_ayah'] =
+          Variable<double>(avgReviewMinutesPerAyah.value);
+    }
+    if (typicalGradeDistributionJson.present) {
+      map['typical_grade_distribution_json'] =
+          Variable<String>(typicalGradeDistributionJson.value);
+    }
+    if (effectiveDay.present) {
+      map['effective_day'] = Variable<int>(effectiveDay.value);
+    }
+    if (createdAtDay.present) {
+      map['created_at_day'] = Variable<int>(createdAtDay.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingCalibrationUpdateCompanion(')
+          ..write('id: $id, ')
+          ..write('avgNewMinutesPerAyah: $avgNewMinutesPerAyah, ')
+          ..write('avgReviewMinutesPerAyah: $avgReviewMinutesPerAyah, ')
+          ..write(
+              'typicalGradeDistributionJson: $typicalGradeDistributionJson, ')
+          ..write('effectiveDay: $effectiveDay, ')
+          ..write('createdAtDay: $createdAtDay')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3406,6 +4242,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ReviewLogTable reviewLog = $ReviewLogTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final $MemProgressTable memProgress = $MemProgressTable(this);
+  late final $CalibrationSampleTable calibrationSample =
+      $CalibrationSampleTable(this);
+  late final $PendingCalibrationUpdateTable pendingCalibrationUpdate =
+      $PendingCalibrationUpdateTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3418,7 +4258,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         scheduleState,
         reviewLog,
         appSettings,
-        memProgress
+        memProgress,
+        calibrationSample,
+        pendingCalibrationUpdate
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -5043,6 +5885,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder = AppSettingsCompanion
   required double avgNewMinutesPerAyah,
   required double avgReviewMinutesPerAyah,
   Value<int> requirePageMetadata,
+  Value<String?> typicalGradeDistributionJson,
   required int updatedAtDay,
 });
 typedef $$AppSettingsTableUpdateCompanionBuilder = AppSettingsCompanion
@@ -5057,6 +5900,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder = AppSettingsCompanion
   Value<double> avgNewMinutesPerAyah,
   Value<double> avgReviewMinutesPerAyah,
   Value<int> requirePageMetadata,
+  Value<String?> typicalGradeDistributionJson,
   Value<int> updatedAtDay,
 });
 
@@ -5105,6 +5949,10 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<int> get requirePageMetadata => $composableBuilder(
       column: $table.requirePageMetadata,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get typicalGradeDistributionJson => $composableBuilder(
+      column: $table.typicalGradeDistributionJson,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get updatedAtDay => $composableBuilder(
@@ -5158,6 +6006,11 @@ class $$AppSettingsTableOrderingComposer
       column: $table.requirePageMetadata,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get typicalGradeDistributionJson =>
+      $composableBuilder(
+          column: $table.typicalGradeDistributionJson,
+          builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get updatedAtDay => $composableBuilder(
       column: $table.updatedAtDay,
       builder: (column) => ColumnOrderings(column));
@@ -5202,6 +6055,11 @@ class $$AppSettingsTableAnnotationComposer
   GeneratedColumn<int> get requirePageMetadata => $composableBuilder(
       column: $table.requirePageMetadata, builder: (column) => column);
 
+  GeneratedColumn<String> get typicalGradeDistributionJson =>
+      $composableBuilder(
+          column: $table.typicalGradeDistributionJson,
+          builder: (column) => column);
+
   GeneratedColumn<int> get updatedAtDay => $composableBuilder(
       column: $table.updatedAtDay, builder: (column) => column);
 }
@@ -5239,6 +6097,7 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             Value<double> avgNewMinutesPerAyah = const Value.absent(),
             Value<double> avgReviewMinutesPerAyah = const Value.absent(),
             Value<int> requirePageMetadata = const Value.absent(),
+            Value<String?> typicalGradeDistributionJson = const Value.absent(),
             Value<int> updatedAtDay = const Value.absent(),
           }) =>
               AppSettingsCompanion(
@@ -5252,6 +6111,7 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             avgNewMinutesPerAyah: avgNewMinutesPerAyah,
             avgReviewMinutesPerAyah: avgReviewMinutesPerAyah,
             requirePageMetadata: requirePageMetadata,
+            typicalGradeDistributionJson: typicalGradeDistributionJson,
             updatedAtDay: updatedAtDay,
           ),
           createCompanionCallback: ({
@@ -5265,6 +6125,7 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             required double avgNewMinutesPerAyah,
             required double avgReviewMinutesPerAyah,
             Value<int> requirePageMetadata = const Value.absent(),
+            Value<String?> typicalGradeDistributionJson = const Value.absent(),
             required int updatedAtDay,
           }) =>
               AppSettingsCompanion.insert(
@@ -5278,6 +6139,7 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             avgNewMinutesPerAyah: avgNewMinutesPerAyah,
             avgReviewMinutesPerAyah: avgReviewMinutesPerAyah,
             requirePageMetadata: requirePageMetadata,
+            typicalGradeDistributionJson: typicalGradeDistributionJson,
             updatedAtDay: updatedAtDay,
           ),
           withReferenceMapper: (p0) => p0
@@ -5452,6 +6314,397 @@ typedef $$MemProgressTableProcessedTableManager = ProcessedTableManager<
     ),
     MemProgressData,
     PrefetchHooks Function()>;
+typedef $$CalibrationSampleTableCreateCompanionBuilder
+    = CalibrationSampleCompanion Function({
+  Value<int> id,
+  required String sampleKind,
+  required int durationSeconds,
+  required int ayahCount,
+  required int createdAtDay,
+  Value<int?> createdAtSeconds,
+});
+typedef $$CalibrationSampleTableUpdateCompanionBuilder
+    = CalibrationSampleCompanion Function({
+  Value<int> id,
+  Value<String> sampleKind,
+  Value<int> durationSeconds,
+  Value<int> ayahCount,
+  Value<int> createdAtDay,
+  Value<int?> createdAtSeconds,
+});
+
+class $$CalibrationSampleTableFilterComposer
+    extends Composer<_$AppDatabase, $CalibrationSampleTable> {
+  $$CalibrationSampleTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sampleKind => $composableBuilder(
+      column: $table.sampleKind, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get durationSeconds => $composableBuilder(
+      column: $table.durationSeconds,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get ayahCount => $composableBuilder(
+      column: $table.ayahCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAtDay => $composableBuilder(
+      column: $table.createdAtDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAtSeconds => $composableBuilder(
+      column: $table.createdAtSeconds,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$CalibrationSampleTableOrderingComposer
+    extends Composer<_$AppDatabase, $CalibrationSampleTable> {
+  $$CalibrationSampleTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sampleKind => $composableBuilder(
+      column: $table.sampleKind, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get durationSeconds => $composableBuilder(
+      column: $table.durationSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get ayahCount => $composableBuilder(
+      column: $table.ayahCount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAtDay => $composableBuilder(
+      column: $table.createdAtDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAtSeconds => $composableBuilder(
+      column: $table.createdAtSeconds,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$CalibrationSampleTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CalibrationSampleTable> {
+  $$CalibrationSampleTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sampleKind => $composableBuilder(
+      column: $table.sampleKind, builder: (column) => column);
+
+  GeneratedColumn<int> get durationSeconds => $composableBuilder(
+      column: $table.durationSeconds, builder: (column) => column);
+
+  GeneratedColumn<int> get ayahCount =>
+      $composableBuilder(column: $table.ayahCount, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtDay => $composableBuilder(
+      column: $table.createdAtDay, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtSeconds => $composableBuilder(
+      column: $table.createdAtSeconds, builder: (column) => column);
+}
+
+class $$CalibrationSampleTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CalibrationSampleTable,
+    CalibrationSampleData,
+    $$CalibrationSampleTableFilterComposer,
+    $$CalibrationSampleTableOrderingComposer,
+    $$CalibrationSampleTableAnnotationComposer,
+    $$CalibrationSampleTableCreateCompanionBuilder,
+    $$CalibrationSampleTableUpdateCompanionBuilder,
+    (
+      CalibrationSampleData,
+      BaseReferences<_$AppDatabase, $CalibrationSampleTable,
+          CalibrationSampleData>
+    ),
+    CalibrationSampleData,
+    PrefetchHooks Function()> {
+  $$CalibrationSampleTableTableManager(
+      _$AppDatabase db, $CalibrationSampleTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CalibrationSampleTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CalibrationSampleTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CalibrationSampleTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> sampleKind = const Value.absent(),
+            Value<int> durationSeconds = const Value.absent(),
+            Value<int> ayahCount = const Value.absent(),
+            Value<int> createdAtDay = const Value.absent(),
+            Value<int?> createdAtSeconds = const Value.absent(),
+          }) =>
+              CalibrationSampleCompanion(
+            id: id,
+            sampleKind: sampleKind,
+            durationSeconds: durationSeconds,
+            ayahCount: ayahCount,
+            createdAtDay: createdAtDay,
+            createdAtSeconds: createdAtSeconds,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String sampleKind,
+            required int durationSeconds,
+            required int ayahCount,
+            required int createdAtDay,
+            Value<int?> createdAtSeconds = const Value.absent(),
+          }) =>
+              CalibrationSampleCompanion.insert(
+            id: id,
+            sampleKind: sampleKind,
+            durationSeconds: durationSeconds,
+            ayahCount: ayahCount,
+            createdAtDay: createdAtDay,
+            createdAtSeconds: createdAtSeconds,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CalibrationSampleTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CalibrationSampleTable,
+    CalibrationSampleData,
+    $$CalibrationSampleTableFilterComposer,
+    $$CalibrationSampleTableOrderingComposer,
+    $$CalibrationSampleTableAnnotationComposer,
+    $$CalibrationSampleTableCreateCompanionBuilder,
+    $$CalibrationSampleTableUpdateCompanionBuilder,
+    (
+      CalibrationSampleData,
+      BaseReferences<_$AppDatabase, $CalibrationSampleTable,
+          CalibrationSampleData>
+    ),
+    CalibrationSampleData,
+    PrefetchHooks Function()>;
+typedef $$PendingCalibrationUpdateTableCreateCompanionBuilder
+    = PendingCalibrationUpdateCompanion Function({
+  Value<int> id,
+  Value<double?> avgNewMinutesPerAyah,
+  Value<double?> avgReviewMinutesPerAyah,
+  Value<String?> typicalGradeDistributionJson,
+  required int effectiveDay,
+  required int createdAtDay,
+});
+typedef $$PendingCalibrationUpdateTableUpdateCompanionBuilder
+    = PendingCalibrationUpdateCompanion Function({
+  Value<int> id,
+  Value<double?> avgNewMinutesPerAyah,
+  Value<double?> avgReviewMinutesPerAyah,
+  Value<String?> typicalGradeDistributionJson,
+  Value<int> effectiveDay,
+  Value<int> createdAtDay,
+});
+
+class $$PendingCalibrationUpdateTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingCalibrationUpdateTable> {
+  $$PendingCalibrationUpdateTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get avgNewMinutesPerAyah => $composableBuilder(
+      column: $table.avgNewMinutesPerAyah,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get avgReviewMinutesPerAyah => $composableBuilder(
+      column: $table.avgReviewMinutesPerAyah,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get typicalGradeDistributionJson => $composableBuilder(
+      column: $table.typicalGradeDistributionJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get effectiveDay => $composableBuilder(
+      column: $table.effectiveDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAtDay => $composableBuilder(
+      column: $table.createdAtDay, builder: (column) => ColumnFilters(column));
+}
+
+class $$PendingCalibrationUpdateTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingCalibrationUpdateTable> {
+  $$PendingCalibrationUpdateTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get avgNewMinutesPerAyah => $composableBuilder(
+      column: $table.avgNewMinutesPerAyah,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get avgReviewMinutesPerAyah => $composableBuilder(
+      column: $table.avgReviewMinutesPerAyah,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get typicalGradeDistributionJson =>
+      $composableBuilder(
+          column: $table.typicalGradeDistributionJson,
+          builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get effectiveDay => $composableBuilder(
+      column: $table.effectiveDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAtDay => $composableBuilder(
+      column: $table.createdAtDay,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$PendingCalibrationUpdateTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingCalibrationUpdateTable> {
+  $$PendingCalibrationUpdateTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get avgNewMinutesPerAyah => $composableBuilder(
+      column: $table.avgNewMinutesPerAyah, builder: (column) => column);
+
+  GeneratedColumn<double> get avgReviewMinutesPerAyah => $composableBuilder(
+      column: $table.avgReviewMinutesPerAyah, builder: (column) => column);
+
+  GeneratedColumn<String> get typicalGradeDistributionJson =>
+      $composableBuilder(
+          column: $table.typicalGradeDistributionJson,
+          builder: (column) => column);
+
+  GeneratedColumn<int> get effectiveDay => $composableBuilder(
+      column: $table.effectiveDay, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtDay => $composableBuilder(
+      column: $table.createdAtDay, builder: (column) => column);
+}
+
+class $$PendingCalibrationUpdateTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PendingCalibrationUpdateTable,
+    PendingCalibrationUpdateData,
+    $$PendingCalibrationUpdateTableFilterComposer,
+    $$PendingCalibrationUpdateTableOrderingComposer,
+    $$PendingCalibrationUpdateTableAnnotationComposer,
+    $$PendingCalibrationUpdateTableCreateCompanionBuilder,
+    $$PendingCalibrationUpdateTableUpdateCompanionBuilder,
+    (
+      PendingCalibrationUpdateData,
+      BaseReferences<_$AppDatabase, $PendingCalibrationUpdateTable,
+          PendingCalibrationUpdateData>
+    ),
+    PendingCalibrationUpdateData,
+    PrefetchHooks Function()> {
+  $$PendingCalibrationUpdateTableTableManager(
+      _$AppDatabase db, $PendingCalibrationUpdateTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingCalibrationUpdateTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingCalibrationUpdateTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PendingCalibrationUpdateTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<double?> avgNewMinutesPerAyah = const Value.absent(),
+            Value<double?> avgReviewMinutesPerAyah = const Value.absent(),
+            Value<String?> typicalGradeDistributionJson = const Value.absent(),
+            Value<int> effectiveDay = const Value.absent(),
+            Value<int> createdAtDay = const Value.absent(),
+          }) =>
+              PendingCalibrationUpdateCompanion(
+            id: id,
+            avgNewMinutesPerAyah: avgNewMinutesPerAyah,
+            avgReviewMinutesPerAyah: avgReviewMinutesPerAyah,
+            typicalGradeDistributionJson: typicalGradeDistributionJson,
+            effectiveDay: effectiveDay,
+            createdAtDay: createdAtDay,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<double?> avgNewMinutesPerAyah = const Value.absent(),
+            Value<double?> avgReviewMinutesPerAyah = const Value.absent(),
+            Value<String?> typicalGradeDistributionJson = const Value.absent(),
+            required int effectiveDay,
+            required int createdAtDay,
+          }) =>
+              PendingCalibrationUpdateCompanion.insert(
+            id: id,
+            avgNewMinutesPerAyah: avgNewMinutesPerAyah,
+            avgReviewMinutesPerAyah: avgReviewMinutesPerAyah,
+            typicalGradeDistributionJson: typicalGradeDistributionJson,
+            effectiveDay: effectiveDay,
+            createdAtDay: createdAtDay,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PendingCalibrationUpdateTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PendingCalibrationUpdateTable,
+        PendingCalibrationUpdateData,
+        $$PendingCalibrationUpdateTableFilterComposer,
+        $$PendingCalibrationUpdateTableOrderingComposer,
+        $$PendingCalibrationUpdateTableAnnotationComposer,
+        $$PendingCalibrationUpdateTableCreateCompanionBuilder,
+        $$PendingCalibrationUpdateTableUpdateCompanionBuilder,
+        (
+          PendingCalibrationUpdateData,
+          BaseReferences<_$AppDatabase, $PendingCalibrationUpdateTable,
+              PendingCalibrationUpdateData>
+        ),
+        PendingCalibrationUpdateData,
+        PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5470,4 +6723,9 @@ class $AppDatabaseManager {
       $$AppSettingsTableTableManager(_db, _db.appSettings);
   $$MemProgressTableTableManager get memProgress =>
       $$MemProgressTableTableManager(_db, _db.memProgress);
+  $$CalibrationSampleTableTableManager get calibrationSample =>
+      $$CalibrationSampleTableTableManager(_db, _db.calibrationSample);
+  $$PendingCalibrationUpdateTableTableManager get pendingCalibrationUpdate =>
+      $$PendingCalibrationUpdateTableTableManager(
+          _db, _db.pendingCalibrationUpdate);
 }
