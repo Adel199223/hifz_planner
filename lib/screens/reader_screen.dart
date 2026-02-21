@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
+import '../ui/tajweed/tajweed_colors.dart';
+import '../ui/tajweed/tajweed_markup.dart';
 
 class ReaderScreen extends ConsumerStatefulWidget {
   const ReaderScreen({
@@ -40,6 +42,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   );
 
   _ReaderMode _mode = _ReaderMode.surah;
+  _ArabicRenderMode _arabicRenderMode = _ArabicRenderMode.plain;
   int _selectedSurah = 1;
   int? _selectedPage;
   Future<List<int>>? _availablePagesFuture;
@@ -271,6 +274,38 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         target: null,
         showMissingTargetMessage: false,
       );
+    }
+  }
+
+  void _switchArabicRenderMode(_ArabicRenderMode mode) {
+    if (mode == _arabicRenderMode) {
+      return;
+    }
+
+    setState(() {
+      _arabicRenderMode = mode;
+    });
+
+    if (mode == _ArabicRenderMode.tajweed) {
+      unawaited(_prepareTajweedTags());
+    }
+  }
+
+  Future<void> _prepareTajweedTags() async {
+    try {
+      await ref.read(tajweedTagsServiceProvider).ensureLoaded();
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _arabicRenderMode = _ArabicRenderMode.plain;
+      });
+      _showSnackBar('Tajweed tags unavailable. Showing plain text.');
     }
   }
 
@@ -719,6 +754,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           );
         }
         _queuePendingJump(ayahs);
+        final tajweedTagsService = ref.read(tajweedTagsServiceProvider);
+        final tajweedEnabled = _arabicRenderMode == _ArabicRenderMode.tajweed &&
+            tajweedTagsService.hasAnyTags;
 
         return ListView.separated(
           key: const ValueKey('reader_ayah_list'),
@@ -730,6 +768,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             return _AyahRow(
               rowKey: _ayahRowKey(key),
               ayah: ayah,
+              tajweedHtml: tajweedEnabled
+                  ? tajweedTagsService.getTajweedHtmlFor(
+                      ayah.surah,
+                      ayah.ayah,
+                    )
+                  : null,
               hovered: _hoveredAyahKey == key,
               tappedHighlighted: _tappedAyahKey == key,
               jumpHighlighted: _jumpHighlightedAyahKey == key,
@@ -779,6 +823,29 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           return;
         }
         _switchMode(selection.first);
+      },
+    );
+  }
+
+  Widget _buildArabicRenderToggle() {
+    return SegmentedButton<_ArabicRenderMode>(
+      key: const ValueKey('reader_arabic_render_toggle'),
+      segments: const [
+        ButtonSegment<_ArabicRenderMode>(
+          value: _ArabicRenderMode.plain,
+          label: Text('Plain'),
+        ),
+        ButtonSegment<_ArabicRenderMode>(
+          value: _ArabicRenderMode.tajweed,
+          label: Text('Tajweed'),
+        ),
+      ],
+      selected: <_ArabicRenderMode>{_arabicRenderMode},
+      onSelectionChanged: (selection) {
+        if (selection.isEmpty) {
+          return;
+        }
+        _switchArabicRenderMode(selection.first);
       },
     );
   }
@@ -912,7 +979,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: _buildModeToggle(),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  _buildModeToggle(),
+                  _buildArabicRenderToggle(),
+                ],
+              ),
             ),
           ),
           if (_mode == _ReaderMode.page && _selectedPage != null)
@@ -948,6 +1022,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 enum _ReaderMode {
   surah,
   page,
+}
+
+enum _ArabicRenderMode {
+  plain,
+  tajweed,
 }
 
 enum _AyahAction {
@@ -1090,6 +1169,7 @@ class _AyahRow extends StatelessWidget {
   const _AyahRow({
     required this.rowKey,
     required this.ayah,
+    required this.tajweedHtml,
     required this.hovered,
     required this.tappedHighlighted,
     required this.jumpHighlighted,
@@ -1100,6 +1180,7 @@ class _AyahRow extends StatelessWidget {
 
   final GlobalKey rowKey;
   final AyahData ayah;
+  final String? tajweedHtml;
   final bool hovered;
   final bool tappedHighlighted;
   final bool jumpHighlighted;
@@ -1120,6 +1201,18 @@ class _AyahRow extends StatelessWidget {
                 : hovered
                     ? colorScheme.primary.withOpacity(0.08)
                     : Colors.transparent;
+    final baseArabicStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontFamily: 'UthmanicHafs',
+              fontSize: 34,
+              height: 1.9,
+            ) ??
+        const TextStyle(
+          fontFamily: 'UthmanicHafs',
+          fontSize: 34,
+          height: 1.9,
+        );
+    final fallbackTextColor =
+        baseArabicStyle.color ?? Theme.of(context).colorScheme.onSurface;
 
     return KeyedSubtree(
       key: rowKey,
@@ -1151,15 +1244,23 @@ class _AyahRow extends StatelessWidget {
                   const SizedBox(height: 8),
                   Directionality(
                     textDirection: TextDirection.rtl,
-                    child: Text(
-                      ayah.textUthmani,
-                      textAlign: TextAlign.right,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontFamily: 'UthmanicHafs',
-                            fontSize: 34,
-                            height: 1.9,
+                    child: tajweedHtml == null
+                        ? Text(
+                            ayah.textUthmani,
+                            textAlign: TextAlign.right,
+                            style: baseArabicStyle,
+                          )
+                        : RichText(
+                            textAlign: TextAlign.right,
+                            text: TextSpan(
+                              children: buildTajweedSpans(
+                                tajweedHtml: tajweedHtml!,
+                                baseStyle: baseArabicStyle,
+                                classColors: tajweedClassColors,
+                                fallbackColor: fallbackTextColor,
+                              ),
+                            ),
                           ),
-                    ),
                   ),
                 ],
               ),

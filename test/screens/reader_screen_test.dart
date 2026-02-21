@@ -7,6 +7,7 @@ import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/bookmark_repo.dart';
 import 'package:hifz_planner/data/repositories/note_repo.dart';
+import 'package:hifz_planner/data/services/tajweed_tags_service.dart';
 import 'package:hifz_planner/screens/reader_screen.dart';
 
 import '../helpers/pump_until_found.dart';
@@ -145,6 +146,33 @@ void main() {
       ),
     );
     expect(rtlAncestor, findsOneWidget);
+  });
+
+  testWidgets('tajweed toggle falls back to plain when mapping is empty', (
+    tester,
+  ) async {
+    await _pumpReader(
+      tester,
+      db,
+      tajweedTagsService: TajweedTagsService(
+        loadAssetText: (_) async => '{}',
+      ),
+    );
+
+    final renderToggle =
+        find.byKey(const ValueKey('reader_arabic_render_toggle'));
+    expect(renderToggle, findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: renderToggle,
+        matching: find.text('Tajweed'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('ٱلْحَمْدُ لِلَّٰهِ'), findsOneWidget);
+    expect(tester.takeException(), equals(null));
   });
 
   testWidgets('tap opens actions and keeps sticky tap highlight',
@@ -456,6 +484,7 @@ Future<void> _pumpReader(
   WidgetTester tester,
   AppDatabase db, {
   ReaderScreen screen = const ReaderScreen(),
+  TajweedTagsService? tajweedTagsService,
 }) async {
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox.shrink());
@@ -467,6 +496,8 @@ Future<void> _pumpReader(
     ProviderScope(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
+        if (tajweedTagsService != null)
+          tajweedTagsServiceProvider.overrideWithValue(tajweedTagsService),
       ],
       child: MaterialApp(
         home: Scaffold(body: screen),

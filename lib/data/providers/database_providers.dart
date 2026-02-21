@@ -16,6 +16,7 @@ import '../services/forecast_simulation_service.dart';
 import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
 import '../services/quran_text_importer_service.dart';
+import '../services/tajweed_tags_service.dart';
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final database = AppDatabase();
@@ -135,3 +136,7 @@ final pageMetadataImporterServiceProvider =
     return PageMetadataImporterService(db);
   },
 );
+
+final tajweedTagsServiceProvider = Provider<TajweedTagsService>((ref) {
+  return TajweedTagsService();
+});
