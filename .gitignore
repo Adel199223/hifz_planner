@@ -1,4 +1,13 @@
 .dart_tool/
 build/
 .flutter-plugins
+.flutter-plugins-dependencies.idea/
+*.iml
+.metadata
+
+# Flutter tool files
+.flutter-plugins
 .flutter-plugins-dependencies
+.dart_tool/
+build/
+
