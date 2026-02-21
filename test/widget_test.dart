@@ -13,19 +13,27 @@ import 'helpers/pump_until_found.dart';
 void main() {
   testWidgets('loads Today screen with NavigationRail', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        bookmarkRepoProvider.overrideWith(
+          (ref) => _FakeBookmarkRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1));
-      await db.close();
     });
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          bookmarkRepoProvider.overrideWithValue(_FakeBookmarkRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: const HifzPlannerApp(),
       ),
     );
@@ -42,18 +50,24 @@ void main() {
 
   testWidgets('navigates to Bookmarks from rail', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1));
-      await db.close();
     });
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: const HifzPlannerApp(),
       ),
     );

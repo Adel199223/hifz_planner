@@ -15,9 +15,17 @@ import 'package:hifz_planner/screens/plan_screen.dart';
 void main() {
   testWidgets('renders questionnaire and suggested plan panel', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
 
-    await _pumpPlan(tester, db);
+    await _pumpPlan(tester, container);
 
     expect(find.textContaining('Onboarding Questionnaire'), findsOneWidget);
     expect(find.byKey(const ValueKey('plan_time_mode')), findsOneWidget);
@@ -49,9 +57,17 @@ void main() {
   testWidgets('running forecast on empty quran data shows incomplete reason',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
 
-    await _pumpPlan(tester, db);
+    await _pumpPlan(tester, container);
     await _tapVisible(
       tester,
       find.byKey(const ValueKey('plan_forecast_run_button')),
@@ -66,7 +82,15 @@ void main() {
   testWidgets('running forecast with seeded data shows completion and curves',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
 
     await db.batch((batch) {
       batch.insertAll(
@@ -97,7 +121,7 @@ void main() {
       dailyMinutesDefault: 60,
     );
 
-    await _pumpPlan(tester, db);
+    await _pumpPlan(tester, container);
     await _tapVisible(
       tester,
       find.byKey(const ValueKey('plan_forecast_run_button')),
@@ -124,8 +148,16 @@ void main() {
   testWidgets('weekly mode computes weekday chips from weekly minutes',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    await _pumpPlan(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    await _pumpPlan(tester, container);
 
     await tester.enterText(
       find.byKey(const ValueKey('plan_weekly_minutes')),
@@ -141,8 +173,16 @@ void main() {
 
   testWidgets('per-weekday mode uses direct entered values', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    await _pumpPlan(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    await _pumpPlan(tester, container);
 
     await tester.tap(find.text('Per weekday'));
     await tester.pumpAndSettle();
@@ -170,8 +210,16 @@ void main() {
   testWidgets('fluency selection updates suggested avg defaults',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    await _pumpPlan(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    await _pumpPlan(tester, container);
 
     expect(
       tester
@@ -214,8 +262,16 @@ void main() {
   testWidgets('activate persists settings row with expected values',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    await _pumpPlan(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    await _pumpPlan(tester, container);
 
     await _enterTextVisible(
       tester,
@@ -266,7 +322,15 @@ void main() {
   testWidgets('activate ensures cursor exists and preserves existing cursor',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
     final progressRepo = ProgressRepo(db);
 
     await progressRepo.updateCursor(
@@ -274,7 +338,7 @@ void main() {
       nextAyah: 5,
       updatedAtDay: 22222,
     );
-    await _pumpPlan(tester, db);
+    await _pumpPlan(tester, container);
 
     await _tapVisible(
         tester, find.byKey(const ValueKey('plan_activate_button')));
@@ -287,8 +351,16 @@ void main() {
   testWidgets('force revision toggle defaults ON and persists edited value',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    await _pumpPlan(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    await _pumpPlan(tester, container);
 
     final forceSwitch = find.byKey(const ValueKey('plan_force_revision_only'));
     expect(
@@ -307,8 +379,16 @@ void main() {
   testWidgets('require page metadata defaults ON and persists edited value',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    await _pumpPlan(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    await _pumpPlan(tester, container);
 
     final metadataSwitch =
         find.byKey(const ValueKey('plan_require_page_metadata'));
@@ -328,8 +408,16 @@ void main() {
   testWidgets('adding calibration samples persists rows and refreshes preview',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    await _pumpPlan(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    await _pumpPlan(tester, container);
 
     await _enterTextVisible(
       tester,
@@ -384,8 +472,16 @@ void main() {
   testWidgets('apply calibration now updates settings and grade distribution',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    await _pumpPlan(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    await _pumpPlan(tester, container);
 
     await _enterTextVisible(
       tester,
@@ -448,7 +544,15 @@ void main() {
       'apply calibration from tomorrow creates pending update and keeps active settings',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
     final settingsRepo = SettingsRepo(db);
 
     await settingsRepo.updateSettings(
@@ -456,7 +560,7 @@ void main() {
       avgReviewMinutesPerAyah: 0.9,
       updatedAtDay: 12345,
     );
-    await _pumpPlan(tester, db);
+    await _pumpPlan(tester, container);
 
     await _enterTextVisible(
       tester,
@@ -493,9 +597,17 @@ void main() {
   testWidgets('invalid grade distribution blocks calibration apply',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
     final settingsRepo = SettingsRepo(db);
-    await _pumpPlan(tester, db);
+    await _pumpPlan(tester, container);
 
     await _enterTextVisible(
       tester,
@@ -534,12 +646,13 @@ void main() {
   });
 }
 
-Future<void> _pumpPlan(WidgetTester tester, AppDatabase db) async {
+Future<void> _pumpPlan(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
   await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        appDatabaseProvider.overrideWithValue(db),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: const MaterialApp(
         home: Scaffold(body: PlanScreen()),
       ),

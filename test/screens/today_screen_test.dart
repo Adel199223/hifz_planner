@@ -15,7 +15,16 @@ import '../helpers/pump_until_found.dart';
 void main() {
   testWidgets('loads plan snapshot and renders both sections', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    _registerTestCleanup(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     await _seedAyahs(db, withPageMetadata: true);
@@ -26,7 +35,7 @@ void main() {
     );
     final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
 
-    await _pumpToday(tester, db);
+    await _pumpToday(tester, container);
 
     expect(find.byKey(const ValueKey('today_screen_root')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_reviews_section')), findsOneWidget);
@@ -38,7 +47,16 @@ void main() {
   testWidgets('grading planned review writes review_log and updates schedule',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    _registerTestCleanup(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     await _seedAyahs(db, withPageMetadata: true);
@@ -49,7 +67,7 @@ void main() {
     );
     final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
 
-    await _pumpToday(tester, db);
+    await _pumpToday(tester, container);
     final gradeButton = find.byKey(
       ValueKey('today_review_grade_${dueUnitId}_q5'),
     );
@@ -82,7 +100,16 @@ void main() {
   testWidgets('self-check grade for new unit writes review_log and schedules',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    _registerTestCleanup(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     await _seedAyahs(db, withPageMetadata: true);
@@ -92,7 +119,7 @@ void main() {
       maxNewUnitsPerDay: 2,
     );
 
-    await _pumpToday(tester, db);
+    await _pumpToday(tester, container);
 
     final plannedNewUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
     expect(plannedNewUnits, isNotEmpty);
@@ -127,7 +154,16 @@ void main() {
   testWidgets('open in reader navigates with page mode and highlight range',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    _registerTestCleanup(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     await _seedAyahs(db, withPageMetadata: true);
@@ -142,10 +178,8 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -173,7 +207,16 @@ void main() {
   testWidgets('open in reader button is disabled when page metadata is missing',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    _registerTestCleanup(tester, db);
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     await _seedAyahs(db, withPageMetadata: false);
@@ -184,7 +227,7 @@ void main() {
       maxNewPagesPerDay: 1,
     );
 
-    await _pumpToday(tester, db);
+    await _pumpToday(tester, container);
 
     final plannedNewUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
     final unit = plannedNewUnits.firstWhere((row) => row.pageMadina == null);
@@ -201,12 +244,10 @@ void main() {
   });
 }
 
-void _registerTestCleanup(WidgetTester tester, AppDatabase db) {
+void _registerTestCleanup(WidgetTester tester) {
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 1));
-    await db.close();
     await tester.pump(const Duration(milliseconds: 1));
   });
 }
@@ -295,12 +336,13 @@ Future<List<MemUnitData>> _fetchPlannedNewUnits(
       .get();
 }
 
-Future<void> _pumpToday(WidgetTester tester, AppDatabase db) async {
+Future<void> _pumpToday(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
   await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        appDatabaseProvider.overrideWithValue(db),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: const MaterialApp(
         home: Scaffold(body: TodayScreen()),
       ),

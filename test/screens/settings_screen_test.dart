@@ -25,15 +25,18 @@ void main() {
       db,
       loadPageIndex: (_) async => <String, int>{'1:1': 1},
     );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        quranTextImporterServiceProvider.overrideWithValue(textService),
+        pageMetadataImporterServiceProvider.overrideWithValue(metadataService),
+      ],
+    );
+    addTearDown(container.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          quranTextImporterServiceProvider.overrideWithValue(textService),
-          pageMetadataImporterServiceProvider
-              .overrideWithValue(metadataService),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: const MaterialApp(
           home: Scaffold(body: SettingsScreen()),
         ),
@@ -68,15 +71,19 @@ void main() {
         db,
         loadPageIndex: (_) async => <String, int>{'1:1': 1},
       );
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          quranTextImporterServiceProvider.overrideWithValue(textService),
+          pageMetadataImporterServiceProvider
+              .overrideWithValue(metadataService),
+        ],
+      );
+      addTearDown(container.dispose);
 
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            appDatabaseProvider.overrideWithValue(db),
-            quranTextImporterServiceProvider.overrideWithValue(textService),
-            pageMetadataImporterServiceProvider
-                .overrideWithValue(metadataService),
-          ],
+        UncontrolledProviderScope(
+          container: container,
           child: const MaterialApp(
             home: Scaffold(body: SettingsScreen()),
           ),
@@ -120,15 +127,18 @@ void main() {
       db,
       loadPageIndex: (_) async => <String, int>{'1:1': 1},
     );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        quranTextImporterServiceProvider.overrideWithValue(textService),
+        pageMetadataImporterServiceProvider.overrideWithValue(metadataService),
+      ],
+    );
+    addTearDown(container.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          quranTextImporterServiceProvider.overrideWithValue(textService),
-          pageMetadataImporterServiceProvider
-              .overrideWithValue(metadataService),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: const MaterialApp(
           home: Scaffold(body: SettingsScreen()),
         ),
@@ -179,15 +189,19 @@ void main() {
           return <String, int>{'1:1': 10};
         },
       );
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          quranTextImporterServiceProvider.overrideWithValue(textService),
+          pageMetadataImporterServiceProvider
+              .overrideWithValue(metadataService),
+        ],
+      );
+      addTearDown(container.dispose);
 
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            appDatabaseProvider.overrideWithValue(db),
-            quranTextImporterServiceProvider.overrideWithValue(textService),
-            pageMetadataImporterServiceProvider
-                .overrideWithValue(metadataService),
-          ],
+        UncontrolledProviderScope(
+          container: container,
           child: const MaterialApp(
             home: Scaffold(body: SettingsScreen()),
           ),
@@ -244,15 +258,18 @@ void main() {
       db,
       loadPageIndex: (_) async => <String, int>{'1:1': 10},
     );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWithValue(db),
+        quranTextImporterServiceProvider.overrideWithValue(textService),
+        pageMetadataImporterServiceProvider.overrideWithValue(metadataService),
+      ],
+    );
+    addTearDown(container.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          quranTextImporterServiceProvider.overrideWithValue(textService),
-          pageMetadataImporterServiceProvider
-              .overrideWithValue(metadataService),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: const MaterialApp(
           home: Scaffold(body: SettingsScreen()),
         ),

@@ -12,23 +12,27 @@ import 'package:hifz_planner/screens/bookmarks_screen.dart';
 import '../helpers/pump_until_found.dart';
 
 void main() {
-  late AppDatabase db;
-
-  setUp(() {
-    db = AppDatabase(NativeDatabase.memory());
-  });
-
   testWidgets('shows empty state when there are no bookmarks', (tester) async {
-    _registerTestCleanup(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        bookmarkRepoProvider.overrideWith(
+          (ref) => _FakeBookmarkRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
     final router = _buildRouter();
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          bookmarkRepoProvider.overrideWithValue(_FakeBookmarkRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -43,7 +47,21 @@ void main() {
   testWidgets('go to verse prefers page mode when page metadata exists', (
     tester,
   ) async {
-    _registerTestCleanup(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        bookmarkRepoProvider.overrideWith(
+          (ref) => _FakeBookmarkRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
     await db.into(db.ayah).insert(
           AyahCompanion.insert(
             surah: 2,
@@ -64,11 +82,8 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          bookmarkRepoProvider.overrideWithValue(_FakeBookmarkRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -96,7 +111,21 @@ void main() {
   });
 
   testWidgets('go to page navigates to page mode route', (tester) async {
-    _registerTestCleanup(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        bookmarkRepoProvider.overrideWith(
+          (ref) => _FakeBookmarkRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
     await db.into(db.ayah).insert(
           AyahCompanion.insert(
             surah: 36,
@@ -116,11 +145,8 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          bookmarkRepoProvider.overrideWithValue(_FakeBookmarkRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -146,7 +172,21 @@ void main() {
   testWidgets('missing page metadata falls back and disables go to page', (
     tester,
   ) async {
-    _registerTestCleanup(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        bookmarkRepoProvider.overrideWith(
+          (ref) => _FakeBookmarkRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
     await db.into(db.ayah).insert(
           AyahCompanion.insert(
             surah: 3,
@@ -165,11 +205,8 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          bookmarkRepoProvider.overrideWithValue(_FakeBookmarkRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -194,12 +231,10 @@ void main() {
   });
 }
 
-void _registerTestCleanup(WidgetTester tester, AppDatabase db) {
+void _registerTestCleanup(WidgetTester tester) {
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 1));
-    await db.close();
     await tester.pump(const Duration(milliseconds: 1));
   });
 }

@@ -12,14 +12,21 @@ import 'package:hifz_planner/screens/notes_screen.dart';
 import '../helpers/pump_until_found.dart';
 
 void main() {
-  late AppDatabase db;
-
-  setUp(() {
-    db = AppDatabase(NativeDatabase.memory());
-  });
-
   testWidgets('renders notes list from stream', (tester) async {
-    _registerTestCleanup(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        noteRepoProvider.overrideWith(
+          (ref) => _FakeNoteRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     final id = await _insertNote(
       db,
@@ -38,11 +45,8 @@ void main() {
     expect(id, greaterThan(0));
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          noteRepoProvider.overrideWithValue(_FakeNoteRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: const MaterialApp(
           home: Scaffold(body: NotesScreen()),
         ),
@@ -68,7 +72,20 @@ void main() {
   testWidgets('editor saves updated title/body and validates empty body', (
     tester,
   ) async {
-    _registerTestCleanup(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        noteRepoProvider.overrideWith(
+          (ref) => _FakeNoteRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     final id = await _insertNote(
       db,
@@ -82,11 +99,8 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          noteRepoProvider.overrideWithValue(_FakeNoteRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -136,7 +150,20 @@ void main() {
   testWidgets('go to verse prefers page mode when page metadata exists', (
     tester,
   ) async {
-    _registerTestCleanup(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        noteRepoProvider.overrideWith(
+          (ref) => _FakeNoteRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     final id = await _insertNote(
       db,
@@ -157,11 +184,8 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          noteRepoProvider.overrideWithValue(_FakeNoteRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -189,7 +213,20 @@ void main() {
   testWidgets('go to page button navigates to reader page target', (
     tester,
   ) async {
-    _registerTestCleanup(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        noteRepoProvider.overrideWith(
+          (ref) => _FakeNoteRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     final id = await _insertNote(
       db,
@@ -210,11 +247,8 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          noteRepoProvider.overrideWithValue(_FakeNoteRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -242,7 +276,20 @@ void main() {
   testWidgets('go to page button is disabled when page metadata is missing', (
     tester,
   ) async {
-    _registerTestCleanup(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        noteRepoProvider.overrideWith(
+          (ref) => _FakeNoteRepo(ref.read(appDatabaseProvider)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     final id = await _insertNote(
       db,
@@ -256,11 +303,8 @@ void main() {
     addTearDown(router.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          noteRepoProvider.overrideWithValue(_FakeNoteRepo(db)),
-        ],
+      UncontrolledProviderScope(
+        container: container,
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -282,12 +326,10 @@ void main() {
   });
 }
 
-void _registerTestCleanup(WidgetTester tester, AppDatabase db) {
+void _registerTestCleanup(WidgetTester tester) {
   addTearDown(() async {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 1));
-    await db.close();
     await tester.pump(const Duration(milliseconds: 1));
   });
 }

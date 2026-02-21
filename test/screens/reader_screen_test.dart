@@ -13,21 +13,23 @@ import 'package:hifz_planner/screens/reader_screen.dart';
 import '../helpers/pump_until_found.dart';
 
 void main() {
-  late AppDatabase db;
-
-  setUp(() async {
-    db = AppDatabase(NativeDatabase.memory());
-    await _seedAyahs(db);
-  });
-
-  tearDown(() async {
-    await db.close();
-  });
-
   testWidgets('surah list supports 1..114 and selecting surah reloads ayahs', (
     tester,
   ) async {
-    await _pumpReader(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
 
     final surahList = find.byKey(const ValueKey('reader_surah_list'));
     expect(find.byKey(const ValueKey('surah_tile_1')), findsOneWidget);
@@ -54,7 +56,20 @@ void main() {
   testWidgets('mode toggle switches to page mode and loads page ayahs', (
     tester,
   ) async {
-    await _pumpReader(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
 
     final modeToggle = find.byKey(const ValueKey('reader_mode_toggle'));
     expect(modeToggle, findsOneWidget);
@@ -91,10 +106,19 @@ void main() {
 
   testWidgets('page mode without metadata still exposes 1..604 page navigation',
       (tester) async {
-    final noMetadataDb = AppDatabase(NativeDatabase.memory());
-    addTearDown(noMetadataDb.close);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
 
-    await noMetadataDb.into(noMetadataDb.ayah).insert(
+    await db.into(db.ayah).insert(
           AyahCompanion.insert(
             surah: 1,
             ayah: 1,
@@ -104,7 +128,7 @@ void main() {
 
     await _pumpReader(
       tester,
-      noMetadataDb,
+      container,
       screen: const ReaderScreen(mode: 'page'),
     );
 
@@ -133,7 +157,20 @@ void main() {
   testWidgets('ayah rows use hover wrapper and RTL text', (
     tester,
   ) async {
-    await _pumpReader(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
 
     expect(find.byType(MouseRegion), findsWidgets);
 
@@ -151,12 +188,27 @@ void main() {
   testWidgets('tajweed toggle falls back to plain when mapping is empty', (
     tester,
   ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        tajweedTagsServiceProvider.overrideWithValue(
+          TajweedTagsService(
+            loadAssetText: (_) async => '{}',
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
     await _pumpReader(
       tester,
-      db,
-      tajweedTagsService: TajweedTagsService(
-        loadAssetText: (_) async => '{}',
-      ),
+      container,
     );
 
     final renderToggle =
@@ -177,7 +229,20 @@ void main() {
 
   testWidgets('tap opens actions and keeps sticky tap highlight',
       (tester) async {
-    await _pumpReader(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
 
     await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
     await tester.pumpAndSettle();
@@ -215,9 +280,22 @@ void main() {
   testWidgets('range highlight marks rows inside inclusive verse range', (
     tester,
   ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
     await _pumpReader(
       tester,
-      db,
+      container,
       screen: const ReaderScreen(
         highlightStartSurah: 1,
         highlightStartAyah: 2,
@@ -244,8 +322,21 @@ void main() {
   testWidgets('bookmark action persists once and does not duplicate', (
     tester,
   ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
     final repo = BookmarkRepo(db);
-    await _pumpReader(tester, db);
+    await _pumpReader(tester, container);
 
     await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
     await tester.pumpAndSettle();
@@ -265,10 +356,23 @@ void main() {
   });
 
   testWidgets('actions remain functional in page mode', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
     final repo = BookmarkRepo(db);
     await _pumpReader(
       tester,
-      db,
+      container,
       screen: const ReaderScreen(mode: 'page', page: 1),
     );
     await pumpUntilFound(
@@ -288,8 +392,21 @@ void main() {
   });
 
   testWidgets('add/edit note creates then updates single note', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
     final noteRepo = NoteRepo(db);
-    await _pumpReader(tester, db);
+    await _pumpReader(tester, container);
 
     await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
     await tester.pumpAndSettle();
@@ -325,7 +442,20 @@ void main() {
   });
 
   testWidgets('copy action copies text and shows feedback', (tester) async {
-    await _pumpReader(tester, db);
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
     await pumpUntilFound(
       tester,
       find.byKey(const ValueKey('ayah_row_1:1')),
@@ -362,6 +492,19 @@ void main() {
   testWidgets(
     'route target loads surah, jumps to ayah, and clears jump highlight',
     (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
       await db.batch((batch) {
         batch.insertAll(
           db.ayah,
@@ -379,7 +522,7 @@ void main() {
 
       await _pumpReader(
         tester,
-        db,
+        container,
         screen: const ReaderScreen(
           targetSurah: 1,
           targetAyah: 30,
@@ -410,9 +553,22 @@ void main() {
   testWidgets(
     'page mode target jump highlights row then clears',
     (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
       await _pumpReader(
         tester,
-        db,
+        container,
         screen: const ReaderScreen(
           mode: 'page',
           page: 2,
@@ -482,23 +638,12 @@ Future<void> _seedAyahs(AppDatabase db) async {
 
 Future<void> _pumpReader(
   WidgetTester tester,
-  AppDatabase db, {
+  ProviderContainer container, {
   ReaderScreen screen = const ReaderScreen(),
-  TajweedTagsService? tajweedTagsService,
 }) async {
-  addTearDown(() async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 1));
-  });
-
   await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        appDatabaseProvider.overrideWithValue(db),
-        if (tajweedTagsService != null)
-          tajweedTagsServiceProvider.overrideWithValue(tajweedTagsService),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: MaterialApp(
         home: Scaffold(body: screen),
       ),
@@ -509,6 +654,14 @@ Future<void> _pumpReader(
     tester,
     find.byKey(const ValueKey('reader_mode_toggle')),
   );
+}
+
+void _registerPumpCleanup(WidgetTester tester) {
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+  });
 }
 
 Future<void> _pumpUntilAyahHighlighted(
