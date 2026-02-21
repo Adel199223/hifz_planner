@@ -11,3 +11,6 @@ build/
 .dart_tool/
 build/
 
+
+.idea/
+
