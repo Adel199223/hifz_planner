@@ -2,7 +2,9 @@ import 'package:drift/drift.dart';
 import 'package:flutter/services.dart';
 
 import '../database/app_database.dart';
-import 'tanzil_text_integrity_guard.dart';
+import '../models/tanzil_line_record.dart';
+import 'tanzil_text_integrity_guard.dart' show parseTanzilText;
+
 
 typedef QuranTextImportProgressCallback = void Function(
   QuranTextImportProgress progress,

@@ -1,90 +1,59 @@
-import 'dart:convert';
-
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 
+import '../models/tanzil_line_record.dart';
+import 'package:hifz_planner/data/models/tanzil_line_record.dart';
+
 const String tanzilUthmaniAssetPath = 'assets/quran/tanzil_uthmani.txt';
-const String expectedTanzilUthmaniSha256 = 'REPLACE_ME';
-const int expectedTanzilUthmaniAyahCount = -1; // REPLACE_ME_COUNT
 
-class TanzilLineRecord {
-  const TanzilLineRecord({
-    required this.surah,
-    required this.ayah,
-    required this.text,
-  });
+// Replace these after running tooling\inspect_tanzil_text.py
+const String expectedTanzilUthmaniSha256 =
+    '7f30c647331a61100ebf24a80507dc0fcdd9f2df97f1312b5b2dfcb982a7f326';
+const int expectedTanzilUthmaniAyahCount = 6236;
 
-  final int surah;
-  final int ayah;
-  final String text;
-}
+final RegExp _ayahLine = RegExp(r'^\s*(\d{1,3})\|(\d{1,3})\|(.*)$');
+final RegExp _hasArabic = RegExp(r'[\u0600-\u06FF]'); // Arabic Unicode block
 
-String sha256HexFromBytes(List<int> bytes) {
+Future<String> computeAssetSha256({String assetPath = tanzilUthmaniAssetPath}) async {
+  final data = await rootBundle.load(assetPath);
+  final bytes = data.buffer.asUint8List();
   return sha256.convert(bytes).toString();
 }
 
-Future<String> computeAssetSha256({
-  AssetBundle? bundle,
-  String assetPath = tanzilUthmaniAssetPath,
-}) async {
-  final sourceBundle = bundle ?? rootBundle;
-  final data = await sourceBundle.load(assetPath);
-  final bytes = data.buffer.asUint8List(
-    data.offsetInBytes,
-    data.lengthInBytes,
-  );
-  return sha256HexFromBytes(bytes);
-}
+List<TanzilLineRecord> parseTanzilText(String raw) {
+  // Strip UTF-8 BOM if present
+  raw = raw.replaceAll('\uFEFF', '');
 
-List<TanzilLineRecord> parseTanzilText(String rawText) {
-  final lines = const LineSplitter().convert(rawText);
-  final rows = <TanzilLineRecord>[];
+  final lines = raw.split(RegExp(r'\r?\n'));
+  final result = <TanzilLineRecord>[];
 
-  for (var index = 0; index < lines.length; index++) {
-    var line = lines[index];
-    final lineNumber = index + 1;
+  for (var i = 0; i < lines.length; i++) {
+    final lineNo = i + 1;
+    final line = lines[i].trimRight();
 
-    if (index == 0 && line.startsWith('\ufeff')) {
-      line = line.substring(1);
-    }
+    if (line.trim().isEmpty) continue;
 
-    if (line.trim().isEmpty) {
-      continue;
-    }
+    final m = _ayahLine.firstMatch(line);
+    if (m == null) {
+      // Skip ONLY non-ayah informational/footer lines that contain NO Arabic letters.
+      if (!_hasArabic.hasMatch(line)) continue;
 
-    final firstPipe = line.indexOf('|');
-    final secondPipe = line.indexOf('|', firstPipe + 1);
-
-    if (firstPipe <= 0 || secondPipe <= firstPipe + 1) {
+      // If Arabic exists but format is wrong, fail hard (do not silently ignore).
       throw FormatException(
-        'Invalid Tanzil format at line $lineNumber. Expected sura|ayah|text.',
+        'Invalid Tanzil format at line $lineNo. Expected sura|ayah|text.',
       );
     }
 
-    final surahText = line.substring(0, firstPipe).trim();
-    final ayahText = line.substring(firstPipe + 1, secondPipe).trim();
-    final text = line.substring(secondPipe + 1);
+    final surah = int.parse(m.group(1)!);
+    final ayah = int.parse(m.group(2)!);
+    final text = m.group(3)!;
 
-    final surah = int.tryParse(surahText);
-    final ayah = int.tryParse(ayahText);
-    if (surah == null || ayah == null) {
-      throw FormatException(
-        'Invalid numeric surah/ayah at line $lineNumber.',
-      );
+    if (surah < 1 || surah > 114 || ayah < 1) {
+      throw FormatException('Invalid surah/ayah numbers at line $lineNo: $surah|$ayah');
     }
 
-    rows.add(
-      TanzilLineRecord(
-        surah: surah,
-        ayah: ayah,
-        text: text,
-      ),
-    );
+    result.add(TanzilLineRecord(surah: surah, ayah: ayah, text: text));
   }
 
-  return rows;
-}
-
-int countParsedAyahs(String rawText) {
-  return parseTanzilText(rawText).length;
+  return result;
 }

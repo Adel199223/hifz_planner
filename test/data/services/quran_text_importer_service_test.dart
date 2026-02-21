@@ -127,17 +127,17 @@ void main() {
   });
 
   test('throws FormatException for malformed line', () async {
-    final importer = QuranTextImporterService(
-      db,
-      loadAssetText: (_) async => '''
+  final importer = QuranTextImporterService(
+    db,
+    loadAssetText: (_) async => '''
 1|1|ok
-bad-line
+هذا_سطر_عربي_غير_صحيح
 ''',
-    );
+  );
 
-    await expectLater(
-      importer.importFromAsset(),
-      throwsA(isA<FormatException>()),
-    );
-  });
+  await expectLater(
+    importer.importFromAsset(),
+    throwsA(isA<FormatException>()),
+  );
+});
 }

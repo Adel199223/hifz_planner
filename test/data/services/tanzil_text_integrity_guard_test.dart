@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/services/tanzil_text_integrity_guard.dart';
+import 'package:hifz_planner/data/models/tanzil_line_record.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -59,9 +60,9 @@ void main() {
   }, skip: hasRealAsset ? false : missingAssetSkipReason);
 
   test('parseTanzilText throws FormatException on malformed line', () {
-    expect(
-      () => parseTanzilText('1|1|ok\nbad-line\n'),
-      throwsA(isA<FormatException>()),
-    );
-  });
+  expect(
+    () => parseTanzilText('1|1|ok\nهذا_سطر_عربي_غير_صحيح\n'),
+    throwsA(isA<FormatException>()),
+  );
+});
 }

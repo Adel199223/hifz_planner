@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/providers/database_providers.dart';
 import '../data/services/calibration_service.dart';
+import '../data/services/forecast_simulation_service.dart';
 import '../data/services/onboarding_defaults.dart';
 
 enum _TimeInputMode { weekly, weekday }
@@ -56,6 +57,10 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
   bool _isRefreshingCalibration = false;
   bool _isAddingSample = false;
   bool _isApplyingCalibration = false;
+
+  bool _isRunningForecast = false;
+  ForecastSimulationResult? _forecastResult;
+  String? _forecastError;
 
   @override
   void initState() {
@@ -293,6 +298,42 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     }
   }
 
+  Future<void> _runForecast() async {
+    if (_isRunningForecast) {
+      return;
+    }
+
+    setState(() {
+      _isRunningForecast = true;
+      _forecastError = null;
+    });
+
+    try {
+      final result =
+          await ref.read(forecastSimulationServiceProvider).simulate();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _forecastResult = result;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _forecastResult = null;
+        _forecastError = 'Forecast failed: $error';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRunningForecast = false;
+        });
+      }
+    }
+  }
+
   Map<int, int>? _parseGradeDistributionOrNull() {
     final raw = <int, String>{
       5: _gradeQ5Controller.text.trim(),
@@ -341,6 +382,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final weekdayMinutes = _currentWeekdayMinutes();
     final dailyDefault = deriveDailyDefault(weekdayMinutes);
     final preview = _calibrationPreview;
+    final forecast = _forecastResult;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -351,6 +393,75 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             Text(
               'Onboarding Questionnaire ($_maxQuestions questions)',
               style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Card(
+              key: const ValueKey('plan_forecast_section'),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Forecast (Deterministic Simulation)',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      key: const ValueKey('plan_forecast_run_button'),
+                      onPressed: _isRunningForecast ? null : _runForecast,
+                      child: Text(
+                        _isRunningForecast ? 'Running...' : 'Run Forecast',
+                      ),
+                    ),
+                    if (_isRunningForecast) ...[
+                      const SizedBox(height: 12),
+                      const LinearProgressIndicator(),
+                    ],
+                    if (_forecastError != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _forecastError!,
+                        key: const ValueKey('plan_forecast_incomplete_reason'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                    if (forecast != null) ...[
+                      const SizedBox(height: 12),
+                      if (forecast.estimatedCompletionDate != null)
+                        Text(
+                          'Estimated completion: ${_formatDate(forecast.estimatedCompletionDate!)}',
+                          key: const ValueKey('plan_forecast_completion_date'),
+                        )
+                      else
+                        Text(
+                          forecast.incompleteReason ??
+                              'Completion estimate unavailable.',
+                          key:
+                              const ValueKey('plan_forecast_incomplete_reason'),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Weekly minutes: ${_formatCurve(forecast.weeklyMinutesCurve)}',
+                        key: const ValueKey('plan_forecast_weekly_minutes'),
+                      ),
+                      Text(
+                        'Revision-only ratio: ${_formatCurve(forecast.revisionOnlyRatioCurve)}',
+                        key: const ValueKey('plan_forecast_revision_ratio'),
+                      ),
+                      Text(
+                        'Avg new pages/day: ${_formatCurve(forecast.avgNewPagesPerDayCurve)}',
+                        key: const ValueKey('plan_forecast_new_pages_per_day'),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Card(
@@ -833,5 +944,26 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       return '--';
     }
     return value.toStringAsFixed(2);
+  }
+
+  String _formatDate(DateTime value) {
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '${value.year}-$month-$day';
+  }
+
+  String _formatCurve(List<double> values, {int maxPoints = 16}) {
+    if (values.isEmpty) {
+      return '[]';
+    }
+
+    final preview = values
+        .take(maxPoints)
+        .map((value) => value.toStringAsFixed(2))
+        .join(', ');
+    if (values.length > maxPoints) {
+      return '[$preview, ...] (${values.length} weeks)';
+    }
+    return '[$preview]';
   }
 }

@@ -12,6 +12,7 @@ import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
 import '../services/calibration_service.dart';
 import '../services/daily_planner.dart';
+import '../services/forecast_simulation_service.dart';
 import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
 import '../services/quran_text_importer_service.dart';
@@ -102,6 +103,23 @@ final calibrationServiceProvider = Provider<CalibrationService>((ref) {
   final settingsRepo = ref.watch(settingsRepoProvider);
   return CalibrationService(calibrationRepo, settingsRepo);
 });
+
+final forecastSimulationServiceProvider = Provider<ForecastSimulationService>(
+  (ref) {
+    final db = ref.watch(appDatabaseProvider);
+    final settingsRepo = ref.watch(settingsRepoProvider);
+    final progressRepo = ref.watch(progressRepoProvider);
+    final scheduleRepo = ref.watch(scheduleRepoProvider);
+    final quranRepo = ref.watch(quranRepoProvider);
+    return ForecastSimulationService(
+      db,
+      settingsRepo,
+      progressRepo,
+      scheduleRepo,
+      quranRepo,
+    );
+  },
+);
 
 final quranTextImporterServiceProvider = Provider<QuranTextImporterService>((
   ref,

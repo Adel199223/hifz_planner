@@ -30,6 +30,11 @@ void main() {
     expect(find.byKey(const ValueKey('plan_max_new_pages')), findsOneWidget);
     expect(find.byKey(const ValueKey('plan_max_new_units')), findsOneWidget);
     expect(find.text('Suggested Plan (Editable)'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_forecast_section')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('plan_forecast_run_button')),
+      findsOneWidget,
+    );
     expect(find.text('Calibration Mode (Optional)'), findsOneWidget);
     expect(find.byKey(const ValueKey('plan_calibration_new_duration')),
         findsOneWidget);
@@ -37,6 +42,81 @@ void main() {
         findsOneWidget);
     expect(
       find.byKey(const ValueKey('plan_apply_calibration_button')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('running forecast on empty quran data shows incomplete reason',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await _pumpPlan(tester, db);
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_forecast_run_button')),
+    );
+
+    expect(
+      find.byKey(const ValueKey('plan_forecast_incomplete_reason')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('running forecast with seeded data shows completion and curves',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await db.batch((batch) {
+      batch.insertAll(
+        db.ayah,
+        [
+          AyahCompanion.insert(
+            surah: 1,
+            ayah: 1,
+            textUthmani: 'ayah-1',
+            pageMadina: const Value(1),
+          ),
+          AyahCompanion.insert(
+            surah: 114,
+            ayah: 6,
+            textUthmani: 'ayah-114-6',
+            pageMadina: const Value(2),
+          ),
+        ],
+      );
+    });
+    await SettingsRepo(db).updateSettings(
+      forceRevisionOnly: 0,
+      requirePageMetadata: 0,
+      maxNewPagesPerDay: 4,
+      maxNewUnitsPerDay: 8,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      dailyMinutesDefault: 60,
+    );
+
+    await _pumpPlan(tester, db);
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_forecast_run_button')),
+    );
+
+    expect(
+      find.byKey(const ValueKey('plan_forecast_completion_date')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_forecast_weekly_minutes')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_forecast_revision_ratio')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_forecast_new_pages_per_day')),
       findsOneWidget,
     );
   });
