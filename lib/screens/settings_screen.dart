@@ -24,6 +24,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _beginImport('Starting Qur\'an text import...');
 
     try {
+      final counts = await _loadAyahImportCounts();
+      if (counts.totalAyahs > 0) {
+        _completeImport('Already imported');
+        return;
+      }
+
       final importer = ref.read(quranTextImporterServiceProvider);
       final result = await importer.importFromAsset(
         force: false,
@@ -45,9 +51,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? 'Import skipped: ayah table already has data.'
           : 'Import complete: ${result.insertedRows} inserted, ${result.ignoredRows} ignored.';
 
-      _showStatusMessage(message);
+      _completeImport(message);
     } catch (error) {
-      _showStatusMessage(
+      _completeImport(
         'Qur\'an text import failed: ${_formatError(error)}',
       );
     } finally {
@@ -63,6 +69,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _beginImport('Starting page metadata import...');
 
     try {
+      final counts = await _loadAyahImportCounts();
+      final nearCompleteThreshold = counts.totalAyahs - 5;
+      final metadataAlreadyCurrent = counts.totalAyahs > 0 &&
+          (counts.pageMappedAyahs == counts.totalAyahs ||
+              counts.pageMappedAyahs >= nearCompleteThreshold);
+      if (metadataAlreadyCurrent) {
+        _completeImport('Page metadata already up to date');
+        return;
+      }
+
       final importer = ref.read(pageMetadataImporterServiceProvider);
       final result = await importer.importFromAsset(
         onProgress: (progress) {
@@ -84,9 +100,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           '${result.unchangedRows} unchanged, ${result.missingRows} missing, '
           '${result.parsedRows} parsed.';
 
-      _showStatusMessage(message);
+      _completeImport(message);
     } catch (error) {
-      _showStatusMessage(
+      _completeImport(
         'Page metadata import failed: ${_formatError(error)}',
       );
     } finally {
@@ -127,6 +143,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+
+  void _completeImport(String message) {
+    _updateProgress(
+      fraction: 1,
+      details: 'completed',
+      statusMessage: message,
+    );
+    _showStatusMessage(message);
+  }
+
+  Future<_AyahImportCounts> _loadAyahImportCounts() async {
+    final db = ref.read(appDatabaseProvider);
+    final row = await db
+        .customSelect(
+          'SELECT COUNT(*) AS total, '
+          'SUM(CASE WHEN page_madina IS NOT NULL THEN 1 ELSE 0 END) AS page_count '
+          'FROM ayah',
+        )
+        .getSingle();
+
+    return _AyahImportCounts(
+      totalAyahs: row.read<int>('total'),
+      pageMappedAyahs: row.read<int?>('page_count') ?? 0,
     );
   }
 
@@ -194,4 +235,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
   }
+}
+
+class _AyahImportCounts {
+  const _AyahImportCounts({
+    required this.totalAyahs,
+    required this.pageMappedAyahs,
+  });
+
+  final int totalAyahs;
+  final int pageMappedAyahs;
 }

@@ -81,10 +81,12 @@ void main() {
     expect(missing, isNull);
   });
 
-  test('getPagesAvailable returns distinct sorted non-null pages', () async {
+  test('getPagesAvailable returns fixed Madani page list 1..604', () async {
     final pages = await repo.getPagesAvailable();
 
-    expect(pages, <int>[5, 10]);
+    expect(pages.length, 604);
+    expect(pages.first, 1);
+    expect(pages.last, 604);
   });
 
   test('getAyahsByPage returns rows ordered by surah and ayah', () async {

@@ -1146,23 +1146,6 @@ class _AyahRow extends StatelessWidget {
                         '${ayah.surah}:${ayah.ayah}',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      const SizedBox(width: 8),
-                      if (ayah.pageMadina != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                Theme.of(context).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            'Page ${ayah.pageMadina}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -1171,7 +1154,11 @@ class _AyahRow extends StatelessWidget {
                     child: Text(
                       ayah.textUthmani,
                       textAlign: TextAlign.right,
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontFamily: 'UthmanicHafs',
+                            fontSize: 34,
+                            height: 1.9,
+                          ),
                     ),
                   ),
                 ],

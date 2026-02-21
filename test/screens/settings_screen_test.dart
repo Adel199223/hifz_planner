@@ -19,10 +19,11 @@ void main() {
     final textService = QuranTextImporterService(
       db,
       loadAssetText: (_) async => '1|1|text',
+      loadPageIndex: () async => <String, int>{'1:1': 1},
     );
     final metadataService = PageMetadataImporterService(
       db,
-      loadAssetText: (_) async => 'surah,ayah,page_madina\n1,1,1',
+      loadPageIndex: (_) async => <String, int>{'1:1': 1},
     );
 
     await tester.pumpWidget(
@@ -58,10 +59,14 @@ void main() {
 1|2|b
 ''';
         },
+        loadPageIndex: () async => <String, int>{
+          '1:1': 1,
+          '1:2': 1,
+        },
       );
       final metadataService = PageMetadataImporterService(
         db,
-        loadAssetText: (_) async => 'surah,ayah,page_madina\n1,1,1',
+        loadPageIndex: (_) async => <String, int>{'1:1': 1},
       );
 
       await tester.pumpWidget(
@@ -93,7 +98,8 @@ void main() {
     },
   );
 
-  testWidgets('shows skipped message when data already exists', (tester) async {
+  testWidgets('shows already imported message when data already exists',
+      (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
 
@@ -108,10 +114,11 @@ void main() {
     final textService = QuranTextImporterService(
       db,
       loadAssetText: (_) async => '1|2|new',
+      loadPageIndex: () async => <String, int>{'1:2': 1},
     );
     final metadataService = PageMetadataImporterService(
       db,
-      loadAssetText: (_) async => 'surah,ayah,page_madina\n1,1,1',
+      loadPageIndex: (_) async => <String, int>{'1:1': 1},
     );
 
     await tester.pumpWidget(
@@ -131,11 +138,11 @@ void main() {
     await tester.tap(find.text('Import Qur\'an Text'));
     await pumpUntilFound(
       tester,
-      find.textContaining('Import skipped: ayah table already has data.'),
+      find.textContaining('Already imported'),
     );
 
     expect(
-      find.textContaining('Import skipped: ayah table already has data.'),
+      find.textContaining('Already imported'),
       findsWidgets,
     );
   });
@@ -146,26 +153,30 @@ void main() {
       final db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
 
-      await db.into(db.ayah).insert(
-            AyahCompanion.insert(
-              surah: 1,
-              ayah: 1,
-              textUthmani: 'verse',
-            ),
-          );
+      await db.batch((batch) {
+        batch.insertAll(
+          db.ayah,
+          [
+            for (var ayah = 1; ayah <= 10; ayah++)
+              AyahCompanion.insert(
+                surah: 1,
+                ayah: ayah,
+                textUthmani: 'verse $ayah',
+              ),
+          ],
+        );
+      });
 
       final textService = QuranTextImporterService(
         db,
         loadAssetText: (_) async => '1|1|text',
+        loadPageIndex: () async => <String, int>{'1:1': 10},
       );
       final metadataService = PageMetadataImporterService(
         db,
-        loadAssetText: (_) async {
+        loadPageIndex: (_) async {
           await Future<void>.delayed(const Duration(milliseconds: 10));
-          return '''
-surah,ayah,page_madina
-1,1,10
-''';
+          return <String, int>{'1:1': 10};
         },
       );
 
@@ -202,4 +213,60 @@ surah,ayah,page_madina
       expect(ayah.pageMadina, 10);
     },
   );
+
+  testWidgets(
+      'shows already up-to-date message for metadata when mostly mapped',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await db.batch((batch) {
+      batch.insertAll(
+        db.ayah,
+        [
+          for (var ayah = 1; ayah <= 10; ayah++)
+            AyahCompanion.insert(
+              surah: 1,
+              ayah: ayah,
+              textUthmani: 'verse $ayah',
+              pageMadina: ayah <= 5 ? Value(ayah) : const Value.absent(),
+            ),
+        ],
+      );
+    });
+
+    final textService = QuranTextImporterService(
+      db,
+      loadAssetText: (_) async => '1|1|text',
+      loadPageIndex: () async => <String, int>{'1:1': 1},
+    );
+    final metadataService = PageMetadataImporterService(
+      db,
+      loadPageIndex: (_) async => <String, int>{'1:1': 10},
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          quranTextImporterServiceProvider.overrideWithValue(textService),
+          pageMetadataImporterServiceProvider
+              .overrideWithValue(metadataService),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(body: SettingsScreen()),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Import Page Metadata'));
+    await pumpUntilFound(
+      tester,
+      find.textContaining('Page metadata already up to date'),
+    );
+
+    expect(
+        find.textContaining('Page metadata already up to date'), findsWidgets);
+    expect(find.textContaining('completed'), findsWidgets);
+  });
 }

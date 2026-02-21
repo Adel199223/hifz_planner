@@ -1,18 +1,15 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart';
-import 'package:flutter/services.dart';
 
 import '../database/app_database.dart';
+import 'madani_page_index_service.dart';
 
-const String tanzilPageMetadataAssetPath =
-    'assets/quran/tanzil_page_metadata.csv';
+const String tanzilPageMetadataAssetPath = madaniPageIndexAssetPath;
 
 typedef PageMetadataImportProgressCallback = void Function(
   PageMetadataImportProgress progress,
 );
 
-typedef _AssetTextLoader = Future<String> Function(String assetPath);
+typedef _PageIndexLoader = Future<Map<String, int>> Function(String assetPath);
 
 class PageMetadataImportProgress {
   const PageMetadataImportProgress({
@@ -54,11 +51,11 @@ class PageMetadataImportResult {
 class PageMetadataImporterService {
   PageMetadataImporterService(
     this._db, {
-    Future<String> Function(String assetPath)? loadAssetText,
-  }) : _loadAssetText = loadAssetText ?? rootBundle.loadString;
+    Future<Map<String, int>> Function(String assetPath)? loadPageIndex,
+  }) : _loadPageIndex = loadPageIndex ?? ((_) => loadMadaniPageIndex());
 
   final AppDatabase _db;
-  final _AssetTextLoader _loadAssetText;
+  final _PageIndexLoader _loadPageIndex;
 
   Future<PageMetadataImportResult> importFromAsset({
     String assetPath = tanzilPageMetadataAssetPath,
@@ -67,7 +64,10 @@ class PageMetadataImporterService {
   }) async {
     if (batchSize <= 0) {
       throw ArgumentError.value(
-          batchSize, 'batchSize', 'Must be greater than 0');
+        batchSize,
+        'batchSize',
+        'Must be greater than 0',
+      );
     }
 
     _emitProgress(
@@ -80,25 +80,24 @@ class PageMetadataImporterService {
       ),
     );
 
-    final rawText = await _loadAssetText(assetPath);
+    final pageIndex = await _loadPageIndex(assetPath);
+    final parsedRows = pageIndex.length;
 
     _emitProgress(
       onProgress,
-      const PageMetadataImportProgress(
+      PageMetadataImportProgress(
         processed: 0,
-        total: 0,
+        total: parsedRows,
         phase: PageMetadataImportProgress.phaseParsing,
         message: 'Parsing page metadata...',
       ),
     );
 
-    final parsed = _parseMetadataCsv(rawText);
-    final parsedRows = parsed.parsedRows;
-    final records = parsed.rowsByAyah.values.toList(growable: false);
+    final records = _recordsFromPageIndex(pageIndex);
 
     final ayahs = await _db.select(_db.ayah).get();
     final ayahByKey = <String, AyahData>{
-      for (final ayah in ayahs) '${ayah.surah}:${ayah.ayah}': ayah,
+      for (final ayah in ayahs) verseKey(ayah.surah, ayah.ayah): ayah,
     };
 
     var matchedRows = 0;
@@ -107,7 +106,7 @@ class PageMetadataImporterService {
     final pendingUpdates = <_PendingPageUpdate>[];
 
     for (final record in records) {
-      final key = '${record.surah}:${record.ayah}';
+      final key = verseKey(record.surah, record.ayah);
       final existing = ayahByKey[key];
       if (existing == null) {
         missingRows += 1;
@@ -190,69 +189,29 @@ class PageMetadataImporterService {
     );
   }
 
-  _ParsedPageMetadataCsv _parseMetadataCsv(String rawText) {
-    final lines = const LineSplitter().convert(rawText);
-    final rowsByAyah = <String, _PageMetadataRow>{};
-    var parsedRows = 0;
-
-    for (var index = 0; index < lines.length; index++) {
-      var line = lines[index];
-      final lineNumber = index + 1;
-
-      if (index == 0 && line.startsWith('\ufeff')) {
-        line = line.substring(1);
+  List<_PageMetadataRow> _recordsFromPageIndex(Map<String, int> pageIndex) {
+    final rows = <_PageMetadataRow>[];
+    for (final entry in pageIndex.entries) {
+      final keyParts = entry.key.split(':');
+      if (keyParts.length != 2) {
+        throw FormatException('Invalid verse key format: "${entry.key}".');
       }
 
-      if (line.trim().isEmpty) {
-        continue;
+      final surah = int.tryParse(keyParts[0]);
+      final ayah = int.tryParse(keyParts[1]);
+      if (surah == null || ayah == null || surah < 1 || ayah < 1) {
+        throw FormatException('Invalid verse key values: "${entry.key}".');
       }
 
-      final normalized = line.trim().toLowerCase().replaceAll(' ', '');
-      if (normalized == 'surah,ayah,page_madina') {
-        continue;
-      }
-
-      final firstComma = line.indexOf(',');
-      final secondComma = line.indexOf(',', firstComma + 1);
-
-      if (firstComma <= 0 || secondComma <= firstComma + 1) {
-        throw FormatException(
-          'Invalid page metadata format at line $lineNumber. '
-          'Expected surah,ayah,page_madina.',
-        );
-      }
-
-      final surahText = line.substring(0, firstComma).trim();
-      final ayahText = line.substring(firstComma + 1, secondComma).trim();
-      final pageText = line.substring(secondComma + 1).trim();
-
-      final surah = int.tryParse(surahText);
-      final ayah = int.tryParse(ayahText);
-      final pageMadina = int.tryParse(pageText);
-
-      if (surah == null || ayah == null || pageMadina == null) {
-        throw FormatException(
-          'Invalid numeric values at line $lineNumber.',
-        );
-      }
-      if (surah <= 0 || ayah <= 0 || pageMadina <= 0) {
-        throw FormatException(
-          'Values must be positive integers at line $lineNumber.',
-        );
-      }
-
-      parsedRows += 1;
-      rowsByAyah['$surah:$ayah'] = _PageMetadataRow(
-        surah: surah,
-        ayah: ayah,
-        pageMadina: pageMadina,
+      rows.add(
+        _PageMetadataRow(
+          surah: surah,
+          ayah: ayah,
+          pageMadina: entry.value,
+        ),
       );
     }
-
-    return _ParsedPageMetadataCsv(
-      parsedRows: parsedRows,
-      rowsByAyah: rowsByAyah,
-    );
+    return rows;
   }
 
   void _emitProgress(
@@ -261,16 +220,6 @@ class PageMetadataImporterService {
   ) {
     onProgress?.call(progress);
   }
-}
-
-class _ParsedPageMetadataCsv {
-  const _ParsedPageMetadataCsv({
-    required this.parsedRows,
-    required this.rowsByAyah,
-  });
-
-  final int parsedRows;
-  final Map<String, _PageMetadataRow> rowsByAyah;
 }
 
 class _PageMetadataRow {

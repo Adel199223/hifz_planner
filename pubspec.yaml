@@ -28,3 +28,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/quran/
+    - assets/fonts/
+  fonts:
+    - family: UthmanicHafs
+      fonts:
+        - asset: assets/fonts/UthmanicHafs1Ver18.ttf

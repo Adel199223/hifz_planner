@@ -2,15 +2,17 @@ import 'package:drift/drift.dart';
 import 'package:flutter/services.dart';
 
 import '../database/app_database.dart';
+import 'madani_page_index_service.dart';
 import '../models/tanzil_line_record.dart';
-import 'tanzil_text_integrity_guard.dart' show parseTanzilText;
-
+import 'tanzil_text_integrity_guard.dart'
+    show expectedTanzilUthmaniAyahCount, parseTanzilText;
 
 typedef QuranTextImportProgressCallback = void Function(
   QuranTextImportProgress progress,
 );
 
 typedef _AssetTextLoader = Future<String> Function(String assetPath);
+typedef _PageIndexLoader = Future<Map<String, int>> Function();
 
 class QuranTextImportProgress {
   const QuranTextImportProgress({
@@ -54,10 +56,13 @@ class QuranTextImporterService {
   QuranTextImporterService(
     this._db, {
     Future<String> Function(String assetPath)? loadAssetText,
-  }) : _loadAssetText = loadAssetText ?? rootBundle.loadString;
+    Future<Map<String, int>> Function()? loadPageIndex,
+  })  : _loadAssetText = loadAssetText ?? rootBundle.loadString,
+        _loadPageIndex = loadPageIndex ?? (() => loadMadaniPageIndex());
 
   final AppDatabase _db;
   final _AssetTextLoader _loadAssetText;
+  final _PageIndexLoader _loadPageIndex;
 
   Future<QuranTextImportResult> importFromAsset({
     String assetPath = 'assets/quran/tanzil_uthmani.txt',
@@ -114,6 +119,16 @@ class QuranTextImporterService {
 
     final rows = _parseTanzilLines(rawText);
     final parsedRows = rows.length;
+    final pageIndex = await _loadPageIndex();
+    final mappedRows = _mapRowsToPages(
+      rows: rows,
+      pageIndex: pageIndex,
+    );
+    _debugAssertMappedRows(
+      rows: rows,
+      mappedRows: mappedRows,
+      pageIndex: pageIndex,
+    );
 
     _emitProgress(
       onProgress,
@@ -127,16 +142,17 @@ class QuranTextImporterService {
 
     var processed = 0;
     for (var start = 0; start < rows.length; start += batchSize) {
-      final end =
-          (start + batchSize < rows.length) ? start + batchSize : rows.length;
-      final chunk = rows.sublist(start, end);
+      final end = (start + batchSize < mappedRows.length)
+          ? start + batchSize
+          : mappedRows.length;
+      final chunk = mappedRows.sublist(start, end);
       final companions = [
-        for (final row in chunk)
+        for (final mapped in chunk)
           AyahCompanion.insert(
-            surah: row.surah,
-            ayah: row.ayah,
-            textUthmani: row.text,
-            pageMadina: const Value.absent(),
+            surah: mapped.row.surah,
+            ayah: mapped.row.ayah,
+            textUthmani: mapped.row.text,
+            pageMadina: Value(mapped.page),
           ),
       ];
 
@@ -192,10 +208,74 @@ class QuranTextImporterService {
   List<TanzilLineRecord> _parseTanzilLines(String rawText) =>
       parseTanzilText(rawText);
 
+  List<_MappedAyahRow> _mapRowsToPages({
+    required List<TanzilLineRecord> rows,
+    required Map<String, int> pageIndex,
+  }) {
+    final mappedRows = <_MappedAyahRow>[];
+    for (final row in rows) {
+      final key = verseKey(row.surah, row.ayah);
+      final page = pageIndex[key];
+      if (page == null) {
+        throw StateError('Missing Madani page mapping for verse "$key".');
+      }
+      mappedRows.add(_MappedAyahRow(row: row, page: page));
+    }
+    return mappedRows;
+  }
+
+  void _debugAssertMappedRows({
+    required List<TanzilLineRecord> rows,
+    required List<_MappedAyahRow> mappedRows,
+    required Map<String, int> pageIndex,
+  }) {
+    assert(() {
+      if (mappedRows.length != rows.length) {
+        throw AssertionError(
+          'Mapped row count ${mappedRows.length} does not match parsed row count ${rows.length}.',
+        );
+      }
+
+      final pages = mappedRows.map((item) => item.page).toList(growable: false);
+      if (pages.any((page) => page < 1 || page > madaniPageCount)) {
+        throw AssertionError(
+            'Mapped rows include page outside 1..$madaniPageCount.');
+      }
+
+      if (rows.length == expectedTanzilUthmaniAyahCount) {
+        final minPage = pages.reduce((a, b) => a < b ? a : b);
+        final maxPage = pages.reduce((a, b) => a > b ? a : b);
+        if (minPage != 1 || maxPage != madaniPageCount) {
+          throw AssertionError(
+            'Mapped page bounds are $minPage..$maxPage, expected 1..$madaniPageCount.',
+          );
+        }
+
+        debugValidateMadaniPageCoverage(
+          pageIndex: pageIndex,
+          appVerseKeys: rows.map((row) => verseKey(row.surah, row.ayah)),
+          expectedVerseCount: expectedTanzilUthmaniAyahCount,
+        );
+      }
+
+      return true;
+    }());
+  }
+
   void _emitProgress(
     QuranTextImportProgressCallback? onProgress,
     QuranTextImportProgress progress,
   ) {
     onProgress?.call(progress);
   }
+}
+
+class _MappedAyahRow {
+  const _MappedAyahRow({
+    required this.row,
+    required this.page,
+  });
+
+  final TanzilLineRecord row;
+  final int page;
 }

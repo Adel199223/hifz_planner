@@ -15,18 +15,17 @@ void main() {
     await db.close();
   });
 
-  test('imports valid CSV and updates matching ayahs', () async {
+  test('imports valid mapping and updates matching ayahs', () async {
     await _seedAyah(db, surah: 1, ayah: 1, text: 'a');
     await _seedAyah(db, surah: 1, ayah: 2, text: 'b', pageMadina: 99);
 
     final service = PageMetadataImporterService(
       db,
-      loadAssetText: (_) async => '''
-surah,ayah,page_madina
-1,1,1
-1,2,2
-2,1,5
-''',
+      loadPageIndex: (_) async => <String, int>{
+        '1:1': 1,
+        '1:2': 2,
+        '2:1': 5,
+      },
     );
 
     final result = await service.importFromAsset();
@@ -47,7 +46,7 @@ surah,ayah,page_madina
 
     final service = PageMetadataImporterService(
       db,
-      loadAssetText: (_) async => '1,1,7',
+      loadPageIndex: (_) async => <String, int>{'1:1': 7},
     );
 
     final first = await service.importFromAsset();
@@ -59,37 +58,29 @@ surah,ayah,page_madina
     expect(second.unchangedRows, 1);
   });
 
-  test('handles header, blank lines, and duplicate keys with last row winning',
-      () async {
-    await _seedAyah(db, surah: 1, ayah: 1, text: 'x', pageMadina: 2);
+  test('counts unchanged rows when page is already current', () async {
+    await _seedAyah(db, surah: 1, ayah: 1, text: 'x', pageMadina: 8);
 
     final service = PageMetadataImporterService(
       db,
-      loadAssetText: (_) async => '''
-\ufeffsurah,ayah,page_madina
-
-1,1,5
-1,1,8
-''',
+      loadPageIndex: (_) async => <String, int>{'1:1': 8},
     );
 
     final result = await service.importFromAsset();
-    final ayah = await _getAyah(db, surah: 1, ayah: 1);
 
-    expect(result.parsedRows, 2);
+    expect(result.parsedRows, 1);
     expect(result.matchedRows, 1);
-    expect(result.updatedRows, 1);
-    expect(ayah?.pageMadina, 8);
+    expect(result.updatedRows, 0);
+    expect(result.unchangedRows, 1);
+    expect(result.missingRows, 0);
   });
 
-  test('throws FormatException with line number for malformed CSV rows',
-      () async {
+  test('propagates FormatException from page index loader', () async {
     final service = PageMetadataImporterService(
       db,
-      loadAssetText: (_) async => '''
-surah,ayah,page_madina
-1,1
-''',
+      loadPageIndex: (_) async {
+        throw const FormatException('bad page index');
+      },
     );
 
     await expectLater(
@@ -98,7 +89,7 @@ surah,ayah,page_madina
         isA<FormatException>().having(
           (e) => e.message,
           'message',
-          contains('line 2'),
+          contains('bad page index'),
         ),
       ),
     );
@@ -112,10 +103,10 @@ surah,ayah,page_madina
     final events = <PageMetadataImportProgress>[];
     final service = PageMetadataImporterService(
       db,
-      loadAssetText: (_) async => '''
-1,1,3
-1,2,4
-''',
+      loadPageIndex: (_) async => <String, int>{
+        '1:1': 3,
+        '1:2': 4,
+      },
     );
 
     await service.importFromAsset(

@@ -88,7 +88,8 @@ void main() {
     expect(find.text('رَبِّ ٱلْعَٰلَمِينَ'), findsNothing);
   });
 
-  testWidgets('page mode without metadata shows import prompt', (tester) async {
+  testWidgets('page mode without metadata still exposes 1..604 page navigation',
+      (tester) async {
     final noMetadataDb = AppDatabase(NativeDatabase.memory());
     addTearDown(noMetadataDb.close);
 
@@ -106,19 +107,34 @@ void main() {
       screen: const ReaderScreen(mode: 'page'),
     );
 
-    expect(
-      find.text('No page metadata found. Import Page Metadata in Settings.'),
-      findsWidgets,
+    final pageList = find.byKey(const ValueKey('reader_page_list'));
+    expect(pageList, findsOneWidget);
+    expect(find.byKey(const ValueKey('reader_page_1')), findsOneWidget);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_page_label')),
     );
+
+    final page1Label = tester.widget<Text>(
+      find.byKey(const ValueKey('reader_page_label')),
+    );
+    expect(page1Label.data, 'Page 1');
+
+    await tester.tap(find.byKey(const ValueKey('reader_page_2')));
+    await tester.pumpAndSettle();
+
+    final page2Label = tester.widget<Text>(
+      find.byKey(const ValueKey('reader_page_label')),
+    );
+    expect(page2Label.data, 'Page 2');
   });
 
-  testWidgets('ayah rows use hover wrapper, RTL text, and page badge', (
+  testWidgets('ayah rows use hover wrapper and RTL text', (
     tester,
   ) async {
     await _pumpReader(tester, db);
 
     expect(find.byType(MouseRegion), findsWidgets);
-    expect(find.text('Page 1'), findsWidgets);
 
     final rtlAncestor = find.ancestor(
       of: find.text('ٱلْحَمْدُ لِلَّٰهِ'),

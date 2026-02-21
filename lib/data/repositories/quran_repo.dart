@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
+import '../services/madani_page_index_service.dart';
 
 class QuranRepo {
   QuranRepo(this._db);
@@ -8,19 +9,7 @@ class QuranRepo {
   final AppDatabase _db;
 
   Future<List<int>> getPagesAvailable() async {
-    final query = _db.selectOnly(
-      _db.ayah,
-      distinct: true,
-    )
-      ..addColumns([_db.ayah.pageMadina])
-      ..where(_db.ayah.pageMadina.isNotNull())
-      ..orderBy([OrderingTerm.asc(_db.ayah.pageMadina)]);
-
-    final rows = await query.get();
-    return rows
-        .map((row) => row.read(_db.ayah.pageMadina))
-        .whereType<int>()
-        .toList();
+    return List<int>.generate(madaniPageCount, (index) => index + 1);
   }
 
   Future<List<AyahData>> getAyahsBySurah(int surah) {
