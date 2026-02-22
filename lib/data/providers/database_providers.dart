@@ -15,8 +15,11 @@ import '../services/daily_planner.dart';
 import '../services/forecast_simulation_service.dart';
 import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
+import '../services/qurancom_api.dart';
 import '../services/quran_text_importer_service.dart';
+import '../services/surah_metadata_service.dart';
 import '../services/tajweed_tags_service.dart';
+import '../../ui/qcf/qcf_font_manager.dart';
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final database = AppDatabase();
@@ -139,4 +142,16 @@ final pageMetadataImporterServiceProvider =
 
 final tajweedTagsServiceProvider = Provider<TajweedTagsService>((ref) {
   return TajweedTagsService();
+});
+
+final surahMetadataServiceProvider = Provider<SurahMetadataService>((ref) {
+  return SurahMetadataService();
+});
+
+final quranComApiProvider = Provider<QuranComApi>((ref) {
+  return QuranComApi();
+});
+
+final qcfFontManagerProvider = Provider<QcfFontManager>((ref) {
+  return QcfFontManager();
 });

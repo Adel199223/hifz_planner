@@ -14,6 +14,7 @@ void main() {
   late List<TanzilLineRecord> parsedRows;
   late Set<String> ayahKeys;
   late Set<int> surahNumbers;
+  late Map<String, String> verseTextByKey;
   late bool duplicateFound;
 
   setUpAll(() async {
@@ -26,11 +27,13 @@ void main() {
 
     ayahKeys = <String>{};
     surahNumbers = <int>{};
+    verseTextByKey = <String, String>{};
     duplicateFound = false;
 
     for (final row in parsedRows) {
       final key = '${row.surah}:${row.ayah}';
       surahNumbers.add(row.surah);
+      verseTextByKey[key] = row.text;
       if (!ayahKeys.add(key)) {
         duplicateFound = true;
       }
@@ -59,10 +62,21 @@ void main() {
     expect(duplicateFound, isFalse);
   }, skip: hasRealAsset ? false : missingAssetSkipReason);
 
+  test('canonical basmala handling keeps expected ayah numbering', () {
+    expect(verseTextByKey['1:1'], 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ');
+    expect(verseTextByKey['2:1'], 'الٓمٓ');
+    expect(verseTextByKey['3:1'], 'الٓمٓ');
+    expect(
+      verseTextByKey['4:1']?.startsWith('يَـٰٓأَيُّهَا ٱلنَّاسُ'),
+      isTrue,
+    );
+    expect(verseTextByKey['9:1']?.startsWith('بَرَآءَةٌ'), isTrue);
+  }, skip: hasRealAsset ? false : missingAssetSkipReason);
+
   test('parseTanzilText throws FormatException on malformed line', () {
-  expect(
-    () => parseTanzilText('1|1|ok\nهذا_سطر_عربي_غير_صحيح\n'),
-    throwsA(isA<FormatException>()),
-  );
-});
+    expect(
+      () => parseTanzilText('1|1|ok\nهذا_سطر_عربي_غير_صحيح\n'),
+      throwsA(isA<FormatException>()),
+    );
+  });
 }

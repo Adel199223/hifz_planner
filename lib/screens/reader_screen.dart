@@ -6,8 +6,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
+import '../data/services/qurancom_api.dart';
+import '../ui/qcf/qcf_font_manager.dart';
+import '../ui/quran/basmala_header.dart';
 import '../ui/tajweed/tajweed_colors.dart';
 import '../ui/tajweed/tajweed_markup.dart';
+
+const double _qcfFontSizeToLineHeight = 2.9 / 6.1;
+const double _fallbackFontSizeToLineHeight = 3.19 / 6.0;
+const double _targetLineWidthToViewportHeight = 0.52;
+const double _mushafAutoFitMinScale = 0.84;
+const double _mushafAutoFitStep = 0.02;
+const double _mushafLineHeightSafetyFactor = 0.98;
+
+const Map<int, Set<int>> _staticCenteredMushafLines = <int, Set<int>>{
+  255: <int>{2},
+  528: <int>{9},
+  534: <int>{6},
+  545: <int>{6},
+  586: <int>{1},
+  593: <int>{2},
+  594: <int>{5},
+  600: <int>{10},
+  602: <int>{5, 15},
+  603: <int>{10, 15},
+  604: <int>{4, 9, 14, 15},
+};
 
 class ReaderScreen extends ConsumerStatefulWidget {
   const ReaderScreen({
@@ -36,17 +60,18 @@ class ReaderScreen extends ConsumerStatefulWidget {
 }
 
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
-  static final List<String> _surahLabels = List<String>.generate(
-    114,
-    (index) => 'Surah ${index + 1}',
-  );
-
+  _ReaderViewMode _viewMode = _ReaderViewMode.simple;
   _ReaderMode _mode = _ReaderMode.surah;
   _ArabicRenderMode _arabicRenderMode = _ArabicRenderMode.plain;
   int _selectedSurah = 1;
+  String _surahSearchQuery = '';
+  final Map<int, String> _surahNamesEn = <int, String>{};
   int? _selectedPage;
   Future<List<int>>? _availablePagesFuture;
   Future<List<AyahData>>? _ayahsFuture;
+  Future<_MushafRenderData>? _mushafFuture;
+  int? _mushafFuturePage;
+  _ArabicRenderMode? _mushafFutureRenderMode;
   String? _hoveredAyahKey;
   String? _tappedAyahKey;
   String? _jumpHighlightedAyahKey;
@@ -58,10 +83,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   final ScrollController _ayahScrollController = ScrollController();
   final Map<String, GlobalKey> _ayahRowKeys = <String, GlobalKey>{};
   Timer? _jumpHighlightTimer;
+  String? _lastMushafFallbackReason;
 
   @override
   void initState() {
     super.initState();
+    unawaited(_loadSurahMetadata());
     _applyWidgetInputs();
   }
 
@@ -97,7 +124,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   void _applyWidgetInputs() {
-    final resolvedMode = _resolveMode(
+    var resolvedMode = _resolveMode(
       mode: widget.mode,
       page: widget.page,
     );
@@ -105,12 +132,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       surah: widget.targetSurah,
       ayah: widget.targetAyah,
     );
+    if (_viewMode == _ReaderViewMode.mushaf) {
+      resolvedMode = _ReaderMode.page;
+    }
 
     _mode = resolvedMode;
     _rangeHighlight = _normalizeRange();
     _pendingJumpTarget = target;
     _clearInteractiveHighlights();
     _jumpScheduled = false;
+    _lastMushafFallbackReason = null;
+    _invalidateMushafFuture();
 
     if (_mode == _ReaderMode.surah) {
       _pageLoadGeneration += 1;
@@ -181,6 +213,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         _selectedPage = null;
         _pendingJumpTarget = null;
         _ayahsFuture = Future.value(const <AyahData>[]);
+        _invalidateMushafFuture();
       });
       return;
     }
@@ -235,6 +268,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       _selectedPage = pageToSelect;
       _pendingJumpTarget = targetForJump;
       _ayahsFuture = _loadAyahsByPage(pageToSelect!);
+      _invalidateMushafFuture();
     });
   }
 
@@ -246,6 +280,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   void _switchMode(_ReaderMode mode) {
+    if (_viewMode == _ReaderViewMode.mushaf) {
+      return;
+    }
     if (mode == _mode) {
       return;
     }
@@ -255,6 +292,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       _pendingJumpTarget = null;
       _clearInteractiveHighlights();
       _jumpScheduled = false;
+      _lastMushafFallbackReason = null;
+      _invalidateMushafFuture();
 
       if (_mode == _ReaderMode.surah) {
         _pageLoadGeneration += 1;
@@ -284,10 +323,50 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
     setState(() {
       _arabicRenderMode = mode;
+      _invalidateMushafFuture();
     });
 
-    if (mode == _ArabicRenderMode.tajweed) {
+    if (mode == _ArabicRenderMode.tajweed &&
+        _viewMode == _ReaderViewMode.simple) {
       unawaited(_prepareTajweedTags());
+    }
+  }
+
+  void _switchViewMode(_ReaderViewMode mode) {
+    if (mode == _viewMode) {
+      return;
+    }
+
+    setState(() {
+      _viewMode = mode;
+      _lastMushafFallbackReason = null;
+      _invalidateMushafFuture();
+      if (mode == _ReaderViewMode.mushaf) {
+        _mode = _ReaderMode.page;
+        _selectedPage = null;
+        _pendingJumpTarget = null;
+        _clearInteractiveHighlights();
+        _jumpScheduled = false;
+        _ayahsFuture = Future.value(const <AyahData>[]);
+        _availablePagesFuture = _loadAvailablePages();
+      }
+    });
+
+    if (mode == _ReaderViewMode.mushaf) {
+      _resolvePageSelection(
+        requestedPage: widget.page,
+        target: null,
+        showMissingTargetMessage: false,
+      );
+      return;
+    }
+
+    if (_mode == _ReaderMode.page && _selectedPage == null) {
+      _resolvePageSelection(
+        requestedPage: widget.page,
+        target: null,
+        showMissingTargetMessage: false,
+      );
     }
   }
 
@@ -319,6 +398,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       _clearInteractiveHighlights();
       _jumpScheduled = false;
       _ayahsFuture = _loadAyahsBySurah(surah);
+      _lastMushafFallbackReason = null;
+      _invalidateMushafFuture();
     });
   }
 
@@ -332,6 +413,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       _clearInteractiveHighlights();
       _jumpScheduled = false;
       _ayahsFuture = _loadAyahsByPage(page);
+      _lastMushafFallbackReason = null;
+      _invalidateMushafFuture();
     });
   }
 
@@ -339,6 +422,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     setState(() {
       _clearInteractiveHighlights();
       _jumpScheduled = false;
+      _lastMushafFallbackReason = null;
+      _invalidateMushafFuture();
       if (_mode == _ReaderMode.surah) {
         _ayahsFuture = _loadAyahsBySurah(_selectedSurah);
       } else {
@@ -358,6 +443,53 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         showMissingTargetMessage: false,
       );
     }
+  }
+
+  Future<void> _loadSurahMetadata() async {
+    try {
+      final metadata = ref.read(surahMetadataServiceProvider);
+      await metadata.ensureLoaded();
+      if (!mounted) {
+        return;
+      }
+      final names = <int, String>{};
+      for (final entry in metadata.getAll()) {
+        names[entry.number] = entry.en;
+      }
+      setState(() {
+        _surahNamesEn
+          ..clear()
+          ..addAll(names);
+      });
+    } catch (_) {
+      // Use "Surah N" fallback labels when metadata fails to load.
+    }
+  }
+
+  String _surahLabelFor(int surahNumber) {
+    final enName = _surahNamesEn[surahNumber];
+    if (enName == null || enName.trim().isEmpty) {
+      return '$surahNumber. Surah $surahNumber';
+    }
+    return '$surahNumber. $enName';
+  }
+
+  List<int> _filteredSurahNumbers() {
+    final query = _surahSearchQuery.trim().toLowerCase();
+    if (query.isEmpty) {
+      return List<int>.generate(114, (index) => index + 1);
+    }
+
+    final result = <int>[];
+    for (var surah = 1; surah <= 114; surah++) {
+      final numberMatch = surah.toString().contains(query);
+      final nameMatch =
+          (_surahNamesEn[surah] ?? '').toLowerCase().contains(query);
+      if (numberMatch || nameMatch) {
+        result.add(surah);
+      }
+    }
+    return result;
   }
 
   String _ayahKey(AyahData ayah) => '${ayah.surah}:${ayah.ayah}';
@@ -707,6 +839,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget _buildAyahPanel() {
+    if (_viewMode == _ReaderViewMode.mushaf) {
+      return _buildMushafPanel();
+    }
+    return _buildSimpleAyahPanel();
+  }
+
+  Widget _buildSimpleAyahPanel() {
     final ayahsFuture = _ayahsFuture;
     if (ayahsFuture == null) {
       return const Center(child: CircularProgressIndicator());
@@ -757,47 +896,526 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         final tajweedTagsService = ref.read(tajweedTagsServiceProvider);
         final tajweedEnabled = _arabicRenderMode == _ArabicRenderMode.tajweed &&
             tajweedTagsService.hasAnyTags;
+        final entries = _buildSimplePanelEntries(ayahs);
 
-        return ListView.separated(
+        return ListView.builder(
           key: const ValueKey('reader_ayah_list'),
           controller: _ayahScrollController,
           padding: const EdgeInsets.all(16),
           itemBuilder: (context, index) {
-            final ayah = ayahs[index];
+            final entry = entries[index];
+            if (entry.kind == _SimplePanelEntryKind.basmalaHeader) {
+              final header = _mode == _ReaderMode.surah
+                  ? const BasmalaHeader()
+                  : BasmalaHeader(
+                      key: ValueKey(
+                        'basmala_header_${entry.ayah!.surah}:${entry.ayah!.ayah}',
+                      ),
+                    );
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: header,
+              );
+            }
+
+            final ayah = entry.ayah!;
             final key = _ayahKey(ayah);
-            return _AyahRow(
-              rowKey: _ayahRowKey(key),
-              ayah: ayah,
-              tajweedHtml: tajweedEnabled
-                  ? tajweedTagsService.getTajweedHtmlFor(
-                      ayah.surah,
-                      ayah.ayah,
-                    )
-                  : null,
-              hovered: _hoveredAyahKey == key,
-              tappedHighlighted: _tappedAyahKey == key,
-              jumpHighlighted: _jumpHighlightedAyahKey == key,
-              rangeHighlighted: _isRangeHighlighted(ayah),
-              onHoverChanged: (isHovered) {
-                setState(() {
-                  if (isHovered) {
-                    _hoveredAyahKey = key;
-                  } else if (_hoveredAyahKey == key) {
-                    _hoveredAyahKey = null;
-                  }
-                });
-              },
-              onTap: () async {
-                setState(() {
-                  _tappedAyahKey = key;
-                });
-                await _showAyahActions(ayah);
-              },
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _AyahRow(
+                rowKey: _ayahRowKey(key),
+                ayah: ayah,
+                tajweedHtml: tajweedEnabled
+                    ? tajweedTagsService.getTajweedHtmlFor(
+                        ayah.surah,
+                        ayah.ayah,
+                      )
+                    : null,
+                hovered: _hoveredAyahKey == key,
+                tappedHighlighted: _tappedAyahKey == key,
+                jumpHighlighted: _jumpHighlightedAyahKey == key,
+                rangeHighlighted: _isRangeHighlighted(ayah),
+                onHoverChanged: (isHovered) {
+                  setState(() {
+                    if (isHovered) {
+                      _hoveredAyahKey = key;
+                    } else if (_hoveredAyahKey == key) {
+                      _hoveredAyahKey = null;
+                    }
+                  });
+                },
+                onTap: () async {
+                  setState(() {
+                    _tappedAyahKey = key;
+                  });
+                  await _showAyahActions(ayah);
+                },
+              ),
             );
           },
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemCount: ayahs.length,
+          itemCount: entries.length,
         );
+      },
+    );
+  }
+
+  List<_SimplePanelEntry> _buildSimplePanelEntries(List<AyahData> ayahs) {
+    final entries = <_SimplePanelEntry>[];
+    for (final ayah in ayahs) {
+      if (_shouldShowSimpleBasmalaHeaderBefore(ayah)) {
+        entries.add(_SimplePanelEntry.basmalaHeader(ayah: ayah));
+      }
+      entries.add(_SimplePanelEntry.ayah(ayah: ayah));
+    }
+    return entries;
+  }
+
+  bool _shouldShowSimpleBasmalaHeaderBefore(AyahData ayah) {
+    if (ayah.ayah != 1 || ayah.surah == 1 || ayah.surah == 9) {
+      return false;
+    }
+    if (_mode == _ReaderMode.surah) {
+      return ayah.surah == _selectedSurah;
+    }
+    return true;
+  }
+
+  Widget _buildMushafPanel() {
+    final selectedPage = _selectedPage;
+    if (selectedPage == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final mushafFuture = _getMushafFuture(page: selectedPage);
+    return FutureBuilder<_MushafRenderData>(
+      future: mushafFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Failed to load Mushaf page.'),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  key: const ValueKey('reader_mushaf_retry_button'),
+                  onPressed: () {
+                    setState(() {
+                      _invalidateMushafFuture();
+                    });
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final data = snapshot.data;
+        if (data == null) {
+          return const Center(child: Text('No Mushaf data available.'));
+        }
+
+        final lines = List<List<MushafWord>>.generate(
+          15,
+          (_) => <MushafWord>[],
+          growable: false,
+        );
+        var invalidLineNumber = false;
+        for (final word in data.pageData.words) {
+          final lineNumber = word.lineNumber;
+          if (lineNumber == null || lineNumber < 1 || lineNumber > 15) {
+            invalidLineNumber = true;
+            break;
+          }
+          lines[lineNumber - 1].add(word);
+        }
+
+        if (invalidLineNumber) {
+          _fallbackToSimpleFromMushaf(
+            'Mushaf line data is invalid for page $selectedPage.',
+          );
+          return const Center(
+            child:
+                Text('Invalid Mushaf line data. Falling back to Simple view.'),
+          );
+        }
+
+        final showBasmala = _shouldShowMushafBasmala(data.pageData.meta);
+        return Column(
+          children: [
+            if (showBasmala)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: BasmalaHeader(
+                  preferredFontFamily: data.fontSelection.familyName,
+                ),
+              ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final horizontalPad = constraints.maxWidth * 0.04;
+                  final verticalPad = constraints.maxHeight * 0.04;
+                  final usableHeight =
+                      (constraints.maxHeight - (2 * verticalPad))
+                          .clamp(0.0, double.infinity);
+                  final lineHeight = usableHeight / 15;
+                  final maxTextWidth =
+                      (constraints.maxWidth - (2 * horizontalPad))
+                          .clamp(0.0, double.infinity);
+                  final viewportHeight = MediaQuery.sizeOf(context).height;
+                  var targetLineWidth =
+                      viewportHeight * _targetLineWidthToViewportHeight;
+                  if (targetLineWidth > maxTextWidth) {
+                    targetLineWidth = maxTextWidth;
+                  }
+
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPad,
+                      vertical: verticalPad,
+                    ),
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < 15; i++)
+                          SizedBox(
+                            key: ValueKey('reader_mushaf_line_${i + 1}'),
+                            height: lineHeight,
+                            child: _buildMushafLine(
+                              context: context,
+                              words: lines[i],
+                              qcfFontFamily: data.fontSelection.familyName,
+                              maxTextWidth: maxTextWidth,
+                              targetLineWidth: targetLineWidth,
+                              lineHeight: lineHeight,
+                              pageNumber: selectedPage,
+                              lineNumber: i + 1,
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<_MushafRenderData> _getMushafFuture({required int page}) {
+    if (_mushafFuture == null ||
+        _mushafFuturePage != page ||
+        _mushafFutureRenderMode != _arabicRenderMode) {
+      _mushafFuturePage = page;
+      _mushafFutureRenderMode = _arabicRenderMode;
+      _mushafFuture = _loadMushafPage(page: page);
+    }
+    return _mushafFuture!;
+  }
+
+  Future<_MushafRenderData> _loadMushafPage({
+    required int page,
+  }) async {
+    final mushafId = _arabicRenderMode == _ArabicRenderMode.tajweed ? 19 : 1;
+    final variant = _arabicRenderMode == _ArabicRenderMode.tajweed
+        ? QcfFontVariant.v4tajweed
+        : QcfFontVariant.v2;
+
+    final api = ref.read(quranComApiProvider);
+    final pageData = await api.getPage(page: page, mushafId: mushafId);
+    final fontSelection = await ref.read(qcfFontManagerProvider).ensurePageFont(
+          page: page,
+          variant: variant,
+        );
+
+    return _MushafRenderData(
+      pageData: pageData,
+      fontSelection: fontSelection,
+      mushafId: mushafId,
+    );
+  }
+
+  void _invalidateMushafFuture() {
+    _mushafFuture = null;
+    _mushafFuturePage = null;
+    _mushafFutureRenderMode = null;
+  }
+
+  void _fallbackToSimpleFromMushaf(String reason) {
+    if (_lastMushafFallbackReason == reason) {
+      return;
+    }
+    _lastMushafFallbackReason = reason;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _viewMode = _ReaderViewMode.simple;
+      });
+      _showSnackBar('$reason Showing Simple view.');
+    });
+  }
+
+  bool _shouldShowMushafBasmala(MushafPageMeta meta) {
+    final chapter =
+        meta.firstChapterId ?? _chapterFromVerseKey(meta.firstVerseKey);
+    final verseNumber =
+        meta.firstVerseNumber ?? _ayahFromVerseKey(meta.firstVerseKey);
+    if (chapter == null || verseNumber == null) {
+      return false;
+    }
+    return chapter != 1 && chapter != 9 && verseNumber == 1;
+  }
+
+  int? _chapterFromVerseKey(String? verseKey) {
+    if (verseKey == null) {
+      return null;
+    }
+    final parts = verseKey.split(':');
+    if (parts.length != 2) {
+      return null;
+    }
+    return int.tryParse(parts[0]);
+  }
+
+  int? _ayahFromVerseKey(String? verseKey) {
+    if (verseKey == null) {
+      return null;
+    }
+    final parts = verseKey.split(':');
+    if (parts.length != 2) {
+      return null;
+    }
+    return int.tryParse(parts[1]);
+  }
+
+  Widget _buildMushafLine({
+    required BuildContext context,
+    required List<MushafWord> words,
+    required String qcfFontFamily,
+    required double maxTextWidth,
+    required double targetLineWidth,
+    required double lineHeight,
+    required int pageNumber,
+    required int lineNumber,
+  }) {
+    final color = Theme.of(context).colorScheme.onSurface;
+    final safeLineHeight = lineHeight <= 0 ? 1.0 : lineHeight;
+    final qcfBaseFontSize = safeLineHeight * _qcfFontSizeToLineHeight;
+    final fallbackBaseFontSize = safeLineHeight * _fallbackFontSizeToLineHeight;
+
+    final hardCenterByCharType = words.any((word) {
+      final charType = (word.charTypeName ?? '').toLowerCase();
+      return charType == 'basmala' ||
+          charType == 'surah_name' ||
+          charType == 'chapter_name';
+    });
+    final hardCenterByPageMap = _isStaticCenteredMushafLine(
+      pageNumber: pageNumber,
+      lineNumber: lineNumber,
+    );
+
+    final baseLayout = _resolveMushafLineLayout(
+      words: words,
+      qcfFontFamily: qcfFontFamily,
+      qcfBaseFontSize: qcfBaseFontSize,
+      fallbackBaseFontSize: fallbackBaseFontSize,
+      qcfLetterSpacing: 0,
+      color: color,
+      maxTextWidth: maxTextWidth,
+      lineHeight: safeLineHeight,
+    );
+
+    var shouldCenter = hardCenterByCharType || hardCenterByPageMap;
+    if (!shouldCenter && maxTextWidth > 0) {
+      shouldCenter = baseLayout.measuredWidth < (maxTextWidth * 0.72);
+    }
+
+    var qcfLetterSpacing = 0.0;
+    final qcfGlyphCount = _countQcfGlyphWords(words);
+    final spacingTargetWidth = targetLineWidth < (maxTextWidth * 0.72)
+        ? maxTextWidth
+        : targetLineWidth;
+    if (!shouldCenter &&
+        qcfGlyphCount > 1 &&
+        spacingTargetWidth > 0 &&
+        baseLayout.measuredWidth < spacingTargetWidth) {
+      final gaps = qcfGlyphCount - 1;
+      final available = spacingTargetWidth - baseLayout.measuredWidth;
+      final maxSpacing = safeLineHeight * 0.045;
+      qcfLetterSpacing = (available / gaps).clamp(0.0, maxSpacing);
+    }
+
+    final lineLayout = qcfLetterSpacing == 0
+        ? baseLayout
+        : _resolveMushafLineLayout(
+            words: words,
+            qcfFontFamily: qcfFontFamily,
+            qcfBaseFontSize: qcfBaseFontSize,
+            fallbackBaseFontSize: fallbackBaseFontSize,
+            qcfLetterSpacing: qcfLetterSpacing,
+            color: color,
+            maxTextWidth: maxTextWidth,
+            lineHeight: safeLineHeight,
+          );
+
+    return Align(
+      alignment: shouldCenter ? Alignment.center : Alignment.centerRight,
+      child: RichText(
+        textDirection: TextDirection.rtl,
+        textAlign: shouldCenter ? TextAlign.center : TextAlign.right,
+        softWrap: false,
+        textScaler: const TextScaler.linear(1.0),
+        strutStyle: lineLayout.strutStyle,
+        textHeightBehavior: const TextHeightBehavior(
+          applyHeightToFirstAscent: false,
+          applyHeightToLastDescent: false,
+        ),
+        text: lineLayout.textSpan,
+      ),
+    );
+  }
+
+  _MushafLineLayout _resolveMushafLineLayout({
+    required List<MushafWord> words,
+    required String qcfFontFamily,
+    required double qcfBaseFontSize,
+    required double fallbackBaseFontSize,
+    required double qcfLetterSpacing,
+    required Color color,
+    required double maxTextWidth,
+    required double lineHeight,
+  }) {
+    var scale = 1.0;
+    late _MushafLineLayout result;
+
+    while (true) {
+      final qcfStyle = TextStyle(
+        fontFamily: qcfFontFamily,
+        fontSize: qcfBaseFontSize * scale,
+        height: 1.0,
+        letterSpacing: qcfLetterSpacing * scale,
+        color: color,
+      );
+      final fallbackStyle = TextStyle(
+        fontFamily: 'UthmanicHafs',
+        fontSize: fallbackBaseFontSize * scale,
+        height: 1.0,
+        color: color,
+      );
+      final largerFontSize = qcfStyle.fontSize! >= fallbackStyle.fontSize!
+          ? qcfStyle.fontSize!
+          : fallbackStyle.fontSize!;
+      final strutStyle = StrutStyle(
+        fontSize: largerFontSize,
+        height: 1.0,
+        forceStrutHeight: true,
+      );
+      final textSpan = TextSpan(
+        children: [
+          for (final word in words)
+            _buildMushafWordSpan(
+              word: word,
+              qcfStyle: qcfStyle,
+              fallbackStyle: fallbackStyle,
+            ),
+        ],
+      );
+
+      final painter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.rtl,
+        textScaler: const TextScaler.linear(1.0),
+        maxLines: 1,
+        strutStyle: strutStyle,
+        textHeightBehavior: const TextHeightBehavior(
+          applyHeightToFirstAscent: false,
+          applyHeightToLastDescent: false,
+        ),
+      )..layout(maxWidth: double.infinity);
+
+      result = _MushafLineLayout(
+        textSpan: textSpan,
+        strutStyle: strutStyle,
+        measuredWidth: painter.width,
+        measuredHeight: painter.height,
+      );
+
+      final fitsWidth = painter.width <= (maxTextWidth + 0.5);
+      final fitsHeight =
+          painter.height <= (lineHeight * _mushafLineHeightSafetyFactor);
+      if ((fitsWidth && fitsHeight) || scale <= _mushafAutoFitMinScale) {
+        break;
+      }
+      scale = (scale - _mushafAutoFitStep).clamp(_mushafAutoFitMinScale, 1.0);
+    }
+
+    return result;
+  }
+
+  int _countQcfGlyphWords(List<MushafWord> words) {
+    var count = 0;
+    for (final word in words) {
+      final codeV2 = word.codeV2;
+      if (codeV2 != null && codeV2.isNotEmpty) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  bool _isStaticCenteredMushafLine({
+    required int pageNumber,
+    required int lineNumber,
+  }) {
+    if (pageNumber == 1 || pageNumber == 2) {
+      return true;
+    }
+    final centeredLines = _staticCenteredMushafLines[pageNumber];
+    if (centeredLines == null) {
+      return false;
+    }
+    return centeredLines.contains(lineNumber);
+  }
+
+  TextSpan _buildMushafWordSpan({
+    required MushafWord word,
+    required TextStyle qcfStyle,
+    required TextStyle fallbackStyle,
+  }) {
+    final codeV2 = word.codeV2;
+    if (codeV2 != null && codeV2.isNotEmpty) {
+      return TextSpan(text: codeV2, style: qcfStyle);
+    }
+    final fallback = word.textQpcHafs ?? '';
+    return TextSpan(text: fallback, style: fallbackStyle);
+  }
+
+  Widget _buildViewToggle() {
+    return SegmentedButton<_ReaderViewMode>(
+      key: const ValueKey('reader_view_toggle'),
+      segments: const [
+        ButtonSegment<_ReaderViewMode>(
+          value: _ReaderViewMode.simple,
+          label: Text('Simple'),
+        ),
+        ButtonSegment<_ReaderViewMode>(
+          value: _ReaderViewMode.mushaf,
+          label: Text('Mushaf (Quran.com)'),
+        ),
+      ],
+      selected: <_ReaderViewMode>{_viewMode},
+      onSelectionChanged: (selection) {
+        if (selection.isEmpty) {
+          return;
+        }
+        _switchViewMode(selection.first);
       },
     );
   }
@@ -818,12 +1436,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         ),
       ],
       selected: <_ReaderMode>{_mode},
-      onSelectionChanged: (selection) {
-        if (selection.isEmpty) {
-          return;
-        }
-        _switchMode(selection.first);
-      },
+      onSelectionChanged: _viewMode == _ReaderViewMode.mushaf
+          ? null
+          : (selection) {
+              if (selection.isEmpty) {
+                return;
+              }
+              _switchMode(selection.first);
+            },
     );
   }
 
@@ -851,6 +1471,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget _buildSurahSelectorPanel(BuildContext context) {
+    final filteredSurahs = _filteredSurahNumbers();
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceVariant,
@@ -865,18 +1486,34 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: TextField(
+              key: const ValueKey('reader_surah_search'),
+              decoration: const InputDecoration(
+                hintText: 'Search Surah',
+                isDense: true,
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _surahSearchQuery = value;
+                });
+              },
+            ),
+          ),
           const Divider(height: 1),
           Expanded(
             child: ListView.builder(
               key: const ValueKey('reader_surah_list'),
-              itemCount: _surahLabels.length,
+              itemCount: filteredSurahs.length,
               itemBuilder: (context, index) {
-                final surahNumber = index + 1;
+                final surahNumber = filteredSurahs[index];
                 final selected = surahNumber == _selectedSurah;
                 return ListTile(
                   key: ValueKey('surah_tile_$surahNumber'),
                   selected: selected,
-                  title: Text(_surahLabels[index]),
+                  title: Text(_surahLabelFor(surahNumber)),
                   onTap: () => _selectSurah(surahNumber),
                 );
               },
@@ -983,6 +1620,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 spacing: 12,
                 runSpacing: 8,
                 children: [
+                  _buildViewToggle(),
                   _buildModeToggle(),
                   _buildArabicRenderToggle(),
                 ],
@@ -1024,9 +1662,73 @@ enum _ReaderMode {
   page,
 }
 
+enum _ReaderViewMode {
+  simple,
+  mushaf,
+}
+
 enum _ArabicRenderMode {
   plain,
   tajweed,
+}
+
+enum _SimplePanelEntryKind {
+  ayah,
+  basmalaHeader,
+}
+
+class _SimplePanelEntry {
+  const _SimplePanelEntry._({
+    required this.kind,
+    this.ayah,
+  });
+
+  factory _SimplePanelEntry.ayah({
+    required AyahData ayah,
+  }) {
+    return _SimplePanelEntry._(
+      kind: _SimplePanelEntryKind.ayah,
+      ayah: ayah,
+    );
+  }
+
+  factory _SimplePanelEntry.basmalaHeader({
+    required AyahData ayah,
+  }) {
+    return _SimplePanelEntry._(
+      kind: _SimplePanelEntryKind.basmalaHeader,
+      ayah: ayah,
+    );
+  }
+
+  final _SimplePanelEntryKind kind;
+  final AyahData? ayah;
+}
+
+class _MushafRenderData {
+  const _MushafRenderData({
+    required this.pageData,
+    required this.fontSelection,
+    required this.mushafId,
+  });
+
+  final MushafPageData pageData;
+  final QcfFontSelection fontSelection;
+  final int mushafId;
+}
+
+class _MushafLineLayout {
+  const _MushafLineLayout({
+    required this.textSpan,
+    required this.strutStyle,
+    required this.measuredWidth,
+    required this.measuredHeight,
+  });
+
+  final TextSpan textSpan;
+  final StrutStyle strutStyle;
+  final double measuredWidth;
+  final double measuredHeight;
 }
 
 enum _AyahAction {

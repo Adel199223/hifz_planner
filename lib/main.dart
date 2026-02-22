@@ -16,6 +16,7 @@ class HifzPlannerApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'Hifz Planner',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.teal,

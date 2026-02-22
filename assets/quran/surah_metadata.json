@@ -1,0 +1,800 @@
+[
+  {
+    "number": 1,
+    "en": "Al-Fatihah",
+    "ar": "الفاتحة",
+    "fr": "L'ouverture",
+    "pt": "Al-Fatihah"
+  },
+  {
+    "number": 2,
+    "en": "Al-Baqarah",
+    "ar": "البقرة",
+    "fr": "La vache",
+    "pt": "Al-Baqarah"
+  },
+  {
+    "number": 3,
+    "en": "Ali 'Imran",
+    "ar": "آل عمران",
+    "fr": "La famille de 'imran",
+    "pt": "Ali 'Imran"
+  },
+  {
+    "number": 4,
+    "en": "An-Nisa",
+    "ar": "النساء",
+    "fr": "Les femmes",
+    "pt": "An-Nisa"
+  },
+  {
+    "number": 5,
+    "en": "Al-Ma'idah",
+    "ar": "المائدة",
+    "fr": "La table servie",
+    "pt": "Al-Ma'idah"
+  },
+  {
+    "number": 6,
+    "en": "Al-An'am",
+    "ar": "الأنعام",
+    "fr": "Les bestiaux",
+    "pt": "Al-An'am"
+  },
+  {
+    "number": 7,
+    "en": "Al-A'raf",
+    "ar": "الأعراف",
+    "fr": "Al-A'raf",
+    "pt": "Al-A'raf"
+  },
+  {
+    "number": 8,
+    "en": "Al-Anfal",
+    "ar": "الأنفال",
+    "fr": "Le butin",
+    "pt": "Al-Anfal"
+  },
+  {
+    "number": 9,
+    "en": "At-Tawbah",
+    "ar": "التوبة",
+    "fr": "Le repentir",
+    "pt": "At-Tawbah"
+  },
+  {
+    "number": 10,
+    "en": "Yunus",
+    "ar": "يونس",
+    "fr": "Jonas",
+    "pt": "Yunus"
+  },
+  {
+    "number": 11,
+    "en": "Hud",
+    "ar": "هود",
+    "fr": "Houd",
+    "pt": "Hud"
+  },
+  {
+    "number": 12,
+    "en": "Yusuf",
+    "ar": "يوسف",
+    "fr": "Joseph",
+    "pt": "Yusuf"
+  },
+  {
+    "number": 13,
+    "en": "Ar-Ra'd",
+    "ar": "الرعد",
+    "fr": "Le tonnerre",
+    "pt": "Ar-Ra'd"
+  },
+  {
+    "number": 14,
+    "en": "Ibrahim",
+    "ar": "ابراهيم",
+    "fr": "Abraham",
+    "pt": "Ibrahim"
+  },
+  {
+    "number": 15,
+    "en": "Al-Hijr",
+    "ar": "الحجر",
+    "fr": "Al-Hijr",
+    "pt": "Al-Hijr"
+  },
+  {
+    "number": 16,
+    "en": "An-Nahl",
+    "ar": "النحل",
+    "fr": "Les abeilles",
+    "pt": "An-Nahl"
+  },
+  {
+    "number": 17,
+    "en": "Al-Isra",
+    "ar": "الإسراء",
+    "fr": "Le voyage nocturne",
+    "pt": "Al-Isra"
+  },
+  {
+    "number": 18,
+    "en": "Al-Kahf",
+    "ar": "الكهف",
+    "fr": "La caverne",
+    "pt": "Al-Kahf"
+  },
+  {
+    "number": 19,
+    "en": "Maryam",
+    "ar": "مريم",
+    "fr": "Marie",
+    "pt": "Maryam"
+  },
+  {
+    "number": 20,
+    "en": "Taha",
+    "ar": "طه",
+    "fr": "Ta-Ha",
+    "pt": "Taha"
+  },
+  {
+    "number": 21,
+    "en": "Al-Anbya",
+    "ar": "الأنبياء",
+    "fr": "Les prophètes",
+    "pt": "Al-Anbya"
+  },
+  {
+    "number": 22,
+    "en": "Al-Hajj",
+    "ar": "الحج",
+    "fr": "Le pèlerinage",
+    "pt": "Al-Hajj"
+  },
+  {
+    "number": 23,
+    "en": "Al-Mu'minun",
+    "ar": "المؤمنون",
+    "fr": "Les croyants",
+    "pt": "Al-Mu'minun"
+  },
+  {
+    "number": 24,
+    "en": "An-Nur",
+    "ar": "النور",
+    "fr": "La lumière",
+    "pt": "An-Nur"
+  },
+  {
+    "number": 25,
+    "en": "Al-Furqan",
+    "ar": "الفرقان",
+    "fr": "Le discernement",
+    "pt": "Al-Furqan"
+  },
+  {
+    "number": 26,
+    "en": "Ash-Shu'ara",
+    "ar": "الشعراء",
+    "fr": "Les poètes",
+    "pt": "Ash-Shu'ara"
+  },
+  {
+    "number": 27,
+    "en": "An-Naml",
+    "ar": "النمل",
+    "fr": "Les fourmis",
+    "pt": "An-Naml"
+  },
+  {
+    "number": 28,
+    "en": "Al-Qasas",
+    "ar": "القصص",
+    "fr": "Le récit",
+    "pt": "Al-Qasas"
+  },
+  {
+    "number": 29,
+    "en": "Al-'Ankabut",
+    "ar": "العنكبوت",
+    "fr": "L'araignée",
+    "pt": "Al-'Ankabut"
+  },
+  {
+    "number": 30,
+    "en": "Ar-Rum",
+    "ar": "الروم",
+    "fr": "Les romains",
+    "pt": "Ar-Rum"
+  },
+  {
+    "number": 31,
+    "en": "Luqman",
+    "ar": "لقمان",
+    "fr": "Louqman",
+    "pt": "Luqman"
+  },
+  {
+    "number": 32,
+    "en": "As-Sajdah",
+    "ar": "السجدة",
+    "fr": "La prosternation",
+    "pt": "As-Sajdah"
+  },
+  {
+    "number": 33,
+    "en": "Al-Ahzab",
+    "ar": "الأحزاب",
+    "fr": "Les coalisés",
+    "pt": "Al-Ahzab"
+  },
+  {
+    "number": 34,
+    "en": "Saba",
+    "ar": "سبإ",
+    "fr": "Saba'",
+    "pt": "Saba"
+  },
+  {
+    "number": 35,
+    "en": "Fatir",
+    "ar": "فاطر",
+    "fr": "Le Créateur",
+    "pt": "Fatir"
+  },
+  {
+    "number": 36,
+    "en": "Ya-Sin",
+    "ar": "يس",
+    "fr": "Ya-Sin",
+    "pt": "Ya-Sin"
+  },
+  {
+    "number": 37,
+    "en": "As-Saffat",
+    "ar": "الصافات",
+    "fr": "Les rangés",
+    "pt": "As-Saffat"
+  },
+  {
+    "number": 38,
+    "en": "Sad",
+    "ar": "ص",
+    "fr": "Sad",
+    "pt": "Sad"
+  },
+  {
+    "number": 39,
+    "en": "Az-Zumar",
+    "ar": "الزمر",
+    "fr": "Les groupes",
+    "pt": "Az-Zumar"
+  },
+  {
+    "number": 40,
+    "en": "Ghafir",
+    "ar": "غافر",
+    "fr": "Le Pardonneur",
+    "pt": "Ghafir"
+  },
+  {
+    "number": 41,
+    "en": "Fussilat",
+    "ar": "فصلت",
+    "fr": "Les versets explicites",
+    "pt": "Fussilat"
+  },
+  {
+    "number": 42,
+    "en": "Ash-Shuraa",
+    "ar": "الشورى",
+    "fr": "La concertation",
+    "pt": "Ash-Shuraa"
+  },
+  {
+    "number": 43,
+    "en": "Az-Zukhruf",
+    "ar": "الزخرف",
+    "fr": "L'ornement",
+    "pt": "Az-Zukhruf"
+  },
+  {
+    "number": 44,
+    "en": "Ad-Dukhan",
+    "ar": "الدخان",
+    "fr": "La fumée",
+    "pt": "Ad-Dukhan"
+  },
+  {
+    "number": 45,
+    "en": "Al-Jathiyah",
+    "ar": "الجاثية",
+    "fr": "L'agenouillée",
+    "pt": "Al-Jathiyah"
+  },
+  {
+    "number": 46,
+    "en": "Al-Ahqaf",
+    "ar": "الأحقاف",
+    "fr": "Al-Ahqaf",
+    "pt": "Al-Ahqaf"
+  },
+  {
+    "number": 47,
+    "en": "Muhammad",
+    "ar": "محمد",
+    "fr": "Mouhammad",
+    "pt": "Muhammad"
+  },
+  {
+    "number": 48,
+    "en": "Al-Fath",
+    "ar": "الفتح",
+    "fr": "La victoire éclatante",
+    "pt": "Al-Fath"
+  },
+  {
+    "number": 49,
+    "en": "Al-Hujurat",
+    "ar": "الحجرات",
+    "fr": "Les appartements",
+    "pt": "Al-Hujurat"
+  },
+  {
+    "number": 50,
+    "en": "Qaf",
+    "ar": "ق",
+    "fr": "Qaf",
+    "pt": "Qaf"
+  },
+  {
+    "number": 51,
+    "en": "Adh-Dhariyat",
+    "ar": "الذاريات",
+    "fr": "Qui éparpillent",
+    "pt": "Adh-Dhariyat"
+  },
+  {
+    "number": 52,
+    "en": "At-Tur",
+    "ar": "الطور",
+    "fr": "Le mont At-Tour",
+    "pt": "At-Tur"
+  },
+  {
+    "number": 53,
+    "en": "An-Najm",
+    "ar": "النجم",
+    "fr": "L'étoile",
+    "pt": "An-Najm"
+  },
+  {
+    "number": 54,
+    "en": "Al-Qamar",
+    "ar": "القمر",
+    "fr": "La lune",
+    "pt": "Al-Qamar"
+  },
+  {
+    "number": 55,
+    "en": "Ar-Rahman",
+    "ar": "الرحمن",
+    "fr": "Le Tout Miséricordieux",
+    "pt": "Ar-Rahman"
+  },
+  {
+    "number": 56,
+    "en": "Al-Waqi'ah",
+    "ar": "الواقعة",
+    "fr": "L'inévitable",
+    "pt": "Al-Waqi'ah"
+  },
+  {
+    "number": 57,
+    "en": "Al-Hadid",
+    "ar": "الحديد",
+    "fr": "Le fer",
+    "pt": "Al-Hadid"
+  },
+  {
+    "number": 58,
+    "en": "Al-Mujadila",
+    "ar": "المجادلة",
+    "fr": "La discussion",
+    "pt": "Al-Mujadila"
+  },
+  {
+    "number": 59,
+    "en": "Al-Hashr",
+    "ar": "الحشر",
+    "fr": "L'exode",
+    "pt": "Al-Hashr"
+  },
+  {
+    "number": 60,
+    "en": "Al-Mumtahanah",
+    "ar": "الممتحنة",
+    "fr": "L'éprouvée",
+    "pt": "Al-Mumtahanah"
+  },
+  {
+    "number": 61,
+    "en": "As-Saf",
+    "ar": "الصف",
+    "fr": "Le rang",
+    "pt": "As-Saf"
+  },
+  {
+    "number": 62,
+    "en": "Al-Jumu'ah",
+    "ar": "الجمعة",
+    "fr": "Le vendredi",
+    "pt": "Al-Jumu'ah"
+  },
+  {
+    "number": 63,
+    "en": "Al-Munafiqun",
+    "ar": "المنافقون",
+    "fr": "Les hypocrites",
+    "pt": "Al-Munafiqun"
+  },
+  {
+    "number": 64,
+    "en": "At-Taghabun",
+    "ar": "التغابن",
+    "fr": "La grande perte",
+    "pt": "At-Taghabun"
+  },
+  {
+    "number": 65,
+    "en": "At-Talaq",
+    "ar": "الطلاق",
+    "fr": "Le divorce",
+    "pt": "At-Talaq"
+  },
+  {
+    "number": 66,
+    "en": "At-Tahrim",
+    "ar": "التحريم",
+    "fr": "L'interdiction",
+    "pt": "At-Tahrim"
+  },
+  {
+    "number": 67,
+    "en": "Al-Mulk",
+    "ar": "الملك",
+    "fr": "La royauté",
+    "pt": "Al-Mulk"
+  },
+  {
+    "number": 68,
+    "en": "Al-Qalam",
+    "ar": "القلم",
+    "fr": "La plume",
+    "pt": "Al-Qalam"
+  },
+  {
+    "number": 69,
+    "en": "Al-Haqqah",
+    "ar": "الحاقة",
+    "fr": "L'inéluctable",
+    "pt": "Al-Haqqah"
+  },
+  {
+    "number": 70,
+    "en": "Al-Ma'arij",
+    "ar": "المعارج",
+    "fr": "Les voies d'ascension",
+    "pt": "Al-Ma'arij"
+  },
+  {
+    "number": 71,
+    "en": "Nuh",
+    "ar": "نوح",
+    "fr": "Noé",
+    "pt": "Nuh"
+  },
+  {
+    "number": 72,
+    "en": "Al-Jinn",
+    "ar": "الجن",
+    "fr": "Les djinns",
+    "pt": "Al-Jinn"
+  },
+  {
+    "number": 73,
+    "en": "Al-Muzzammil",
+    "ar": "المزمل",
+    "fr": "L'enveloppé",
+    "pt": "Al-Muzzammil"
+  },
+  {
+    "number": 74,
+    "en": "Al-Muddaththir",
+    "ar": "المدثر",
+    "fr": "Celui qui se couvre",
+    "pt": "Al-Muddaththir"
+  },
+  {
+    "number": 75,
+    "en": "Al-Qiyamah",
+    "ar": "القيامة",
+    "fr": "La résurrection",
+    "pt": "Al-Qiyamah"
+  },
+  {
+    "number": 76,
+    "en": "Al-Insan",
+    "ar": "الانسان",
+    "fr": "L'homme",
+    "pt": "Al-Insan"
+  },
+  {
+    "number": 77,
+    "en": "Al-Mursalat",
+    "ar": "المرسلات",
+    "fr": "Les envoyés",
+    "pt": "Al-Mursalat"
+  },
+  {
+    "number": 78,
+    "en": "An-Naba",
+    "ar": "النبإ",
+    "fr": "La nouvelle",
+    "pt": "An-Naba"
+  },
+  {
+    "number": 79,
+    "en": "An-Nazi'at",
+    "ar": "النازعات",
+    "fr": "Ceux qui arrachent",
+    "pt": "An-Nazi'at"
+  },
+  {
+    "number": 80,
+    "en": "'Abasa",
+    "ar": "عبس",
+    "fr": "Il s'est renfrogné",
+    "pt": "'Abasa"
+  },
+  {
+    "number": 81,
+    "en": "At-Takwir",
+    "ar": "التكوير",
+    "fr": "L'obscurcissement",
+    "pt": "At-Takwir"
+  },
+  {
+    "number": 82,
+    "en": "Al-Infitar",
+    "ar": "الإنفطار",
+    "fr": "La rupture",
+    "pt": "Al-Infitar"
+  },
+  {
+    "number": 83,
+    "en": "Al-Mutaffifin",
+    "ar": "المطففين",
+    "fr": "Les fraudeurs",
+    "pt": "Al-Mutaffifin"
+  },
+  {
+    "number": 84,
+    "en": "Al-Inshiqaq",
+    "ar": "الإنشقاق",
+    "fr": "La déchirure",
+    "pt": "Al-Inshiqaq"
+  },
+  {
+    "number": 85,
+    "en": "Al-Buruj",
+    "ar": "البروج",
+    "fr": "Les constellations",
+    "pt": "Al-Buruj"
+  },
+  {
+    "number": 86,
+    "en": "At-Tariq",
+    "ar": "الطارق",
+    "fr": "L'astre nocturne",
+    "pt": "At-Tariq"
+  },
+  {
+    "number": 87,
+    "en": "Al-A'la",
+    "ar": "الأعلى",
+    "fr": "Le Très-Haut",
+    "pt": "Al-A'la"
+  },
+  {
+    "number": 88,
+    "en": "Al-Ghashiyah",
+    "ar": "الغاشية",
+    "fr": "L'enveloppante",
+    "pt": "Al-Ghashiyah"
+  },
+  {
+    "number": 89,
+    "en": "Al-Fajr",
+    "ar": "الفجر",
+    "fr": "L'aube",
+    "pt": "Al-Fajr"
+  },
+  {
+    "number": 90,
+    "en": "Al-Balad",
+    "ar": "البلد",
+    "fr": "La cité",
+    "pt": "Al-Balad"
+  },
+  {
+    "number": 91,
+    "en": "Ash-Shams",
+    "ar": "الشمس",
+    "fr": "Le soleil",
+    "pt": "Ash-Shams"
+  },
+  {
+    "number": 92,
+    "en": "Al-Layl",
+    "ar": "الليل",
+    "fr": "La nuit",
+    "pt": "Al-Layl"
+  },
+  {
+    "number": 93,
+    "en": "Ad-Duhaa",
+    "ar": "الضحى",
+    "fr": "Le jour montant",
+    "pt": "Ad-Duhaa"
+  },
+  {
+    "number": 94,
+    "en": "Ash-Sharh",
+    "ar": "الشرح",
+    "fr": "L'ouverture",
+    "pt": "Ash-Sharh"
+  },
+  {
+    "number": 95,
+    "en": "At-Tin",
+    "ar": "التين",
+    "fr": "Les figues",
+    "pt": "At-Tin"
+  },
+  {
+    "number": 96,
+    "en": "Al-'Alaq",
+    "ar": "العلق",
+    "fr": "L'adhérence",
+    "pt": "Al-'Alaq"
+  },
+  {
+    "number": 97,
+    "en": "Al-Qadr",
+    "ar": "القدر",
+    "fr": "La destinée",
+    "pt": "Al-Qadr"
+  },
+  {
+    "number": 98,
+    "en": "Al-Bayyinah",
+    "ar": "البينة",
+    "fr": "La preuve",
+    "pt": "Al-Bayyinah"
+  },
+  {
+    "number": 99,
+    "en": "Az-Zalzalah",
+    "ar": "الزلزلة",
+    "fr": "Le séisme",
+    "pt": "Az-Zalzalah"
+  },
+  {
+    "number": 100,
+    "en": "Al-'Adiyat",
+    "ar": "العاديات",
+    "fr": "Les coursiers",
+    "pt": "Al-'Adiyat"
+  },
+  {
+    "number": 101,
+    "en": "Al-Qari'ah",
+    "ar": "القارعة",
+    "fr": "Le fracas",
+    "pt": "Al-Qari'ah"
+  },
+  {
+    "number": 102,
+    "en": "At-Takathur",
+    "ar": "التكاثر",
+    "fr": "La course aux richesses",
+    "pt": "At-Takathur"
+  },
+  {
+    "number": 103,
+    "en": "Al-'Asr",
+    "ar": "العصر",
+    "fr": "Le temps",
+    "pt": "Al-'Asr"
+  },
+  {
+    "number": 104,
+    "en": "Al-Humazah",
+    "ar": "الهمزة",
+    "fr": "Les calomniateurs",
+    "pt": "Al-Humazah"
+  },
+  {
+    "number": 105,
+    "en": "Al-Fil",
+    "ar": "الفيل",
+    "fr": "L'éléphant",
+    "pt": "Al-Fil"
+  },
+  {
+    "number": 106,
+    "en": "Quraysh",
+    "ar": "قريش",
+    "fr": "Les Quraysh",
+    "pt": "Quraysh"
+  },
+  {
+    "number": 107,
+    "en": "Al-Ma'un",
+    "ar": "الماعون",
+    "fr": "L'entraide",
+    "pt": "Al-Ma'un"
+  },
+  {
+    "number": 108,
+    "en": "Al-Kawthar",
+    "ar": "الكوثر",
+    "fr": "L'abondance",
+    "pt": "Al-Kawthar"
+  },
+  {
+    "number": 109,
+    "en": "Al-Kafirun",
+    "ar": "الكافرون",
+    "fr": "Les mécréants",
+    "pt": "Al-Kafirun"
+  },
+  {
+    "number": 110,
+    "en": "An-Nasr",
+    "ar": "النصر",
+    "fr": "Le secours",
+    "pt": "An-Nasr"
+  },
+  {
+    "number": 111,
+    "en": "Al-Masad",
+    "ar": "المسد",
+    "fr": "Les fibres",
+    "pt": "Al-Masad"
+  },
+  {
+    "number": 112,
+    "en": "Al-Ikhlas",
+    "ar": "الإخلاص",
+    "fr": "La sincérité",
+    "pt": "Al-Ikhlas"
+  },
+  {
+    "number": 113,
+    "en": "Al-Falaq",
+    "ar": "الفلق",
+    "fr": "L'aube naissante",
+    "pt": "Al-Falaq"
+  },
+  {
+    "number": 114,
+    "en": "An-Nas",
+    "ar": "الناس",
+    "fr": "Les humains",
+    "pt": "An-Nas"
+  }
+]
