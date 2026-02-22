@@ -6,6 +6,7 @@ const List<String> _requiredFiles = <String>[
   'agent.md',
   'APP_KNOWLEDGE.md',
   'README.md',
+  '.github/workflows/dart.yml',
   'docs/assistant/APP_KNOWLEDGE.md',
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
   'docs/assistant/INDEX.md',
@@ -13,7 +14,10 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/workflows/READER_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
+  'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
+  'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+  'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
 ];
 
 const List<String> _workflowRequiredSections = <String>[
@@ -35,6 +39,8 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/APP_KNOWLEDGE.md',
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
   'docs/assistant/INDEX.md',
+  'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
+  'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/READER_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
@@ -43,8 +49,19 @@ const List<String> _docsToScanForBackticks = <String>[
 
 final RegExp _backtickRegex = RegExp(r'`([^`\n]+)`');
 final RegExp _pathLikeRegex = RegExp(
-  r'^(AGENTS\.md|agent\.md|APP_KNOWLEDGE\.md|README\.md|docs/|lib/|test/|tooling/|assets/)',
+  r'^(AGENTS\.md|agent\.md|APP_KNOWLEDGE\.md|README\.md|docs/|lib/|test/|tooling/|assets/|\.github/)',
 );
+
+final List<RegExp> _bashOnlyPatterns = <RegExp>[
+  RegExp(r'(^|\s)grep(\s|$)', caseSensitive: false),
+  RegExp(r'(^|\s)awk(\s|$)', caseSensitive: false),
+  RegExp(r'(^|\s)sed(\s|$)', caseSensitive: false),
+  RegExp(r'\bexport\s+[A-Za-z_]', caseSensitive: false),
+  RegExp(r'\|\s*xargs\b', caseSensitive: false),
+  RegExp(r'\bset -e\b', caseSensitive: false),
+  RegExp(r'(^|\s)\./'),
+  RegExp(r'&&'),
+];
 
 class AgentDocsValidator {
   AgentDocsValidator({
@@ -59,6 +76,7 @@ class AgentDocsValidator {
     _validateManifest(issues);
     _validateWorkflowSections(issues);
     _validateCanonicalContracts(issues);
+    _validateTemplatePolicies(issues);
     _validateBacktickPaths(issues);
     return issues;
   }
@@ -138,6 +156,7 @@ class AgentDocsValidator {
     }
 
     final workflows = manifest['workflows'];
+    final workflowsById = <String, Map<String, dynamic>>{};
     if (workflows is! List) {
       issues.add('Manifest key "workflows" must be an array.');
     } else {
@@ -148,24 +167,40 @@ class AgentDocsValidator {
           continue;
         }
         _validateManifestWorkflow(issues, value, index: i);
+        final id = value['id'];
+        if (id is String && id.trim().isNotEmpty) {
+          workflowsById[id] = value;
+        }
       }
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
+        requiredId: 'ci_repo_ops',
+        expectedDoc: 'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
+      );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
+        requiredId: 'commit_publish_ops',
+        expectedDoc: 'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
+      );
     }
 
     final globalCommands = manifest['global_commands'];
     if (globalCommands is! Map<String, dynamic>) {
       issues.add('Manifest key "global_commands" must be an object.');
     } else {
-      _validateStringList(
+      _validateCommandList(
         issues,
         globalCommands['bootstrap'],
         'global_commands.bootstrap',
       );
-      _validateStringList(
+      _validateCommandList(
         issues,
         globalCommands['analysis'],
         'global_commands.analysis',
       );
-      _validateStringList(
+      _validateCommandList(
         issues,
         globalCommands['tests'],
         'global_commands.tests',
@@ -191,7 +226,21 @@ class AgentDocsValidator {
         contracts['windows_test_policy'],
         'contracts.windows_test_policy',
       );
+      _validateNonEmptyString(
+        issues,
+        contracts['templates_read_policy'],
+        'contracts.templates_read_policy',
+      );
+      final templatePolicy = contracts['templates_read_policy'];
+      if (templatePolicy is String &&
+          !templatePolicy.toLowerCase().contains('read-on-demand')) {
+        issues.add(
+          'contracts.templates_read_policy must include read-on-demand guidance.',
+        );
+      }
     }
+
+    _validateNoTemplateRoutingInManifest(issues, manifest);
 
     final lastUpdated = manifest['last_updated'];
     if (lastUpdated is! String ||
@@ -208,7 +257,8 @@ class AgentDocsValidator {
     required int index,
   }) {
     _validateNonEmptyString(issues, workflow['id'], 'workflows[$index].id');
-    _validateNonEmptyString(issues, workflow['scope'], 'workflows[$index].scope');
+    _validateNonEmptyString(
+        issues, workflow['scope'], 'workflows[$index].scope');
 
     final doc = workflow['doc'];
     if (doc is! String || doc.trim().isEmpty) {
@@ -227,7 +277,7 @@ class AgentDocsValidator {
       workflow['targeted_tests'],
       'workflows[$index].targeted_tests',
     );
-    _validateStringList(
+    _validateCommandList(
       issues,
       workflow['validation_commands'],
       'workflows[$index].validation_commands',
@@ -239,6 +289,8 @@ class AgentDocsValidator {
       'docs/assistant/workflows/READER_WORKFLOW.md',
       'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
       'docs/assistant/workflows/PLANNER_WORKFLOW.md',
+      'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
+      'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
       'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
     ];
     for (final relativePath in workflowDocs) {
@@ -258,6 +310,26 @@ class AgentDocsValidator {
   }
 
   void _validateCanonicalContracts(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      if (!text.contains('compatibility shim')) {
+        issues.add(
+          'AGENTS.md must state that it is a compatibility shim.',
+        );
+      }
+    }
+
+    final agentRunbook = _resolveFile('agent.md');
+    if (agentRunbook.existsSync()) {
+      final text = agentRunbook.readAsStringSync();
+      if (!text.contains('short shim')) {
+        issues.add(
+          'agent.md must explain AGENTS.md compatibility role.',
+        );
+      }
+    }
+
     final appKnowledge = _resolveFile('APP_KNOWLEDGE.md');
     if (appKnowledge.existsSync()) {
       final text = appKnowledge.readAsStringSync();
@@ -269,6 +341,11 @@ class AgentDocsValidator {
       if (!text.contains('source code remains the final truth')) {
         issues.add(
           'APP_KNOWLEDGE.md must state that source code is final truth.',
+        );
+      }
+      if (!text.contains('Why two `APP_KNOWLEDGE.md` files:')) {
+        issues.add(
+          'APP_KNOWLEDGE.md must explain canonical-vs-bridge file split.',
         );
       }
     }
@@ -284,6 +361,51 @@ class AgentDocsValidator {
       if (!text.contains('if this file conflicts with `APP_KNOWLEDGE.md`')) {
         issues.add(
           'Bridge doc must include explicit conflict rule for APP_KNOWLEDGE.md.',
+        );
+      }
+      if (!text
+          .contains('intentionally shorter than the canonical root document')) {
+        issues.add(
+          'Bridge doc must explain why it differs from canonical content.',
+        );
+      }
+    }
+  }
+
+  void _validateTemplatePolicies(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      if (!text.contains('docs/assistant/templates/*') ||
+          !text.toLowerCase().contains('read-on-demand only')) {
+        issues.add(
+          'AGENTS.md must declare docs/assistant/templates/* read-on-demand policy.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      if (!text.contains('docs/assistant/templates/*') ||
+          !text.toLowerCase().contains('read-on-demand only')) {
+        issues.add(
+          'agent.md must declare docs/assistant/templates/* read-on-demand policy.',
+        );
+      }
+      if (!text.toLowerCase().contains('explicitly requests template/prompt')) {
+        issues.add(
+          'agent.md must state explicit user-request exception for template usage.',
+        );
+      }
+    }
+
+    final index = _resolveFile('docs/assistant/INDEX.md');
+    if (index.existsSync()) {
+      final text = index.readAsStringSync().toLowerCase();
+      if (text.contains('docs/assistant/templates/')) {
+        issues.add(
+          'INDEX.md must not route private template files as default docs.',
         );
       }
     }
@@ -304,6 +426,101 @@ class AgentDocsValidator {
         if (!_pathTokenExists(token)) {
           issues.add('Backtick path not found in $relativePath: $token');
         }
+      }
+    }
+  }
+
+  void _validateRequiredWorkflowId(
+    List<String> issues, {
+    required Map<String, Map<String, dynamic>> workflowsById,
+    required String requiredId,
+    required String expectedDoc,
+  }) {
+    final workflow = workflowsById[requiredId];
+    if (workflow == null) {
+      issues.add('Manifest must include required workflow id "$requiredId".');
+      return;
+    }
+    final doc = workflow['doc'];
+    if (doc != expectedDoc) {
+      issues.add(
+        'Manifest workflow "$requiredId" must point to "$expectedDoc".',
+      );
+      return;
+    }
+    if (!_exists(doc)) {
+      issues.add('Manifest required workflow doc does not exist: $doc');
+    }
+  }
+
+  void _validateNoTemplateRoutingInManifest(
+    List<String> issues,
+    Map<String, dynamic> manifest,
+  ) {
+    final canonical = manifest['canonical'];
+    if (canonical is Map<String, dynamic>) {
+      for (final entry in canonical.entries) {
+        final value = entry.value;
+        if (value is String && _isTemplatePath(value)) {
+          issues.add(
+            'Template path must not appear in manifest canonical routing: ${entry.key} -> $value',
+          );
+        }
+      }
+    }
+
+    final bridges = manifest['bridges'];
+    if (bridges is List) {
+      for (final value in bridges) {
+        if (value is String && _isTemplatePath(value)) {
+          issues.add(
+            'Template path must not appear in manifest bridges routing: $value',
+          );
+        }
+      }
+    }
+
+    final workflows = manifest['workflows'];
+    if (workflows is List) {
+      for (var i = 0; i < workflows.length; i++) {
+        final workflow = workflows[i];
+        if (workflow is! Map<String, dynamic>) {
+          continue;
+        }
+        final doc = workflow['doc'];
+        if (doc is String && _isTemplatePath(doc)) {
+          issues.add(
+            'Template path must not appear as workflow doc (workflows[$i].doc): $doc',
+          );
+        }
+        _checkNoTemplatePathInList(
+          issues,
+          workflow['primary_files'],
+          'workflows[$i].primary_files',
+        );
+        _checkNoTemplatePathInList(
+          issues,
+          workflow['targeted_tests'],
+          'workflows[$i].targeted_tests',
+        );
+      }
+    }
+  }
+
+  void _checkNoTemplatePathInList(
+    List<String> issues,
+    dynamic value,
+    String label,
+  ) {
+    if (value is! List) {
+      return;
+    }
+    for (var i = 0; i < value.length; i++) {
+      final entry = value[i];
+      if (entry is String && _isTemplatePath(entry)) {
+        issues.add(
+          'Template path must not appear in manifest routing list ($label[$i]): $entry',
+        );
       }
     }
   }
@@ -345,7 +562,7 @@ class AgentDocsValidator {
     }
   }
 
-  void _validateStringList(
+  void _validateCommandList(
     List<String> issues,
     dynamic value,
     String label,
@@ -358,8 +575,27 @@ class AgentDocsValidator {
       final entry = value[i];
       if (entry is! String || entry.trim().isEmpty) {
         issues.add('$label[$i] must be a non-empty string.');
+        continue;
+      }
+      if (!_isPowerShellSafe(entry)) {
+        issues.add(
+          '$label[$i] appears bash-specific; use PowerShell-safe syntax: $entry',
+        );
       }
     }
+  }
+
+  bool _isPowerShellSafe(String command) {
+    final trimmed = command.trim();
+    if (trimmed.isEmpty) {
+      return false;
+    }
+    for (final pattern in _bashOnlyPatterns) {
+      if (pattern.hasMatch(trimmed)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void _validateNonEmptyString(
@@ -402,6 +638,11 @@ class AgentDocsValidator {
       }
     }
     return false;
+  }
+
+  bool _isTemplatePath(String path) {
+    final normalized = path.replaceAll('\\', '/').toLowerCase();
+    return normalized.startsWith('docs/assistant/templates/');
   }
 
   bool _exists(String relativePath) {

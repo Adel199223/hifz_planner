@@ -10,6 +10,13 @@ A new Flutter project.
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
+- `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
+
+Canonical source:
+- `APP_KNOWLEDGE.md` is the canonical app-level architecture/status brief.
+
+CI quality gates:
+- `.github/workflows/dart.yml`
 
 ## Getting Started
 

@@ -11,6 +11,7 @@ Use when changes touch:
 - `agent.md`
 - `APP_KNOWLEDGE.md`
 - `docs/assistant/*`
+- `.github/workflows/dart.yml`
 - docs references in `README.md`
 - docs validator script
 
@@ -19,6 +20,7 @@ Use when changes touch:
 - Do not let bridge docs become alternate canon.
 - Do not add stale paths or commands that fail in this repo.
 - Do not skip docs validation after changing documentation structure.
+- Do not route private template assets as default execution docs.
 
 ## Primary Files
 
@@ -26,10 +28,13 @@ Use when changes touch:
 - `agent.md`
 - `APP_KNOWLEDGE.md`
 - `README.md`
+- `.github/workflows/dart.yml`
 - `docs/assistant/APP_KNOWLEDGE.md`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
+- `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
+- `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
 - `tooling/validate_agent_docs.dart`
 - `test/tooling/validate_agent_docs_test.dart`
 
@@ -58,9 +63,25 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
 4. Symptoms: docs drift after feature changes.
    - Update canonical file first, then bridge/index/manifest/workflows.
 
+## Sync Order
+
+1. Update canonical:
+   - `APP_KNOWLEDGE.md`
+2. Update bridge:
+   - `docs/assistant/APP_KNOWLEDGE.md`
+3. Update routing docs:
+   - `docs/assistant/INDEX.md`
+   - `docs/assistant/manifest.json`
+4. Update validator and tests:
+   - `tooling/validate_agent_docs.dart`
+   - `test/tooling/validate_agent_docs_test.dart`
+5. Update private templates only when requested:
+   - `docs/assistant/templates/*`
+
 ## Handoff Checklist
 
 - canonical-vs-bridge policy remains explicit
 - validator passes with zero errors
 - workflow docs keep required section template
 - README onboarding links are in sync with assistant docs
+- CI command examples in docs match `.github/workflows/dart.yml`

@@ -6,6 +6,11 @@ The canonical app brief is:
 - `APP_KNOWLEDGE.md` (repo root)
 
 This file is a bridge for tools/agents expecting the old assistant-doc path.
+It is intentionally shorter than the canonical root document.
+
+Why two `APP_KNOWLEDGE.md` files:
+- Root file is canonical architecture/status truth.
+- This file is a bootstrap bridge for path compatibility and quick routing.
 
 Recommended starting points:
 - `AGENTS.md` (compatibility shim)

@@ -23,6 +23,16 @@ Workflow runbooks:
 - Quran.com data/cache/fonts: `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md`
 - Planner/scheduler: `docs/assistant/workflows/PLANNER_WORKFLOW.md`
 - Docs maintenance: `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`
+- CI and repo operations: `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
+- Commit/publish hygiene: `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
+
+Why two `APP_KNOWLEDGE.md` files:
+- Root `APP_KNOWLEDGE.md` is canonical and complete.
+- `docs/assistant/APP_KNOWLEDGE.md` is intentionally shorter as a bridge/bootstrap doc.
+
+Why both `AGENTS.md` and `agent.md` exist:
+- `AGENTS.md` is a short compatibility shim for auto-discovery tools.
+- `agent.md` is the operational runbook for humans and AI agents.
 
 ## 1) App Purpose
 
@@ -65,7 +75,7 @@ Defined in `lib/app/router.dart`:
 
 ### Global Preferences (persisted)
 - Language options (selection only, not full app translation yet):
-  - English, Francais, العربية, Portugues
+  - English, Français, العربية, Português
 - Theme options:
   - Sepia, Dark
 - Stored via SharedPreferences and restored on startup.
@@ -309,7 +319,7 @@ Quality checks:
 
 ```powershell
 dart format .
-flutter analyze
+flutter analyze --no-fatal-infos --no-fatal-warnings
 flutter test -j 1 -r expanded
 ```
 
@@ -321,6 +331,19 @@ flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
 
 Why `-j 1`:
 - Windows is more stable with single-threaded Flutter test runs in this project.
+
+### CI Quality Gate
+
+CI source of truth:
+- `.github/workflows/dart.yml`
+
+Current CI checks:
+- `flutter pub get`
+- `flutter analyze --no-fatal-infos --no-fatal-warnings`
+- `dart run tooling/validate_agent_docs.dart`
+- `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart`
+- `flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart`
+- `flutter test -j 1 -r expanded test/app/app_preferences_test.dart`
 
 ## 11) Testing Coverage Snapshot
 
@@ -378,3 +401,7 @@ Representative files:
 - Avoid touching generated Drift code by hand.
 - When adding UI behavior, prefer stable `ValueKey`s for testability.
 - Keep Quran.com parity work grounded in source behavior, but avoid breaking existing planner and data workflows.
+
+Current branch model:
+- `main` is the stable default branch.
+- active implementation branches follow `feat/*`.

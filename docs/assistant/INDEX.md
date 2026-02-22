@@ -21,6 +21,8 @@ One-page navigation guide for agent-facing documentation.
 | `docs/assistant/workflows/READER_WORKFLOW.md` | Task targets Verse by Verse / Reading UI and interactions. | Planner internals or DB migrations. | 2 min |
 | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | Task targets Quran.com fetch/cache/dedupe/fonts/translations. | Navigation shell changes. | 2 min |
 | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | Task targets onboarding/plan/today/scheduler/calibration. | Quran.com rendering fidelity tasks. | 2 min |
+| `docs/assistant/workflows/CI_REPO_WORKFLOW.md` | Task targets CI workflow edits, branch sync/merge hygiene, and release gating commands. | Feature implementation details inside reader/planner logic. | 2 min |
+| `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` | Task starts with "commit": stage triage, ignore checks, commit message, push, and branch cleanup operations. | Feature implementation logic or schema design work. | 2 min |
 | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | Task changes docs structure/contracts/links. | Runtime feature implementation. | 2 min |
 
 ## Validator Command
