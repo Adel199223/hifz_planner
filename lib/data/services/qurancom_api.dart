@@ -24,16 +24,22 @@ class QuranComApiException implements Exception {
 
 class MushafWord {
   const MushafWord({
+    this.verseKey,
     required this.codeV2,
     required this.textQpcHafs,
+    this.translationText,
+    this.transliterationText,
     required this.charTypeName,
     required this.lineNumber,
     required this.position,
     required this.pageNumber,
   });
 
+  final String? verseKey;
   final String? codeV2;
   final String? textQpcHafs;
+  final String? translationText;
+  final String? transliterationText;
   final String? charTypeName;
   final int? lineNumber;
   final int? position;
@@ -41,8 +47,11 @@ class MushafWord {
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
+      'verse_key': verseKey,
       'code_v2': codeV2,
       'text_qpc_hafs': textQpcHafs,
+      'translation_text': translationText,
+      'transliteration_text': transliterationText,
       'char_type_name': charTypeName,
       'line_number': lineNumber,
       'position': position,
@@ -52,8 +61,13 @@ class MushafWord {
 
   factory MushafWord.fromJson(Map<String, dynamic> json) {
     return MushafWord(
+      verseKey: _asString(json['verse_key']),
       codeV2: _asString(json['code_v2']),
       textQpcHafs: _asString(json['text_qpc_hafs']),
+      translationText: _asString(json['translation_text']) ??
+          _asNestedText(json['translation']),
+      transliterationText: _asString(json['transliteration_text']) ??
+          _asNestedText(json['transliteration']),
       charTypeName: _asString(json['char_type_name']),
       lineNumber: _asInt(json['line_number']),
       position: _asInt(json['position']),
@@ -67,17 +81,29 @@ class MushafPageMeta {
     required this.firstChapterId,
     required this.firstVerseNumber,
     required this.firstVerseKey,
+    this.pageNumber,
+    this.juzNumber,
+    this.hizbNumber,
+    this.rubElHizbNumber,
   });
 
   final int? firstChapterId;
   final int? firstVerseNumber;
   final String? firstVerseKey;
+  final int? pageNumber;
+  final int? juzNumber;
+  final int? hizbNumber;
+  final int? rubElHizbNumber;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'first_chapter_id': firstChapterId,
       'first_verse_number': firstVerseNumber,
       'first_verse_key': firstVerseKey,
+      'page_number': pageNumber,
+      'juz_number': juzNumber,
+      'hizb_number': hizbNumber,
+      'rub_el_hizb_number': rubElHizbNumber,
     };
   }
 
@@ -86,6 +112,80 @@ class MushafPageMeta {
       firstChapterId: _asInt(json['first_chapter_id']),
       firstVerseNumber: _asInt(json['first_verse_number']),
       firstVerseKey: _asString(json['first_verse_key']),
+      pageNumber: _asInt(json['page_number']),
+      juzNumber: _asInt(json['juz_number']),
+      hizbNumber: _asInt(json['hizb_number']),
+      rubElHizbNumber: _asInt(json['rub_el_hizb_number']),
+    );
+  }
+}
+
+class MushafJuzNavEntry {
+  const MushafJuzNavEntry({
+    required this.juzNumber,
+    required this.page,
+    required this.verseKey,
+  });
+
+  final int juzNumber;
+  final int page;
+  final String? verseKey;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'juz_number': juzNumber,
+      'page': page,
+      'verse_key': verseKey,
+    };
+  }
+
+  factory MushafJuzNavEntry.fromJson(Map<String, dynamic> json) {
+    final juzNumber = _asInt(json['juz_number']);
+    final page = _asInt(json['page']);
+    if (juzNumber == null || page == null) {
+      throw const FormatException('Invalid cached juz navigation entry.');
+    }
+    return MushafJuzNavEntry(
+      juzNumber: juzNumber,
+      page: page,
+      verseKey: _asString(json['verse_key']),
+    );
+  }
+}
+
+class MushafVerseData {
+  const MushafVerseData({
+    required this.verseKey,
+    required this.words,
+    this.codeV2,
+  });
+
+  final String verseKey;
+  final List<MushafWord> words;
+  final String? codeV2;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'verse_key': verseKey,
+      'words': [for (final word in words) word.toJson()],
+      'code_v2': codeV2,
+    };
+  }
+
+  factory MushafVerseData.fromJson(Map<String, dynamic> json) {
+    final verseKey = _asString(json['verse_key']);
+    final wordsRaw = json['words'];
+    if (verseKey == null || verseKey.trim().isEmpty || wordsRaw is! List) {
+      throw const FormatException('Invalid cached Mushaf verse data format.');
+    }
+
+    return MushafVerseData(
+      verseKey: verseKey,
+      words: [
+        for (final item in wordsRaw)
+          if (item is Map<String, dynamic>) MushafWord.fromJson(item),
+      ],
+      codeV2: _asString(json['code_v2']),
     );
   }
 }
@@ -94,15 +194,18 @@ class MushafPageData {
   const MushafPageData({
     required this.words,
     required this.meta,
+    this.verses = const <MushafVerseData>[],
   });
 
   final List<MushafWord> words;
   final MushafPageMeta meta;
+  final List<MushafVerseData> verses;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'meta': meta.toJson(),
       'words': [for (final word in words) word.toJson()],
+      'verses': [for (final verse in verses) verse.toJson()],
     };
   }
 
@@ -115,12 +218,23 @@ class MushafPageData {
       );
     }
 
+    final verses = <MushafVerseData>[];
+    final versesRaw = json['verses'];
+    if (versesRaw is List) {
+      for (final item in versesRaw) {
+        if (item is Map<String, dynamic>) {
+          verses.add(MushafVerseData.fromJson(item));
+        }
+      }
+    }
+
     return MushafPageData(
       words: [
         for (final item in wordsRaw)
           if (item is Map<String, dynamic>) MushafWord.fromJson(item),
       ],
       meta: MushafPageMeta.fromJson(metaRaw),
+      verses: verses,
     );
   }
 }
@@ -143,11 +257,384 @@ class QuranComApi {
   final Future<Directory> Function() _getSupportDirectory;
   final Duration _retryDelay;
   final int _retries;
+  final Map<String, MushafPageData> _pageMemoryCache =
+      <String, MushafPageData>{};
+  final Map<String, Future<MushafPageData>> _pendingPageLoads =
+      <String, Future<MushafPageData>>{};
+  final Map<String, Future<MushafPageData>> _pendingPageRefreshes =
+      <String, Future<MushafPageData>>{};
+  final Map<int, List<MushafJuzNavEntry>> _juzIndexMemoryCache =
+      <int, List<MushafJuzNavEntry>>{};
+  final Map<int, Future<List<MushafJuzNavEntry>>> _pendingJuzIndexLoads =
+      <int, Future<List<MushafJuzNavEntry>>>{};
 
   Future<MushafPageData> getPage({
     required int page,
     required int mushafId,
   }) async {
+    return _getPage(
+      page: page,
+      mushafId: mushafId,
+      requireVerseData: false,
+      requireWordTooltipData: false,
+    );
+  }
+
+  Future<List<MushafJuzNavEntry>> getJuzIndex({
+    required int mushafId,
+  }) async {
+    _validatePageAndMushaf(page: 1, mushafId: mushafId);
+    final cached = _juzIndexMemoryCache[mushafId];
+    if (cached != null && cached.isNotEmpty) {
+      return cached;
+    }
+
+    var pending = _pendingJuzIndexLoads[mushafId];
+    if (pending == null) {
+      final future = _loadJuzIndexFromCacheOrNetwork(mushafId: mushafId);
+      pending = future.whenComplete(() {
+        _pendingJuzIndexLoads.remove(mushafId);
+      });
+      _pendingJuzIndexLoads[mushafId] = pending;
+    }
+
+    final entries = await pending;
+    _juzIndexMemoryCache[mushafId] = entries;
+    return entries;
+  }
+
+  Future<MushafPageData> getPageWithVerses({
+    required int page,
+    required int mushafId,
+    bool requireWordTooltipData = false,
+  }) async {
+    if (!requireWordTooltipData) {
+      return _getPage(
+        page: page,
+        mushafId: mushafId,
+        requireVerseData: true,
+        requireWordTooltipData: false,
+      );
+    }
+
+    try {
+      return await _getPage(
+        page: page,
+        mushafId: mushafId,
+        requireVerseData: true,
+        requireWordTooltipData: true,
+      );
+    } catch (_) {
+      // Tooltip data is optional. Fall back to verse-ready data when refresh fails.
+      return _getPage(
+        page: page,
+        mushafId: mushafId,
+        requireVerseData: true,
+        requireWordTooltipData: false,
+      );
+    }
+  }
+
+  Future<MushafPageData> _loadPageForVerseWords({
+    required int page,
+    required int mushafId,
+  }) async {
+    return _getPage(
+      page: page,
+      mushafId: mushafId,
+      requireVerseData: true,
+      requireWordTooltipData: false,
+    );
+  }
+
+  Future<List<MushafWord>> getVerseWordsByPage({
+    required int page,
+    required int mushafId,
+    required String verseKey,
+  }) async {
+    final normalizedVerseKey = verseKey.trim();
+    if (normalizedVerseKey.isEmpty) {
+      throw const QuranComApiException('Verse key is required.');
+    }
+
+    var pageData = await getPage(page: page, mushafId: mushafId);
+    if (pageData.verses.isEmpty) {
+      pageData = await _loadPageForVerseWords(
+        page: page,
+        mushafId: mushafId,
+      );
+    }
+
+    for (final verse in pageData.verses) {
+      if (verse.verseKey == normalizedVerseKey) {
+        return verse.words;
+      }
+    }
+
+    throw QuranComApiException(
+      'Verse $normalizedVerseKey not found in page $page (mushaf $mushafId).',
+    );
+  }
+
+  Future<MushafPageData> _getPage({
+    required int page,
+    required int mushafId,
+    required bool requireVerseData,
+    required bool requireWordTooltipData,
+  }) async {
+    _validatePageAndMushaf(page: page, mushafId: mushafId);
+    final key = _pageKey(page: page, mushafId: mushafId);
+    final cached = _pageMemoryCache[key];
+    if (cached != null) {
+      if ((!requireVerseData || _hasRequiredVerseData(cached)) &&
+          (!requireWordTooltipData || _hasWordTooltipData(cached))) {
+        return cached;
+      }
+    }
+
+    var pending = _pendingPageLoads[key];
+    if (pending == null) {
+      final future =
+          _loadPageFromCacheOrNetwork(page: page, mushafId: mushafId);
+      pending = future.whenComplete(() {
+        _pendingPageLoads.remove(key);
+      });
+      _pendingPageLoads[key] = pending;
+    }
+
+    final pageData = await pending;
+    final normalizedPageData = _normalizeWordVerseKeys(pageData);
+    _pageMemoryCache[key] = normalizedPageData;
+    if ((!requireVerseData || _hasRequiredVerseData(normalizedPageData)) &&
+        (!requireWordTooltipData || _hasWordTooltipData(normalizedPageData))) {
+      return normalizedPageData;
+    }
+
+    var refreshPending = _pendingPageRefreshes[key];
+    if (refreshPending == null) {
+      final refreshFuture = _refreshPageFromNetwork(
+        page: page,
+        mushafId: mushafId,
+      );
+      refreshPending = refreshFuture.whenComplete(() {
+        _pendingPageRefreshes.remove(key);
+      });
+      _pendingPageRefreshes[key] = refreshPending;
+    }
+    final refreshed = _normalizeWordVerseKeys(await refreshPending);
+    _pageMemoryCache[key] = refreshed;
+    return refreshed;
+  }
+
+  bool _hasRequiredVerseData(MushafPageData data) {
+    if (data.verses.isEmpty) {
+      return false;
+    }
+    for (final verse in data.verses) {
+      final codeV2 = verse.codeV2;
+      if (codeV2 == null || codeV2.trim().isEmpty) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _hasWordTooltipData(MushafPageData data) {
+    for (final word in data.words) {
+      final charType = (word.charTypeName ?? '').trim().toLowerCase();
+      if (charType != 'word') {
+        continue;
+      }
+      final translation = (word.translationText ?? '').trim();
+      final transliteration = (word.transliterationText ?? '').trim();
+      if (translation.isNotEmpty || transliteration.isNotEmpty) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  MushafPageData _normalizeWordVerseKeys(MushafPageData data) {
+    final allWordsHaveVerseKey = data.words.every(
+      (word) => (word.verseKey ?? '').trim().isNotEmpty,
+    );
+    if (allWordsHaveVerseKey || data.verses.isEmpty) {
+      return data;
+    }
+
+    final rebuiltWords = <MushafWord>[];
+    final rebuiltVerses = <MushafVerseData>[];
+    for (final verse in data.verses) {
+      final normalizedVerseKey = verse.verseKey.trim();
+      if (normalizedVerseKey.isEmpty) {
+        return data;
+      }
+
+      final verseWords = <MushafWord>[
+        for (final word in verse.words)
+          _copyWordWithVerseKey(
+            word: word,
+            verseKey: normalizedVerseKey,
+          ),
+      ];
+      rebuiltWords.addAll(verseWords);
+      rebuiltVerses.add(
+        MushafVerseData(
+          verseKey: normalizedVerseKey,
+          words: verseWords,
+          codeV2: verse.codeV2,
+        ),
+      );
+    }
+
+    if (rebuiltWords.length != data.words.length) {
+      return data;
+    }
+    return MushafPageData(
+      words: rebuiltWords,
+      meta: data.meta,
+      verses: rebuiltVerses,
+    );
+  }
+
+  MushafWord _copyWordWithVerseKey({
+    required MushafWord word,
+    required String verseKey,
+  }) {
+    return MushafWord(
+      verseKey: verseKey,
+      codeV2: word.codeV2,
+      textQpcHafs: word.textQpcHafs,
+      translationText: word.translationText,
+      transliterationText: word.transliterationText,
+      charTypeName: word.charTypeName,
+      lineNumber: word.lineNumber,
+      position: word.position,
+      pageNumber: word.pageNumber,
+    );
+  }
+
+  Future<List<MushafJuzNavEntry>> _loadJuzIndexFromCacheOrNetwork({
+    required int mushafId,
+  }) async {
+    final cacheFile = await _resolveJuzIndexCacheFile(mushafId: mushafId);
+    final cached = await _readCachedJuzIndex(cacheFile);
+    if (cached != null) {
+      return cached;
+    }
+
+    final fetched = await _fetchJuzIndex(mushafId: mushafId);
+    await _writeCacheAtomic(cacheFile, jsonEncode([
+      for (final entry in fetched) entry.toJson(),
+    ]));
+    return fetched;
+  }
+
+  Future<List<MushafJuzNavEntry>?> _readCachedJuzIndex(File cacheFile) async {
+    if (!await cacheFile.exists()) {
+      return null;
+    }
+
+    try {
+      final rawCache = await cacheFile.readAsString();
+      final decoded = jsonDecode(rawCache);
+      if (decoded is! List) {
+        return null;
+      }
+      final entries = <MushafJuzNavEntry>[
+        for (final item in decoded)
+          if (item is Map<String, dynamic>) MushafJuzNavEntry.fromJson(item),
+      ];
+      if (entries.length != 30) {
+        return null;
+      }
+      entries.sort((a, b) => a.juzNumber.compareTo(b.juzNumber));
+      return entries;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<List<MushafJuzNavEntry>> _fetchJuzIndex({
+    required int mushafId,
+  }) async {
+    final entries = <MushafJuzNavEntry>[];
+    for (var juzNumber = 1; juzNumber <= 30; juzNumber++) {
+      final payload = await _fetchJuzNavPayload(
+        mushafId: mushafId,
+        juzNumber: juzNumber,
+      );
+      final entry = _parseJuzNavPayload(
+        rawBody: payload,
+        fallbackJuzNumber: juzNumber,
+      );
+      entries.add(entry);
+    }
+
+    entries.sort((a, b) => a.juzNumber.compareTo(b.juzNumber));
+    return entries;
+  }
+
+  Future<MushafPageData> _loadPageFromCacheOrNetwork({
+    required int page,
+    required int mushafId,
+  }) async {
+    final cacheFile = await _resolveCacheFile(page: page, mushafId: mushafId);
+    final cached = await _readCachedPage(cacheFile);
+    if (cached != null) {
+      return cached;
+    }
+    return _fetchAndCachePage(
+      page: page,
+      mushafId: mushafId,
+      cacheFile: cacheFile,
+    );
+  }
+
+  Future<MushafPageData> _refreshPageFromNetwork({
+    required int page,
+    required int mushafId,
+  }) async {
+    final cacheFile = await _resolveCacheFile(page: page, mushafId: mushafId);
+    return _fetchAndCachePage(
+      page: page,
+      mushafId: mushafId,
+      cacheFile: cacheFile,
+    );
+  }
+
+  Future<MushafPageData?> _readCachedPage(File cacheFile) async {
+    if (!await cacheFile.exists()) {
+      return null;
+    }
+
+    try {
+      final rawCache = await cacheFile.readAsString();
+      final decoded = jsonDecode(rawCache);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Invalid cache JSON root object.');
+      }
+      return MushafPageData.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<MushafPageData> _fetchAndCachePage({
+    required int page,
+    required int mushafId,
+    required File cacheFile,
+  }) async {
+    final payload = await _fetchPagePayload(page: page, mushafId: mushafId);
+    final data = _parseApiPayload(payload);
+    await _writeCacheAtomic(cacheFile, jsonEncode(data.toJson()));
+    return data;
+  }
+
+  void _validatePageAndMushaf({
+    required int page,
+    required int mushafId,
+  }) {
     if (page < 1 || page > 604) {
       throw QuranComApiException(
         'Invalid page number $page. Expected 1..604.',
@@ -156,35 +643,35 @@ class QuranComApi {
     if (mushafId <= 0) {
       throw QuranComApiException('Invalid mushaf id $mushafId.');
     }
+  }
 
-    final cacheFile = await _resolveCacheFile(page: page, mushafId: mushafId);
-    if (await cacheFile.exists()) {
-      try {
-        final rawCache = await cacheFile.readAsString();
-        final decoded = jsonDecode(rawCache);
-        if (decoded is! Map<String, dynamic>) {
-          throw const FormatException('Invalid cache JSON root object.');
-        }
-        return MushafPageData.fromJson(decoded);
-      } catch (_) {
-        // Fall through to network fetch if cache is unreadable.
-      }
-    }
-
-    final payload = await _fetchPagePayload(page: page, mushafId: mushafId);
-    final data = _parseApiPayload(payload);
-    await _writeCacheAtomic(cacheFile, jsonEncode(data.toJson()));
-    return data;
+  String _pageKey({
+    required int page,
+    required int mushafId,
+  }) {
+    return '$page|$mushafId';
   }
 
   Future<File> _resolveCacheFile({
     required int page,
     required int mushafId,
   }) async {
+    final cacheDir = await _resolveCacheDirectory();
+    return File(_joinPath(cacheDir.path, 'page_${page}_m$mushafId.json'));
+  }
+
+  Future<File> _resolveJuzIndexCacheFile({
+    required int mushafId,
+  }) async {
+    final cacheDir = await _resolveCacheDirectory();
+    return File(_joinPath(cacheDir.path, 'juz_index_m$mushafId.json'));
+  }
+
+  Future<Directory> _resolveCacheDirectory() async {
     final supportDir = await _getSupportDirectory();
     final cacheDir = Directory(_joinPath(supportDir.path, 'qurancom_pages'));
     await cacheDir.create(recursive: true);
-    return File(_joinPath(cacheDir.path, 'page_${page}_m$mushafId.json'));
+    return cacheDir;
   }
 
   Future<String> _fetchPagePayload({
@@ -193,16 +680,51 @@ class QuranComApi {
   }) async {
     final uri = Uri.parse(
       '$_apiBase/verses/by_page/$page'
-      '?words=true&mushaf=$mushafId&word_fields=code_v2,text_qpc_hafs',
+      '?words=true&mushaf=$mushafId'
+      '&fields=verse_key,chapter_id,verse_number,page_number,juz_number,hizb_number,rub_el_hizb_number,code_v2'
+      '&word_fields=verse_key,position,line_number,page_number,char_type_name,code_v2,text_qpc_hafs,translation,transliteration',
     );
 
+    return _fetchPayload(
+      uri: uri,
+      requestFailureMessage: 'Request failed for page $page.',
+      attemptsFailureMessage:
+          'Failed to fetch page $page after ${_retries + 1} attempts.',
+    );
+  }
+
+  Future<String> _fetchJuzNavPayload({
+    required int mushafId,
+    required int juzNumber,
+  }) async {
+    final uri = Uri.parse(
+      '$_apiBase/verses/by_juz/$juzNumber'
+      '?mushaf=$mushafId'
+      '&words=false'
+      '&per_page=1'
+      '&page=1'
+      '&fields=verse_key,chapter_id,verse_number,page_number,juz_number,hizb_number,rub_el_hizb_number',
+    );
+    return _fetchPayload(
+      uri: uri,
+      requestFailureMessage: 'Request failed for juz $juzNumber.',
+      attemptsFailureMessage:
+          'Failed to fetch juz $juzNumber after ${_retries + 1} attempts.',
+    );
+  }
+
+  Future<String> _fetchPayload({
+    required Uri uri,
+    required String requestFailureMessage,
+    required String attemptsFailureMessage,
+  }) async {
     Object? lastError;
     for (var attempt = 0; attempt <= _retries; attempt++) {
       try {
         final response = await _httpClient.get(uri);
         if (response.statusCode != HttpStatus.ok) {
           throw QuranComApiException(
-            'Request failed for page $page.',
+            requestFailureMessage,
             statusCode: response.statusCode,
           );
         }
@@ -220,7 +742,7 @@ class QuranComApi {
       throw lastError;
     }
     throw QuranComApiException(
-      'Failed to fetch page $page after ${_retries + 1} attempts.',
+      attemptsFailureMessage,
       cause: lastError,
     );
   }
@@ -244,20 +766,42 @@ class QuranComApi {
     if (firstVerse is! Map<String, dynamic>) {
       throw const QuranComApiException('Invalid first verse payload.');
     }
-    final firstVerseKey = _asString(firstVerse['verse_key']);
+    final firstVerseKey = _asString(firstVerse['verse_key']) ??
+        _composeVerseKey(
+          chapterId: _asInt(firstVerse['chapter_id']),
+          verseNumber: _asInt(firstVerse['verse_number']),
+        );
     final firstChapterId =
         _asInt(firstVerse['chapter_id']) ?? _chapterFromVerseKey(firstVerseKey);
     final firstVerseNumber = _asInt(firstVerse['verse_number']);
+    final pageNumber = _asInt(firstVerse['page_number']);
+    final juzNumber = _asInt(firstVerse['juz_number']);
+    final hizbNumber = _asInt(firstVerse['hizb_number']);
+    final rubElHizbNumber = _asInt(firstVerse['rub_el_hizb_number']);
     final meta = MushafPageMeta(
       firstChapterId: firstChapterId,
       firstVerseNumber: firstVerseNumber,
       firstVerseKey: firstVerseKey,
+      pageNumber: pageNumber,
+      juzNumber: juzNumber,
+      hizbNumber: hizbNumber,
+      rubElHizbNumber: rubElHizbNumber,
     );
 
     final words = <MushafWord>[];
+    final verses = <MushafVerseData>[];
     for (final verse in versesRaw) {
       if (verse is! Map<String, dynamic>) {
         throw const QuranComApiException('Invalid verse entry in payload.');
+      }
+
+      final verseKey = _asString(verse['verse_key']) ??
+          _composeVerseKey(
+            chapterId: _asInt(verse['chapter_id']),
+            verseNumber: _asInt(verse['verse_number']),
+          );
+      if (verseKey == null || verseKey.trim().isEmpty) {
+        throw const QuranComApiException('Invalid verse key in payload.');
       }
 
       final wordsRaw = verse['words'];
@@ -266,26 +810,78 @@ class QuranComApi {
             'Invalid words array in verse payload.');
       }
 
+      final verseWords = <MushafWord>[];
       for (final word in wordsRaw) {
         if (word is! Map<String, dynamic>) {
           throw const QuranComApiException('Invalid word entry in payload.');
         }
-        words.add(
-          MushafWord(
-            codeV2: _asString(word['code_v2']),
-            textQpcHafs: _asString(word['text_qpc_hafs']),
-            charTypeName: _asString(word['char_type_name']),
-            lineNumber: _asInt(word['line_number']),
-            position: _asInt(word['position']),
-            pageNumber: _asInt(word['page_number']),
-          ),
+        final parsedWord = MushafWord(
+          verseKey: _asString(word['verse_key']) ?? verseKey,
+          codeV2: _asString(word['code_v2']),
+          textQpcHafs: _asString(word['text_qpc_hafs']),
+          translationText: _asNestedText(word['translation']),
+          transliterationText: _asNestedText(word['transliteration']),
+          charTypeName: _asString(word['char_type_name']),
+          lineNumber: _asInt(word['line_number']),
+          position: _asInt(word['position']),
+          pageNumber: _asInt(word['page_number']),
         );
+        verseWords.add(parsedWord);
+        words.add(parsedWord);
       }
+
+      verses.add(
+        MushafVerseData(
+          verseKey: verseKey,
+          words: verseWords,
+          codeV2: _asString(verse['code_v2']),
+        ),
+      );
     }
 
     return MushafPageData(
       words: words,
       meta: meta,
+      verses: verses,
+    );
+  }
+
+  MushafJuzNavEntry _parseJuzNavPayload({
+    required String rawBody,
+    required int fallbackJuzNumber,
+  }) {
+    final decoded = jsonDecode(rawBody);
+    if (decoded is! Map<String, dynamic>) {
+      throw const QuranComApiException('Invalid Quran.com payload root.');
+    }
+
+    final versesRaw = decoded['verses'];
+    if (versesRaw is! List || versesRaw.isEmpty) {
+      throw const QuranComApiException(
+        'Invalid Quran.com payload: verses.',
+      );
+    }
+    final firstVerse = versesRaw.first;
+    if (firstVerse is! Map<String, dynamic>) {
+      throw const QuranComApiException('Invalid first verse payload.');
+    }
+
+    final pageNumber = _asInt(firstVerse['page_number']);
+    if (pageNumber == null || pageNumber < 1 || pageNumber > 604) {
+      throw const QuranComApiException('Invalid page number in juz payload.');
+    }
+
+    final juzNumber = _asInt(firstVerse['juz_number']) ?? fallbackJuzNumber;
+    final verseKey = _asString(firstVerse['verse_key']) ??
+        _composeVerseKey(
+          chapterId: _asInt(firstVerse['chapter_id']),
+          verseNumber: _asInt(firstVerse['verse_number']),
+        );
+
+    return MushafJuzNavEntry(
+      juzNumber: juzNumber,
+      page: pageNumber,
+      verseKey: verseKey,
     );
   }
 
@@ -311,6 +907,16 @@ class QuranComApi {
     }
     return int.tryParse(parts.first);
   }
+
+  String? _composeVerseKey({
+    required int? chapterId,
+    required int? verseNumber,
+  }) {
+    if (chapterId == null || verseNumber == null) {
+      return null;
+    }
+    return '$chapterId:$verseNumber';
+  }
 }
 
 int? _asInt(dynamic value) {
@@ -328,6 +934,13 @@ String? _asString(dynamic value) {
     return value;
   }
   return null;
+}
+
+String? _asNestedText(dynamic value) {
+  if (value is! Map) {
+    return null;
+  }
+  return _asString(value['text']);
 }
 
 String _joinPath(String base, String leaf) {

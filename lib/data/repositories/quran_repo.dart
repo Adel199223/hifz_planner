@@ -29,6 +29,24 @@ class QuranRepo {
     return query.get();
   }
 
+  Future<int> getAyahCountForSurah(int surah) async {
+    final countExp = _db.ayah.id.count();
+    final query = _db.selectOnly(_db.ayah)
+      ..addColumns([countExp])
+      ..where(_db.ayah.surah.equals(surah));
+    final row = await query.getSingle();
+    return row.read(countExp) ?? 0;
+  }
+
+  Future<int?> getPageForVerse(int surah, int ayah) async {
+    final query = _db.selectOnly(_db.ayah)
+      ..addColumns([_db.ayah.pageMadina])
+      ..where(_db.ayah.surah.equals(surah) & _db.ayah.ayah.equals(ayah))
+      ..limit(1);
+    final row = await query.getSingleOrNull();
+    return row?.read(_db.ayah.pageMadina);
+  }
+
   Future<List<AyahData>> searchAyahs(String query, {int limit = 50}) {
     final normalized = query.trim();
     if (normalized.isEmpty) {

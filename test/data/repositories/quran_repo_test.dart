@@ -99,6 +99,26 @@ void main() {
     expect(pageRows[1].ayah, 1);
   });
 
+  test('getAyahCountForSurah returns number of ayahs for surah', () async {
+    final countSurah1 = await repo.getAyahCountForSurah(1);
+    final countSurah2 = await repo.getAyahCountForSurah(2);
+    final countMissing = await repo.getAyahCountForSurah(99);
+
+    expect(countSurah1, 3);
+    expect(countSurah2, 2);
+    expect(countMissing, 0);
+  });
+
+  test('getPageForVerse returns mapped page or null', () async {
+    final page11 = await repo.getPageForVerse(1, 1);
+    final page21 = await repo.getPageForVerse(2, 1);
+    final missing = await repo.getPageForVerse(2, 2);
+
+    expect(page11, 5);
+    expect(page21, 10);
+    expect(missing, isNull);
+  });
+
   test('getAyahsFromCursor includes cursor ayah in canonical order', () async {
     final rows = await repo.getAyahsFromCursor(
       startSurah: 1,

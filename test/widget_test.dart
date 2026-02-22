@@ -44,6 +44,7 @@ void main() {
     );
 
     expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byKey(const ValueKey('global_menu_button')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_screen_root')), findsOneWidget);
     expect(find.text('Planned Reviews'), findsOneWidget);
   });

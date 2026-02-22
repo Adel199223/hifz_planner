@@ -3,9 +3,13 @@ import 'package:go_router/go_router.dart';
 
 import '../screens/about_screen.dart';
 import '../screens/bookmarks_screen.dart';
+import '../screens/learn_screen.dart';
+import '../screens/my_quran_screen.dart';
 import '../screens/notes_screen.dart';
 import '../screens/plan_screen.dart';
+import '../screens/quran_radio_screen.dart';
 import '../screens/reader_screen.dart';
+import '../screens/reciters_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/today_screen.dart';
 import 'navigation_shell.dart';
@@ -76,6 +80,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/plan',
             builder: (context, state) => const PlanScreen(),
+          ),
+          GoRoute(
+            path: '/learn',
+            builder: (context, state) => const LearnScreen(),
+          ),
+          GoRoute(
+            path: '/my-quran',
+            builder: (context, state) => const MyQuranScreen(),
+          ),
+          GoRoute(
+            path: '/quran-radio',
+            builder: (context, state) => const QuranRadioScreen(),
+          ),
+          GoRoute(
+            path: '/reciters',
+            builder: (context, state) => const RecitersScreen(),
           ),
           GoRoute(
             path: '/today',

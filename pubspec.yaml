@@ -17,6 +17,8 @@ dependencies:
   path_provider: ^2.1.5
   http: ^1.2.2
   crypto: ^3.0.7
+  flutter_svg: ^2.2.0
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
@@ -34,3 +36,6 @@ flutter:
     - family: UthmanicHafs
       fonts:
         - asset: assets/fonts/UthmanicHafs1Ver18.ttf
+    - family: SurahNames
+      fonts:
+        - asset: assets/fonts/sura_names.ttf

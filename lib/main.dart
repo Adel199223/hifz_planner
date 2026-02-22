@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app/app_preferences.dart';
 import 'app/router.dart';
+import 'theme/quran_themes.dart';
 
 void main() {
   runApp(const ProviderScope(child: HifzPlannerApp()));
@@ -13,14 +15,16 @@ class HifzPlannerApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final preferences = ref.watch(appPreferencesProvider);
 
     return MaterialApp.router(
       title: 'Hifz Planner',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.teal,
-      ),
+      theme: QuranThemes.sepia(),
+      darkTheme: QuranThemes.dark(),
+      themeMode: preferences.theme == AppThemeChoice.dark
+          ? ThemeMode.dark
+          : ThemeMode.light,
       routerConfig: router,
     );
   }
