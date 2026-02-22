@@ -158,17 +158,22 @@ class MushafVerseData {
     required this.verseKey,
     required this.words,
     this.codeV2,
+    this.translations = const <MushafVerseTranslation>[],
   });
 
   final String verseKey;
   final List<MushafWord> words;
   final String? codeV2;
+  final List<MushafVerseTranslation> translations;
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'verse_key': verseKey,
       'words': [for (final word in words) word.toJson()],
       'code_v2': codeV2,
+      'translations': [
+        for (final translation in translations) translation.toJson(),
+      ],
     };
   }
 
@@ -179,6 +184,16 @@ class MushafVerseData {
       throw const FormatException('Invalid cached Mushaf verse data format.');
     }
 
+    final translations = <MushafVerseTranslation>[];
+    final translationsRaw = json['translations'];
+    if (translationsRaw is List) {
+      for (final item in translationsRaw) {
+        if (item is Map<String, dynamic>) {
+          translations.add(MushafVerseTranslation.fromJson(item));
+        }
+      }
+    }
+
     return MushafVerseData(
       verseKey: verseKey,
       words: [
@@ -186,6 +201,54 @@ class MushafVerseData {
           if (item is Map<String, dynamic>) MushafWord.fromJson(item),
       ],
       codeV2: _asString(json['code_v2']),
+      translations: translations,
+    );
+  }
+}
+
+class MushafVerseTranslation {
+  const MushafVerseTranslation({
+    this.resourceId,
+    this.resourceName,
+    this.text,
+    this.languageCode,
+  });
+
+  final int? resourceId;
+  final String? resourceName;
+  final String? text;
+  final String? languageCode;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'resource_id': resourceId,
+      'resource_name': resourceName,
+      'text': text,
+      'language_code': languageCode,
+    };
+  }
+
+  factory MushafVerseTranslation.fromJson(Map<String, dynamic> json) {
+    var resourceId = _asInt(json['resource_id']) ?? _asInt(json['id']);
+    var resourceName =
+        _asString(json['resource_name']) ?? _asString(json['name']);
+    final text = _asString(json['text']);
+    var languageCode =
+        _asString(json['language_code']) ?? _asString(json['language_name']);
+
+    final resource = json['resource'];
+    if (resource is Map<String, dynamic>) {
+      resourceId ??= _asInt(resource['id']);
+      resourceName ??= _asString(resource['name']);
+      languageCode ??= _asString(resource['language_code']) ??
+          _asString(resource['language_name']);
+    }
+
+    return MushafVerseTranslation(
+      resourceId: resourceId,
+      resourceName: resourceName,
+      text: text,
+      languageCode: languageCode,
     );
   }
 }
@@ -275,7 +338,9 @@ class QuranComApi {
     return _getPage(
       page: page,
       mushafId: mushafId,
+      translationResourceId: null,
       requireVerseData: false,
+      requireVerseTranslations: false,
       requireWordTooltipData: false,
     );
   }
@@ -307,12 +372,15 @@ class QuranComApi {
     required int page,
     required int mushafId,
     bool requireWordTooltipData = false,
+    int? translationResourceId,
   }) async {
     if (!requireWordTooltipData) {
       return _getPage(
         page: page,
         mushafId: mushafId,
+        translationResourceId: translationResourceId,
         requireVerseData: true,
+        requireVerseTranslations: translationResourceId != null,
         requireWordTooltipData: false,
       );
     }
@@ -321,7 +389,9 @@ class QuranComApi {
       return await _getPage(
         page: page,
         mushafId: mushafId,
+        translationResourceId: translationResourceId,
         requireVerseData: true,
+        requireVerseTranslations: translationResourceId != null,
         requireWordTooltipData: true,
       );
     } catch (_) {
@@ -329,7 +399,9 @@ class QuranComApi {
       return _getPage(
         page: page,
         mushafId: mushafId,
+        translationResourceId: translationResourceId,
         requireVerseData: true,
+        requireVerseTranslations: translationResourceId != null,
         requireWordTooltipData: false,
       );
     }
@@ -338,36 +410,45 @@ class QuranComApi {
   Future<MushafPageData> _loadPageForVerseWords({
     required int page,
     required int mushafId,
+    int? translationResourceId,
   }) async {
     return _getPage(
       page: page,
       mushafId: mushafId,
+      translationResourceId: translationResourceId,
       requireVerseData: true,
+      requireVerseTranslations: translationResourceId != null,
       requireWordTooltipData: false,
     );
   }
 
-  Future<List<MushafWord>> getVerseWordsByPage({
+  Future<MushafVerseData> getVerseDataByPage({
     required int page,
     required int mushafId,
     required String verseKey,
+    int? translationResourceId,
   }) async {
     final normalizedVerseKey = verseKey.trim();
     if (normalizedVerseKey.isEmpty) {
       throw const QuranComApiException('Verse key is required.');
     }
 
-    var pageData = await getPage(page: page, mushafId: mushafId);
+    var pageData = await getPageWithVerses(
+      page: page,
+      mushafId: mushafId,
+      translationResourceId: translationResourceId,
+    );
     if (pageData.verses.isEmpty) {
       pageData = await _loadPageForVerseWords(
         page: page,
         mushafId: mushafId,
+        translationResourceId: translationResourceId,
       );
     }
 
     for (final verse in pageData.verses) {
       if (verse.verseKey == normalizedVerseKey) {
-        return verse.words;
+        return verse;
       }
     }
 
@@ -376,17 +457,41 @@ class QuranComApi {
     );
   }
 
+  Future<List<MushafWord>> getVerseWordsByPage({
+    required int page,
+    required int mushafId,
+    required String verseKey,
+  }) async {
+    final verse = await getVerseDataByPage(
+      page: page,
+      mushafId: mushafId,
+      verseKey: verseKey,
+    );
+    return verse.words;
+  }
+
   Future<MushafPageData> _getPage({
     required int page,
     required int mushafId,
+    required int? translationResourceId,
     required bool requireVerseData,
+    required bool requireVerseTranslations,
     required bool requireWordTooltipData,
   }) async {
     _validatePageAndMushaf(page: page, mushafId: mushafId);
-    final key = _pageKey(page: page, mushafId: mushafId);
+    final key = _pageKey(
+      page: page,
+      mushafId: mushafId,
+      translationResourceId: translationResourceId,
+    );
     final cached = _pageMemoryCache[key];
     if (cached != null) {
       if ((!requireVerseData || _hasRequiredVerseData(cached)) &&
+          (!requireVerseTranslations ||
+              _hasRequiredVerseTranslations(
+                cached,
+                translationResourceId: translationResourceId,
+              )) &&
           (!requireWordTooltipData || _hasWordTooltipData(cached))) {
         return cached;
       }
@@ -394,8 +499,11 @@ class QuranComApi {
 
     var pending = _pendingPageLoads[key];
     if (pending == null) {
-      final future =
-          _loadPageFromCacheOrNetwork(page: page, mushafId: mushafId);
+      final future = _loadPageFromCacheOrNetwork(
+        page: page,
+        mushafId: mushafId,
+        translationResourceId: translationResourceId,
+      );
       pending = future.whenComplete(() {
         _pendingPageLoads.remove(key);
       });
@@ -406,6 +514,11 @@ class QuranComApi {
     final normalizedPageData = _normalizeWordVerseKeys(pageData);
     _pageMemoryCache[key] = normalizedPageData;
     if ((!requireVerseData || _hasRequiredVerseData(normalizedPageData)) &&
+        (!requireVerseTranslations ||
+            _hasRequiredVerseTranslations(
+              normalizedPageData,
+              translationResourceId: translationResourceId,
+            )) &&
         (!requireWordTooltipData || _hasWordTooltipData(normalizedPageData))) {
       return normalizedPageData;
     }
@@ -415,6 +528,7 @@ class QuranComApi {
       final refreshFuture = _refreshPageFromNetwork(
         page: page,
         mushafId: mushafId,
+        translationResourceId: translationResourceId,
       );
       refreshPending = refreshFuture.whenComplete(() {
         _pendingPageRefreshes.remove(key);
@@ -433,6 +547,33 @@ class QuranComApi {
     for (final verse in data.verses) {
       final codeV2 = verse.codeV2;
       if (codeV2 == null || codeV2.trim().isEmpty) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _hasRequiredVerseTranslations(
+    MushafPageData data, {
+    required int? translationResourceId,
+  }) {
+    if (translationResourceId == null || data.verses.isEmpty) {
+      return false;
+    }
+
+    for (final verse in data.verses) {
+      final hasTranslation = verse.translations.any((translation) {
+        final text = (translation.text ?? '').trim();
+        if (text.isEmpty) {
+          return false;
+        }
+        final resourceId = translation.resourceId;
+        if (resourceId == null) {
+          return true;
+        }
+        return resourceId == translationResourceId;
+      });
+      if (!hasTranslation) {
         return false;
       }
     }
@@ -483,6 +624,7 @@ class QuranComApi {
           verseKey: normalizedVerseKey,
           words: verseWords,
           codeV2: verse.codeV2,
+          translations: verse.translations,
         ),
       );
     }
@@ -524,9 +666,11 @@ class QuranComApi {
     }
 
     final fetched = await _fetchJuzIndex(mushafId: mushafId);
-    await _writeCacheAtomic(cacheFile, jsonEncode([
-      for (final entry in fetched) entry.toJson(),
-    ]));
+    await _writeCacheAtomic(
+        cacheFile,
+        jsonEncode([
+          for (final entry in fetched) entry.toJson(),
+        ]));
     return fetched;
   }
 
@@ -578,8 +722,13 @@ class QuranComApi {
   Future<MushafPageData> _loadPageFromCacheOrNetwork({
     required int page,
     required int mushafId,
+    required int? translationResourceId,
   }) async {
-    final cacheFile = await _resolveCacheFile(page: page, mushafId: mushafId);
+    final cacheFile = await _resolveCacheFile(
+      page: page,
+      mushafId: mushafId,
+      translationResourceId: translationResourceId,
+    );
     final cached = await _readCachedPage(cacheFile);
     if (cached != null) {
       return cached;
@@ -587,6 +736,7 @@ class QuranComApi {
     return _fetchAndCachePage(
       page: page,
       mushafId: mushafId,
+      translationResourceId: translationResourceId,
       cacheFile: cacheFile,
     );
   }
@@ -594,11 +744,17 @@ class QuranComApi {
   Future<MushafPageData> _refreshPageFromNetwork({
     required int page,
     required int mushafId,
+    required int? translationResourceId,
   }) async {
-    final cacheFile = await _resolveCacheFile(page: page, mushafId: mushafId);
+    final cacheFile = await _resolveCacheFile(
+      page: page,
+      mushafId: mushafId,
+      translationResourceId: translationResourceId,
+    );
     return _fetchAndCachePage(
       page: page,
       mushafId: mushafId,
+      translationResourceId: translationResourceId,
       cacheFile: cacheFile,
     );
   }
@@ -623,9 +779,14 @@ class QuranComApi {
   Future<MushafPageData> _fetchAndCachePage({
     required int page,
     required int mushafId,
+    required int? translationResourceId,
     required File cacheFile,
   }) async {
-    final payload = await _fetchPagePayload(page: page, mushafId: mushafId);
+    final payload = await _fetchPagePayload(
+      page: page,
+      mushafId: mushafId,
+      translationResourceId: translationResourceId,
+    );
     final data = _parseApiPayload(payload);
     await _writeCacheAtomic(cacheFile, jsonEncode(data.toJson()));
     return data;
@@ -648,16 +809,27 @@ class QuranComApi {
   String _pageKey({
     required int page,
     required int mushafId,
+    required int? translationResourceId,
   }) {
-    return '$page|$mushafId';
+    final translationPart =
+        translationResourceId == null ? 't0' : 't$translationResourceId';
+    return '$page|$mushafId|$translationPart';
   }
 
   Future<File> _resolveCacheFile({
     required int page,
     required int mushafId,
+    required int? translationResourceId,
   }) async {
     final cacheDir = await _resolveCacheDirectory();
-    return File(_joinPath(cacheDir.path, 'page_${page}_m$mushafId.json'));
+    final translationSuffix =
+        translationResourceId == null ? '' : '_t$translationResourceId';
+    return File(
+      _joinPath(
+        cacheDir.path,
+        'page_${page}_m$mushafId$translationSuffix.json',
+      ),
+    );
   }
 
   Future<File> _resolveJuzIndexCacheFile({
@@ -677,12 +849,18 @@ class QuranComApi {
   Future<String> _fetchPagePayload({
     required int page,
     required int mushafId,
+    required int? translationResourceId,
   }) async {
+    final translationParams = translationResourceId == null
+        ? ''
+        : '&translations=$translationResourceId'
+            '&translation_fields=resource_name,language_name,text';
     final uri = Uri.parse(
       '$_apiBase/verses/by_page/$page'
       '?words=true&mushaf=$mushafId'
       '&fields=verse_key,chapter_id,verse_number,page_number,juz_number,hizb_number,rub_el_hizb_number,code_v2'
-      '&word_fields=verse_key,position,line_number,page_number,char_type_name,code_v2,text_qpc_hafs,translation,transliteration',
+      '&word_fields=verse_key,position,line_number,page_number,char_type_name,code_v2,text_qpc_hafs,translation,transliteration'
+      '$translationParams',
     );
 
     return _fetchPayload(
@@ -835,6 +1013,7 @@ class QuranComApi {
           verseKey: verseKey,
           words: verseWords,
           codeV2: _asString(verse['code_v2']),
+          translations: _parseVerseTranslations(verse),
         ),
       );
     }
@@ -883,6 +1062,23 @@ class QuranComApi {
       page: pageNumber,
       verseKey: verseKey,
     );
+  }
+
+  List<MushafVerseTranslation> _parseVerseTranslations(
+    Map<String, dynamic> verse,
+  ) {
+    final translationsRaw = verse['translations'];
+    if (translationsRaw is! List) {
+      return const <MushafVerseTranslation>[];
+    }
+
+    final translations = <MushafVerseTranslation>[];
+    for (final item in translationsRaw) {
+      if (item is Map<String, dynamic>) {
+        translations.add(MushafVerseTranslation.fromJson(item));
+      }
+    }
+    return translations;
   }
 
   Future<void> _writeCacheAtomic(File destination, String payload) async {

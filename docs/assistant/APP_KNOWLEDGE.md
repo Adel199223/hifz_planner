@@ -1,0 +1,91 @@
+# Assistant Bridge: APP_KNOWLEDGE
+
+## Canonical Source
+
+The canonical app brief is:
+- `APP_KNOWLEDGE.md` (repo root)
+
+This file is a bridge for tools/agents expecting the old assistant-doc path.
+
+## What This File Is For
+
+Use this file to:
+- discover where canonical knowledge lives
+- bootstrap quickly to high-impact files
+- follow a fixed onboarding checklist in the first 15 minutes
+
+## When To Use
+
+Use this file:
+- if an agent is configured to open `docs/assistant/APP_KNOWLEDGE.md`
+- when you need a quick index before reading full canonical docs
+
+Do not use this file as primary truth when there is a conflict.
+
+## Doc Sync Rule
+
+1. Root canonical wins:
+   - if this file conflicts with `APP_KNOWLEDGE.md`, trust `APP_KNOWLEDGE.md`
+2. Keep this bridge updated whenever canonical structure changes
+3. Do not duplicate long canonical content here unless necessary
+
+## Quick Start Links (High Impact)
+
+### Core entry docs
+- `agent.md`
+- `APP_KNOWLEDGE.md`
+- `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
+
+### App shell
+- `lib/main.dart`
+- `lib/app/router.dart`
+- `lib/app/navigation_shell.dart`
+
+### Reader and Quran pipeline
+- `lib/screens/reader_screen.dart`
+- `lib/data/services/qurancom_api.dart`
+- `lib/ui/qcf/qcf_font_manager.dart`
+
+### Planning
+- `lib/screens/plan_screen.dart`
+- `lib/screens/today_screen.dart`
+- `lib/data/services/daily_planner.dart`
+- `lib/data/services/spaced_repetition_scheduler.dart`
+
+### DB schema
+- `lib/data/database/app_database.dart`
+
+### Key tests
+- `test/screens/reader_screen_test.dart`
+- `test/data/services/qurancom_api_test.dart`
+- `test/app/navigation_shell_menu_test.dart`
+- `test/app/app_preferences_test.dart`
+
+## Outsider Bootstrap Checklist (First 15 Minutes)
+
+1. Run:
+   - `git status --short`
+2. Read:
+   - `agent.md`
+   - `APP_KNOWLEDGE.md`
+3. Confirm current routes:
+   - open `lib/app/router.dart`
+4. Confirm current reader modes:
+   - search `_ReaderViewMode` in `lib/screens/reader_screen.dart`
+5. Confirm DB schema version:
+   - open `lib/data/database/app_database.dart`
+6. Pick relevant smoke tests for your area before edits
+
+## Windows Command Baseline
+
+```powershell
+flutter pub get
+flutter analyze
+flutter test -j 1 -r expanded
+```
+
+## What Not To Do
+
+- Do not treat this bridge file as canonical.
+- Do not assume stale paths from historical docs are valid.
+- Do not skip targeted tests for the area you changed.

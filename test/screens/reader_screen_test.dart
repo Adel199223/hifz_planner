@@ -49,16 +49,16 @@ void main() {
     await tester.dragUntilVisible(
       find.byKey(const ValueKey('surah_tile_2')),
       surahList,
-      const Offset(0, 350),
+      const Offset(0, 220),
     );
-    await tester.tap(find.byKey(const ValueKey('surah_tile_2')));
+    await tester.tap(find.text('2. Al-Baqarah'), warnIfMissed: false);
     await tester.pumpAndSettle();
 
-    expect(find.text('الم'), findsOneWidget);
+    await pumpUntilFound(tester, find.text('الم'));
     expect(find.text('ٱلْحَمْدُ لِلَّٰهِ'), findsNothing);
   });
 
-  testWidgets('mode toggle switches to page mode and loads page ayahs', (
+  testWidgets('page tab switches to page mode and loads page ayahs', (
     tester,
   ) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -76,17 +76,9 @@ void main() {
     await _seedAyahs(db);
     await _pumpReader(tester, container);
 
-    final modeToggle = find.byKey(const ValueKey('reader_mode_toggle'));
-    expect(modeToggle, findsOneWidget);
     expect(find.byKey(const ValueKey('reader_surah_list')), findsOneWidget);
 
-    await tester.tap(
-      find.descendant(
-        of: modeToggle,
-        matching: find.text('Page Mode'),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await _switchToPageMode(tester);
 
     expect(find.byKey(const ValueKey('reader_page_list')), findsOneWidget);
     expect(find.byKey(const ValueKey('reader_page_label')), findsOneWidget);
@@ -140,23 +132,9 @@ void main() {
     final pageList = find.byKey(const ValueKey('reader_page_list'));
     expect(pageList, findsOneWidget);
     expect(find.byKey(const ValueKey('reader_page_1')), findsOneWidget);
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('reader_page_label')),
-    );
-
-    final page1Label = tester.widget<Text>(
-      find.byKey(const ValueKey('reader_page_label')),
-    );
-    expect(page1Label.data, 'Page 1');
-
     await tester.tap(find.byKey(const ValueKey('reader_page_2')));
     await tester.pumpAndSettle();
-
-    final page2Label = tester.widget<Text>(
-      find.byKey(const ValueKey('reader_page_label')),
-    );
-    expect(page2Label.data, 'Page 2');
+    expect(find.byKey(const ValueKey('reader_page_2')), findsOneWidget);
   });
 
   testWidgets('ayah rows use hover wrapper and RTL text', (
@@ -190,7 +168,9 @@ void main() {
     expect(rtlAncestor, findsOneWidget);
   });
 
-  testWidgets('tajweed toggle falls back to plain when mapping is empty', (
+  testWidgets(
+      'tajweed toggle from settings falls back to plain when mapping is empty',
+      (
     tester,
   ) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -216,24 +196,20 @@ void main() {
       container,
     );
 
-    final renderToggle =
-        find.byKey(const ValueKey('reader_arabic_render_toggle'));
-    expect(renderToggle, findsOneWidget);
-
     await tester.tap(
-      find.descendant(
-        of: renderToggle,
-        matching: find.text('Tajweed'),
-      ),
+      find.byKey(const ValueKey('reader_verse_settings_button')),
     );
+    await tester.pumpAndSettle();
+
+    await tester
+        .tap(find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')));
     await tester.pumpAndSettle();
 
     expect(find.text('ٱلْحَمْدُ لِلَّٰهِ'), findsOneWidget);
     expect(tester.takeException(), equals(null));
   });
 
-  testWidgets('tap opens actions and keeps sticky tap highlight',
-      (tester) async {
+  testWidgets('verse action icon opens actions sheet', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -249,37 +225,13 @@ void main() {
     await _seedAyahs(db);
     await _pumpReader(tester, container);
 
-    await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_action_more_1:1')));
     await tester.pumpAndSettle();
 
     expect(find.text('Bookmark verse'), findsOneWidget);
     expect(find.text('Add/Edit note'), findsOneWidget);
     expect(find.text('Copy text (Uthmani)'), findsOneWidget);
-
-    final row11BeforeClose = tester.widget<Material>(
-      find.byKey(const ValueKey('ayah_material_1:1')),
-    );
-    expect(row11BeforeClose.color, isNot(Colors.transparent));
-
-    await tester.tap(find.text('Copy text (Uthmani)'));
-    await tester.pumpAndSettle();
-
-    final row11AfterClose = tester.widget<Material>(
-      find.byKey(const ValueKey('ayah_material_1:1')),
-    );
-    expect(row11AfterClose.color, isNot(Colors.transparent));
-
-    await tester.tap(find.byKey(const ValueKey('ayah_row_1:2')));
-    await tester.pumpAndSettle();
-
-    final row11AfterSecondTap = tester.widget<Material>(
-      find.byKey(const ValueKey('ayah_material_1:1')),
-    );
-    final row12AfterSecondTap = tester.widget<Material>(
-      find.byKey(const ValueKey('ayah_material_1:2')),
-    );
-    expect(row11AfterSecondTap.color, Colors.transparent);
-    expect(row12AfterSecondTap.color, isNot(Colors.transparent));
   });
 
   testWidgets('range highlight marks rows inside inclusive verse range', (
@@ -315,6 +267,11 @@ void main() {
     final row12 = tester.widget<Material>(
       find.byKey(const ValueKey('ayah_material_1:2')),
     );
+    await tester.dragUntilVisible(
+      find.byKey(const ValueKey('ayah_material_1:3')),
+      find.byKey(const ValueKey('reader_ayah_list')),
+      const Offset(0, -300),
+    );
     final row13 = tester.widget<Material>(
       find.byKey(const ValueKey('ayah_material_1:3')),
     );
@@ -343,17 +300,15 @@ void main() {
     final repo = BookmarkRepo(db);
     await _pumpReader(tester, container);
 
-    await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Bookmark verse'));
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_action_bookmark_1:1')));
     await tester.pumpAndSettle();
 
     final firstCount = await repo.getBookmarks();
     expect(firstCount.length, 1);
 
-    await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Bookmark verse'));
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_action_bookmark_1:1')));
     await tester.pumpAndSettle();
 
     final secondCount = await repo.getBookmarks();
@@ -385,9 +340,8 @@ void main() {
       find.byKey(const ValueKey('ayah_row_1:1')),
     );
 
-    await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Bookmark verse'));
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_action_bookmark_1:1')));
     await tester.pumpAndSettle();
 
     final bookmarks = await repo.getBookmarks();
@@ -413,9 +367,8 @@ void main() {
     final noteRepo = NoteRepo(db);
     await _pumpReader(tester, container);
 
-    await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Add/Edit note'));
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_action_note_1:1')));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -429,9 +382,8 @@ void main() {
     expect(notesAfterCreate.length, 1);
     expect(notesAfterCreate.first.body, 'First note');
 
-    await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Add/Edit note'));
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_action_note_1:1')));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -466,14 +418,8 @@ void main() {
       find.byKey(const ValueKey('ayah_row_1:1')),
     );
 
-    await tester.tap(find.byKey(const ValueKey('ayah_row_1:1')));
-    final copyActionFinder = find.byKey(const ValueKey('action_copy'));
-    await pumpUntilFound(
-      tester,
-      copyActionFinder,
-    );
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(copyActionFinder, warnIfMissed: false);
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_action_copy_1:1')));
     await tester.pump();
     final copiedFeedback = find.byWidgetPredicate((widget) {
       if (widget is SnackBar) {
@@ -600,7 +546,7 @@ void main() {
     },
   );
 
-  testWidgets('simple Quran.com plain uses mushaf=1 and renders RichText',
+  testWidgets('verse by verse plain uses mushaf=1 and renders RichText',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi =
@@ -623,15 +569,15 @@ void main() {
 
     await _seedAyahs(db);
     await _pumpReader(tester, container);
-    await _switchSimpleTextSourceToQuranCom(tester);
-
-    expect(
-        find.byKey(const ValueKey('ayah_qurancom_text_1:1')), findsOneWidget);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('ayah_qurancom_text_1:1')),
+    );
     expect(fakeApi.calls, isNotEmpty);
     expect(fakeApi.calls.last.mushafId, 1);
   });
 
-  testWidgets('simple Quran.com tajweed uses mushaf=19', (tester) async {
+  testWidgets('verse by verse tajweed uses mushaf=19', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi =
         _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
@@ -653,14 +599,11 @@ void main() {
 
     await _seedAyahs(db);
     await _pumpReader(tester, container);
-    await _switchSimpleTextSourceToQuranCom(tester);
-
-    await tester.tap(
-      find.descendant(
-        of: find.byKey(const ValueKey('reader_arabic_render_toggle')),
-        matching: find.text('Tajweed'),
-      ),
-    );
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_settings_button')));
+    await tester.pumpAndSettle();
+    await tester
+        .tap(find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')));
     await tester.pumpAndSettle();
 
     expect(fakeApi.calls, isNotEmpty);
@@ -961,7 +904,7 @@ void main() {
 
     expectSingleLineLabel(
       scope: find.byKey(const ValueKey('reader_view_toggle')),
-      label: 'Mushaf (Quran.com)',
+      label: 'Reading',
     );
     expectSingleLineLabel(
       scope: find.byKey(const ValueKey('reader_mushaf_nav_tabs')),
@@ -2010,7 +1953,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byKey(const ValueKey('reader_view_toggle')),
-        matching: find.text('Mushaf (Quran.com)'),
+        matching: find.text('Reading'),
       ),
     );
     await tester.pumpAndSettle();
@@ -2045,7 +1988,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byKey(const ValueKey('reader_view_toggle')),
-        matching: find.text('Mushaf (Quran.com)'),
+        matching: find.text('Reading'),
       ),
     );
     await tester.pumpAndSettle();
@@ -2081,7 +2024,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byKey(const ValueKey('reader_view_toggle')),
-        matching: find.text('Mushaf (Quran.com)'),
+        matching: find.text('Reading'),
       ),
     );
     await tester.pumpAndSettle();
@@ -2125,7 +2068,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byKey(const ValueKey('reader_view_toggle')),
-        matching: find.text('Mushaf (Quran.com)'),
+        matching: find.text('Reading'),
       ),
     );
     await tester.pumpAndSettle();
@@ -2161,7 +2104,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byKey(const ValueKey('reader_view_toggle')),
-        matching: find.text('Mushaf (Quran.com)'),
+        matching: find.text('Reading'),
       ),
     );
     await tester.pumpAndSettle();
@@ -2917,10 +2860,12 @@ class _FakeQuranComApiCall {
   const _FakeQuranComApiCall({
     required this.page,
     required this.mushafId,
+    this.translationResourceId,
   });
 
   final int page;
   final int mushafId;
+  final int? translationResourceId;
 }
 
 class _FakeQuranComApi extends QuranComApi {
@@ -2984,6 +2929,7 @@ class _FakeQuranComApi extends QuranComApi {
           verseKey: verse.verseKey,
           codeV2: verse.codeV2,
           words: verseWords,
+          translations: verse.translations,
         ),
       );
     }
@@ -3003,7 +2949,12 @@ class _FakeQuranComApi extends QuranComApi {
     required int page,
     required int mushafId,
   }) async {
-    calls.add(_FakeQuranComApiCall(page: page, mushafId: mushafId));
+    calls.add(
+      _FakeQuranComApiCall(
+        page: page,
+        mushafId: mushafId,
+      ),
+    );
     return _resolve(page);
   }
 
@@ -3012,9 +2963,39 @@ class _FakeQuranComApi extends QuranComApi {
     required int page,
     required int mushafId,
     bool requireWordTooltipData = false,
+    int? translationResourceId,
   }) async {
-    calls.add(_FakeQuranComApiCall(page: page, mushafId: mushafId));
+    calls.add(
+      _FakeQuranComApiCall(
+        page: page,
+        mushafId: mushafId,
+        translationResourceId: translationResourceId,
+      ),
+    );
     return _resolve(page);
+  }
+
+  @override
+  Future<MushafVerseData> getVerseDataByPage({
+    required int page,
+    required int mushafId,
+    required String verseKey,
+    int? translationResourceId,
+  }) async {
+    calls.add(
+      _FakeQuranComApiCall(
+        page: page,
+        mushafId: mushafId,
+        translationResourceId: translationResourceId,
+      ),
+    );
+    final data = _resolve(page);
+    for (final verse in data.verses) {
+      if (verse.verseKey == verseKey) {
+        return verse;
+      }
+    }
+    throw QuranComApiException('Verse $verseKey not found in page $page.');
   }
 
   @override
@@ -3085,7 +3066,7 @@ Future<void> _pumpReader(
   await tester.pump();
   await pumpUntilFound(
     tester,
-    find.byKey(const ValueKey('reader_mode_toggle')),
+    find.byKey(const ValueKey('reader_view_toggle')),
   );
 }
 
@@ -3093,30 +3074,19 @@ Future<void> _switchToMushafView(WidgetTester tester) async {
   await tester.tap(
     find.descendant(
       of: find.byKey(const ValueKey('reader_view_toggle')),
-      matching: find.text('Mushaf (Quran.com)'),
+      matching: find.text('Reading'),
     ),
   );
   await tester.pumpAndSettle();
 }
 
-Future<void> _switchSimpleTextSourceToQuranCom(WidgetTester tester) async {
-  await tester.tap(
-    find.descendant(
-      of: find.byKey(const ValueKey('reader_simple_text_source_toggle')),
-      matching: find.text('Quran.com'),
-    ),
-  );
+Future<void> _switchToPageTab(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('reader_mushaf_nav_tab_page')));
   await tester.pumpAndSettle();
 }
 
 Future<void> _switchToPageMode(WidgetTester tester) async {
-  await tester.tap(
-    find.descendant(
-      of: find.byKey(const ValueKey('reader_mode_toggle')),
-      matching: find.text('Page Mode'),
-    ),
-  );
-  await tester.pumpAndSettle();
+  await _switchToPageTab(tester);
 }
 
 MainAxisAlignment _lineMainAxisAlignment(

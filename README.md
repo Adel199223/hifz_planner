@@ -2,6 +2,12 @@
 
 A new Flutter project.
 
+## Agent onboarding docs
+
+- `agent.md`
+- `APP_KNOWLEDGE.md`
+- `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
