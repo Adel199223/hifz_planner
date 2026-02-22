@@ -7,13 +7,22 @@ It explains what the app is, what is already implemented, where key logic lives,
 
 Documentation contract for contributors and AI agents:
 - Canonical app brief: `APP_KNOWLEDGE.md` (this file)
+- Compatibility entrypoint: `AGENTS.md`
 - Agent runbook entrypoint: `agent.md`
 - Assistant bridge path: `docs/assistant/APP_KNOWLEDGE.md`
 - DB/Drift deep reference: `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
+- Assistant doc index: `docs/assistant/INDEX.md`
+- Machine manifest: `docs/assistant/manifest.json`
 
 If documentation conflicts:
 - this file (`APP_KNOWLEDGE.md`) is canonical for overall app behavior and structure
 - source code remains the final truth
+
+Workflow runbooks:
+- Reader/UI: `docs/assistant/workflows/READER_WORKFLOW.md`
+- Quran.com data/cache/fonts: `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md`
+- Planner/scheduler: `docs/assistant/workflows/PLANNER_WORKFLOW.md`
+- Docs maintenance: `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`
 
 ## 1) App Purpose
 

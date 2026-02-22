@@ -7,6 +7,12 @@ The canonical app brief is:
 
 This file is a bridge for tools/agents expecting the old assistant-doc path.
 
+Recommended starting points:
+- `AGENTS.md` (compatibility shim)
+- `agent.md` (primary runbook)
+- `docs/assistant/INDEX.md` (human index)
+- `docs/assistant/manifest.json` (machine routing map)
+
 ## What This File Is For
 
 Use this file to:
@@ -32,8 +38,11 @@ Do not use this file as primary truth when there is a conflict.
 ## Quick Start Links (High Impact)
 
 ### Core entry docs
+- `AGENTS.md`
 - `agent.md`
 - `APP_KNOWLEDGE.md`
+- `docs/assistant/INDEX.md`
+- `docs/assistant/manifest.json`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 
 ### App shell

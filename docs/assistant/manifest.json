@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "canonical": {
+    "agent_runbook": "agent.md",
+    "app_knowledge": "APP_KNOWLEDGE.md",
+    "db_knowledge": "docs/assistant/DB_DRIFT_KNOWLEDGE.md"
+  },
+  "bridges": [
+    "AGENTS.md",
+    "docs/assistant/APP_KNOWLEDGE.md"
+  ],
+  "workflows": [
+    {
+      "id": "reader_ui",
+      "doc": "docs/assistant/workflows/READER_WORKFLOW.md",
+      "scope": "Verse by Verse and Reading (Mushaf) UI/interaction work.",
+      "primary_files": [
+        "lib/screens/reader_screen.dart",
+        "lib/ui/tajweed/tajweed_colors.dart",
+        "lib/ui/tajweed/tajweed_markup.dart",
+        "lib/data/services/surah_metadata_service.dart"
+      ],
+      "targeted_tests": [
+        "test/screens/reader_screen_test.dart",
+        "test/app/navigation_shell_menu_test.dart"
+      ],
+      "validation_commands": [
+        "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
+        "flutter analyze"
+      ]
+    },
+    {
+      "id": "qurancom_data_pipeline",
+      "doc": "docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md",
+      "scope": "Quran.com API fetch/cache/dedupe/translation and QCF font pipeline.",
+      "primary_files": [
+        "lib/data/services/qurancom_api.dart",
+        "lib/ui/qcf/qcf_font_manager.dart",
+        "lib/data/providers/database_providers.dart"
+      ],
+      "targeted_tests": [
+        "test/data/services/qurancom_api_test.dart",
+        "test/screens/reader_screen_test.dart"
+      ],
+      "validation_commands": [
+        "flutter test -j 1 -r expanded test/data/services/qurancom_api_test.dart",
+        "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
+        "flutter analyze"
+      ]
+    },
+    {
+      "id": "planner_scheduler",
+      "doc": "docs/assistant/workflows/PLANNER_WORKFLOW.md",
+      "scope": "Onboarding plan, daily planning, scheduling, calibration, forecast.",
+      "primary_files": [
+        "lib/screens/plan_screen.dart",
+        "lib/screens/today_screen.dart",
+        "lib/data/services/daily_planner.dart",
+        "lib/data/services/spaced_repetition_scheduler.dart",
+        "lib/data/database/app_database.dart"
+      ],
+      "targeted_tests": [
+        "test/screens/plan_screen_test.dart",
+        "test/screens/today_screen_test.dart",
+        "test/data/services/daily_planner_test.dart",
+        "test/data/services/spaced_repetition_scheduler_test.dart",
+        "test/data/database/app_database_test.dart"
+      ],
+      "validation_commands": [
+        "flutter test -j 1 -r expanded test/screens/plan_screen_test.dart",
+        "flutter test -j 1 -r expanded test/screens/today_screen_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/spaced_repetition_scheduler_test.dart",
+        "flutter analyze"
+      ]
+    },
+    {
+      "id": "docs_maintenance",
+      "doc": "docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md",
+      "scope": "Agent docs consistency, routing clarity, and path validity.",
+      "primary_files": [
+        "AGENTS.md",
+        "agent.md",
+        "APP_KNOWLEDGE.md",
+        "docs/assistant/APP_KNOWLEDGE.md",
+        "docs/assistant/INDEX.md",
+        "docs/assistant/manifest.json",
+        "docs/assistant/DB_DRIFT_KNOWLEDGE.md",
+        "tooling/validate_agent_docs.dart"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+      ]
+    }
+  ],
+  "global_commands": {
+    "bootstrap": [
+      "git status --short",
+      "rg -n \"symbol_or_keyword\" lib test tooling"
+    ],
+    "analysis": [
+      "flutter analyze"
+    ],
+    "tests": [
+      "flutter test -j 1 -r expanded"
+    ]
+  },
+  "contracts": {
+    "canonical_precedence": "APP_KNOWLEDGE.md is canonical for app-level architecture and status. Source code is final truth on conflicts.",
+    "docs_sync_rule": "If bridge docs conflict with canonical docs, canonical wins and bridge docs must be updated.",
+    "windows_test_policy": "Prefer flutter test -j 1 -r expanded for stability on Windows."
+  },
+  "last_updated": "2026-02-22"
+}

@@ -4,8 +4,11 @@ A new Flutter project.
 
 ## Agent onboarding docs
 
+- `AGENTS.md`
 - `agent.md`
 - `APP_KNOWLEDGE.md`
+- `docs/assistant/INDEX.md`
+- `docs/assistant/manifest.json`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 
 ## Getting Started
