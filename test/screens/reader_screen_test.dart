@@ -546,7 +546,7 @@ void main() {
     },
   );
 
-  testWidgets('verse by verse plain uses mushaf=1 and renders RichText',
+  testWidgets('verse by verse plain uses mushaf=1 and renders word widgets',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi =
@@ -572,6 +572,14 @@ void main() {
     await pumpUntilFound(
       tester,
       find.byKey(const ValueKey('ayah_qurancom_text_1:1')),
+    );
+    expect(
+      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+      findsOneWidget,
     );
     expect(fakeApi.calls, isNotEmpty);
     expect(fakeApi.calls.last.mushafId, 1);
@@ -608,6 +616,118 @@ void main() {
 
     expect(fakeApi.calls, isNotEmpty);
     expect(fakeApi.calls.last.mushafId, 19);
+  });
+
+  testWidgets(
+      'verse by verse hover tooltip uses word translation when available',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
+    final fakeFonts = _FakeQcfFontManager(
+      familyName: 'qcf_test_family',
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+    );
+
+    final tooltipFinder =
+        find.byKey(const ValueKey('reader_verse_word_tooltip_1:1_0'));
+    expect(tooltipFinder, findsOneWidget);
+    final tooltip = tester.widget<Tooltip>(tooltipFinder);
+    expect(tooltip.message, 'All praise and thanks');
+  });
+
+  testWidgets(
+      'verse by verse hover tooltip falls back when translation missing',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
+    final fakeFonts = _FakeQcfFontManager(
+      familyName: 'qcf_test_family',
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+    );
+
+    final tooltipFinder =
+        find.byKey(const ValueKey('reader_verse_word_tooltip_1:1_1'));
+    expect(tooltipFinder, findsOneWidget);
+    final tooltip = tester.widget<Tooltip>(tooltipFinder);
+    expect(tooltip.message, 'Translation unavailable');
+  });
+
+  testWidgets('verse by verse basmala words do not overlap', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
+    final fakeFonts = _FakeQcfFontManager(
+      familyName: 'qcf_test_family',
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+    );
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+    );
+
+    final firstWordRect = tester.getRect(
+      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+    );
+    final secondWordRect = tester.getRect(
+      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+    );
+    expect(firstWordRect.overlaps(secondWordRect), isFalse);
   });
 
   testWidgets('mushaf chrome replaces center segmented controls',

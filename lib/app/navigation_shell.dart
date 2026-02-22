@@ -54,7 +54,10 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
         destinations.indexWhere((d) => d.path == widget.location);
     final currentIndex = selectedIndex >= 0 ? selectedIndex : 0;
     final prefs = ref.watch(appPreferencesProvider);
+    final isReaderSettingsOpen = ref.watch(readerSettingsPaneOpenProvider);
     final strings = AppStrings.of(prefs.language);
+    final isReaderRoute = widget.location == '/reader';
+    final shouldShowGlobalMenuButton = !(isReaderRoute && isReaderSettingsOpen);
 
     final menuItems = <_GlobalMenuDestination>[
       _GlobalMenuDestination(
@@ -260,24 +263,25 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
               Expanded(child: widget.child),
             ],
           ),
-          PositionedDirectional(
-            top: 8,
-            end: 12,
-            child: SafeArea(
-              child: Material(
-                color: menuButtonBackground,
-                shape: CircleBorder(
-                  side: BorderSide(color: menuButtonBorderColor),
-                ),
-                child: IconButton(
-                  key: const ValueKey('global_menu_button'),
-                  tooltip: strings.menu,
-                  onPressed: _openMenuDrawer,
-                  icon: const Icon(Icons.menu),
+          if (shouldShowGlobalMenuButton)
+            PositionedDirectional(
+              top: 8,
+              end: 12,
+              child: SafeArea(
+                child: Material(
+                  color: menuButtonBackground,
+                  shape: CircleBorder(
+                    side: BorderSide(color: menuButtonBorderColor),
+                  ),
+                  child: IconButton(
+                    key: const ValueKey('global_menu_button'),
+                    tooltip: strings.menu,
+                    onPressed: _openMenuDrawer,
+                    icon: const Icon(Icons.menu),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

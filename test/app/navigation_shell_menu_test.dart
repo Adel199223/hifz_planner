@@ -221,6 +221,104 @@ void main() {
     final railElement = tester.element(find.byType(NavigationRail));
     expect(Theme.of(railElement).brightness, Brightness.dark);
   });
+
+  testWidgets('reader settings open hides global menu button', (tester) async {
+    final fakeStore = _FakeAppPreferencesStore();
+    final container = _createContainer(fakeStore);
+    addTearDown(container.dispose);
+    await _seedReaderAyahs(container.read(appDatabaseProvider));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const HifzPlannerApp(),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_screen_root')),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('global_menu_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('global_menu_item_read')));
+    await tester.pumpAndSettle();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_settings_button')),
+    );
+
+    expect(find.byKey(const ValueKey('global_menu_button')), findsOneWidget);
+
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_settings_button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('global_menu_button')), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('reader_mushaf_settings_done')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('global_menu_button')), findsOneWidget);
+  });
+
+  testWidgets('reader top-right controls do not overlap global menu',
+      (tester) async {
+    final fakeStore = _FakeAppPreferencesStore();
+    final container = _createContainer(fakeStore);
+    addTearDown(container.dispose);
+    await _seedReaderAyahs(container.read(appDatabaseProvider));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const HifzPlannerApp(),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_screen_root')),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('global_menu_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('global_menu_item_read')));
+    await tester.pumpAndSettle();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_settings_button')),
+    );
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('global_menu_button')),
+    );
+
+    final menuRect =
+        tester.getRect(find.byKey(const ValueKey('global_menu_button')));
+    final readerSettingsRect = tester
+        .getRect(find.byKey(const ValueKey('reader_verse_settings_button')));
+    expect(menuRect.overlaps(readerSettingsRect), isFalse);
+  });
+}
+
+Future<void> _seedReaderAyahs(AppDatabase db) async {
+  await db.batch((batch) {
+    batch.insertAll(
+      db.ayah,
+      [
+        AyahCompanion.insert(
+          surah: 1,
+          ayah: 1,
+          textUthmani: 'ٱلْحَمْدُ لِلَّٰهِ',
+        ),
+        AyahCompanion.insert(
+          surah: 1,
+          ayah: 2,
+          textUthmani: 'رَبِّ ٱلْعَٰلَمِينَ',
+        ),
+      ],
+    );
+  });
 }
 
 ProviderContainer _createContainer(_FakeAppPreferencesStore fakeStore) {

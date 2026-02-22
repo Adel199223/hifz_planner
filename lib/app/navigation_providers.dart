@@ -3,6 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'nav_destination.dart';
 
+final readerSettingsPaneOpenProvider =
+    NotifierProvider<_ReaderSettingsPaneOpenNotifier, bool>(
+  _ReaderSettingsPaneOpenNotifier.new,
+);
+
+class _ReaderSettingsPaneOpenNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setOpen(bool isOpen) {
+    state = isOpen;
+  }
+}
+
 final navDestinationsProvider = Provider<List<NavDestination>>((ref) {
   return const [
     NavDestination(

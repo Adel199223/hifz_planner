@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:hifz_planner/data/services/tanzil_text_integrity_guard.dart';
 
 Future<void> main() async {
@@ -13,7 +14,7 @@ Future<void> main() async {
 
   final bytes = await file.readAsBytes();
   final rawText = utf8.decode(bytes);
-  final checksum = sha256HexFromBytes(bytes);
+  final checksum = sha256.convert(bytes).toString();
   final rows = parseTanzilText(rawText);
   final ayahCount = rows.length;
   final surahCount = rows.map((row) => row.surah).toSet().length;
