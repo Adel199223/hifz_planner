@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../database/app_database.dart';
@@ -14,6 +17,8 @@ import '../services/calibration_service.dart';
 import '../services/daily_planner.dart';
 import '../services/forecast_simulation_service.dart';
 import '../services/new_unit_generator.dart';
+import '../services/ayah_audio_service.dart';
+import '../services/ayah_audio_source.dart';
 import '../services/page_metadata_importer_service.dart';
 import '../services/qurancom_api.dart';
 import '../services/quran_text_importer_service.dart';
@@ -154,4 +159,47 @@ final quranComApiProvider = Provider<QuranComApi>((ref) {
 
 final qcfFontManagerProvider = Provider<QcfFontManager>((ref) {
   return QcfFontManager();
+});
+
+final ayahAudioStreamConfigProvider = Provider<AyahAudioStreamConfig>((ref) {
+  return const AyahAudioStreamConfig();
+});
+
+final ayahAudioSourceProvider = Provider<AyahAudioSource>((ref) {
+  final config = ref.watch(ayahAudioStreamConfigProvider);
+  return AlQuranCloudAyahAudioSource(
+    edition: config.edition,
+    bitrate: config.bitrate,
+  );
+});
+
+AyahAudioService createStreamingAyahAudioService(Ref ref) {
+  final source = ref.watch(ayahAudioSourceProvider);
+  final service = JustAudioAyahAudioService(
+    audioPlayer: AudioPlayer(),
+    source: source,
+  );
+  ref.onDispose(() {
+    unawaited(service.dispose());
+  });
+  return service;
+}
+
+final ayahAudioServiceProvider = Provider.autoDispose<AyahAudioService>((ref) {
+  final service = NoopAyahAudioService();
+  ref.onDispose(() {
+    unawaited(service.dispose());
+  });
+  return service;
+});
+
+final ayahAudioStateProvider =
+    StreamProvider.autoDispose<AyahAudioState>((ref) {
+  final service = ref.watch(ayahAudioServiceProvider);
+  return service.stateStream;
+});
+
+final ayahAudioErrorProvider = StreamProvider.autoDispose<String>((ref) {
+  final service = ref.watch(ayahAudioServiceProvider);
+  return service.errorStream;
 });

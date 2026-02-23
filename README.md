@@ -22,6 +22,12 @@ Canonical source:
 CI quality gates:
 - `.github/workflows/dart.yml`
 
+## Reader audio streaming
+
+- Verse-by-verse recitation streams from AlQuran Cloud CDN.
+- Default source: edition `ar.alafasy`, bitrate `128`.
+- Playback is streaming-first; offline download can be added later.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

@@ -44,6 +44,7 @@ Compatibility:
    - `lib/screens/reader_screen.dart`
 4. Confirm data pipeline:
    - `lib/data/services/qurancom_api.dart`
+   - `lib/data/services/ayah_audio_service.dart`
    - `lib/ui/qcf/qcf_font_manager.dart`
 5. Run docs validator:
    - `dart run tooling/validate_agent_docs.dart`

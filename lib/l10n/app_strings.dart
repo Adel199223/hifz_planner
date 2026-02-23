@@ -56,6 +56,17 @@ class AppStrings {
   String get juz => _t('juz', 'Juz');
   String get page => _t('page', 'Page');
   String get listen => _t('listen', 'Listen');
+  String get playFromHere => _t('play_from_here', 'Play from here');
+  String get pause => _t('pause', 'Pause');
+  String get resume => _t('resume', 'Resume');
+  String get next => _t('next', 'Next');
+  String get previous => _t('previous', 'Previous');
+  String get playbackSpeed => _t('playback_speed', 'Speed');
+  String get repeat => _t('repeat', 'Repeat');
+  String get repeatOff => _t('repeat_off', 'Off');
+  String get repeat1x => _t('repeat_1x', '1x');
+  String get repeat2x => _t('repeat_2x', '2x');
+  String get repeat3x => _t('repeat_3x', '3x');
   String get tajweedColors => _t('tajweed_colors', 'Tajweed colors');
   String get translation => _t('translation', 'Translation');
   String get arabic => _t('arabic', 'Arabic');
@@ -491,6 +502,10 @@ class AppStrings {
       _t('failed_to_save_bookmark', 'Failed to save bookmark.');
   String get noteAdded => _t('note_added', 'Note added.');
   String get copiedVerseText => _t('copied_verse_text', 'Copied verse text.');
+  String audioLoadFailed(String error) => _fmt(
+        _t('audio_load_failed', 'Audio playback failed: {error}'),
+        <String, Object>{'error': error},
+      );
   String get audioControlsComingSoon =>
       _t('audio_controls_coming_soon', 'Audio controls are coming soon.');
   String get shareComingSoon =>
@@ -544,6 +559,17 @@ class AppStrings {
       'juz': 'Juz',
       'page': 'Page',
       'listen': 'Écouter',
+      'play_from_here': "Lire à partir d'ici",
+      'pause': 'Pause',
+      'resume': 'Reprendre',
+      'next': 'Suivant',
+      'previous': 'Précédent',
+      'playback_speed': 'Vitesse',
+      'repeat': 'Répéter',
+      'repeat_off': 'Désactivé',
+      'repeat_1x': '1x',
+      'repeat_2x': '2x',
+      'repeat_3x': '3x',
       'tajweed_colors': 'Couleurs du Tajwid',
       'tafsirs': 'Tafsirs',
       'lessons': 'Leçons',
@@ -559,6 +585,7 @@ class AppStrings {
       'verse_actions_unavailable':
           "Actions de l'ayah indisponibles pour ces données de page.",
       'translation_unavailable': 'Traduction indisponible',
+      'audio_load_failed': "Échec de la lecture audio : {error}",
       'translation_label': 'Traduction : {label}',
       'page_label': 'Page {page}',
       'juz_label': 'Juz {juz}',
@@ -673,6 +700,17 @@ class AppStrings {
       'juz': 'Juz',
       'page': 'Página',
       'listen': 'Ouvir',
+      'play_from_here': 'Reproduzir a partir daqui',
+      'pause': 'Pausar',
+      'resume': 'Retomar',
+      'next': 'Próximo',
+      'previous': 'Anterior',
+      'playback_speed': 'Velocidade',
+      'repeat': 'Repetir',
+      'repeat_off': 'Desativado',
+      'repeat_1x': '1x',
+      'repeat_2x': '2x',
+      'repeat_3x': '3x',
       'tajweed_colors': 'Cores de Tajweed',
       'translation': 'Tradução',
       'arabic': 'Árabe',
@@ -683,6 +721,7 @@ class AppStrings {
       'font_size': 'Tamanho da fonte',
       'selected_reciter': 'Recitador selecionado',
       'translation_unavailable': 'Tradução indisponível',
+      'audio_load_failed': 'Falha na reprodução de áudio: {error}',
       'translation_label': 'Tradução: {label}',
       'page_label': 'Página {page}',
       'learn_title': 'Planos de aprendizado',
@@ -798,6 +837,17 @@ class AppStrings {
       'juz': 'جزء',
       'page': 'صفحة',
       'listen': 'استمع',
+      'play_from_here': 'تشغيل من هنا',
+      'pause': 'إيقاف مؤقت',
+      'resume': 'استئناف',
+      'next': 'التالي',
+      'previous': 'السابق',
+      'playback_speed': 'السرعة',
+      'repeat': 'تكرار',
+      'repeat_off': 'إيقاف',
+      'repeat_1x': '1x',
+      'repeat_2x': '2x',
+      'repeat_3x': '3x',
       'tajweed_colors': 'ألوان التجويد',
       'translation': 'الترجمة',
       'arabic': 'العربية',
@@ -809,6 +859,7 @@ class AppStrings {
       'add_edit_note': 'إضافة/تعديل ملاحظة',
       'copy_text_uthmani': 'نسخ النص (عثماني)',
       'translation_unavailable': 'الترجمة غير متاحة',
+      'audio_load_failed': 'فشل تشغيل الصوت: {error}',
       'script_style': 'نمط الخط',
       'uthmani': 'عثماني',
       'tajweed': 'تجويد',

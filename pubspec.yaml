@@ -20,6 +20,8 @@ dependencies:
   http: ^1.2.2
   crypto: ^3.0.7
   flutter_svg: ^2.2.0
+  just_audio: ^0.10.5
+  just_audio_windows: ^0.2.2
   shared_preferences: ^2.5.3
 
 dev_dependencies:

@@ -58,6 +58,8 @@ Do not use this file as primary truth when there is a conflict.
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`
 - `lib/data/services/qurancom_api.dart`
+- `lib/data/services/ayah_audio_source.dart`
+- `lib/data/services/ayah_audio_service.dart`
 - `lib/ui/qcf/qcf_font_manager.dart`
 
 ### Localization

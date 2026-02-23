@@ -159,7 +159,34 @@ Translation behavior:
   - Arabic app language -> currently falls back to English resource `85`
 - Fallback text: `Translation unavailable`
 
-### 3.2 Reading (Mushaf) view
+### 3.2 Reader recitation playback (streaming)
+
+Status:
+- Implemented in Reader (Verse by Verse + Reading top Listen controls).
+- Uses AlQuran Cloud CDN streaming (no OAuth, no server, no DB changes).
+- `Reciters` route remains a placeholder screen and is not the playback control surface yet.
+
+Playback capabilities:
+- Per-ayah play from verse action row.
+- Play from here (queue to end of current surah).
+- Pause/resume.
+- Next/previous (distinct ayah navigation).
+- Speed control: `0.75x`, `1.0x`, `1.25x`, `1.5x`.
+- Repeat current ayah count: `Off`, `1x`, `2x`, `3x`.
+- Mini-player appears in Reader when an ayah is active.
+- Playback stays active while navigating inside `/reader` and stops when leaving `/reader` (provider disposal).
+
+Implementation files:
+- `lib/data/services/ayah_audio_source.dart`
+- `lib/data/services/ayah_audio_service.dart`
+- `lib/data/providers/database_providers.dart`
+- `lib/screens/reader_screen.dart`
+
+Windows plugin note:
+- Audio stack uses `just_audio` with `just_audio_windows`.
+- After changing audio plugin dependencies, run a full restart (not only hot reload) so Windows plugin registration is reloaded.
+
+### 3.3 Reading (Mushaf) view
 
 Intent:
 - Quran.com-style page reading with QCF glyph fidelity and word-level interaction.

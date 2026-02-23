@@ -11,6 +11,7 @@ Use when changes touch:
 - reader actions, highlights, hover/click behavior
 - mushaf/verse-by-verse shell controls
 - chapter header/basmala rendering in reader context
+- reader recitation playback (per-ayah play, queue, mini-player controls)
 
 ## What Not To Do
 
@@ -23,10 +24,13 @@ Use when changes touch:
 
 - `lib/screens/reader_screen.dart`
 - `lib/data/services/qurancom_api.dart`
+- `lib/data/services/ayah_audio_source.dart`
+- `lib/data/services/ayah_audio_service.dart`
 - `lib/ui/qcf/qcf_font_manager.dart`
 - `lib/ui/tajweed/tajweed_markup.dart`
 - `lib/ui/tajweed/tajweed_colors.dart`
 - `test/screens/reader_screen_test.dart`
+- `test/data/services/ayah_audio_source_test.dart`
 - `test/app/navigation_shell_menu_test.dart`
 
 ## Minimal Commands
@@ -34,12 +38,14 @@ Use when changes touch:
 ```powershell
 git status --short
 rg -n "_ReaderViewMode|Verse by Verse|Reading|_MushafNavTab" lib/screens/reader_screen.dart
+rg -n "ayahAudio|playFrom|playAyah|mini_player" lib/screens/reader_screen.dart lib/data/services/ayah_audio_service.dart
 ```
 
 ## Targeted Tests
 
 ```powershell
 flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
+flutter test -j 1 -r expanded test/data/services/ayah_audio_source_test.dart
 flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
 ```
 
@@ -53,10 +59,13 @@ flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
    - Validate action handlers and existing key-based test coverage in `reader_screen_test.dart`.
 4. Symptoms: parity drift after control updates.
    - Re-check shell controls and settings pane behavior under both reader modes.
+5. Symptoms: `MissingPluginException` for `just_audio` on Windows.
+   - Ensure `just_audio_windows` is in `pubspec.yaml`, run `flutter pub get`, and fully restart the app (not only hot reload).
 
 ## Handoff Checklist
 
 - modified files are scoped to reader concerns
 - fallback behavior still works for partial Quran.com failures
 - `test/screens/reader_screen_test.dart` passes
+- `test/data/services/ayah_audio_source_test.dart` passes for ayah index/url mapping
 - any control/key changes are reflected in tests

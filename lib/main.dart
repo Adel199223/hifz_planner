@@ -4,11 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app_preferences.dart';
 import 'app/router.dart';
+import 'data/providers/database_providers.dart';
 import 'l10n/app_language.dart';
 import 'theme/quran_themes.dart';
 
 void main() {
-  runApp(const ProviderScope(child: HifzPlannerApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        ayahAudioServiceProvider.overrideWith(createStreamingAyahAudioService),
+      ],
+      child: const HifzPlannerApp(),
+    ),
+  );
 }
 
 class HifzPlannerApp extends ConsumerWidget {

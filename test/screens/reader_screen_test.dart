@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:drift/drift.dart';
@@ -14,6 +15,7 @@ import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/bookmark_repo.dart';
 import 'package:hifz_planner/data/repositories/note_repo.dart';
 import 'package:hifz_planner/data/services/qurancom_api.dart';
+import 'package:hifz_planner/data/services/ayah_audio_service.dart';
 import 'package:hifz_planner/data/services/tajweed_tags_service.dart';
 import 'package:hifz_planner/l10n/app_language.dart';
 import 'package:hifz_planner/screens/reader_screen.dart';
@@ -350,6 +352,162 @@ void main() {
     expect(find.text('Add/Edit note'), findsOneWidget);
     expect(find.text('Copy text (Uthmani)'), findsOneWidget);
   });
+
+  testWidgets(
+    'verse row play button calls playAyah with verse coordinates',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeAudio = _FakeAyahAudioService();
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await fakeAudio.dispose();
+      });
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+
+      await tester
+          .tap(find.byKey(const ValueKey('reader_verse_action_play_1:1')));
+      await tester.pump();
+
+      expect(fakeAudio.playAyahCalls.length, 1);
+      expect(fakeAudio.playAyahCalls.single, const AyahRef(surah: 1, ayah: 1));
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
+
+  testWidgets(
+    'verse row play-from-here menu calls playFrom',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeAudio = _FakeAyahAudioService();
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await fakeAudio.dispose();
+      });
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+
+      await tester.tap(
+        find.byKey(const ValueKey('reader_verse_action_play_from_1:1')),
+        warnIfMissed: false,
+      );
+      await tester.pump();
+
+      expect(fakeAudio.playFromCalls.length, 1);
+      expect(fakeAudio.playFromCalls.single, const AyahRef(surah: 1, ayah: 1));
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
+
+  testWidgets(
+    'reader mini-player controls call audio service methods',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeAudio = _FakeAyahAudioService();
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await fakeAudio.dispose();
+      });
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+
+      fakeAudio.emitState(
+        const AyahAudioState(
+          currentAyah: AyahRef(surah: 1, ayah: 1),
+          isPlaying: true,
+          speed: 1.0,
+          repeatCount: 0,
+          canNext: true,
+          canPrevious: true,
+          queueLength: 3,
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('reader_audio_mini_player')),
+          findsOneWidget);
+
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_play_pause_button')));
+      await tester.pump();
+      expect(fakeAudio.pauseCalls, 1);
+
+      fakeAudio.emitState(
+        const AyahAudioState(
+          currentAyah: AyahRef(surah: 1, ayah: 1),
+          isPlaying: false,
+          speed: 1.0,
+          repeatCount: 0,
+          canNext: true,
+          canPrevious: true,
+          queueLength: 3,
+        ),
+      );
+      await tester.pump();
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_play_pause_button')));
+      await tester.pump();
+      expect(fakeAudio.resumeCalls, 1);
+
+      await tester.tap(find.byKey(const ValueKey('reader_audio_prev_button')));
+      await tester.pump();
+      expect(fakeAudio.previousCalls, 1);
+
+      await tester.tap(find.byKey(const ValueKey('reader_audio_next_button')));
+      await tester.pump();
+      expect(fakeAudio.nextCalls, 1);
+
+      final speedButton = tester.widget<PopupMenuButton<double>>(
+        find.byKey(const ValueKey('reader_audio_speed_selector')),
+      );
+      speedButton.onSelected?.call(1.25);
+      await tester.pump();
+      expect(fakeAudio.speedChanges, isNotEmpty);
+      expect(fakeAudio.speedChanges.last, 1.25);
+
+      final repeatButton = tester.widget<PopupMenuButton<int>>(
+        find.byKey(const ValueKey('reader_audio_repeat_selector')),
+      );
+      repeatButton.onSelected?.call(2);
+      await tester.pump();
+      expect(fakeAudio.repeatChanges, isNotEmpty);
+      expect(fakeAudio.repeatChanges.last, 2);
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
 
   testWidgets('range highlight marks rows inside inclusive verse range', (
     tester,
@@ -3091,6 +3249,92 @@ MushafPageData _buildSpacingMushafDataFixture() {
       firstVerseKey: '2:2',
     ),
   );
+}
+
+class _FakeAyahAudioService implements AyahAudioService {
+  final StreamController<AyahAudioState> _stateController =
+      StreamController<AyahAudioState>.broadcast();
+  final StreamController<String> _errorController =
+      StreamController<String>.broadcast();
+
+  AyahAudioState _state = const AyahAudioState.initial();
+  final List<AyahRef> playAyahCalls = <AyahRef>[];
+  final List<AyahRef> playFromCalls = <AyahRef>[];
+  final List<double> speedChanges = <double>[];
+  final List<int> repeatChanges = <int>[];
+  int pauseCalls = 0;
+  int resumeCalls = 0;
+  int nextCalls = 0;
+  int previousCalls = 0;
+  int stopCalls = 0;
+
+  @override
+  Stream<AyahAudioState> get stateStream async* {
+    yield _state;
+    yield* _stateController.stream;
+  }
+
+  @override
+  Stream<String> get errorStream => _errorController.stream;
+
+  @override
+  AyahAudioState get currentState => _state;
+
+  void emitState(AyahAudioState state) {
+    _state = state;
+    _stateController.add(state);
+  }
+
+  @override
+  Future<void> next() async {
+    nextCalls += 1;
+  }
+
+  @override
+  Future<void> pause() async {
+    pauseCalls += 1;
+  }
+
+  @override
+  Future<void> playAyah(int surah, int ayah) async {
+    playAyahCalls.add(AyahRef(surah: surah, ayah: ayah));
+  }
+
+  @override
+  Future<void> playFrom(int surah, int ayah) async {
+    playFromCalls.add(AyahRef(surah: surah, ayah: ayah));
+  }
+
+  @override
+  Future<void> previous() async {
+    previousCalls += 1;
+  }
+
+  @override
+  Future<void> resume() async {
+    resumeCalls += 1;
+  }
+
+  @override
+  Future<void> setRepeatCount(int repeatCount) async {
+    repeatChanges.add(repeatCount);
+  }
+
+  @override
+  Future<void> setSpeed(double speed) async {
+    speedChanges.add(speed);
+  }
+
+  @override
+  Future<void> stop() async {
+    stopCalls += 1;
+  }
+
+  @override
+  Future<void> dispose() async {
+    await _stateController.close();
+    await _errorController.close();
+  }
 }
 
 class _FakeQuranComApiCall {
