@@ -76,6 +76,7 @@ class AgentDocsValidator {
     _validateManifest(issues);
     _validateWorkflowSections(issues);
     _validateCanonicalContracts(issues);
+    _validateBranchSafetyPolicy(issues);
     _validateTemplatePolicies(issues);
     _validateBacktickPaths(issues);
     return issues;
@@ -406,6 +407,46 @@ class AgentDocsValidator {
       if (text.contains('docs/assistant/templates/')) {
         issues.add(
           'INDEX.md must not route private template files as default docs.',
+        );
+      }
+    }
+  }
+
+  void _validateBranchSafetyPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync().toLowerCase();
+      if (!text.contains('major changes') ||
+          !text.contains('feat/*') ||
+          !text.contains('main')) {
+        issues.add(
+          'AGENTS.md must enforce branch safety: major changes on feat/*, main stays stable.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync().toLowerCase();
+      if (!text.contains('major changes') ||
+          !text.contains('feat/*') ||
+          !text.contains('main') ||
+          !text.contains('pr flow')) {
+        issues.add(
+          'agent.md must enforce branch safety and PR flow for major work on main.',
+        );
+      }
+    }
+
+    final ciWorkflow =
+        _resolveFile('docs/assistant/workflows/CI_REPO_WORKFLOW.md');
+    if (ciWorkflow.existsSync()) {
+      final text = ciWorkflow.readAsStringSync().toLowerCase();
+      if (!text.contains('major changes directly on `main`') ||
+          !text.contains('feat/*') ||
+          !text.contains('required checks')) {
+        issues.add(
+          'CI_REPO_WORKFLOW.md must include explicit main/feat/* branch safety and required checks policy.',
         );
       }
     }

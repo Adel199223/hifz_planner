@@ -161,6 +161,32 @@ void main() {
     );
   });
 
+  test('validator fails when branch safety policy is missing in AGENTS.md', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
+    agentsFile.writeAsStringSync(
+      [
+        '# AGENTS',
+        '',
+        'This is a compatibility shim.',
+        'docs/assistant/templates/* is read-on-demand only.',
+      ].join('\n'),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) => issue.contains('AGENTS.md must enforce branch safety'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when template path is added to manifest routing', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
@@ -234,6 +260,8 @@ Directory _createValidFixture() {
       '# AGENTS Compatibility Entry',
       '',
       'This is a compatibility shim.',
+      'Major changes must start on a new feat/* branch, not on main.',
+      'Keep main stable; merge major work through PR flow with required checks.',
       'docs/assistant/templates/* is read-on-demand only.',
     ].join('\n'),
   );
@@ -245,6 +273,8 @@ Directory _createValidFixture() {
       'AGENTS.md is a short shim for discovery.',
       'docs/assistant/templates/* is read-on-demand only.',
       'Only open templates when user explicitly requests template/prompt work.',
+      'Major changes must start on a new feat/* branch, not on main.',
+      'Keep main stable; merge major work through PR flow with required checks.',
     ].join('\n'),
   );
   writeFile(
@@ -300,9 +330,7 @@ Directory _createValidFixture() {
     workflowTemplate,
   );
   writeFile(
-    'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
-    workflowTemplate,
-  );
+      'docs/assistant/workflows/CI_REPO_WORKFLOW.md', _ciWorkflowTemplate());
   writeFile(
     'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
     workflowTemplate,
@@ -440,6 +468,44 @@ String _workflowTemplate() {
     '## Handoff Checklist',
     '',
     'Done.',
+  ].join('\n');
+}
+
+String _ciWorkflowTemplate() {
+  return [
+    '## What This Workflow Is For',
+    '',
+    'CI purpose.',
+    '',
+    '## When To Use',
+    '',
+    'When.',
+    '',
+    '## What Not To Do',
+    '',
+    'Do not implement major changes directly on `main`; use `feat/*` first.',
+    'Do not merge major work to `main` without PR flow and required checks.',
+    '',
+    '## Primary Files',
+    '',
+    '- APP_KNOWLEDGE.md',
+    '',
+    '## Minimal Commands',
+    '',
+    'git status --short --branch',
+    '',
+    '## Targeted Tests',
+    '',
+    'flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart',
+    '',
+    '## Failure Modes and Fallback Steps',
+    '',
+    'Fallback.',
+    '',
+    '## Handoff Checklist',
+    '',
+    'major changes were developed on `feat/*` branch, not directly on `main`.',
+    '`main` updates for major work followed PR flow and required checks.',
   ].join('\n');
 }
 

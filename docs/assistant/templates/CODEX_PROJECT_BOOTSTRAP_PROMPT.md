@@ -63,30 +63,35 @@ Create or update these files (adapt names to repo domain where needed):
 3. Source code is final truth when docs conflict.
 4. `AGENTS.md` is shim; `agent.md` is runbook.
 5. If user says “commit”, follow commit workflow protocol before any commit.
+6. Keep `main` stable: major changes must start on a new `feat/*` branch.
+7. Merge to `main` via PR flow and required checks; avoid direct push to `main` for major work.
 
 ## Commit/Publish Workflow Requirements
 In `COMMIT_PUBLISH_WORKFLOW.md`, define a strict sequence:
-1. Fetch/prune and inspect state:
+1. Branch safety gate (before staging):
+   - if change is major and branch is `main`, create/switch to `feat/<scope-name>`
+   - keep `main` as stable integration branch
+2. Fetch/prune and inspect state:
    - `git fetch --prune origin`
    - `git status --short --branch`
    - `git diff --name-only`
    - `git diff --cached --name-only`
    - `git ls-files --others --exclude-standard`
-2. Triage:
+3. Triage:
    - what to stage
    - what to ignore
    - what to split into separate commits
-3. Validate:
+4. Validate:
    - targeted tests for touched area
    - docs validator when docs changed
-4. Commit:
+5. Commit:
    - scoped staging (`git add <path>`)
    - remove accidental staged files (`git restore --staged <path>`)
    - meaningful commit message
-5. Push:
+6. Push:
    - push correct branch only
    - never force-push `main`
-6. Optional repo cleanup (only if explicitly requested):
+7. Optional repo cleanup (only if explicitly requested):
    - ff-only merge to `main`
    - delete stale branches with explicit keep-list
    - prune refs and verify final clean state

@@ -20,5 +20,7 @@ Why both files exist:
 - Source code wins over docs on any conflict.
 - Do not manually edit generated Drift file: `lib/data/database/app_database.g.dart`.
 - Run targeted tests before broad suites.
+- Major changes must start on a new `feat/*` branch, not on `main`.
+- Keep `main` stable; merge major work through PR flow with required checks.
 - `docs/assistant/templates/*` is read-on-demand only.
 - Only open or update `docs/assistant/templates/*` when the user explicitly asks for template/prompt creation or updates.

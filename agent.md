@@ -58,6 +58,8 @@ Compatibility:
 7. `docs/assistant/templates/*` is read-on-demand only.
 8. Only open or update template files when the user explicitly requests template/prompt work.
 9. Exception: if user says to create/update the reusable prompt/template, `docs/assistant/templates/*` becomes in-scope for that task only.
+10. Major changes must start on a new `feat/*` branch, not on `main`.
+11. Keep `main` stable; merge major work through PR flow with required checks.
 
 ## Core Commands
 

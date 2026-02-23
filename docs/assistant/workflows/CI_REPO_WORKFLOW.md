@@ -10,6 +10,7 @@ For explicit commit/stage/push triage protocol, use `docs/assistant/workflows/CO
 Use when changes touch:
 - `.github/workflows/dart.yml`
 - branch sync/merge/reset strategy
+- branch model enforcement (`main` stable, `feat/*` for major changes)
 - docs and scripts that define CI/validation commands
 - release gating checks before pushing to `main`
 
@@ -18,6 +19,8 @@ Use when changes touch:
 - Do not bypass fast-forward-only merge policy when it is required.
 - Do not change CI commands in docs without syncing to the workflow file.
 - Do not push branch cleanup/deletions before confirming critical tests pass.
+- Do not implement major changes directly on `main`; create/use a `feat/*` branch first.
+- Do not merge major work to `main` without PR flow and required checks.
 
 ## Primary Files
 
@@ -64,6 +67,8 @@ flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
 
 - `.github/workflows/dart.yml` and docs commands are in sync
 - `docs/assistant/manifest.json` includes `ci_repo_ops`
+- major changes were developed on `feat/*` branch, not directly on `main`
+- `main` updates for major work followed PR flow and required checks
 - `dart run tooling/validate_agent_docs.dart` passes
 - targeted CI-facing tests pass
 - branch state and upstream tracking are clean before handoff
