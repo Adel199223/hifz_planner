@@ -91,7 +91,7 @@ In `COMMIT_PUBLISH_WORKFLOW.md`, define a strict sequence:
 6. Push:
    - push correct branch only
    - never force-push `main`
-7. Optional repo cleanup (only if explicitly requested):
+7. Repo cleanup:
    - ff-only merge to `main`
    - delete stale branches with explicit keep-list
    - prune refs and verify final clean state
