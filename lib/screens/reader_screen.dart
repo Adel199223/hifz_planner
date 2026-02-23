@@ -14,6 +14,7 @@ import '../data/services/ayah_audio_service.dart';
 import '../data/services/qurancom_api.dart';
 import '../l10n/app_language.dart';
 import '../l10n/app_strings.dart';
+import '../ui/audio/reciter_selection_list.dart';
 import '../ui/qcf/qcf_font_manager.dart';
 import '../ui/tajweed/tajweed_colors.dart';
 import '../ui/tajweed/tajweed_markup.dart';
@@ -1049,6 +1050,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (raw.isEmpty) {
       return _strings.unknown;
     }
+    if (error is MissingPluginException ||
+        raw.contains('MissingPluginException')) {
+      return _strings.audioPluginUnavailable;
+    }
+    final normalized = raw.toLowerCase();
+    if (normalized.contains('socketexception') ||
+        normalized.contains('failed host lookup') ||
+        normalized.contains('timed out')) {
+      return _strings.audioNetworkError;
+    }
     return raw;
   }
 
@@ -1096,6 +1107,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Future<void> _setPlaybackSpeed(double speed) async {
     try {
       await ref.read(ayahAudioServiceProvider).setSpeed(speed);
+      await ref.read(ayahAudioPreferencesProvider.notifier).setSpeed(speed);
     } catch (error) {
       _showSnackBar(_strings.audioLoadFailed(_audioErrorText(error)));
     }
@@ -1104,6 +1116,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Future<void> _setPlaybackRepeatCount(int repeatCount) async {
     try {
       await ref.read(ayahAudioServiceProvider).setRepeatCount(repeatCount);
+      await ref
+          .read(ayahAudioPreferencesProvider.notifier)
+          .setRepeatCount(repeatCount);
+    } catch (error) {
+      _showSnackBar(_strings.audioLoadFailed(_audioErrorText(error)));
+    }
+  }
+
+  Future<void> _seekAudioTo(Duration position) async {
+    try {
+      await ref.read(ayahAudioServiceProvider).seekTo(position);
     } catch (error) {
       _showSnackBar(_strings.audioLoadFailed(_audioErrorText(error)));
     }
@@ -1116,6 +1139,163 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       2 => _strings.repeat2x,
       _ => _strings.repeat3x,
     };
+  }
+
+  String _formatDuration(Duration? duration) {
+    if (duration == null) {
+      return '--:--';
+    }
+    final totalSeconds = duration.inSeconds;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _openReciterPicker() async {
+    if (ref.read(ayahReciterSwitchInProgressProvider)) {
+      return;
+    }
+    final reciters = await ref.read(ayahReciterCatalogProvider.future);
+    if (!mounted) {
+      return;
+    }
+    if (reciters.isEmpty) {
+      _showSnackBar(_strings.failedToLoadReciters);
+      return;
+    }
+    final selectedEdition = ref.read(selectedReciterProvider).edition;
+    final selected = await showReciterPickerBottomSheet(
+      context: context,
+      strings: _strings,
+      options: reciters,
+      selectedEdition: selectedEdition,
+    );
+    if (selected == null || !mounted) {
+      return;
+    }
+    final result = await ref
+        .read(ayahReciterSwitchCoordinatorProvider)
+        .switchReciter(selected);
+    if (!mounted) {
+      return;
+    }
+
+    switch (result.status) {
+      case ReciterSelectionStatus.applied:
+        if (result.didChangeBitrate && result.resolvedBitrate != null) {
+          _showSnackBar(
+            _strings.reciterAppliedWithBitrate(
+              selected.englishName,
+              result.resolvedBitrate!,
+            ),
+          );
+        }
+        return;
+      case ReciterSelectionStatus.unavailable:
+        _showSnackBar(
+          _strings.reciterNotAvailableForStreaming(selected.englishName),
+        );
+        return;
+      case ReciterSelectionStatus.failed:
+        _showSnackBar(
+          _strings.audioLoadFailed(
+            _audioErrorText(result.error ?? _strings.unknown),
+          ),
+        );
+        return;
+    }
+  }
+
+  Future<void> _openPlaybackSpeedPicker() async {
+    final selected = await showModalBottomSheet<double>(
+      context: context,
+      builder: (sheetContext) {
+        final current = ref.read(ayahAudioStateProvider).asData?.value.speed ??
+            ref.read(ayahAudioPreferencesProvider).speed;
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              ListTile(
+                title: Text(_strings.playbackSpeed),
+              ),
+              for (final speed in _playbackSpeedOptions)
+                RadioListTile<double>(
+                  value: speed,
+                  groupValue: current,
+                  title: Text('${speed.toStringAsFixed(2)}x'),
+                  onChanged: (value) {
+                    Navigator.of(sheetContext).pop(value);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected == null) {
+      return;
+    }
+    await _setPlaybackSpeed(selected);
+  }
+
+  Future<void> _openRepeatPicker() async {
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      builder: (sheetContext) {
+        final current =
+            ref.read(ayahAudioStateProvider).asData?.value.repeatCount ??
+                ref.read(ayahAudioPreferencesProvider).repeatCount;
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              ListTile(
+                title: Text(_strings.manageRepeatSettings),
+              ),
+              for (final repeatCount in _repeatCountOptions)
+                RadioListTile<int>(
+                  value: repeatCount,
+                  groupValue: current,
+                  title: Text(_repeatLabelForCount(repeatCount)),
+                  onChanged: (value) {
+                    Navigator.of(sheetContext).pop(value);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected == null) {
+      return;
+    }
+    await _setPlaybackRepeatCount(selected);
+  }
+
+  Future<void> _handleAudioOptionsAction(
+      _ReaderAudioOptionAction action) async {
+    switch (action) {
+      case _ReaderAudioOptionAction.download:
+        _showSnackBar(_strings.downloadComingSoon);
+        return;
+      case _ReaderAudioOptionAction.repeat:
+        await _openRepeatPicker();
+        return;
+      case _ReaderAudioOptionAction.experience:
+        _showSnackBar(_strings.experienceComingSoon);
+        return;
+      case _ReaderAudioOptionAction.speed:
+        await _openPlaybackSpeedPicker();
+        return;
+      case _ReaderAudioOptionAction.reciter:
+        await _openReciterPicker();
+        return;
+    }
   }
 
   void _setMushafSettingsOpen(bool isOpen) {
@@ -3807,6 +3987,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildMushafArabicSettingsBody() {
     final colorScheme = Theme.of(context).colorScheme;
     final previewWord = _hoveredMushafPreviewWord;
+    final selectedReciter = ref.watch(selectedReciterProvider);
+    final isSwitchingReciter = ref.watch(ayahReciterSwitchInProgressProvider);
     final previewArabic =
         previewWord?.textQpcHafs ?? previewWord?.codeV2 ?? _strings.preview;
     final previewTranslation = previewWord == null
@@ -3898,24 +4080,33 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          Container(
-            key: const ValueKey('reader_mushaf_reciter_card'),
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHigh,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: const ValueKey('reader_mushaf_reciter_card'),
               borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(_strings.selectedReciter),
-                const SizedBox(height: 6),
-                Text(
-                  'Mishari Rashid al-`Afasy',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+              onTap: isSwitchingReciter
+                  ? null
+                  : () => unawaited(_openReciterPicker()),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_strings.selectedReciter),
+                    const SizedBox(height: 6),
+                    Text(
+                      selectedReciter.englishName,
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -3938,8 +4129,24 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       return const SizedBox.shrink();
     }
     final colorScheme = Theme.of(context).colorScheme;
-    final speedLabel = '${state.speed.toStringAsFixed(2)}x';
-    final repeatLabel = _repeatLabelForCount(state.repeatCount);
+    final isSwitchingReciter = ref.watch(ayahReciterSwitchInProgressProvider);
+    final totalDuration = state.duration ?? Duration.zero;
+    final hasDuration = totalDuration > Duration.zero;
+    final safePosition = state.position < Duration.zero
+        ? Duration.zero
+        : (hasDuration && state.position > totalDuration
+            ? totalDuration
+            : state.position);
+    final sliderMax =
+        hasDuration ? totalDuration.inMilliseconds.toDouble() : 1.0;
+    final sliderValue = hasDuration
+        ? safePosition.inMilliseconds
+            .toDouble()
+            .clamp(0.0, sliderMax)
+            .toDouble()
+        : 0.0;
+    final elapsedLabel = _formatDuration(safePosition);
+    final totalLabel = _formatDuration(state.duration);
 
     return Container(
       key: const ValueKey('reader_audio_mini_player'),
@@ -3950,101 +4157,173 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         ),
       ),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: constraints.maxWidth),
-              child: Row(
-                children: [
-                  Text(
-                    _strings.surahAyahLabel(ayah.surah, ayah.ayah),
-                    key: const ValueKey('reader_audio_current_ayah'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    key: const ValueKey('reader_audio_prev_button'),
-                    onPressed: state.canPrevious
-                        ? () => unawaited(
-                            ref.read(ayahAudioServiceProvider).previous())
-                        : null,
-                    tooltip: _strings.previous,
-                    icon: const Icon(Icons.skip_previous_rounded),
-                  ),
-                  IconButton(
-                    key: const ValueKey('reader_audio_play_pause_button'),
-                    onPressed: () {
-                      if (state.isPlaying) {
-                        unawaited(ref.read(ayahAudioServiceProvider).pause());
-                      } else {
-                        unawaited(ref.read(ayahAudioServiceProvider).resume());
-                      }
-                    },
-                    tooltip: state.isPlaying ? _strings.pause : _strings.resume,
-                    icon: Icon(
-                      state.isPlaying
-                          ? Icons.pause_circle_filled_rounded
-                          : Icons.play_circle_fill_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                _strings.surahAyahLabel(ayah.surah, ayah.ayah),
+                key: const ValueKey('reader_audio_current_ayah'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(width: 8),
+              if (state.isBuffering)
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      colorScheme.primary,
                     ),
                   ),
-                  IconButton(
-                    key: const ValueKey('reader_audio_next_button'),
-                    onPressed: state.canNext
-                        ? () =>
-                            unawaited(ref.read(ayahAudioServiceProvider).next())
-                        : null,
-                    tooltip: _strings.next,
-                    icon: const Icon(Icons.skip_next_rounded),
+                ),
+              const Spacer(),
+              PopupMenuButton<_ReaderAudioOptionAction>(
+                key: const ValueKey('reader_audio_options_button'),
+                tooltip: _strings.audioOptions,
+                onSelected: (action) =>
+                    unawaited(_handleAudioOptionsAction(action)),
+                itemBuilder: (context) => [
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_download'),
+                    value: _ReaderAudioOptionAction.download,
+                    child: Text(_strings.download),
                   ),
-                  const SizedBox(width: 8),
-                  PopupMenuButton<double>(
-                    key: const ValueKey('reader_audio_speed_selector'),
-                    tooltip: _strings.playbackSpeed,
-                    onSelected: (speed) => unawaited(_setPlaybackSpeed(speed)),
-                    itemBuilder: (context) => [
-                      for (final speed in _playbackSpeedOptions)
-                        PopupMenuItem<double>(
-                          key: ValueKey(
-                            'reader_audio_speed_option_${speed.toStringAsFixed(2)}',
-                          ),
-                          value: speed,
-                          child: Text('${speed.toStringAsFixed(2)}x'),
-                        ),
-                    ],
-                    child: _ReaderAudioPill(
-                      label: '${_strings.playbackSpeed}: $speedLabel',
-                    ),
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_repeat'),
+                    value: _ReaderAudioOptionAction.repeat,
+                    child: Text(_strings.manageRepeatSettings),
                   ),
-                  const SizedBox(width: 8),
-                  PopupMenuButton<int>(
-                    key: const ValueKey('reader_audio_repeat_selector'),
-                    tooltip: _strings.repeat,
-                    onSelected: (repeatCount) =>
-                        unawaited(_setPlaybackRepeatCount(repeatCount)),
-                    itemBuilder: (context) => [
-                      for (final repeatCount in _repeatCountOptions)
-                        PopupMenuItem<int>(
-                          key: ValueKey(
-                              'reader_audio_repeat_option_$repeatCount'),
-                          value: repeatCount,
-                          child: Text(_repeatLabelForCount(repeatCount)),
-                        ),
-                    ],
-                    child: _ReaderAudioPill(
-                      label: '${_strings.repeat}: $repeatLabel',
-                    ),
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_experience'),
+                    value: _ReaderAudioOptionAction.experience,
+                    child: Text(_strings.experience),
+                  ),
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_speed'),
+                    value: _ReaderAudioOptionAction.speed,
+                    child: Text(_strings.playbackSpeed),
+                  ),
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_reciter'),
+                    value: _ReaderAudioOptionAction.reciter,
+                    enabled: !isSwitchingReciter,
+                    child: Text(_strings.selectReciter),
                   ),
                 ],
               ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  elapsedLabel,
+                  key: const ValueKey('reader_audio_elapsed_time'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              Expanded(
+                child: Slider(
+                  key: const ValueKey('reader_audio_seek_slider'),
+                  min: 0,
+                  max: sliderMax,
+                  value: sliderValue,
+                  onChanged: hasDuration ? (_) {} : null,
+                  onChangeEnd: hasDuration
+                      ? (value) {
+                          unawaited(
+                            _seekAudioTo(
+                              Duration(milliseconds: value.round()),
+                            ),
+                          );
+                        }
+                      : null,
+                ),
+              ),
+              SizedBox(
+                width: 80,
+                child: Text(
+                  totalLabel,
+                  key: const ValueKey('reader_audio_total_time'),
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              IconButton(
+                key: const ValueKey('reader_audio_prev_button'),
+                onPressed: state.canPrevious
+                    ? () =>
+                        unawaited(ref.read(ayahAudioServiceProvider).previous())
+                    : null,
+                tooltip: _strings.previous,
+                icon: const Icon(Icons.skip_previous_rounded),
+              ),
+              IconButton(
+                key: const ValueKey('reader_audio_play_pause_button'),
+                onPressed: () {
+                  if (state.isPlaying) {
+                    unawaited(ref.read(ayahAudioServiceProvider).pause());
+                  } else {
+                    unawaited(ref.read(ayahAudioServiceProvider).resume());
+                  }
+                },
+                tooltip: state.isPlaying ? _strings.pause : _strings.resume,
+                icon: Icon(
+                  state.isPlaying
+                      ? Icons.pause_circle_filled_rounded
+                      : Icons.play_circle_fill_rounded,
+                ),
+              ),
+              IconButton(
+                key: const ValueKey('reader_audio_next_button'),
+                onPressed: state.canNext
+                    ? () => unawaited(ref.read(ayahAudioServiceProvider).next())
+                    : null,
+                tooltip: _strings.next,
+                icon: const Icon(Icons.skip_next_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              _ReaderAudioPill(
+                label:
+                    '${_strings.playbackSpeed}: ${state.speed.toStringAsFixed(2)}x',
+              ),
+              const SizedBox(width: 8),
+              _ReaderAudioPill(
+                label:
+                    '${_strings.repeat}: ${_repeatLabelForCount(state.repeatCount)}',
+              ),
+            ],
+          ),
+          if (state.bufferedPosition > Duration.zero && hasDuration) ...[
+            const SizedBox(height: 2),
+            Text(
+              _strings.elapsedTimeLabel(
+                _formatDuration(state.bufferedPosition),
+              ),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
             ),
-          );
-        },
+          ],
+        ],
       ),
     );
   }
@@ -4119,6 +4398,14 @@ enum _MushafSettingsTab {
   arabic,
   translation,
   wordByWord,
+}
+
+enum _ReaderAudioOptionAction {
+  download,
+  repeat,
+  experience,
+  speed,
+  reciter,
 }
 
 enum _MushafScriptStyleOption {

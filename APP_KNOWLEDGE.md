@@ -164,7 +164,7 @@ Translation behavior:
 Status:
 - Implemented in Reader (Verse by Verse + Reading top Listen controls).
 - Uses AlQuran Cloud CDN streaming (no OAuth, no server, no DB changes).
-- `Reciters` route remains a placeholder screen and is not the playback control surface yet.
+- `Reciters` route is implemented as a functional searchable reciter selector.
 
 Playback capabilities:
 - Per-ayah play from verse action row.
@@ -174,13 +174,25 @@ Playback capabilities:
 - Speed control: `0.75x`, `1.0x`, `1.25x`, `1.5x`.
 - Repeat current ayah count: `Off`, `1x`, `2x`, `3x`.
 - Mini-player appears in Reader when an ayah is active.
+- Mini-player includes elapsed/total time and seek slider.
+- Audio options menu includes:
+  - `Download` (placeholder)
+  - `Manage repeat settings` (functional)
+  - `Experience` (placeholder)
+  - `Speed` (functional)
+  - `Reciter` (functional)
 - Playback stays active while navigating inside `/reader` and stops when leaving `/reader` (provider disposal).
+- Selected reciter/speed/repeat are persisted locally via SharedPreferences.
 
 Implementation files:
 - `lib/data/services/ayah_audio_source.dart`
 - `lib/data/services/ayah_audio_service.dart`
-- `lib/data/providers/database_providers.dart`
+- `lib/data/services/ayah_audio_preferences.dart`
+- `lib/data/services/ayah_reciter_catalog_service.dart`
+- `lib/data/providers/audio_providers.dart`
+- `lib/ui/audio/reciter_selection_list.dart`
 - `lib/screens/reader_screen.dart`
+- `lib/screens/reciters_screen.dart`
 
 Windows plugin note:
 - Audio stack uses `just_audio` with `just_audio_windows`.

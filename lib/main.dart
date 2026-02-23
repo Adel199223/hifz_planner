@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 
 import 'app/app_preferences.dart';
 import 'app/router.dart';
@@ -9,6 +10,11 @@ import 'l10n/app_language.dart';
 import 'theme/quran_themes.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  JustAudioMediaKit.ensureInitialized(
+    windows: true,
+    linux: true,
+  );
   runApp(
     ProviderScope(
       overrides: [

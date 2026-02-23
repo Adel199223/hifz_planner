@@ -61,12 +61,19 @@ class AppStrings {
   String get resume => _t('resume', 'Resume');
   String get next => _t('next', 'Next');
   String get previous => _t('previous', 'Previous');
+  String get audioOptions => _t('audio_options', 'Audio options');
+  String get download => _t('download', 'Download');
+  String get manageRepeatSettings =>
+      _t('manage_repeat_settings', 'Manage repeat settings');
+  String get experience => _t('experience', 'Experience');
   String get playbackSpeed => _t('playback_speed', 'Speed');
   String get repeat => _t('repeat', 'Repeat');
   String get repeatOff => _t('repeat_off', 'Off');
   String get repeat1x => _t('repeat_1x', '1x');
   String get repeat2x => _t('repeat_2x', '2x');
   String get repeat3x => _t('repeat_3x', '3x');
+  String get selectReciter => _t('select_reciter', 'Select Reciter');
+  String get searchReciter => _t('search_reciter', 'Search Reciter');
   String get tajweedColors => _t('tajweed_colors', 'Tajweed colors');
   String get translation => _t('translation', 'Translation');
   String get arabic => _t('arabic', 'Arabic');
@@ -144,6 +151,8 @@ class AppStrings {
   String get bookmarksTitle => _t('bookmarks_title', 'Bookmarks');
   String get failedToLoadBookmarks =>
       _t('failed_to_load_bookmarks', 'Failed to load bookmarks.');
+  String get failedToLoadReciters =>
+      _t('failed_to_load_reciters', 'Failed to load reciters.');
   String get noBookmarksYet => _t('no_bookmarks_yet', 'No bookmarks yet.');
   String savedLabel(String timestamp) => _fmt(
         _t('saved_label', 'Saved {timestamp}'),
@@ -506,8 +515,42 @@ class AppStrings {
         _t('audio_load_failed', 'Audio playback failed: {error}'),
         <String, Object>{'error': error},
       );
+  String get audioPluginUnavailable => _t(
+        'audio_plugin_unavailable',
+        'Audio plugin unavailable. Restart app after full rebuild.',
+      );
+  String get audioNetworkError => _t(
+        'audio_network_error',
+        'Audio source unavailable. Check your internet connection.',
+      );
+  String reciterNotAvailableForStreaming(String reciter) => _fmt(
+        _t(
+          'reciter_not_available_for_streaming',
+          '{reciter} is not available for streaming right now.',
+        ),
+        <String, Object>{'reciter': reciter},
+      );
+  String reciterAppliedWithBitrate(String reciter, int bitrate) => _fmt(
+        _t(
+          'reciter_applied_with_bitrate',
+          '{reciter} selected ({bitrate} kbps).',
+        ),
+        <String, Object>{'reciter': reciter, 'bitrate': bitrate},
+      );
   String get audioControlsComingSoon =>
       _t('audio_controls_coming_soon', 'Audio controls are coming soon.');
+  String get downloadComingSoon =>
+      _t('download_coming_soon', 'Download is coming soon.');
+  String get experienceComingSoon =>
+      _t('experience_coming_soon', 'Experience settings are coming soon.');
+  String elapsedTimeLabel(String value) => _fmt(
+        _t('elapsed_time_label', 'Elapsed {value}'),
+        <String, Object>{'value': value},
+      );
+  String totalTimeLabel(String value) => _fmt(
+        _t('total_time_label', 'Total {value}'),
+        <String, Object>{'value': value},
+      );
   String get shareComingSoon =>
       _t('share_coming_soon', 'Share is coming soon.');
   String get tafsirsComingSoon =>
@@ -564,12 +607,18 @@ class AppStrings {
       'resume': 'Reprendre',
       'next': 'Suivant',
       'previous': 'Précédent',
+      'audio_options': 'Options audio',
+      'download': 'Télécharger',
+      'manage_repeat_settings': 'Gérer les paramètres de répétition',
+      'experience': 'Expérience',
       'playback_speed': 'Vitesse',
       'repeat': 'Répéter',
       'repeat_off': 'Désactivé',
       'repeat_1x': '1x',
       'repeat_2x': '2x',
       'repeat_3x': '3x',
+      'select_reciter': 'Choisir un récitateur',
+      'search_reciter': 'Rechercher un récitateur',
       'tajweed_colors': 'Couleurs du Tajwid',
       'tafsirs': 'Tafsirs',
       'lessons': 'Leçons',
@@ -586,6 +635,18 @@ class AppStrings {
           "Actions de l'ayah indisponibles pour ces données de page.",
       'translation_unavailable': 'Traduction indisponible',
       'audio_load_failed': "Échec de la lecture audio : {error}",
+      'failed_to_load_reciters': 'Échec du chargement des récitateurs.',
+      'download_coming_soon': 'Le téléchargement arrive bientôt.',
+      'experience_coming_soon': "Les paramètres d'expérience arrivent bientôt.",
+      'audio_plugin_unavailable':
+          "Plugin audio indisponible. Redémarrez l'application après une reconstruction complète.",
+      'audio_network_error':
+          'Source audio indisponible. Vérifiez votre connexion internet.',
+      'reciter_not_available_for_streaming':
+          '{reciter} est indisponible en streaming pour le moment.',
+      'reciter_applied_with_bitrate': '{reciter} sélectionné ({bitrate} kbps).',
+      'elapsed_time_label': 'Écoulé {value}',
+      'total_time_label': 'Total {value}',
       'translation_label': 'Traduction : {label}',
       'page_label': 'Page {page}',
       'juz_label': 'Juz {juz}',
@@ -705,12 +766,18 @@ class AppStrings {
       'resume': 'Retomar',
       'next': 'Próximo',
       'previous': 'Anterior',
+      'audio_options': 'Opções de áudio',
+      'download': 'Baixar',
+      'manage_repeat_settings': 'Gerenciar configurações de repetição',
+      'experience': 'Experiência',
       'playback_speed': 'Velocidade',
       'repeat': 'Repetir',
       'repeat_off': 'Desativado',
       'repeat_1x': '1x',
       'repeat_2x': '2x',
       'repeat_3x': '3x',
+      'select_reciter': 'Selecionar recitador',
+      'search_reciter': 'Pesquisar recitador',
       'tajweed_colors': 'Cores de Tajweed',
       'translation': 'Tradução',
       'arabic': 'Árabe',
@@ -722,6 +789,18 @@ class AppStrings {
       'selected_reciter': 'Recitador selecionado',
       'translation_unavailable': 'Tradução indisponível',
       'audio_load_failed': 'Falha na reprodução de áudio: {error}',
+      'failed_to_load_reciters': 'Falha ao carregar recitadores.',
+      'download_coming_soon': 'Download em breve.',
+      'experience_coming_soon': 'Configurações de experiência em breve.',
+      'audio_plugin_unavailable':
+          'Plugin de áudio indisponível. Reinicie o app após reconstrução completa.',
+      'audio_network_error':
+          'Fonte de áudio indisponível. Verifique sua conexão com a internet.',
+      'reciter_not_available_for_streaming':
+          '{reciter} não está disponível para streaming no momento.',
+      'reciter_applied_with_bitrate': '{reciter} selecionado ({bitrate} kbps).',
+      'elapsed_time_label': 'Decorrido {value}',
+      'total_time_label': 'Total {value}',
       'translation_label': 'Tradução: {label}',
       'page_label': 'Página {page}',
       'learn_title': 'Planos de aprendizado',
@@ -842,12 +921,18 @@ class AppStrings {
       'resume': 'استئناف',
       'next': 'التالي',
       'previous': 'السابق',
+      'audio_options': 'خيارات الصوت',
+      'download': 'تنزيل',
+      'manage_repeat_settings': 'إدارة إعدادات التكرار',
+      'experience': 'التجربة',
       'playback_speed': 'السرعة',
       'repeat': 'تكرار',
       'repeat_off': 'إيقاف',
       'repeat_1x': '1x',
       'repeat_2x': '2x',
       'repeat_3x': '3x',
+      'select_reciter': 'اختر القارئ',
+      'search_reciter': 'ابحث عن قارئ',
       'tajweed_colors': 'ألوان التجويد',
       'translation': 'الترجمة',
       'arabic': 'العربية',
@@ -860,6 +945,18 @@ class AppStrings {
       'copy_text_uthmani': 'نسخ النص (عثماني)',
       'translation_unavailable': 'الترجمة غير متاحة',
       'audio_load_failed': 'فشل تشغيل الصوت: {error}',
+      'failed_to_load_reciters': 'تعذر تحميل قائمة القراء.',
+      'download_coming_soon': 'ميزة التنزيل قريبًا.',
+      'experience_coming_soon': 'إعدادات التجربة قريبًا.',
+      'audio_plugin_unavailable':
+          'ملحق الصوت غير متاح. أعد تشغيل التطبيق بعد إعادة البناء الكاملة.',
+      'audio_network_error': 'مصدر الصوت غير متاح. تحقق من اتصال الإنترنت.',
+      'reciter_not_available_for_streaming':
+          'القارئ {reciter} غير متاح للبث حالياً.',
+      'reciter_applied_with_bitrate':
+          'تم اختيار {reciter} ({bitrate} كيلوبت/ث).',
+      'elapsed_time_label': 'الوقت المنقضي {value}',
+      'total_time_label': 'المدة الكلية {value}',
       'script_style': 'نمط الخط',
       'uthmani': 'عثماني',
       'tajweed': 'تجويد',

@@ -21,7 +21,10 @@ dependencies:
   crypto: ^3.0.7
   flutter_svg: ^2.2.0
   just_audio: ^0.10.5
-  just_audio_windows: ^0.2.2
+  just_audio_media_kit: ^2.1.0
+  media_kit: ^1.2.6
+  media_kit_libs_windows_audio: ^1.0.9
+  media_kit_libs_linux: ^1.2.1
   shared_preferences: ^2.5.3
 
 dev_dependencies:

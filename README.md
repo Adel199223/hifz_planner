@@ -26,7 +26,16 @@ CI quality gates:
 
 - Verse-by-verse recitation streams from AlQuran Cloud CDN.
 - Default source: edition `ar.alafasy`, bitrate `128`.
+- Reader includes Quran.com-style playback options menu with:
+  - `Download` (placeholder)
+  - `Manage repeat settings` (functional)
+  - `Experience` (placeholder)
+  - `Speed` (functional)
+  - `Reciter` (functional)
+- Reciter/speed/repeat preferences persist across launches.
+- `Reciters` route is a functional searchable selector backed by AlQuran Cloud editions API with bundled fallback list.
 - Playback is streaming-first; offline download can be added later.
+- If you see `MissingPluginException` for audio on Windows, do a full app restart/rebuild (hot reload is not enough).
 
 ## Getting Started
 

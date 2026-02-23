@@ -26,11 +26,19 @@ Use when changes touch:
 - `lib/data/services/qurancom_api.dart`
 - `lib/data/services/ayah_audio_source.dart`
 - `lib/data/services/ayah_audio_service.dart`
+- `lib/data/services/ayah_audio_preferences.dart`
+- `lib/data/services/ayah_reciter_catalog_service.dart`
+- `lib/data/providers/audio_providers.dart`
+- `lib/ui/audio/reciter_selection_list.dart`
+- `lib/screens/reciters_screen.dart`
 - `lib/ui/qcf/qcf_font_manager.dart`
 - `lib/ui/tajweed/tajweed_markup.dart`
 - `lib/ui/tajweed/tajweed_colors.dart`
 - `test/screens/reader_screen_test.dart`
 - `test/data/services/ayah_audio_source_test.dart`
+- `test/data/services/ayah_reciter_catalog_service_test.dart`
+- `test/data/providers/audio_providers_test.dart`
+- `test/screens/reciters_screen_test.dart`
 - `test/app/navigation_shell_menu_test.dart`
 
 ## Minimal Commands
@@ -38,7 +46,8 @@ Use when changes touch:
 ```powershell
 git status --short
 rg -n "_ReaderViewMode|Verse by Verse|Reading|_MushafNavTab" lib/screens/reader_screen.dart
-rg -n "ayahAudio|playFrom|playAyah|mini_player" lib/screens/reader_screen.dart lib/data/services/ayah_audio_service.dart
+rg -n "ayahAudio|playFrom|playAyah|mini_player|reader_audio_options_button" lib/screens/reader_screen.dart lib/data/services/ayah_audio_service.dart
+rg -n "edition|reciter|fallback|versebyverse" lib/data/services/ayah_reciter_catalog_service.dart lib/data/providers/audio_providers.dart
 ```
 
 ## Targeted Tests
@@ -46,6 +55,9 @@ rg -n "ayahAudio|playFrom|playAyah|mini_player" lib/screens/reader_screen.dart l
 ```powershell
 flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
 flutter test -j 1 -r expanded test/data/services/ayah_audio_source_test.dart
+flutter test -j 1 -r expanded test/data/services/ayah_reciter_catalog_service_test.dart
+flutter test -j 1 -r expanded test/data/providers/audio_providers_test.dart
+flutter test -j 1 -r expanded test/screens/reciters_screen_test.dart
 flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
 ```
 
@@ -61,6 +73,10 @@ flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
    - Re-check shell controls and settings pane behavior under both reader modes.
 5. Symptoms: `MissingPluginException` for `just_audio` on Windows.
    - Ensure `just_audio_windows` is in `pubspec.yaml`, run `flutter pub get`, and fully restart the app (not only hot reload).
+6. Symptoms: reciter list fails to load.
+   - Confirm AlQuran Cloud editions endpoint response shape, then verify bundled fallback list is still present in `ayah_reciter_catalog_service.dart`.
+7. Symptoms: speed/repeat/reciter settings reset after restart.
+   - Verify SharedPreferences keys and notifier write-through in `ayah_audio_preferences.dart` and `audio_providers.dart`.
 
 ## Handoff Checklist
 
@@ -68,4 +84,7 @@ flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
 - fallback behavior still works for partial Quran.com failures
 - `test/screens/reader_screen_test.dart` passes
 - `test/data/services/ayah_audio_source_test.dart` passes for ayah index/url mapping
+- `test/data/services/ayah_reciter_catalog_service_test.dart` passes for API parsing + fallback
+- `test/data/providers/audio_providers_test.dart` passes for persisted reciter/speed/repeat state
+- `test/screens/reciters_screen_test.dart` passes for searchable selector behavior
 - any control/key changes are reflected in tests

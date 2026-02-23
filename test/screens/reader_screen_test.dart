@@ -16,6 +16,7 @@ import 'package:hifz_planner/data/repositories/bookmark_repo.dart';
 import 'package:hifz_planner/data/repositories/note_repo.dart';
 import 'package:hifz_planner/data/services/qurancom_api.dart';
 import 'package:hifz_planner/data/services/ayah_audio_service.dart';
+import 'package:hifz_planner/data/services/ayah_audio_source.dart';
 import 'package:hifz_planner/data/services/tajweed_tags_service.dart';
 import 'package:hifz_planner/l10n/app_language.dart';
 import 'package:hifz_planner/screens/reader_screen.dart';
@@ -448,11 +449,15 @@ void main() {
         const AyahAudioState(
           currentAyah: AyahRef(surah: 1, ayah: 1),
           isPlaying: true,
+          isBuffering: false,
           speed: 1.0,
           repeatCount: 0,
           canNext: true,
           canPrevious: true,
           queueLength: 3,
+          position: Duration(seconds: 5),
+          bufferedPosition: Duration(seconds: 8),
+          duration: Duration(seconds: 20),
         ),
       );
       await tester.pump();
@@ -469,11 +474,15 @@ void main() {
         const AyahAudioState(
           currentAyah: AyahRef(surah: 1, ayah: 1),
           isPlaying: false,
+          isBuffering: false,
           speed: 1.0,
           repeatCount: 0,
           canNext: true,
           canPrevious: true,
           queueLength: 3,
+          position: Duration(seconds: 5),
+          bufferedPosition: Duration(seconds: 8),
+          duration: Duration(seconds: 20),
         ),
       );
       await tester.pump();
@@ -490,24 +499,88 @@ void main() {
       await tester.pump();
       expect(fakeAudio.nextCalls, 1);
 
-      final speedButton = tester.widget<PopupMenuButton<double>>(
-        find.byKey(const ValueKey('reader_audio_speed_selector')),
+      final seekSlider = tester.widget<Slider>(
+        find.byKey(const ValueKey('reader_audio_seek_slider')),
       );
-      speedButton.onSelected?.call(1.25);
+      seekSlider.onChangeEnd?.call(10000);
       await tester.pump();
+      expect(fakeAudio.seekToCalls, 1);
+      expect(fakeAudio.lastSeekTo, const Duration(seconds: 10));
+
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_options_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('reader_audio_option_speed')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('1.25x').last);
+      await tester.pumpAndSettle();
       expect(fakeAudio.speedChanges, isNotEmpty);
       expect(fakeAudio.speedChanges.last, 1.25);
 
-      final repeatButton = tester.widget<PopupMenuButton<int>>(
-        find.byKey(const ValueKey('reader_audio_repeat_selector')),
-      );
-      repeatButton.onSelected?.call(2);
-      await tester.pump();
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_options_button')));
+      await tester.pumpAndSettle();
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_option_repeat')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2x').last);
+      await tester.pumpAndSettle();
       expect(fakeAudio.repeatChanges, isNotEmpty);
       expect(fakeAudio.repeatChanges.last, 2);
     },
     timeout: const Timeout(Duration(seconds: 30)),
   );
+
+  testWidgets('reader audio reciter menu option disables while switching',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeAudio = _FakeAyahAudioService();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+      ],
+    );
+    addTearDown(() async {
+      container.dispose();
+      await fakeAudio.dispose();
+    });
+    container
+        .read(ayahReciterSwitchInProgressProvider.notifier)
+        .setInProgress(true);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+
+    fakeAudio.emitState(
+      const AyahAudioState(
+        currentAyah: AyahRef(surah: 1, ayah: 1),
+        isPlaying: false,
+        isBuffering: false,
+        speed: 1.0,
+        repeatCount: 0,
+        canNext: true,
+        canPrevious: true,
+        queueLength: 3,
+        position: Duration(seconds: 1),
+        bufferedPosition: Duration(seconds: 2),
+        duration: Duration(seconds: 20),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('reader_audio_options_button')));
+    await tester.pumpAndSettle();
+
+    final reciterItem = tester.widget<PopupMenuItem<dynamic>>(
+      find.byKey(const ValueKey('reader_audio_option_reciter')),
+    );
+    expect(reciterItem.enabled, isFalse);
+  });
 
   testWidgets('range highlight marks rows inside inclusive verse range', (
     tester,
@@ -3267,6 +3340,8 @@ class _FakeAyahAudioService implements AyahAudioService {
   int nextCalls = 0;
   int previousCalls = 0;
   int stopCalls = 0;
+  int seekToCalls = 0;
+  Duration? lastSeekTo;
 
   @override
   Stream<AyahAudioState> get stateStream async* {
@@ -3279,6 +3354,12 @@ class _FakeAyahAudioService implements AyahAudioService {
 
   @override
   AyahAudioState get currentState => _state;
+
+  @override
+  Future<void> updateSource(
+    AyahAudioSource source, {
+    bool stopPlayback = true,
+  }) async {}
 
   void emitState(AyahAudioState state) {
     _state = state;
@@ -3308,6 +3389,12 @@ class _FakeAyahAudioService implements AyahAudioService {
   @override
   Future<void> previous() async {
     previousCalls += 1;
+  }
+
+  @override
+  Future<void> seekTo(Duration position) async {
+    seekToCalls += 1;
+    lastSeekTo = position;
   }
 
   @override

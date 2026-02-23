@@ -21,4 +21,5 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+playstore_audit_dump.txt
 

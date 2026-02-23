@@ -31,29 +31,41 @@ class AyahAudioState {
   const AyahAudioState({
     required this.currentAyah,
     required this.isPlaying,
+    required this.isBuffering,
     required this.speed,
     required this.repeatCount,
     required this.canNext,
     required this.canPrevious,
     required this.queueLength,
+    required this.position,
+    required this.bufferedPosition,
+    required this.duration,
   });
 
   const AyahAudioState.initial()
       : currentAyah = null,
         isPlaying = false,
+        isBuffering = false,
         speed = 1.0,
         repeatCount = 0,
         canNext = false,
         canPrevious = false,
-        queueLength = 0;
+        queueLength = 0,
+        position = Duration.zero,
+        bufferedPosition = Duration.zero,
+        duration = null;
 
   final AyahRef? currentAyah;
   final bool isPlaying;
+  final bool isBuffering;
   final double speed;
   final int repeatCount;
   final bool canNext;
   final bool canPrevious;
   final int queueLength;
+  final Duration position;
+  final Duration bufferedPosition;
+  final Duration? duration;
 
   bool get hasActiveAyah => currentAyah != null;
 }
@@ -63,6 +75,7 @@ abstract class AyahAudioService {
   Stream<String> get errorStream;
   AyahAudioState get currentState;
 
+  Future<void> updateSource(AyahAudioSource source, {bool stopPlayback = true});
   Future<void> playAyah(int surah, int ayah);
   Future<void> playFrom(int surah, int ayah);
   Future<void> pause();
@@ -70,6 +83,7 @@ abstract class AyahAudioService {
   Future<void> stop();
   Future<void> next();
   Future<void> previous();
+  Future<void> seekTo(Duration position);
   Future<void> setSpeed(double speed);
   Future<void> setRepeatCount(int repeatCount);
   Future<void> dispose();
@@ -85,6 +99,23 @@ class AyahAudioStreamConfig {
   final int bitrate;
 }
 
+class AudioOperationQueue {
+  Future<void> _tail = Future<void>.value();
+
+  Future<void> run(Future<void> Function() operation) {
+    final completer = Completer<void>();
+    _tail = _tail.catchError((_) {}).then((_) async {
+      try {
+        await operation();
+        completer.complete();
+      } catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      }
+    });
+    return completer.future;
+  }
+}
+
 class JustAudioAyahAudioService implements AyahAudioService {
   JustAudioAyahAudioService({
     required AudioPlayer audioPlayer,
@@ -98,10 +129,26 @@ class JustAudioAyahAudioService implements AyahAudioService {
       _audioPlayer.playerStateStream.listen((_) {
         _syncState();
       }),
+      _audioPlayer.positionStream.listen((_) {
+        _syncState();
+      }),
+      _audioPlayer.bufferedPositionStream.listen((_) {
+        _syncState();
+      }),
+      _audioPlayer.durationStream.listen((_) {
+        _syncState();
+      }),
       _audioPlayer.playbackEventStream.listen(
         (_) {},
         onError: (Object error, StackTrace stackTrace) {
-          _emitError(error.toString());
+          final message = error.toString();
+          _emitError(message);
+          final normalized = message.toLowerCase();
+          if (normalized.contains('operation aborted') ||
+              normalized.contains('bufferingprogress')) {
+            _syncState();
+            return;
+          }
           unawaited(stop());
         },
       ),
@@ -110,17 +157,19 @@ class JustAudioAyahAudioService implements AyahAudioService {
   }
 
   final AudioPlayer _audioPlayer;
-  final AyahAudioSource _source;
+  AyahAudioSource _source;
   final StreamController<AyahAudioState> _stateController =
       StreamController<AyahAudioState>.broadcast();
   final StreamController<String> _errorController =
       StreamController<String>.broadcast();
   late final List<StreamSubscription<dynamic>> _playerSubscriptions;
+  final AudioOperationQueue _operationQueue = AudioOperationQueue();
 
   AyahAudioState _state = const AyahAudioState.initial();
   List<AyahRef> _timeline = const <AyahRef>[];
   double _speed = 1.0;
   int _repeatCount = 0;
+  bool _isDisposed = false;
 
   @override
   Stream<AyahAudioState> get stateStream async* {
@@ -135,116 +184,201 @@ class JustAudioAyahAudioService implements AyahAudioService {
   AyahAudioState get currentState => _state;
 
   @override
-  Future<void> playAyah(int surah, int ayah) async {
-    final ayahCount = ayahCountForSurah(surah);
-    if (ayah < 1 || ayah > ayahCount) {
-      throw RangeError.range(ayah, 1, ayahCount, 'ayah');
-    }
-    final timeline = _buildTimeline(
-      <AyahRef>[
-        AyahRef(surah: surah, ayah: ayah),
-      ],
-    );
-    await _startTimeline(timeline, autoPlay: true);
+  Future<void> updateSource(
+    AyahAudioSource source, {
+    bool stopPlayback = true,
+  }) {
+    return _runSerialized(() async {
+      _source = source;
+      if (stopPlayback) {
+        await _stopInternal();
+        return;
+      }
+      _syncState();
+    });
   }
 
   @override
-  Future<void> playFrom(int surah, int ayah) async {
-    final ayahCount = ayahCountForSurah(surah);
-    if (ayah < 1 || ayah > ayahCount) {
-      throw RangeError.range(ayah, 1, ayahCount, 'ayah');
-    }
-    final queue = <AyahRef>[
-      for (var currentAyah = ayah; currentAyah <= ayahCount; currentAyah++)
-        AyahRef(surah: surah, ayah: currentAyah),
-    ];
-    await _startTimeline(_buildTimeline(queue), autoPlay: true);
+  Future<void> playAyah(int surah, int ayah) {
+    return _runSerialized(() async {
+      final ayahCount = ayahCountForSurah(surah);
+      if (ayah < 1 || ayah > ayahCount) {
+        throw RangeError.range(ayah, 1, ayahCount, 'ayah');
+      }
+      final timeline = _buildTimeline(
+        <AyahRef>[
+          AyahRef(surah: surah, ayah: ayah),
+        ],
+      );
+      await _startTimelineInternal(timeline, autoPlay: true);
+    });
   }
 
   @override
-  Future<void> pause() async {
-    await _audioPlayer.pause();
-    _syncState();
+  Future<void> playFrom(int surah, int ayah) {
+    return _runSerialized(() async {
+      final ayahCount = ayahCountForSurah(surah);
+      if (ayah < 1 || ayah > ayahCount) {
+        throw RangeError.range(ayah, 1, ayahCount, 'ayah');
+      }
+      final queue = <AyahRef>[
+        for (var currentAyah = ayah; currentAyah <= ayahCount; currentAyah++)
+          AyahRef(surah: surah, ayah: currentAyah),
+      ];
+      await _startTimelineInternal(_buildTimeline(queue), autoPlay: true);
+    });
   }
 
   @override
-  Future<void> resume() async {
-    if (_timeline.isEmpty) {
-      return;
-    }
-    await _audioPlayer.play();
-    _syncState();
+  Future<void> pause() {
+    return _runSerialized(() async {
+      await _audioPlayer.pause();
+      _syncState();
+    });
   }
 
   @override
-  Future<void> stop() async {
+  Future<void> resume() {
+    return _runSerialized(() async {
+      if (_timeline.isEmpty) {
+        return;
+      }
+      await _audioPlayer.play();
+      _syncState();
+    });
+  }
+
+  @override
+  Future<void> stop() {
+    return _runSerialized(_stopInternal);
+  }
+
+  Future<void> _stopInternal() async {
     _timeline = const <AyahRef>[];
-    await _audioPlayer.stop();
+    try {
+      await _audioPlayer.stop();
+    } catch (error) {
+      _emitError(error.toString());
+      try {
+        await _audioPlayer.pause();
+      } catch (_) {
+        // Ignore secondary stop/pause failures from platform plugin.
+      }
+    }
     _syncState();
   }
 
   @override
-  Future<void> next() async {
-    final currentIndex = _resolvedCurrentIndex();
-    final targetIndex = _nextDistinctIndexFrom(currentIndex);
-    if (targetIndex == null) {
-      return;
-    }
-    await _seekToDistinctIndex(targetIndex);
+  Future<void> next() {
+    return _runSerialized(() async {
+      final currentIndex = _resolvedCurrentIndex();
+      final targetIndex = _nextDistinctIndexFrom(currentIndex);
+      if (targetIndex == null) {
+        return;
+      }
+      await _seekToDistinctIndexInternal(targetIndex);
+    });
   }
 
   @override
-  Future<void> previous() async {
-    final currentIndex = _resolvedCurrentIndex();
-    final targetIndex = _previousDistinctIndexFrom(currentIndex);
-    if (targetIndex == null) {
-      return;
-    }
-    await _seekToDistinctIndex(targetIndex);
+  Future<void> previous() {
+    return _runSerialized(() async {
+      final currentIndex = _resolvedCurrentIndex();
+      final targetIndex = _previousDistinctIndexFrom(currentIndex);
+      if (targetIndex == null) {
+        return;
+      }
+      await _seekToDistinctIndexInternal(targetIndex);
+    });
   }
 
   @override
-  Future<void> setSpeed(double speed) async {
-    if (speed <= 0) {
-      throw RangeError.value(speed, 'speed', 'Speed must be > 0.');
-    }
-    _speed = speed;
-    await _audioPlayer.setSpeed(speed);
-    _syncState();
+  Future<void> seekTo(Duration position) {
+    return _runSerialized(() async {
+      if (_timeline.isEmpty) {
+        return;
+      }
+      final totalDuration = _audioPlayer.duration;
+      var safePosition = position;
+      if (safePosition < Duration.zero) {
+        safePosition = Duration.zero;
+      }
+      if (totalDuration != null && safePosition > totalDuration) {
+        safePosition = totalDuration;
+      }
+      try {
+        await _audioPlayer.seek(safePosition);
+        _syncState();
+      } catch (error) {
+        _emitError(error.toString());
+        await _stopInternal();
+      }
+    });
   }
 
   @override
-  Future<void> setRepeatCount(int repeatCount) async {
-    if (repeatCount < 0 || repeatCount > 3) {
-      throw RangeError.range(repeatCount, 0, 3, 'repeatCount');
-    }
-    if (_repeatCount == repeatCount) {
-      return;
-    }
-    _repeatCount = repeatCount;
-
-    if (_timeline.isEmpty) {
+  Future<void> setSpeed(double speed) {
+    return _runSerialized(() async {
+      if (speed <= 0) {
+        throw RangeError.value(speed, 'speed', 'Speed must be > 0.');
+      }
+      _speed = speed;
+      try {
+        await _audioPlayer.setSpeed(speed);
+      } catch (error) {
+        _emitError(error.toString());
+      }
       _syncState();
-      return;
-    }
+    });
+  }
 
-    final remainingQueue = _remainingDistinctQueueFromCurrent();
-    if (remainingQueue.isEmpty) {
-      _syncState();
-      return;
-    }
-    final wasPlaying = _audioPlayer.playing;
-    await _startTimeline(_buildTimeline(remainingQueue), autoPlay: wasPlaying);
+  @override
+  Future<void> setRepeatCount(int repeatCount) {
+    return _runSerialized(() async {
+      if (repeatCount < 0 || repeatCount > 3) {
+        throw RangeError.range(repeatCount, 0, 3, 'repeatCount');
+      }
+      if (_repeatCount == repeatCount) {
+        return;
+      }
+      _repeatCount = repeatCount;
+
+      if (_timeline.isEmpty) {
+        _syncState();
+        return;
+      }
+
+      final remainingQueue = _remainingDistinctQueueFromCurrent();
+      if (remainingQueue.isEmpty) {
+        _syncState();
+        return;
+      }
+      final wasPlaying = _audioPlayer.playing;
+      await _startTimelineInternal(
+        _buildTimeline(remainingQueue),
+        autoPlay: wasPlaying,
+      );
+    });
   }
 
   @override
   Future<void> dispose() async {
-    for (final sub in _playerSubscriptions) {
-      await sub.cancel();
+    if (_isDisposed) {
+      return;
     }
-    await _audioPlayer.dispose();
-    await _stateController.close();
-    await _errorController.close();
+    _isDisposed = true;
+    await _operationQueue.run(() async {
+      for (final sub in _playerSubscriptions) {
+        await sub.cancel();
+      }
+      try {
+        await _audioPlayer.dispose();
+      } catch (_) {
+        // Best effort disposal; avoid bubbling plugin teardown failures.
+      }
+      await _stateController.close();
+      await _errorController.close();
+    });
   }
 
   List<AyahRef> _buildTimeline(List<AyahRef> queue) {
@@ -262,12 +396,12 @@ class JustAudioAyahAudioService implements AyahAudioService {
     return timeline;
   }
 
-  Future<void> _startTimeline(
+  Future<void> _startTimelineInternal(
     List<AyahRef> timeline, {
     required bool autoPlay,
   }) async {
     if (timeline.isEmpty) {
-      await stop();
+      await _stopInternal();
       return;
     }
 
@@ -293,11 +427,11 @@ class JustAudioAyahAudioService implements AyahAudioService {
       _syncState();
     } catch (error) {
       _emitError(error.toString());
-      await stop();
+      await _stopInternal();
     }
   }
 
-  Future<void> _seekToDistinctIndex(int index) async {
+  Future<void> _seekToDistinctIndexInternal(int index) async {
     final wasPlaying = _audioPlayer.playing;
     try {
       await _audioPlayer.seek(Duration.zero, index: index);
@@ -307,7 +441,7 @@ class JustAudioAyahAudioService implements AyahAudioService {
       _syncState();
     } catch (error) {
       _emitError(error.toString());
-      await stop();
+      await _stopInternal();
     }
   }
 
@@ -384,11 +518,16 @@ class JustAudioAyahAudioService implements AyahAudioService {
     final state = AyahAudioState(
       currentAyah: currentAyah,
       isPlaying: _audioPlayer.playing,
+      isBuffering: _audioPlayer.processingState == ProcessingState.loading ||
+          _audioPlayer.processingState == ProcessingState.buffering,
       speed: _speed,
       repeatCount: _repeatCount,
       canNext: _nextDistinctIndexFrom(currentIndex) != null,
       canPrevious: _previousDistinctIndexFrom(currentIndex) != null,
       queueLength: _timeline.length,
+      position: _audioPlayer.position,
+      bufferedPosition: _audioPlayer.bufferedPosition,
+      duration: _audioPlayer.duration,
     );
     _state = state;
     if (!_stateController.isClosed) {
@@ -401,6 +540,19 @@ class JustAudioAyahAudioService implements AyahAudioService {
       return;
     }
     _errorController.add(message);
+  }
+
+  Future<void> _runSerialized(Future<void> Function() operation) {
+    if (_isDisposed) {
+      return Future<void>.value();
+    }
+    return _operationQueue.run(() async {
+      try {
+        await operation();
+      } catch (error) {
+        _emitError(error.toString());
+      }
+    });
   }
 }
 
@@ -424,6 +576,12 @@ class NoopAyahAudioService implements AyahAudioService {
   AyahAudioState get currentState => _state;
 
   @override
+  Future<void> updateSource(
+    AyahAudioSource source, {
+    bool stopPlayback = true,
+  }) async {}
+
+  @override
   Future<void> next() async {}
 
   @override
@@ -442,15 +600,22 @@ class NoopAyahAudioService implements AyahAudioService {
   Future<void> resume() async {}
 
   @override
+  Future<void> seekTo(Duration position) async {}
+
+  @override
   Future<void> setRepeatCount(int repeatCount) async {
     _state = AyahAudioState(
       currentAyah: _state.currentAyah,
       isPlaying: _state.isPlaying,
+      isBuffering: _state.isBuffering,
       speed: _state.speed,
       repeatCount: repeatCount,
       canNext: _state.canNext,
       canPrevious: _state.canPrevious,
       queueLength: _state.queueLength,
+      position: _state.position,
+      bufferedPosition: _state.bufferedPosition,
+      duration: _state.duration,
     );
     _stateController.add(_state);
   }
@@ -460,11 +625,15 @@ class NoopAyahAudioService implements AyahAudioService {
     _state = AyahAudioState(
       currentAyah: _state.currentAyah,
       isPlaying: _state.isPlaying,
+      isBuffering: _state.isBuffering,
       speed: speed,
       repeatCount: _state.repeatCount,
       canNext: _state.canNext,
       canPrevious: _state.canPrevious,
       queueLength: _state.queueLength,
+      position: _state.position,
+      bufferedPosition: _state.bufferedPosition,
+      duration: _state.duration,
     );
     _stateController.add(_state);
   }
