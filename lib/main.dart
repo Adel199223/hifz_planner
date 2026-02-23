@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app_preferences.dart';
 import 'app/router.dart';
+import 'l10n/app_language.dart';
 import 'theme/quran_themes.dart';
 
 void main() {
@@ -25,6 +27,15 @@ class HifzPlannerApp extends ConsumerWidget {
       themeMode: preferences.theme == AppThemeChoice.dark
           ? ThemeMode.dark
           : ThemeMode.light,
+      locale: preferences.language.locale,
+      supportedLocales: AppLanguage.values
+          .map((language) => language.locale)
+          .toList(growable: false),
+      localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       routerConfig: router,
     );
   }

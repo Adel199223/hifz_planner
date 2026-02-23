@@ -12,6 +12,7 @@ import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/services/qurancom_api.dart';
 import '../l10n/app_language.dart';
+import '../l10n/app_strings.dart';
 import '../ui/qcf/qcf_font_manager.dart';
 import '../ui/tajweed/tajweed_colors.dart';
 import '../ui/tajweed/tajweed_markup.dart';
@@ -37,8 +38,6 @@ const double _mushafUnderlineTabIndicator = 2;
 const double _readerTopRightMenuClearance = 64;
 const double _verseByVerseWordGap = 4;
 const double _verseByVerseWordRunSpacing = 8;
-const String _mushafBasmalaTranslation =
-    'In the Name of Allah - the Most Compassionate, Most Merciful';
 const int _translationResourceEnglish = 85;
 const int _translationResourceFrench = 31;
 const int _translationResourcePortuguese = 43;
@@ -137,6 +136,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   String? _lastMushafInteractionWarningKey;
   bool _pendingMushafScrollReset = false;
   Timer? _jumpHighlightTimer;
+
+  AppStrings get _strings =>
+      AppStrings.of(ref.read(appPreferencesProvider).language);
 
   @override
   void initState() {
@@ -322,13 +324,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       final targetPage = targetAyah?.pageMadina;
       if (targetPage == null) {
         if (showMissingTargetMessage) {
-          _showSnackBar('Target ayah has no page metadata yet.');
+          _showSnackBar(_strings.targetAyahNoPageMetadataYet);
         }
         targetForJump = null;
       } else if (!pages.contains(targetPage)) {
         if (showMissingTargetMessage) {
-          _showSnackBar(
-              'Target ayah page is not available in imported metadata.');
+          _showSnackBar(_strings.targetAyahPageUnavailable);
         }
         targetForJump = null;
       } else {
@@ -502,7 +503,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       setState(() {
         _arabicRenderMode = _ArabicRenderMode.plain;
       });
-      _showSnackBar('Tajweed tags unavailable. Showing plain text.');
+      _showSnackBar(_strings.tajweedTagsUnavailableShowingPlain);
     }
   }
 
@@ -560,7 +561,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
     final page = _firstMadinaPage(ayahs);
     if (page == null) {
-      _showSnackBar('No page metadata found for Surah $surah.');
+      _showSnackBar(_strings.noPageMetadataForSurah(surah));
       return;
     }
 
@@ -581,7 +582,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       return;
     }
     if (page == null) {
-      _showSnackBar('No page metadata found for $surah:$ayah.');
+      _showSnackBar(_strings.noPageMetadataForSurahAyah(surah, ayah));
       return;
     }
     setState(() {
@@ -663,7 +664,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   String _surahLabelFor(int surahNumber) {
     final enName = _surahNamesEn[surahNumber];
     if (enName == null || enName.trim().isEmpty) {
-      return '$surahNumber. Surah $surahNumber';
+      return '$surahNumber. ${_strings.surahLabel(surahNumber)}';
     }
     return '$surahNumber. $enName';
   }
@@ -683,7 +684,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   String _translationResourceLabelForId(int resourceId) {
-    return _translationResourceLabelById[resourceId] ?? 'Translation';
+    return _translationResourceLabelById[resourceId] ?? _strings.translation;
   }
 
   String _ayahKey(AyahData ayah) => '${ayah.surah}:${ayah.ayah}';
@@ -787,10 +788,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         _pendingJumpTarget = null;
       });
       if (_mode == _ReaderMode.page) {
-        _showSnackBar('Target ayah is not visible on the selected page.');
+        _showSnackBar(_strings.targetAyahNotVisibleOnSelectedPage);
       } else {
         _showSnackBar(
-          'Ayah ${pendingTarget.ayah} was not found in Surah ${pendingTarget.surah}.',
+          _strings.ayahNotFoundInSurah(
+            pendingTarget.ayah,
+            pendingTarget.surah,
+          ),
         );
       }
       return;
@@ -903,20 +907,20 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ListTile(
                 key: const ValueKey('action_bookmark'),
                 leading: const Icon(Icons.bookmark_add_outlined),
-                title: const Text('Bookmark verse'),
+                title: Text(_strings.bookmarkVerse),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(_AyahAction.bookmark),
               ),
               ListTile(
                 key: const ValueKey('action_note'),
                 leading: const Icon(Icons.note_alt_outlined),
-                title: const Text('Add/Edit note'),
+                title: Text(_strings.addEditNote),
                 onTap: () => Navigator.of(sheetContext).pop(_AyahAction.note),
               ),
               ListTile(
                 key: const ValueKey('action_copy'),
                 leading: const Icon(Icons.copy_outlined),
-                title: const Text('Copy text (Uthmani)'),
+                title: Text(_strings.copyTextUthmani),
                 onTap: () => Navigator.of(sheetContext).pop(_AyahAction.copy),
               ),
             ],
@@ -950,7 +954,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         ayah: ayah.ayah,
       );
       if (existing != null) {
-        _showSnackBar('Verse already bookmarked.');
+        _showSnackBar(_strings.verseAlreadyBookmarked);
         return;
       }
 
@@ -958,9 +962,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         surah: ayah.surah,
         ayah: ayah.ayah,
       );
-      _showSnackBar('Bookmark saved.');
+      _showSnackBar(_strings.bookmarkSaved);
     } catch (_) {
-      _showSnackBar('Failed to save bookmark.');
+      _showSnackBar(_strings.failedToSaveBookmark);
     }
   }
 
@@ -985,22 +989,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           title: draft.title,
           body: draft.body,
         );
-        _showSnackBar('Note added.');
+        _showSnackBar(_strings.noteAdded);
       } else {
         final updated = await noteRepo.updateNote(
           id: existing.id,
           title: draft.title,
           body: draft.body,
         );
-        _showSnackBar(updated ? 'Note updated.' : 'Note update failed.');
+        _showSnackBar(
+            updated ? _strings.noteUpdated : _strings.noteUpdateFailed);
       }
     } catch (_) {
-      _showSnackBar('Failed to save note.');
+      _showSnackBar(_strings.noteSaveFailed);
     }
   }
 
   Future<void> _copyText(AyahData ayah) async {
-    _showSnackBar('Copied verse text.');
+    _showSnackBar(_strings.copiedVerseText);
     unawaited(
       Clipboard.setData(
         ClipboardData(text: ayah.textUthmani),
@@ -1011,10 +1016,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<_NoteDraft?> _showNoteDialog(NoteData? existing) async {
+    final strings = _strings;
     return showDialog<_NoteDraft>(
       context: context,
       builder: (dialogContext) {
-        return _ReaderNoteEditorDialog(existing: existing);
+        return _ReaderNoteEditorDialog(
+          existing: existing,
+          strings: strings,
+        );
       },
     );
   }
@@ -1062,7 +1071,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Future<void> _handleMushafVerseTap(String verseKey) async {
     final ayah = _mushafAyahLookupByVerseKey[verseKey];
     if (ayah == null) {
-      _showSnackBar('Verse actions unavailable for this page data.');
+      _showSnackBar(_strings.verseActionsUnavailable);
       return;
     }
 
@@ -1302,7 +1311,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             verseData,
             translationResourceId: translationResourceId,
           ) ??
-          'Translation unavailable',
+          _strings.translationUnavailable,
     );
   }
 
@@ -1461,6 +1470,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildVerseByVersePanel() {
     final ayahsFuture = _ayahsFuture;
     final preferences = ref.watch(appPreferencesProvider);
+    final strings = AppStrings.of(preferences.language);
     final translationResourceId =
         _translationResourceIdForLanguage(preferences.language);
     if (ayahsFuture == null) {
@@ -1479,12 +1489,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Failed to load ayahs.'),
+                Text(strings.failedToLoadAyahs),
                 const SizedBox(height: 8),
                 OutlinedButton(
                   key: const ValueKey('reader_retry_button'),
                   onPressed: _refreshCurrentView,
-                  child: const Text('Retry'),
+                  child: Text(strings.retry),
                 ),
               ],
             ),
@@ -1494,17 +1504,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         final ayahs = snapshot.data ?? const <AyahData>[];
         if (ayahs.isEmpty) {
           if (_mode == _ReaderMode.page && _selectedPage == null) {
-            return const Center(
+            return Center(
               child: Text(
-                'No page metadata found. Import Page Metadata in Settings.',
+                strings.noPageMetadataImportInSettings,
               ),
             );
           }
           return Center(
             child: Text(
               _mode == _ReaderMode.surah
-                  ? 'No ayahs found for Surah $_selectedSurah.'
-                  : 'No ayahs found for Page $_selectedPage.',
+                  ? strings.noAyahsForSurah(_selectedSurah)
+                  : strings.noAyahsForPage(_selectedPage),
             ),
           );
         }
@@ -1562,7 +1572,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       ayah: ayah,
                       ayahKey: ayahKey,
                       renderData: null,
-                      translationText: 'Translation unavailable',
+                      translationText: strings.translationUnavailable,
                     );
                   }
 
@@ -1613,8 +1623,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
 
     final chapter = firstAyah.surah;
-    final transliterated = _surahNamesEn[chapter] ?? 'Surah $chapter';
-    final translated = 'Surah $chapter';
+    final transliterated =
+        _surahNamesEn[chapter] ?? _strings.surahLabel(chapter);
+    final translated = _strings.surahLabel(chapter);
     final showBasmala = chapter != 1 && chapter != 9;
     final colorScheme = Theme.of(context).colorScheme;
     final headerTitleStyle =
@@ -1680,7 +1691,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                _mushafBasmalaTranslation,
+                _strings.basmalaTranslation,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.7),
@@ -1793,37 +1804,37 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           IconButton(
             key: ValueKey('reader_verse_action_play_$ayahKey'),
             icon: const Icon(Icons.play_arrow_rounded),
-            tooltip: 'Listen',
-            onPressed: () => _showSnackBar('Audio controls are coming soon.'),
+            tooltip: _strings.listen,
+            onPressed: () => _showSnackBar(_strings.audioControlsComingSoon),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_bookmark_$ayahKey'),
             icon: const Icon(Icons.bookmark_border),
-            tooltip: 'Bookmark',
+            tooltip: _strings.bookmarkVerse,
             onPressed: () => unawaited(_bookmarkAyah(ayah)),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_copy_$ayahKey'),
             icon: const Icon(Icons.copy_outlined),
-            tooltip: 'Copy',
+            tooltip: _strings.copy,
             onPressed: () => unawaited(_copyText(ayah)),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_share_$ayahKey'),
             icon: const Icon(Icons.share_outlined),
-            tooltip: 'Share',
-            onPressed: () => _showSnackBar('Share is coming soon.'),
+            tooltip: _strings.share,
+            onPressed: () => _showSnackBar(_strings.shareComingSoon),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_note_$ayahKey'),
             icon: const Icon(Icons.edit_note_outlined),
-            tooltip: 'Add/Edit note',
+            tooltip: _strings.addEditNote,
             onPressed: () => unawaited(_addOrEditNote(ayah)),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_more_$ayahKey'),
             icon: const Icon(Icons.more_horiz),
-            tooltip: 'More',
+            tooltip: _strings.more,
             onPressed: () => unawaited(_showAyahActions(ayah)),
           ),
         ],
@@ -1847,25 +1858,25 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           _buildVerseByVerseBottomActionChip(
             key: ValueKey('reader_verse_tafsir_$ayahKey'),
             icon: Icons.menu_book_outlined,
-            label: 'Tafsirs',
+            label: _strings.tafsirs,
             style: rowStyle,
-            onTap: () => _showSnackBar('Tafsirs are coming soon.'),
+            onTap: () => _showSnackBar(_strings.tafsirsComingSoon),
           ),
           const SizedBox(width: 16),
           _buildVerseByVerseBottomActionChip(
             key: ValueKey('reader_verse_lessons_$ayahKey'),
             icon: Icons.school_outlined,
-            label: 'Lessons',
+            label: _strings.lessons,
             style: rowStyle,
-            onTap: () => _showSnackBar('Lessons are coming soon.'),
+            onTap: () => _showSnackBar(_strings.lessonsComingSoon),
           ),
           const SizedBox(width: 16),
           _buildVerseByVerseBottomActionChip(
             key: ValueKey('reader_verse_reflections_$ayahKey'),
             icon: Icons.chat_bubble_outline,
-            label: 'Reflections',
+            label: _strings.reflections,
             style: rowStyle,
-            onTap: () => _showSnackBar('Reflections are coming soon.'),
+            onTap: () => _showSnackBar(_strings.reflectionsComingSoon),
           ),
         ],
       ),
@@ -1987,14 +1998,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         children: [
           const Icon(Icons.bookmark_border, size: 18),
           const SizedBox(width: 8),
-          Text('Page $pageNumber', key: const ValueKey('reader_page_label')),
+          Text(
+            _strings.pageLabel(pageNumber),
+            key: const ValueKey('reader_page_label'),
+          ),
           if (meta?.juzNumber != null) ...[
             const SizedBox(width: 12),
-            Text('Juz ${meta!.juzNumber}', style: subduedStyle),
+            Text(_strings.juzLabel(meta!.juzNumber!), style: subduedStyle),
           ],
           if (meta?.hizbNumber != null) ...[
             const SizedBox(width: 12),
-            Text('Hizb ${meta!.hizbNumber}', style: subduedStyle),
+            Text(_strings.hizbLabel(meta!.hizbNumber!), style: subduedStyle),
           ],
         ],
       ),
@@ -2005,8 +2019,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required int translationResourceId,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final translationLabel =
-        'Translation: ${_translationResourceLabelForId(translationResourceId)}';
+    final translationLabel = _strings.translationLabel(
+      _translationResourceLabelForId(translationResourceId),
+    );
     final topActionsEndInset = _readerTopActionsEndInset();
 
     return Padding(
@@ -2024,7 +2039,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     key: const ValueKey('reader_verse_listen_button'),
                     onPressed: null,
                     icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('Listen'),
+                    label: Text(_strings.listen),
                   ),
                   const SizedBox(width: 8),
                   OutlinedButton(
@@ -2045,9 +2060,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text(
-                      'Tajweed colors',
-                      key: ValueKey('reader_verse_tajweed_colors'),
+                    child: Text(
+                      _strings.tajweedColors,
+                      key: const ValueKey('reader_verse_tajweed_colors'),
                     ),
                   ),
                 ],
@@ -2058,7 +2073,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           IconButton(
             key: const ValueKey('reader_verse_settings_button'),
             icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
-            tooltip: _mushafSettingsOpen ? 'Close settings' : 'Open settings',
+            tooltip: _mushafSettingsOpen
+                ? _strings.closeSettings
+                : _strings.openSettings,
             onPressed: () {
               setState(() {
                 _setMushafSettingsOpen(!_mushafSettingsOpen);
@@ -2088,7 +2105,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Failed to load Mushaf page.'),
+                Text(_strings.failedToLoadMushafPage),
                 const SizedBox(height: 8),
                 OutlinedButton(
                   key: const ValueKey('reader_mushaf_retry_button'),
@@ -2097,7 +2114,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       _invalidateMushafFuture();
                     });
                   },
-                  child: const Text('Retry'),
+                  child: Text(_strings.retry),
                 ),
               ],
             ),
@@ -2106,7 +2123,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
         final data = snapshot.data;
         if (data == null) {
-          return const Center(child: Text('No Mushaf data available.'));
+          return Center(child: Text(_strings.noMushafDataAvailable));
         }
         if (_pendingMushafScrollReset) {
           _resetMushafScrollToTop();
@@ -2123,7 +2140,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         }
         final chapterHeader = _buildMushafExternalChapterHeader(data.pageData);
         if (displayLines.isEmpty) {
-          return const Center(child: Text('No Mushaf text available.'));
+          return Center(child: Text(_strings.noMushafTextAvailable));
         }
 
         return Column(
@@ -2273,14 +2290,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         children: [
           const Icon(Icons.bookmark_border, size: 18),
           const SizedBox(width: 8),
-          Text('Page $pageNumber', key: const ValueKey('reader_page_label')),
+          Text(
+            _strings.pageLabel(pageNumber),
+            key: const ValueKey('reader_page_label'),
+          ),
           if (meta.juzNumber != null) ...[
             const SizedBox(width: 12),
-            Text('Juz ${meta.juzNumber}', style: subduedStyle),
+            Text(_strings.juzLabel(meta.juzNumber!), style: subduedStyle),
           ],
           if (meta.hizbNumber != null) ...[
             const SizedBox(width: 12),
-            Text('Hizb ${meta.hizbNumber}', style: subduedStyle),
+            Text(_strings.hizbLabel(meta.hizbNumber!), style: subduedStyle),
           ],
         ],
       ),
@@ -2305,13 +2325,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     key: const ValueKey('reader_mushaf_listen_button'),
                     onPressed: null,
                     icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('Listen'),
+                    label: Text(_strings.listen),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
                     key: const ValueKey('reader_mushaf_language_arabic'),
                     onPressed: () {},
-                    child: const Text('Arabic'),
+                    child: Text(_strings.arabic),
                   ),
                   const SizedBox(width: 6),
                   OutlinedButton(
@@ -2322,7 +2342,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                         _mushafSettingsTab = _MushafSettingsTab.translation;
                       });
                     },
-                    child: const Text('Translation'),
+                    child: Text(_strings.translation),
                   ),
                   const SizedBox(width: 10),
                   Container(
@@ -2332,9 +2352,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       color: colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text(
-                      'Tajweed colors',
-                      key: ValueKey('reader_mushaf_tajweed_colors'),
+                    child: Text(
+                      _strings.tajweedColors,
+                      key: const ValueKey('reader_mushaf_tajweed_colors'),
                     ),
                   ),
                 ],
@@ -2345,7 +2365,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           IconButton(
             key: const ValueKey('reader_mushaf_settings_button'),
             icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
-            tooltip: _mushafSettingsOpen ? 'Close settings' : 'Open settings',
+            tooltip: _mushafSettingsOpen
+                ? _strings.closeSettings
+                : _strings.openSettings,
             onPressed: () {
               setState(() {
                 _setMushafSettingsOpen(!_mushafSettingsOpen);
@@ -2422,8 +2444,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       return null;
     }
 
-    final transliterated = _surahNamesEn[chapter] ?? 'Surah $chapter';
-    final translated = 'Surah $chapter';
+    final transliterated =
+        _surahNamesEn[chapter] ?? _strings.surahLabel(chapter);
+    final translated = _strings.surahLabel(chapter);
     final showBasmala = chapter != 1 && chapter != 9;
     final colorScheme = Theme.of(context).colorScheme;
     final headerTitleStyle =
@@ -2490,7 +2513,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                _mushafBasmalaTranslation,
+                _strings.basmalaTranslation,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.7),
@@ -2749,7 +2772,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (translation.isNotEmpty) {
       return translation;
     }
-    return 'Translation unavailable';
+    return _strings.translationUnavailable;
   }
 
   Future<void> _showMushafWordPopover({
@@ -2766,7 +2789,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           key: ValueKey('reader_mushaf_word_popover_${lineNumber}_$wordIndex'),
-          title: const Text('Word'),
+          title: Text(_strings.word),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2781,14 +2804,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text('Verse: ${lineWord.verseKey ?? 'Unknown'}'),
+              Text(
+                '${_strings.verse}: ${lineWord.verseKey ?? _strings.unknown}',
+              ),
             ],
           ),
           actions: [
             TextButton(
               key: const ValueKey('reader_mushaf_word_popover_close'),
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Close'),
+              child: Text(_strings.close),
             ),
           ],
         );
@@ -2910,16 +2935,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildMushafViewToggle() {
     return _buildMushafPillSwitch<_ReaderViewMode>(
       key: const ValueKey('reader_view_toggle'),
-      options: const [
+      options: [
         _MushafControlOption<_ReaderViewMode>(
           value: _ReaderViewMode.simple,
-          label: 'Verse by Verse',
-          optionKey: ValueKey('reader_mushaf_view_simple'),
+          label: _strings.verseByVerse,
+          optionKey: const ValueKey('reader_mushaf_view_simple'),
         ),
         _MushafControlOption<_ReaderViewMode>(
           value: _ReaderViewMode.mushaf,
-          label: 'Reading',
-          optionKey: ValueKey('reader_mushaf_view_mushaf'),
+          label: _strings.reading,
+          optionKey: const ValueKey('reader_mushaf_view_mushaf'),
         ),
       ],
       selectedValue: _viewMode,
@@ -2930,26 +2955,26 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildMushafNavTabs() {
     return _buildMushafPillSwitch<_MushafNavTab>(
       key: const ValueKey('reader_mushaf_nav_tabs'),
-      options: const [
+      options: [
         _MushafControlOption<_MushafNavTab>(
           value: _MushafNavTab.surah,
-          label: 'Surah',
-          optionKey: ValueKey('reader_mushaf_nav_tab_surah'),
+          label: _strings.surah,
+          optionKey: const ValueKey('reader_mushaf_nav_tab_surah'),
         ),
         _MushafControlOption<_MushafNavTab>(
           value: _MushafNavTab.verse,
-          label: 'Verse',
-          optionKey: ValueKey('reader_mushaf_nav_tab_verse'),
+          label: _strings.verse,
+          optionKey: const ValueKey('reader_mushaf_nav_tab_verse'),
         ),
         _MushafControlOption<_MushafNavTab>(
           value: _MushafNavTab.juz,
-          label: 'Juz',
-          optionKey: ValueKey('reader_mushaf_nav_tab_juz'),
+          label: _strings.juz,
+          optionKey: const ValueKey('reader_mushaf_nav_tab_juz'),
         ),
         _MushafControlOption<_MushafNavTab>(
           value: _MushafNavTab.page,
-          label: 'Page',
-          optionKey: ValueKey('reader_mushaf_nav_tab_page'),
+          label: _strings.page,
+          optionKey: const ValueKey('reader_mushaf_nav_tab_page'),
         ),
       ],
       selectedValue: _mushafNavTab,
@@ -2975,21 +3000,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildMushafSettingsTabs() {
     return _buildMushafUnderlineTabs<_MushafSettingsTab>(
       key: const ValueKey('reader_mushaf_settings_tabs'),
-      options: const [
+      options: [
         _MushafControlOption<_MushafSettingsTab>(
           value: _MushafSettingsTab.arabic,
-          label: 'Arabic',
-          optionKey: ValueKey('reader_mushaf_settings_tab_arabic'),
+          label: _strings.arabic,
+          optionKey: const ValueKey('reader_mushaf_settings_tab_arabic'),
         ),
         _MushafControlOption<_MushafSettingsTab>(
           value: _MushafSettingsTab.translation,
-          label: 'Translation',
-          optionKey: ValueKey('reader_mushaf_settings_tab_translation'),
+          label: _strings.translation,
+          optionKey: const ValueKey('reader_mushaf_settings_tab_translation'),
         ),
         _MushafControlOption<_MushafSettingsTab>(
           value: _MushafSettingsTab.wordByWord,
-          label: 'Word By Word',
-          optionKey: ValueKey('reader_mushaf_settings_tab_word_by_word'),
+          label: _strings.wordByWord,
+          optionKey: const ValueKey('reader_mushaf_settings_tab_word_by_word'),
         ),
       ],
       selectedValue: _mushafSettingsTab,
@@ -3007,21 +3032,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         : _MushafScriptStyleOption.uthmani;
     return _buildMushafPillSwitch<_MushafScriptStyleOption>(
       key: const ValueKey('reader_mushaf_script_tabs'),
-      options: const [
+      options: [
         _MushafControlOption<_MushafScriptStyleOption>(
           value: _MushafScriptStyleOption.uthmani,
-          label: 'Uthmani',
-          optionKey: ValueKey('reader_mushaf_script_tab_uthmani'),
+          label: _strings.uthmani,
+          optionKey: const ValueKey('reader_mushaf_script_tab_uthmani'),
         ),
         _MushafControlOption<_MushafScriptStyleOption>(
           value: _MushafScriptStyleOption.tajweed,
-          label: 'Tajweed',
-          optionKey: ValueKey('reader_mushaf_script_tab_tajweed'),
+          label: _strings.tajweed,
+          optionKey: const ValueKey('reader_mushaf_script_tab_tajweed'),
         ),
         _MushafControlOption<_MushafScriptStyleOption>(
           value: _MushafScriptStyleOption.indopak,
-          label: 'IndoPak (Soon)',
-          optionKey: ValueKey('reader_mushaf_script_tab_indopak'),
+          label: _strings.indoPakSoon,
+          optionKey: const ValueKey('reader_mushaf_script_tab_indopak'),
           enabled: false,
         ),
       ],
@@ -3338,10 +3363,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: TextField(
             key: const ValueKey('reader_mushaf_nav_surah_search'),
-            decoration: const InputDecoration(
-              hintText: 'Search Surah',
+            decoration: InputDecoration(
+              hintText: _strings.searchSurah,
               isDense: true,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
             ),
             onChanged: (value) {
               setState(() {
@@ -3393,8 +3418,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           child: DropdownButtonFormField<int>(
             key: const ValueKey('reader_mushaf_nav_verse_surah'),
             value: _verseTabSelectedSurah,
-            decoration: const InputDecoration(
-              labelText: 'Surah',
+            decoration: InputDecoration(
+              labelText: _strings.surah,
               isDense: true,
             ),
             items: [
@@ -3416,10 +3441,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
           child: TextField(
             key: const ValueKey('reader_mushaf_nav_verse_search'),
-            decoration: const InputDecoration(
-              hintText: 'Verse number',
+            decoration: InputDecoration(
+              hintText: _strings.verseNumberHint,
               isDense: true,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -3437,14 +3462,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return const Center(
-                  child: Text('Failed to load verses.'),
+                return Center(
+                  child: Text(_strings.failedToLoadVerses),
                 );
               }
               final maxAyah = snapshot.data ?? 0;
               if (maxAyah <= 0) {
-                return const Center(
-                  child: Text('No verses available for selected surah.'),
+                return Center(
+                  child: Text(_strings.noVersesAvailableForSelectedSurah),
                 );
               }
               final filteredAyahs = _filteredVerseNumbers(maxAyah);
@@ -3457,7 +3482,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     key: ValueKey(
                       'reader_mushaf_nav_verse_${_verseTabSelectedSurah}_$ayah',
                     ),
-                    title: Text('Verse $ayah'),
+                    title: Text(_strings.ayahLabel(ayah)),
                     onTap: () {
                       unawaited(
                         _jumpToVerseInMushaf(
@@ -3489,10 +3514,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: TextField(
             key: const ValueKey('reader_mushaf_nav_juz_search'),
-            decoration: const InputDecoration(
-              hintText: 'Search Juz',
+            decoration: InputDecoration(
+              hintText: _strings.searchJuz,
               isDense: true,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -3514,7 +3539,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Failed to load Juz index.'),
+                      Text(_strings.failedToLoadJuzIndex),
                       const SizedBox(height: 8),
                       OutlinedButton(
                         key: const ValueKey('reader_mushaf_nav_juz_retry'),
@@ -3523,7 +3548,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                             _juzIndexFuture = _loadMushafJuzIndex();
                           });
                         },
-                        child: const Text('Retry'),
+                        child: Text(_strings.retry),
                       ),
                     ],
                   ),
@@ -3533,8 +3558,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 snapshot.data ?? const <MushafJuzNavEntry>[],
               );
               if (entries.isEmpty) {
-                return const Center(
-                  child: Text('No Juz entries found.'),
+                return Center(
+                  child: Text(_strings.noJuzEntriesFound),
                 );
               }
               return ListView.builder(
@@ -3544,8 +3569,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   final entry = entries[index];
                   return ListTile(
                     key: ValueKey('reader_mushaf_nav_juz_${entry.juzNumber}'),
-                    title: Text('Juz ${entry.juzNumber}'),
-                    subtitle: Text('Page ${entry.page}'),
+                    title: Text(_strings.juzLabel(entry.juzNumber)),
+                    subtitle: Text(_strings.pageLabel(entry.page)),
                     onTap: () => _jumpToJuzInMushaf(entry),
                   );
                 },
@@ -3570,10 +3595,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: TextField(
             key: const ValueKey('reader_mushaf_nav_page_search'),
-            decoration: const InputDecoration(
-              hintText: 'Search Page',
+            decoration: InputDecoration(
+              hintText: _strings.searchPage,
               isDense: true,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -3595,12 +3620,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Failed to load pages.'),
+                      Text(_strings.failedToLoadPages),
                       const SizedBox(height: 8),
                       OutlinedButton(
                         key: const ValueKey('reader_page_retry_button'),
                         onPressed: _refreshCurrentView,
-                        child: const Text('Retry'),
+                        child: Text(_strings.retry),
                       ),
                     ],
                   ),
@@ -3610,8 +3635,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 snapshot.data ?? const <int>[],
               );
               if (pages.isEmpty) {
-                return const Center(
-                  child: Text('No pages available.'),
+                return Center(
+                  child: Text(_strings.noPagesAvailable),
                 );
               }
               return ListView.builder(
@@ -3622,7 +3647,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   return ListTile(
                     key: ValueKey('reader_page_$page'),
                     selected: page == _selectedPage,
-                    title: Text('Page $page'),
+                    title: Text(_strings.pageLabel(page)),
                     onTap: () => _selectPage(page),
                   );
                 },
@@ -3655,11 +3680,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 _MushafSettingsTab.arabic => _buildMushafArabicSettingsBody(),
                 _MushafSettingsTab.translation =>
                   _buildMushafScaffoldSettingsBody(
-                    'Translation settings are coming soon.',
+                    _strings.translationSettingsComingSoon,
                   ),
                 _MushafSettingsTab.wordByWord =>
                   _buildMushafScaffoldSettingsBody(
-                    'Word by Word settings are coming soon.',
+                    _strings.wordByWordSettingsComingSoon,
                   ),
               },
             ),
@@ -3672,7 +3697,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 TextButton(
                   key: const ValueKey('reader_mushaf_settings_reset'),
                   onPressed: _resetMushafSettings,
-                  child: const Text('Reset'),
+                  child: Text(_strings.reset),
                 ),
                 const Spacer(),
                 FilledButton(
@@ -3682,7 +3707,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       _setMushafSettingsOpen(false);
                     });
                   },
-                  child: const Text('Done'),
+                  child: Text(_strings.done),
                 ),
               ],
             ),
@@ -3696,9 +3721,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final previewWord = _hoveredMushafPreviewWord;
     final previewArabic =
-        previewWord?.textQpcHafs ?? previewWord?.codeV2 ?? 'Preview';
+        previewWord?.textQpcHafs ?? previewWord?.codeV2 ?? _strings.preview;
     final previewTranslation = previewWord == null
-        ? 'Translation unavailable'
+        ? _strings.translationUnavailable
         : _mushafWordTooltipMessage(previewWord);
 
     return SingleChildScrollView(
@@ -3707,7 +3732,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Preview:',
+            '${_strings.preview}:',
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 6),
@@ -3741,7 +3766,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Script style',
+            _strings.scriptStyle,
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
@@ -3751,7 +3776,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             key: const ValueKey('reader_mushaf_tajweed_toggle'),
             value: _arabicRenderMode == _ArabicRenderMode.tajweed,
             contentPadding: EdgeInsets.zero,
-            title: const Text('Show Tajweed rules while reading'),
+            title: Text(_strings.showTajweedRulesWhileReading),
             onChanged: (value) {
               _switchArabicRenderMode(
                 value == true
@@ -3764,7 +3789,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           Row(
             children: [
               Text(
-                'Font size',
+                _strings.fontSize,
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const Spacer(),
@@ -3794,11 +3819,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               color: colorScheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Selected Reciter'),
-                SizedBox(height: 6),
+                Text(_strings.selectedReciter),
+                const SizedBox(height: 6),
                 Text(
                   'Mishari Rashid al-`Afasy',
                   style: TextStyle(fontWeight: FontWeight.w600),
@@ -3967,9 +3992,11 @@ class _NoteDraft {
 class _ReaderNoteEditorDialog extends StatefulWidget {
   const _ReaderNoteEditorDialog({
     required this.existing,
+    required this.strings,
   });
 
   final NoteData? existing;
+  final AppStrings strings;
 
   @override
   State<_ReaderNoteEditorDialog> createState() =>
@@ -4009,7 +4036,7 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
     final body = _bodyController.text.trim();
     if (body.isEmpty) {
       setState(() {
-        _errorMessage = 'Body is required.';
+        _errorMessage = widget.strings.bodyRequired;
       });
       return;
     }
@@ -4026,7 +4053,11 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.existing == null ? 'Add note' : 'Edit note'),
+      title: Text(
+        widget.existing == null
+            ? widget.strings.addNote
+            : widget.strings.editNote,
+      ),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: SingleChildScrollView(
@@ -4037,8 +4068,8 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
                 key: const ValueKey('note_title_field'),
                 controller: _titleController,
                 focusNode: _titleFocusNode,
-                decoration: const InputDecoration(
-                  labelText: 'Title (optional)',
+                decoration: InputDecoration(
+                  labelText: widget.strings.noteTitleOptional,
                 ),
               ),
               const SizedBox(height: 12),
@@ -4048,8 +4079,8 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
                 focusNode: _bodyFocusNode,
                 maxLines: 6,
                 minLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Note body',
+                decoration: InputDecoration(
+                  labelText: widget.strings.noteBody,
                   alignLabelWithHint: true,
                 ),
               ),
@@ -4072,12 +4103,12 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
       actions: [
         TextButton(
           onPressed: _close,
-          child: const Text('Cancel'),
+          child: Text(widget.strings.cancel),
         ),
         FilledButton(
           key: const ValueKey('note_save_button'),
           onPressed: _save,
-          child: const Text('Save'),
+          child: Text(widget.strings.save),
         ),
       ],
     );

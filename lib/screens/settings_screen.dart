@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/app_preferences.dart';
 import '../data/providers/database_providers.dart';
+import '../l10n/app_strings.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -14,19 +16,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isImporting = false;
   double? _progressFraction;
   String? _progressDetails;
-  String _statusMessage = 'Ready to import bundled Qur\'an assets.';
+  String _statusMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _statusMessage = AppStrings.of(
+      ref.read(appPreferencesProvider).language,
+    ).readyToImportBundledQuranAssets;
+  }
 
   Future<void> _runTextImport() async {
     if (_isImporting) {
       return;
     }
 
-    _beginImport('Starting Qur\'an text import...');
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+    _beginImport(strings.startingQuranTextImport);
 
     try {
       final counts = await _loadAyahImportCounts();
       if (counts.totalAyahs > 0) {
-        _completeImport('Already imported');
+        _completeImport(strings.alreadyImported);
         return;
       }
 
@@ -48,14 +59,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
 
       final message = result.skipped
-          ? 'Import skipped: ayah table already has data.'
-          : 'Import complete: ${result.insertedRows} inserted, ${result.ignoredRows} ignored.';
+          ? strings.importSkippedAyahTableHasData
+          : strings.importCompleteSummary(
+              result.insertedRows,
+              result.ignoredRows,
+            );
 
       _completeImport(message);
     } catch (error) {
-      _completeImport(
-        'Qur\'an text import failed: ${_formatError(error)}',
-      );
+      _completeImport(strings.quranTextImportFailed(_formatError(error)));
     } finally {
       _finishImport();
     }
@@ -66,7 +78,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
 
-    _beginImport('Starting page metadata import...');
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+    _beginImport(strings.startingPageMetadataImport);
 
     try {
       final counts = await _loadAyahImportCounts();
@@ -75,7 +88,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           (counts.pageMappedAyahs == counts.totalAyahs ||
               counts.pageMappedAyahs >= nearCompleteThreshold);
       if (metadataAlreadyCurrent) {
-        _completeImport('Page metadata already up to date');
+        _completeImport(strings.pageMetadataAlreadyUpToDate);
         return;
       }
 
@@ -95,16 +108,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         return;
       }
 
-      final message =
-          'Page metadata import complete: ${result.updatedRows} updated, '
-          '${result.unchangedRows} unchanged, ${result.missingRows} missing, '
-          '${result.parsedRows} parsed.';
+      final message = strings.pageMetadataImportCompleteSummary(
+        updatedRows: result.updatedRows,
+        unchangedRows: result.unchangedRows,
+        missingRows: result.missingRows,
+        parsedRows: result.parsedRows,
+      );
 
       _completeImport(message);
     } catch (error) {
-      _completeImport(
-        'Page metadata import failed: ${_formatError(error)}',
-      );
+      _completeImport(strings.pageMetadataImportFailed(_formatError(error)));
     } finally {
       _finishImport();
     }
@@ -149,7 +162,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _completeImport(String message) {
     _updateProgress(
       fraction: 1,
-      details: 'completed',
+      details:
+          AppStrings.of(ref.read(appPreferencesProvider).language).completed,
       statusMessage: message,
     );
     _showStatusMessage(message);
@@ -189,6 +203,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final prefs = ref.watch(appPreferencesProvider);
+    final strings = AppStrings.of(prefs.language);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -196,7 +213,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Settings',
+              strings.settingsTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
@@ -207,12 +224,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 FilledButton.icon(
                   onPressed: _isImporting ? null : _runTextImport,
                   icon: const Icon(Icons.download),
-                  label: const Text('Import Qur\'an Text'),
+                  label: Text(strings.importQuranText),
                 ),
                 FilledButton.icon(
                   onPressed: _isImporting ? null : _runPageMetadataImport,
                   icon: const Icon(Icons.menu_book_outlined),
-                  label: const Text('Import Page Metadata'),
+                  label: Text(strings.importPageMetadata),
                 ),
               ],
             ),

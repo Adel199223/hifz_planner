@@ -3,15 +3,19 @@ import 'dart:ui' show PointerDeviceKind;
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hifz_planner/app/app_preferences.dart';
+import 'package:hifz_planner/app/app_preferences_store.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/bookmark_repo.dart';
 import 'package:hifz_planner/data/repositories/note_repo.dart';
 import 'package:hifz_planner/data/services/qurancom_api.dart';
 import 'package:hifz_planner/data/services/tajweed_tags_service.dart';
+import 'package:hifz_planner/l10n/app_language.dart';
 import 'package:hifz_planner/screens/reader_screen.dart';
 import 'package:hifz_planner/ui/qcf/qcf_font_manager.dart';
 
@@ -166,6 +170,119 @@ void main() {
       ),
     );
     expect(rtlAncestor, findsOneWidget);
+  });
+
+  testWidgets('reader labels localize to French terminology', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'fr'),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      locale: const Locale('fr'),
+    );
+
+    expect(find.text('Ayah par Ayah'), findsOneWidget);
+    expect(find.text('Lecture'), findsOneWidget);
+    expect(find.text('Sourate'), findsOneWidget);
+    expect(find.text('Écouter'), findsOneWidget);
+    expect(find.text('Couleurs du Tajwid'), findsOneWidget);
+    expect(find.text('Tafsirs'), findsWidgets);
+    expect(find.text('Leçons'), findsWidgets);
+    expect(find.text('Réflexions'), findsWidgets);
+  });
+
+  testWidgets('reader labels localize to Portuguese terminology',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'pt'),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      locale: const Locale('pt'),
+    );
+
+    expect(find.text('Verso por verso'), findsOneWidget);
+    expect(find.text('Lendo'), findsOneWidget);
+    expect(find.text('Surah'), findsOneWidget);
+    expect(find.text('Versículo'), findsOneWidget);
+    expect(find.text('Página'), findsWidgets);
+    expect(find.text('Ouvir'), findsOneWidget);
+    expect(find.text('Cores de Tajweed'), findsOneWidget);
+    expect(find.text('Lições'), findsWidgets);
+    expect(find.text('Reflexões'), findsWidgets);
+  });
+
+  testWidgets('reader labels localize to Arabic and app direction is RTL', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'ar'),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      locale: const Locale('ar'),
+    );
+
+    expect(find.text('آية بآية'), findsOneWidget);
+    expect(find.text('القراءة'), findsOneWidget);
+    expect(find.text('سورة'), findsOneWidget);
+    expect(find.text('استمع'), findsOneWidget);
+    expect(find.text('ألوان التجويد'), findsOneWidget);
+    expect(find.text('تفاسير'), findsWidgets);
+    expect(find.text('فوائد'), findsWidgets);
+    expect(find.text('تدبرات'), findsWidgets);
+
+    final context =
+        tester.element(find.byKey(const ValueKey('reader_view_toggle')));
+    expect(Directionality.of(context), TextDirection.rtl);
   });
 
   testWidgets(
@@ -3170,15 +3287,52 @@ class _FakeQcfFontManager extends QcfFontManager {
   }
 }
 
+class _FakeAppPreferencesStore implements AppPreferencesStore {
+  _FakeAppPreferencesStore({
+    StoredAppPreferences? initial,
+  }) : _stored = initial ?? const StoredAppPreferences();
+
+  StoredAppPreferences _stored;
+
+  @override
+  Future<StoredAppPreferences> load() async => _stored;
+
+  @override
+  Future<void> saveLanguageCode(String code) async {
+    _stored = StoredAppPreferences(
+      languageCode: code,
+      themeCode: _stored.themeCode,
+    );
+  }
+
+  @override
+  Future<void> saveThemeCode(String code) async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: code,
+    );
+  }
+}
+
 Future<void> _pumpReader(
   WidgetTester tester,
   ProviderContainer container, {
   ReaderScreen screen = const ReaderScreen(),
+  Locale? locale,
 }) async {
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
+        locale: locale,
+        supportedLocales: AppLanguage.values
+            .map((language) => language.locale)
+            .toList(growable: false),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         home: Scaffold(body: screen),
       ),
     ),

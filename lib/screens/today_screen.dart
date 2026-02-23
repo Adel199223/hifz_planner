@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../app/app_preferences.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/repositories/schedule_repo.dart';
 import '../data/services/daily_planner.dart';
 import '../data/time/local_day_time.dart';
+import '../l10n/app_strings.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -16,14 +18,6 @@ class TodayScreen extends ConsumerStatefulWidget {
 }
 
 class _TodayScreenState extends ConsumerState<TodayScreen> {
-  static const List<_GradeOption> _gradeOptions = <_GradeOption>[
-    _GradeOption(label: 'Good', q: 5),
-    _GradeOption(label: 'Medium', q: 4),
-    _GradeOption(label: 'Hard', q: 3),
-    _GradeOption(label: 'Very hard', q: 2),
-    _GradeOption(label: 'Fail', q: 0),
-  ];
-
   bool _isLoading = true;
   String? _errorMessage;
   TodayPlan? _plan;
@@ -38,6 +32,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Future<void> _loadTodayPlan() async {
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -63,7 +59,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       }
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Failed to load today plan.';
+        _errorMessage = strings.failedToLoadTodayPlan;
       });
     }
   }
@@ -73,6 +69,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     required int gradeQ,
     required VoidCallback onSuccessRemove,
   }) async {
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+
     if (_busyUnitIds.contains(unitId)) {
       return;
     }
@@ -117,7 +115,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         onSuccessRemove();
         _busyUnitIds.remove(unitId);
       });
-      _showSnackBar('Grade saved.');
+      _showSnackBar(strings.gradeSaved);
     } catch (_) {
       if (!mounted) {
         return;
@@ -125,7 +123,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       setState(() {
         _busyUnitIds.remove(unitId);
       });
-      _showSnackBar('Failed to save grade.');
+      _showSnackBar(strings.failedToSaveGrade);
     }
   }
 
@@ -154,15 +152,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     return uri.toString();
   }
 
-  String _formatUnitHeader(MemUnitData unit) {
+  String _formatUnitHeader(MemUnitData unit, AppStrings strings) {
     final parts = <String>[unit.kind];
     if (unit.pageMadina != null) {
-      parts.add('Page ${unit.pageMadina}');
+      parts.add(strings.pageLabel(unit.pageMadina!));
     }
     return parts.join(' • ');
   }
 
-  String _formatRange(MemUnitData unit) {
+  String _formatRange(MemUnitData unit, AppStrings strings) {
     final startSurah = unit.startSurah;
     final startAyah = unit.startAyah;
     final endSurah = unit.endSurah;
@@ -172,7 +170,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         startAyah == null ||
         endSurah == null ||
         endAyah == null) {
-      return 'Range unavailable';
+      return strings.rangeUnavailable;
     }
     return '$startSurah:$startAyah - $endSurah:$endAyah';
   }
@@ -188,6 +186,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Widget _buildGradeButtons({
+    required AppStrings strings,
     required int unitId,
     required bool busy,
     required String keyPrefix,
@@ -197,7 +196,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       spacing: 8,
       runSpacing: 8,
       children: [
-        for (final option in _gradeOptions)
+        for (final option in _gradeOptions(strings))
           OutlinedButton(
             key: ValueKey('${keyPrefix}_${unitId}_q${option.q}'),
             onPressed: busy ? null : () => onGrade(option.q),
@@ -207,7 +206,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildReviewSection() {
+  Widget _buildReviewSection(AppStrings strings) {
     return Card(
       key: const ValueKey('today_reviews_section'),
       child: Padding(
@@ -216,17 +215,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Planned Reviews',
+              strings.plannedReviews,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
             if (_remainingReviews.isEmpty)
-              const Text('No planned reviews left.')
+              Text(strings.noPlannedReviewsLeft)
             else
               Column(
                 children: [
                   for (final dueRow in _remainingReviews) ...[
-                    _buildReviewRow(dueRow),
+                    _buildReviewRow(dueRow, strings),
                     const SizedBox(height: 12),
                   ],
                 ],
@@ -237,7 +236,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildReviewRow(DueUnitRow dueRow) {
+  Widget _buildReviewRow(DueUnitRow dueRow, AppStrings strings) {
     final unit = dueRow.unit;
     final unitId = unit.id;
     final busy = _busyUnitIds.contains(unitId);
@@ -256,15 +255,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _formatUnitHeader(unit),
+              _formatUnitHeader(unit, strings),
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 4),
-            Text(_formatRange(unit)),
+            Text(_formatRange(unit, strings)),
             const SizedBox(height: 4),
-            Text('Due day ${dueRow.schedule.dueDay}'),
+            Text(strings.dueDayLabel(dueRow.schedule.dueDay)),
             const SizedBox(height: 10),
             _buildGradeButtons(
+              strings: strings,
               unitId: unitId,
               busy: busy,
               keyPrefix: 'today_review_grade',
@@ -286,7 +286,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildNewMemorizationSection() {
+  Widget _buildNewMemorizationSection(AppStrings strings) {
     return Card(
       key: const ValueKey('today_new_section'),
       child: Padding(
@@ -295,17 +295,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'New Memorization',
+              strings.newMemorization,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
             if (_remainingNewUnits.isEmpty)
-              const Text('No planned new units left.')
+              Text(strings.noPlannedNewUnitsLeft)
             else
               Column(
                 children: [
                   for (final unit in _remainingNewUnits) ...[
-                    _buildNewUnitRow(unit),
+                    _buildNewUnitRow(unit, strings),
                     const SizedBox(height: 12),
                   ],
                 ],
@@ -316,7 +316,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildNewUnitRow(MemUnitData unit) {
+  Widget _buildNewUnitRow(MemUnitData unit, AppStrings strings) {
     final unitId = unit.id;
     final busy = _busyUnitIds.contains(unitId);
     final canOpenInReader = _canOpenInReader(unit);
@@ -336,11 +336,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _formatUnitHeader(unit),
+              _formatUnitHeader(unit, strings),
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 4),
-            Text(_formatRange(unit)),
+            Text(_formatRange(unit, strings)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
@@ -353,21 +353,22 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                           context.go(_buildReaderRoute(unit));
                         }
                       : null,
-                  child: const Text('Open in Reader'),
+                  child: Text(strings.openInReader),
                 ),
               ],
             ),
             if (pageMissing) ...[
               const SizedBox(height: 6),
-              const Text('Page metadata required to open in Reader.'),
+              Text(strings.pageMetadataRequiredToOpenInReader),
             ],
             const SizedBox(height: 10),
             Text(
-              'Self-check grade',
+              strings.selfCheckGrade,
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
             _buildGradeButtons(
+              strings: strings,
               unitId: unitId,
               busy: busy,
               keyPrefix: 'today_new_grade',
@@ -389,6 +390,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final prefs = ref.watch(appPreferencesProvider);
+    final strings = AppStrings.of(prefs.language);
+
     if (_isLoading) {
       return const SafeArea(
         key: ValueKey('today_screen_root'),
@@ -413,7 +417,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               OutlinedButton(
                 key: const ValueKey('today_retry_button'),
                 onPressed: _loadTodayPlan,
-                child: const Text('Retry'),
+                child: Text(strings.retry),
               ),
             ],
           ),
@@ -431,16 +435,20 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Today',
+              strings.todayTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             if (plan != null) ...[
               Text(
-                'Planned review minutes: ${plan.minutesPlannedReviews.toStringAsFixed(1)}',
+                strings.plannedReviewMinutes(
+                  plan.minutesPlannedReviews.toStringAsFixed(1),
+                ),
               ),
               Text(
-                'Planned new minutes: ${plan.minutesPlannedNew.toStringAsFixed(1)}',
+                strings.plannedNewMinutes(
+                  plan.minutesPlannedNew.toStringAsFixed(1),
+                ),
               ),
               if (plan.message != null) ...[
                 const SizedBox(height: 6),
@@ -454,13 +462,23 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               ],
               const SizedBox(height: 12),
             ],
-            _buildReviewSection(),
+            _buildReviewSection(strings),
             const SizedBox(height: 16),
-            _buildNewMemorizationSection(),
+            _buildNewMemorizationSection(strings),
           ],
         ),
       ),
     );
+  }
+
+  List<_GradeOption> _gradeOptions(AppStrings strings) {
+    return <_GradeOption>[
+      _GradeOption(label: strings.gradeGood, q: 5),
+      _GradeOption(label: strings.gradeMedium, q: 4),
+      _GradeOption(label: strings.gradeHard, q: 3),
+      _GradeOption(label: strings.gradeVeryHard, q: 2),
+      _GradeOption(label: strings.gradeFail, q: 0),
+    ];
   }
 }
 
