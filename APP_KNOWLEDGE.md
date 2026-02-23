@@ -195,8 +195,9 @@ Implementation files:
 - `lib/screens/reciters_screen.dart`
 
 Windows plugin note:
-- Audio stack uses `just_audio` with `just_audio_windows`.
-- After changing audio plugin dependencies, run a full restart (not only hot reload) so Windows plugin registration is reloaded.
+- Audio stack uses `just_audio` with `just_audio_media_kit` backend (`media_kit_libs_windows_audio` on Windows).
+- `just_audio_windows` is intentionally not used due Windows thread-channel instability observed during reciter switching.
+- After changing audio plugin dependencies, run a full restart/rebuild (not only hot reload) so plugin registration is reloaded.
 
 ### 3.3 Reading (Mushaf) view
 

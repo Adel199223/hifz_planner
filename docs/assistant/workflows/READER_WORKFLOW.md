@@ -72,10 +72,12 @@ flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
 4. Symptoms: parity drift after control updates.
    - Re-check shell controls and settings pane behavior under both reader modes.
 5. Symptoms: `MissingPluginException` for `just_audio` on Windows.
-   - Ensure `just_audio_windows` is in `pubspec.yaml`, run `flutter pub get`, and fully restart the app (not only hot reload).
-6. Symptoms: reciter list fails to load.
+   - Ensure `just_audio_media_kit` + `media_kit_libs_windows_audio` are in `pubspec.yaml`, run `flutter pub get`, and fully restart the app (not only hot reload).
+6. Symptoms: old `just_audio_windows` thread-channel logs or app drop during playback after dependency changes.
+   - Perform a full plugin refresh on Windows: `flutter clean`, `flutter pub get`, then `flutter run -d windows`.
+7. Symptoms: reciter list fails to load.
    - Confirm AlQuran Cloud editions endpoint response shape, then verify bundled fallback list is still present in `ayah_reciter_catalog_service.dart`.
-7. Symptoms: speed/repeat/reciter settings reset after restart.
+8. Symptoms: speed/repeat/reciter settings reset after restart.
    - Verify SharedPreferences keys and notifier write-through in `ayah_audio_preferences.dart` and `audio_providers.dart`.
 
 ## Handoff Checklist

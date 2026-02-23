@@ -35,7 +35,8 @@ CI quality gates:
 - Reciter/speed/repeat preferences persist across launches.
 - `Reciters` route is a functional searchable selector backed by AlQuran Cloud editions API with bundled fallback list.
 - Playback is streaming-first; offline download can be added later.
-- If you see `MissingPluginException` for audio on Windows, do a full app restart/rebuild (hot reload is not enough).
+- Windows backend uses `just_audio_media_kit` (`media_kit_libs_windows_audio`).
+- If audio plugin wiring looks stale on Windows, run a full rebuild/restart (`flutter clean`, `flutter pub get`, then `flutter run -d windows`).
 
 ## Getting Started
 
