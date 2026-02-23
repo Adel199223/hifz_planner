@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 7,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
@@ -75,6 +75,72 @@
       ]
     },
     {
+      "id": "localization_i18n",
+      "doc": "docs/assistant/workflows/LOCALIZATION_WORKFLOW.md",
+      "scope": "Localization labels, RTL behavior, and terminology consistency.",
+      "primary_files": [
+        "docs/assistant/LOCALIZATION_GLOSSARY.md",
+        "lib/l10n/app_language.dart",
+        "lib/l10n/app_strings.dart",
+        "lib/main.dart",
+        "lib/screens/reader_screen.dart"
+      ],
+      "targeted_tests": [
+        "test/l10n/app_strings_test.dart",
+        "test/tooling/validate_localization_test.dart",
+        "test/screens/reader_screen_test.dart",
+        "test/app/navigation_shell_menu_test.dart"
+      ],
+      "validation_commands": [
+        "dart run tooling/validate_localization.dart",
+        "flutter test -j 1 -r expanded test/l10n/app_strings_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_localization_test.dart",
+        "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
+        "flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart"
+      ]
+    },
+    {
+      "id": "workspace_performance",
+      "doc": "docs/assistant/workflows/PERFORMANCE_WORKFLOW.md",
+      "scope": "Editor performance, workspace indexing/watchers, and artifact placement hygiene.",
+      "primary_files": [
+        "docs/assistant/workflows/PERFORMANCE_WORKFLOW.md",
+        "docs/assistant/PERFORMANCE_BASELINES.md",
+        ".vscode/settings.json",
+        ".gitignore",
+        "tooling/validate_workspace_hygiene.dart",
+        "test/tooling/validate_workspace_hygiene_test.dart"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_workspace_hygiene_test.dart",
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "dart run tooling/validate_workspace_hygiene.dart",
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_workspace_hygiene_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+      ]
+    },
+    {
+      "id": "reference_discovery",
+      "doc": "docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md",
+      "scope": "External inspiration/parity source discovery for named apps/sites/products.",
+      "primary_files": [
+        "docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md",
+        "docs/assistant/manifest.json",
+        "AGENTS.md",
+        "agent.md"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+      ]
+    },
+    {
       "id": "ci_repo_ops",
       "doc": "docs/assistant/workflows/CI_REPO_WORKFLOW.md",
       "scope": "CI workflow command parity, branch merge hygiene, and repo operations safety.",
@@ -83,10 +149,15 @@
         "agent.md",
         "docs/assistant/manifest.json",
         "docs/assistant/INDEX.md",
-        "tooling/validate_agent_docs.dart"
+        "tooling/validate_agent_docs.dart",
+        "tooling/validate_localization.dart",
+        "tooling/validate_workspace_hygiene.dart"
       ],
       "targeted_tests": [
         "test/tooling/validate_agent_docs_test.dart",
+        "test/tooling/validate_localization_test.dart",
+        "test/tooling/validate_workspace_hygiene_test.dart",
+        "test/l10n/app_strings_test.dart",
         "test/app/navigation_shell_menu_test.dart",
         "test/screens/reader_screen_test.dart"
       ],
@@ -95,7 +166,11 @@
         "git status --short --branch",
         "git branch -vv",
         "flutter analyze --no-fatal-infos --no-fatal-warnings",
+        "dart run tooling/validate_localization.dart",
+        "dart run tooling/validate_workspace_hygiene.dart",
+        "flutter test -j 1 -r expanded test/l10n/app_strings_test.dart",
         "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_workspace_hygiene_test.dart",
         "flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart",
         "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart"
       ]
@@ -135,19 +210,31 @@
         "APP_KNOWLEDGE.md",
         "docs/assistant/APP_KNOWLEDGE.md",
         "docs/assistant/INDEX.md",
+        "docs/assistant/LOCALIZATION_GLOSSARY.md",
+        "docs/assistant/PERFORMANCE_BASELINES.md",
         "docs/assistant/manifest.json",
         "docs/assistant/DB_DRIFT_KNOWLEDGE.md",
         ".github/workflows/dart.yml",
         "docs/assistant/workflows/CI_REPO_WORKFLOW.md",
         "docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md",
-        "tooling/validate_agent_docs.dart"
+        "docs/assistant/workflows/LOCALIZATION_WORKFLOW.md",
+        "docs/assistant/workflows/PERFORMANCE_WORKFLOW.md",
+        "tooling/validate_agent_docs.dart",
+        "tooling/validate_localization.dart",
+        "tooling/validate_workspace_hygiene.dart"
       ],
       "targeted_tests": [
-        "test/tooling/validate_agent_docs_test.dart"
+        "test/tooling/validate_agent_docs_test.dart",
+        "test/tooling/validate_localization_test.dart",
+        "test/tooling/validate_workspace_hygiene_test.dart"
       ],
       "validation_commands": [
         "dart run tooling/validate_agent_docs.dart",
-        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+        "dart run tooling/validate_localization.dart",
+        "dart run tooling/validate_workspace_hygiene.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_localization_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_workspace_hygiene_test.dart"
       ]
     }
   ],
@@ -167,7 +254,12 @@
     "canonical_precedence": "APP_KNOWLEDGE.md is canonical for app-level architecture and status. Source code is final truth on conflicts.",
     "docs_sync_rule": "If bridge docs conflict with canonical docs, canonical wins and bridge docs must be updated.",
     "windows_test_policy": "Prefer flutter test -j 1 -r expanded for stability on Windows.",
-    "templates_read_policy": "docs/assistant/templates/* are read-on-demand only; open/update only when explicitly requested by the user."
+    "templates_read_policy": "docs/assistant/templates/* are read-on-demand only; open/update only when explicitly requested by the user.",
+    "localization_glossary_source_of_truth": "docs/assistant/LOCALIZATION_GLOSSARY.md is the canonical term source for localized UI labels.",
+    "workspace_performance_source_of_truth": "docs/assistant/PERFORMANCE_BASELINES.md is the canonical source for workspace/editor performance defaults.",
+    "env_artifacts_outside_workspace_default": "Heavyweight environments and generated runtime artifacts should live outside repo root when feasible.",
+    "post_change_docs_sync_prompt_policy": "After significant implementation changes, ask whether to run Assistant Docs Sync and update only relevant assistant docs if approved.",
+    "inspiration_reference_discovery_policy": "When user names a product/site to emulate, run REFERENCE_DISCOVERY_WORKFLOW.md and prioritize official sources, then high-quality GitHub repos, then Hugging Face only for ML/data/inference scope."
   },
-  "last_updated": "2026-02-22"
+  "last_updated": "2026-02-23"
 }

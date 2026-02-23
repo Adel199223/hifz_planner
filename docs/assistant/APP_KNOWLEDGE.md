@@ -60,6 +60,22 @@ Do not use this file as primary truth when there is a conflict.
 - `lib/data/services/qurancom_api.dart`
 - `lib/ui/qcf/qcf_font_manager.dart`
 
+### Localization
+- `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
+- `docs/assistant/LOCALIZATION_GLOSSARY.md`
+- `lib/l10n/app_language.dart`
+- `lib/l10n/app_strings.dart`
+- `test/l10n/app_strings_test.dart`
+
+### Workspace performance
+- `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
+- `docs/assistant/PERFORMANCE_BASELINES.md`
+- `tooling/validate_workspace_hygiene.dart`
+- `test/tooling/validate_workspace_hygiene_test.dart`
+
+### Inspiration/parity reference discovery
+- `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
+
 ### Planning
 - `lib/screens/plan_screen.dart`
 - `lib/screens/today_screen.dart`

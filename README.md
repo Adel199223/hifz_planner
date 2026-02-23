@@ -10,6 +10,10 @@ A new Flutter project.
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
+- `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
+- `docs/assistant/LOCALIZATION_GLOSSARY.md`
+- `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
+- `docs/assistant/PERFORMANCE_BASELINES.md`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
 
 Canonical source:

@@ -19,6 +19,7 @@ Use when requests include:
 - Do not include unrelated files in the same commit.
 - Do not force-push to `main`.
 - Do not delete remote branches without a keep-list and user intent.
+- Do not perform broad assistant-doc rewrites after implementation; use targeted docs sync by scope only.
 
 ## Primary Files
 
@@ -84,6 +85,28 @@ flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
    - re-fetch and re-check divergence before any merge.
 5. Symptoms: remote branch deletion denied.
    - keep branch and report the denied deletion explicitly.
+
+## Significant-Change Docs Sync Policy
+
+Significant change definition:
+- Any behavior/UI/data-flow change under `lib/` or `tooling/` affecting runtime behavior, agent workflows, CI contracts, or developer process.
+- Any multi-file feature pass.
+- If uncertain, treat as significant.
+
+Mandatory prompt at end of significant implementation work:
+- Ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
+
+If user says yes:
+- update only relevant assistant docs by touched scope:
+  - Reader/UI -> reader workflow + canonical app sections + related routing docs
+  - Data pipeline -> data workflow + manifest/contract references only where needed
+  - Localization -> localization workflow/glossary + impacted routing docs
+  - CI/repo ops -> CI workflow + manifest/validator docs
+  - Template-only -> template file only unless user explicitly requests propagation
+
+If user says no:
+- continue without docs edits
+- mention potential docs drift risk briefly in handoff
 
 ## Handoff Checklist
 

@@ -41,6 +41,18 @@ jobs:
       - name: Validate agent docs contract
         run: dart run tooling/validate_agent_docs.dart
 
+      - name: Validate localization contract
+        run: dart run tooling/validate_localization.dart
+
+      - name: Validate workspace hygiene contract
+        run: dart run tooling/validate_workspace_hygiene.dart
+
+      - name: Localization regression suite
+        run: flutter test -j 1 -r expanded test/l10n/app_strings_test.dart
+
+      - name: Workspace hygiene regression suite
+        run: flutter test -j 1 -r expanded test/tooling/validate_workspace_hygiene_test.dart
+
       - name: Reader regression suite
         run: flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
 

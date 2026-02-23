@@ -23,9 +23,12 @@ Compatibility:
 
 | If task is about... | Open first | Run first |
 |---|---|---|
+| VS Code lag, file watchers, indexing pressure, workspace hygiene | `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` | `dart run tooling/validate_workspace_hygiene.dart` |
+| Localization, new language rollout, terminology consistency, RTL | `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` | `dart run tooling/validate_localization.dart` |
 | Reader UI or Quran parity | `docs/assistant/workflows/READER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart` |
 | Quran.com API/cache/fonts | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | `flutter test -j 1 -r expanded test/data/services/qurancom_api_test.dart` |
 | Planning/scheduling/calibration | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart` |
+| "Like X"/"same as X"/parity inspired by named app/site | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | Agent docs/structure | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | CI workflow / branch merge hygiene | `docs/assistant/workflows/CI_REPO_WORKFLOW.md` | `flutter analyze --no-fatal-infos --no-fatal-warnings` |
 | Commit, stage, ignore, push, remote cleanup | `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` | `git status --short --branch` |
@@ -60,6 +63,11 @@ Compatibility:
 9. Exception: if user says to create/update the reusable prompt/template, `docs/assistant/templates/*` becomes in-scope for that task only.
 10. Major changes must start on a new `feat/*` branch, not on `main`.
 11. Keep `main` stable; merge major work through PR flow with required checks.
+12. For localization tasks, open `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` and use `docs/assistant/LOCALIZATION_GLOSSARY.md` as the term source of truth.
+13. For workspace performance tasks, open `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` and treat `docs/assistant/PERFORMANCE_BASELINES.md` as the source of truth.
+14. For inspiration/parity requests against named apps/sites, open `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` and base implementation decisions on cited references.
+15. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
+16. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
 
 ## Core Commands
 
@@ -75,4 +83,6 @@ flutter test -j 1 -r expanded
 - files changed are intentional
 - targeted tests passed for the touched area
 - `dart run tooling/validate_agent_docs.dart` passed for doc changes
+- `dart run tooling/validate_workspace_hygiene.dart` passed for performance/workspace changes
+- after significant changes, Assistant Docs Sync prompt was asked and outcome recorded
 - no stale or broken doc paths remain

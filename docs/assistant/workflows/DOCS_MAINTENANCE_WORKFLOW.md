@@ -21,6 +21,9 @@ Use when changes touch:
 - Do not add stale paths or commands that fail in this repo.
 - Do not skip docs validation after changing documentation structure.
 - Do not route private template assets as default execution docs.
+- Do not duplicate localization term tables across docs; keep terms canonical in `docs/assistant/LOCALIZATION_GLOSSARY.md`.
+- Do not duplicate performance exclusion tables across docs; keep workspace defaults canonical in `docs/assistant/PERFORMANCE_BASELINES.md`.
+- Do not run full assistant-doc rewrites after feature work unless explicitly approved; use targeted docs sync by touched scope.
 
 ## Primary Files
 
@@ -33,10 +36,19 @@ Use when changes touch:
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
+- `docs/assistant/LOCALIZATION_GLOSSARY.md`
+- `docs/assistant/PERFORMANCE_BASELINES.md`
 - `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
+- `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
+- `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
+- `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
 - `tooling/validate_agent_docs.dart`
+- `tooling/validate_localization.dart`
+- `tooling/validate_workspace_hygiene.dart`
 - `test/tooling/validate_agent_docs_test.dart`
+- `test/tooling/validate_localization_test.dart`
+- `test/tooling/validate_workspace_hygiene_test.dart`
 
 ## Minimal Commands
 
@@ -62,6 +74,26 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
    - Run validator and fix failing references.
 4. Symptoms: docs drift after feature changes.
    - Update canonical file first, then bridge/index/manifest/workflows.
+5. Symptoms: no docs updates were requested after significant change.
+   - Ask: "Would you like me to run Assistant Docs Sync for this change now?"
+   - If declined, record brief drift warning.
+
+## Significant-Change Docs Sync Policy
+
+Significant change definition:
+- behavior/UI/data-flow changes in `lib/` or `tooling/`
+- multi-file feature passes
+- CI/contract/workflow changes affecting developer process
+
+Mandatory end-of-implementation prompt:
+- "Would you like me to run Assistant Docs Sync for this change now?"
+
+Relevance matrix:
+- Reader/UI change -> reader workflow + canonical app sections + relevant test/docs links
+- Data pipeline change -> data workflow + cache/API contract docs only
+- Localization change -> localization workflow/glossary only (+ routing references if needed)
+- CI/repo ops change -> CI workflow + manifest/validator only
+- Template-only change -> template only unless user requests broader propagation
 
 ## Sync Order
 
@@ -74,9 +106,14 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
    - `docs/assistant/manifest.json`
 4. Update validator and tests:
    - `tooling/validate_agent_docs.dart`
+   - `tooling/validate_localization.dart`
+   - `tooling/validate_workspace_hygiene.dart`
    - `test/tooling/validate_agent_docs_test.dart`
+   - `test/tooling/validate_localization_test.dart`
+   - `test/tooling/validate_workspace_hygiene_test.dart`
 5. Update private templates only when requested:
    - `docs/assistant/templates/*`
+6. For significant implementation work, ask docs-sync prompt and update only relevant files when approved.
 
 ## Handoff Checklist
 
@@ -85,3 +122,5 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
 - workflow docs keep required section template
 - README onboarding links are in sync with assistant docs
 - CI command examples in docs match `.github/workflows/dart.yml`
+- localization terms and workspace performance defaults are maintained in their canonical docs only
+- significant-change docs-sync prompt was asked and response handled

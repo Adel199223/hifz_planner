@@ -28,6 +28,10 @@ Use when changes touch:
 - `agent.md`
 - `docs/assistant/manifest.json`
 - `docs/assistant/INDEX.md`
+- `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
+- `docs/assistant/PERFORMANCE_BASELINES.md`
+- `tooling/validate_localization.dart`
+- `tooling/validate_workspace_hygiene.dart`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
 - `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`
 - `tooling/validate_agent_docs.dart`
@@ -39,15 +43,21 @@ git fetch --prune origin
 git status --short --branch
 git branch -vv
 flutter analyze --no-fatal-infos --no-fatal-warnings
+dart run tooling/validate_localization.dart
+dart run tooling/validate_workspace_hygiene.dart
 flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
 flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
+flutter test -j 1 -r expanded test/l10n/app_strings_test.dart
 flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
+flutter test -j 1 -r expanded test/tooling/validate_workspace_hygiene_test.dart
 ```
 
 ## Targeted Tests
 
 ```powershell
 flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
+flutter test -j 1 -r expanded test/tooling/validate_workspace_hygiene_test.dart
+flutter test -j 1 -r expanded test/l10n/app_strings_test.dart
 flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
 flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
 ```

@@ -10,14 +10,21 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/APP_KNOWLEDGE.md',
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
   'docs/assistant/INDEX.md',
+  'docs/assistant/LOCALIZATION_GLOSSARY.md',
+  'docs/assistant/PERFORMANCE_BASELINES.md',
   'docs/assistant/manifest.json',
   'docs/assistant/workflows/READER_WORKFLOW.md',
+  'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
+  'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
+  'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
   'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
   'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
+  'tooling/validate_workspace_hygiene.dart',
+  'test/tooling/validate_workspace_hygiene_test.dart',
 ];
 
 const List<String> _workflowRequiredSections = <String>[
@@ -39,8 +46,13 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/APP_KNOWLEDGE.md',
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
   'docs/assistant/INDEX.md',
+  'docs/assistant/LOCALIZATION_GLOSSARY.md',
+  'docs/assistant/PERFORMANCE_BASELINES.md',
   'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
+  'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
+  'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
+  'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
   'docs/assistant/workflows/READER_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
@@ -49,7 +61,7 @@ const List<String> _docsToScanForBackticks = <String>[
 
 final RegExp _backtickRegex = RegExp(r'`([^`\n]+)`');
 final RegExp _pathLikeRegex = RegExp(
-  r'^(AGENTS\.md|agent\.md|APP_KNOWLEDGE\.md|README\.md|docs/|lib/|test/|tooling/|assets/|\.github/)',
+  r'^(AGENTS\.md|agent\.md|APP_KNOWLEDGE\.md|README\.md|docs/|lib/|test/|tooling/|assets/|\.github/|\.vscode/|\.gitignore|pubspec\.yaml)',
 );
 
 final List<RegExp> _bashOnlyPatterns = <RegExp>[
@@ -77,6 +89,10 @@ class AgentDocsValidator {
     _validateWorkflowSections(issues);
     _validateCanonicalContracts(issues);
     _validateBranchSafetyPolicy(issues);
+    _validateLocalizationRoutingPolicy(issues);
+    _validatePerformanceRoutingPolicy(issues);
+    _validateReferenceDiscoveryPolicy(issues);
+    _validatePostChangeDocsSyncPolicy(issues);
     _validateTemplatePolicies(issues);
     _validateBacktickPaths(issues);
     return issues;
@@ -185,6 +201,24 @@ class AgentDocsValidator {
         requiredId: 'commit_publish_ops',
         expectedDoc: 'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
       );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
+        requiredId: 'localization_i18n',
+        expectedDoc: 'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
+      );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
+        requiredId: 'workspace_performance',
+        expectedDoc: 'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
+      );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
+        requiredId: 'reference_discovery',
+        expectedDoc: 'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+      );
     }
 
     final globalCommands = manifest['global_commands'];
@@ -232,11 +266,73 @@ class AgentDocsValidator {
         contracts['templates_read_policy'],
         'contracts.templates_read_policy',
       );
+      _validateNonEmptyString(
+        issues,
+        contracts['localization_glossary_source_of_truth'],
+        'contracts.localization_glossary_source_of_truth',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['workspace_performance_source_of_truth'],
+        'contracts.workspace_performance_source_of_truth',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['env_artifacts_outside_workspace_default'],
+        'contracts.env_artifacts_outside_workspace_default',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['post_change_docs_sync_prompt_policy'],
+        'contracts.post_change_docs_sync_prompt_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['inspiration_reference_discovery_policy'],
+        'contracts.inspiration_reference_discovery_policy',
+      );
       final templatePolicy = contracts['templates_read_policy'];
       if (templatePolicy is String &&
           !templatePolicy.toLowerCase().contains('read-on-demand')) {
         issues.add(
           'contracts.templates_read_policy must include read-on-demand guidance.',
+        );
+      }
+      final glossaryContract =
+          contracts['localization_glossary_source_of_truth'];
+      if (glossaryContract is String &&
+          !glossaryContract.contains(
+            'docs/assistant/LOCALIZATION_GLOSSARY.md',
+          )) {
+        issues.add(
+          'contracts.localization_glossary_source_of_truth must reference docs/assistant/LOCALIZATION_GLOSSARY.md.',
+        );
+      }
+      final performanceContract =
+          contracts['workspace_performance_source_of_truth'];
+      if (performanceContract is String &&
+          !performanceContract.contains(
+            'docs/assistant/PERFORMANCE_BASELINES.md',
+          )) {
+        issues.add(
+          'contracts.workspace_performance_source_of_truth must reference docs/assistant/PERFORMANCE_BASELINES.md.',
+        );
+      }
+      final docsSyncPolicy = contracts['post_change_docs_sync_prompt_policy'];
+      if (docsSyncPolicy is String &&
+          !docsSyncPolicy.toLowerCase().contains('assistant docs sync')) {
+        issues.add(
+          'contracts.post_change_docs_sync_prompt_policy must include "Assistant Docs Sync" guidance.',
+        );
+      }
+      final referencePolicy =
+          contracts['inspiration_reference_discovery_policy'];
+      if (referencePolicy is String &&
+          !referencePolicy.contains(
+            'REFERENCE_DISCOVERY_WORKFLOW.md',
+          )) {
+        issues.add(
+          'contracts.inspiration_reference_discovery_policy must reference docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
         );
       }
     }
@@ -288,6 +384,9 @@ class AgentDocsValidator {
   void _validateWorkflowSections(List<String> issues) {
     const workflowDocs = <String>[
       'docs/assistant/workflows/READER_WORKFLOW.md',
+      'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
+      'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
+      'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
       'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
       'docs/assistant/workflows/PLANNER_WORKFLOW.md',
       'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
@@ -407,6 +506,102 @@ class AgentDocsValidator {
       if (text.contains('docs/assistant/templates/')) {
         issues.add(
           'INDEX.md must not route private template files as default docs.',
+        );
+      }
+    }
+  }
+
+  void _validateLocalizationRoutingPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      if (!text.contains('LOCALIZATION_WORKFLOW.md') ||
+          !text.contains('LOCALIZATION_GLOSSARY.md')) {
+        issues.add(
+          'AGENTS.md must route localization tasks to LOCALIZATION_WORKFLOW.md and LOCALIZATION_GLOSSARY.md.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      if (!text.contains('LOCALIZATION_WORKFLOW.md') ||
+          !text.contains('LOCALIZATION_GLOSSARY.md')) {
+        issues.add(
+          'agent.md must route localization tasks to LOCALIZATION_WORKFLOW.md and LOCALIZATION_GLOSSARY.md.',
+        );
+      }
+    }
+  }
+
+  void _validatePerformanceRoutingPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      if (!text.contains('PERFORMANCE_WORKFLOW.md') ||
+          !text.contains('PERFORMANCE_BASELINES.md')) {
+        issues.add(
+          'AGENTS.md must route performance tasks to PERFORMANCE_WORKFLOW.md and PERFORMANCE_BASELINES.md.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      if (!text.contains('PERFORMANCE_WORKFLOW.md') ||
+          !text.contains('PERFORMANCE_BASELINES.md')) {
+        issues.add(
+          'agent.md must route performance tasks to PERFORMANCE_WORKFLOW.md and PERFORMANCE_BASELINES.md.',
+        );
+      }
+    }
+  }
+
+  void _validateReferenceDiscoveryPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      if (!text.contains('REFERENCE_DISCOVERY_WORKFLOW.md')) {
+        issues.add(
+          'AGENTS.md must route inspiration/parity tasks to REFERENCE_DISCOVERY_WORKFLOW.md.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      if (!text.contains('REFERENCE_DISCOVERY_WORKFLOW.md')) {
+        issues.add(
+          'agent.md must route inspiration/parity tasks to REFERENCE_DISCOVERY_WORKFLOW.md.',
+        );
+      }
+    }
+  }
+
+  void _validatePostChangeDocsSyncPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync().toLowerCase();
+      if (!text.contains('assistant docs sync') ||
+          !text.contains('significant')) {
+        issues.add(
+          'AGENTS.md must include significant-change Assistant Docs Sync prompt policy.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      if (!text.contains(
+            'Would you like me to run Assistant Docs Sync for this change now?',
+          ) &&
+          !text.toLowerCase().contains('assistant docs sync')) {
+        issues.add(
+          'agent.md must include mandatory post-significant-change Assistant Docs Sync prompt policy.',
         );
       }
     }

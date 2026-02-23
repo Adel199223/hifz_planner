@@ -17,6 +17,11 @@ One-page navigation guide for agent-facing documentation.
 | `APP_KNOWLEDGE.md` | You need canonical app architecture, feature status, and subsystem map. | Fine-grained per-workflow checklists. | 3 min |
 | `docs/assistant/APP_KNOWLEDGE.md` | Your workflow expects assistant-path docs and needs canonical pointer/bootstrapping. | Canonical truth when conflicts exist. | 1 min |
 | `docs/assistant/manifest.json` | You are an automated agent selecting docs/tests programmatically. | Human narrative context. | <1 min |
+| `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` | Task changes labels/locales/RTL/translation-resource mapping. | DB schema or non-localization feature logic. | 2 min |
+| `docs/assistant/LOCALIZATION_GLOSSARY.md` | You need canonical terms across languages without duplication. | Runtime data/cache logic decisions. | 1 min |
+| `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` | Task targets VS Code lag, file watchers, indexing pressure, or workspace artifact placement. | Feature/domain logic implementation details. | 2 min |
+| `docs/assistant/PERFORMANCE_BASELINES.md` | You need canonical watcher/search excludes and environment placement defaults. | CI release logic or runtime architecture decisions. | 1 min |
+| `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | Task requires parity/inspiration from named apps/sites and external reference selection. | Direct implementation details without external-source analysis. | 2 min |
 | `docs/assistant/DB_DRIFT_KNOWLEDGE.md` | You are changing schema/migrations/repos/planner persistence. | Reader-only UI behavior changes. | 3 min |
 | `docs/assistant/workflows/READER_WORKFLOW.md` | Task targets Verse by Verse / Reading UI and interactions. | Planner internals or DB migrations. | 2 min |
 | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | Task targets Quran.com fetch/cache/dedupe/fonts/translations. | Navigation shell changes. | 2 min |

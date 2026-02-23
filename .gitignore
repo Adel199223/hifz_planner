@@ -13,5 +13,12 @@ build/
 
 
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 

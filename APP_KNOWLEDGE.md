@@ -20,11 +20,25 @@ If documentation conflicts:
 
 Workflow runbooks:
 - Reader/UI: `docs/assistant/workflows/READER_WORKFLOW.md`
+- Localization/i18n: `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
 - Quran.com data/cache/fonts: `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md`
 - Planner/scheduler: `docs/assistant/workflows/PLANNER_WORKFLOW.md`
+- Workspace performance: `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
+- Reference discovery: `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
 - Docs maintenance: `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`
 - CI and repo operations: `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
 - Commit/publish hygiene: `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
+
+Localization glossary:
+- `docs/assistant/LOCALIZATION_GLOSSARY.md` (canonical term source)
+
+Workspace performance baseline:
+- `docs/assistant/PERFORMANCE_BASELINES.md` (canonical VS Code/workspace performance defaults)
+
+Significant-change docs sync policy:
+- after significant implementation changes, ask:
+  - "Would you like me to run Assistant Docs Sync for this change now?"
+- if approved, update only relevant assistant docs by touched scope.
 
 Why two `APP_KNOWLEDGE.md` files:
 - Root `APP_KNOWLEDGE.md` is canonical and complete.
@@ -74,7 +88,7 @@ Defined in `lib/app/router.dart`:
 - `highlightEndSurah`, `highlightEndAyah`
 
 ### Global Preferences (persisted)
-- Language options (selection only, not full app translation yet):
+- Language options (fully wired for app UI strings):
   - English, Français, العربية, Português
 - Theme options:
   - Sepia, Dark
@@ -86,6 +100,20 @@ Files:
 - `lib/l10n/app_language.dart`
 - `lib/l10n/app_strings.dart`
 - `lib/theme/quran_themes.dart`
+
+Localization governance:
+- Use `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` for process.
+- Use `docs/assistant/LOCALIZATION_GLOSSARY.md` as the term source of truth.
+- Avoid duplicating term tables across other docs.
+
+Workspace performance governance:
+- Use `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` for lag/indexing/file-watcher issues.
+- Use `docs/assistant/PERFORMANCE_BASELINES.md` as canonical exclusion and environment placement policy.
+- Avoid repeating exclusion tables in other docs.
+
+Inspiration/parity governance:
+- Use `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` when user names external apps/sites to emulate.
+- Prefer official sources first, then high-quality community repos; use Hugging Face only when model/data/inference scope is relevant.
 
 ## 3) Reader System (Most Important Area)
 
@@ -341,6 +369,8 @@ Current CI checks:
 - `flutter pub get`
 - `flutter analyze --no-fatal-infos --no-fatal-warnings`
 - `dart run tooling/validate_agent_docs.dart`
+- `dart run tooling/validate_localization.dart`
+- `flutter test -j 1 -r expanded test/l10n/app_strings_test.dart`
 - `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart`
 - `flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart`
 - `flutter test -j 1 -r expanded test/app/app_preferences_test.dart`
@@ -362,11 +392,12 @@ Representative files:
 
 ## 12) Known Constraints / Incomplete Areas
 
-- Full localization is not implemented yet; language selection is currently preference + prepared string surface for new shell/menu areas.
+- Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
 - `Translation` and `Word By Word` settings tabs are scaffolded but not fully implemented.
 - My Quran / Quran Radio / Reciters screens are placeholders.
 - Web parity will require abstraction of `dart:io` usage in Quran.com cache/font services.
 - Quran.com parity work is active; visuals and interactions are close in many areas but still evolving.
+- No Python CI/tooling is configured because this repository currently has no Python code path; add Python configuration only when Python tooling is introduced.
 
 ## 13) Where to Edit What
 
@@ -380,6 +411,14 @@ Representative files:
   - `lib/l10n/app_language.dart`
   - `lib/l10n/app_strings.dart`
   - `lib/theme/quran_themes.dart`
+  - `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
+  - `docs/assistant/LOCALIZATION_GLOSSARY.md`
+- Workspace performance and hygiene:
+  - `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
+  - `docs/assistant/PERFORMANCE_BASELINES.md`
+  - `tooling/validate_workspace_hygiene.dart`
+  - `.vscode/settings.json`
+  - `.gitignore`
 - Reader UI and behavior:
   - `lib/screens/reader_screen.dart`
 - Quran.com fetch/cache/parsing:

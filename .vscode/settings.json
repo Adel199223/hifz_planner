@@ -1,0 +1,22 @@
+{
+  "files.watcherExclude": {
+    "**/dist/**": true,
+    "**/.idea/**": true,
+    "**/.dart_tool/**": true,
+    "**/build/**": true,
+    "**/*.log": true,
+    "**/.git/**": true,
+    "**/windows/**/x64/**": true,
+    "**/.venv/**": true,
+    "**/*.tlog": true
+  },
+  "search.exclude": {
+    "**/dist/**": true,
+    "**/.dart_tool/**": true,
+    "**/build/**": true,
+    "**/*.log": true,
+    "**/windows/**/x64/**": true,
+    "**/.venv/**": true,
+    "**/*.tlog": true
+  }
+}

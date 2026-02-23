@@ -17,6 +17,7 @@ Use when changes touch:
 - Do not make schema changes here unless explicitly required.
 - Do not bypass fallback paths that protect against missing font/API/cache.
 - Do not skip reader widget tests after UI or interaction changes.
+- Do not define localization terms here; route terminology/locale changes through `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` and `docs/assistant/LOCALIZATION_GLOSSARY.md`.
 
 ## Primary Files
 
