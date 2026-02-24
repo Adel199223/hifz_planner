@@ -75,6 +75,22 @@ class AppStrings {
   String get selectReciter => _t('select_reciter', 'Select Reciter');
   String get searchReciter => _t('search_reciter', 'Search Reciter');
   String get tajweedColors => _t('tajweed_colors', 'Tajweed colors');
+  String get tajweedLegendSilentLetter =>
+      _t('tajweed_legend_silent_letter', 'Silent letter');
+  String get tajweedLegendNormalMadd2 =>
+      _t('tajweed_legend_normal_madd_2', 'Normal madd (2)');
+  String get tajweedLegendSeparatedMadd246 =>
+      _t('tajweed_legend_separated_madd_246', 'Separated madd (2/4/6)');
+  String get tajweedLegendConnectedMadd45 =>
+      _t('tajweed_legend_connected_madd_45', 'Connected madd (4/5)');
+  String get tajweedLegendNecessaryMadd6 =>
+      _t('tajweed_legend_necessary_madd_6', 'Necessary madd (6)');
+  String get tajweedLegendGhunnaIkhfa =>
+      _t('tajweed_legend_ghunna_ikhfa', "Ghunna/ikhfa'");
+  String get tajweedLegendQalqalaEcho =>
+      _t('tajweed_legend_qalqala_echo', 'Qalqala (echo)');
+  String get tajweedLegendTafkhimHeavy =>
+      _t('tajweed_legend_tafkhim_heavy', 'Tafkhim (heavy)');
   String get translation => _t('translation', 'Translation');
   String get arabic => _t('arabic', 'Arabic');
   String get wordByWord => _t('word_by_word', 'Word By Word');
@@ -620,6 +636,14 @@ class AppStrings {
       'select_reciter': 'Choisir un récitateur',
       'search_reciter': 'Rechercher un récitateur',
       'tajweed_colors': 'Couleurs du Tajwid',
+      'tajweed_legend_silent_letter': 'Lettre muette',
+      'tajweed_legend_normal_madd_2': 'Madd naturel (2)',
+      'tajweed_legend_separated_madd_246': 'Madd séparé (2/4/6)',
+      'tajweed_legend_connected_madd_45': 'Madd joint (4/5)',
+      'tajweed_legend_necessary_madd_6': 'Madd obligatoire (6)',
+      'tajweed_legend_ghunna_ikhfa': "Ghunnah/ikhfa'",
+      'tajweed_legend_qalqala_echo': 'Qalqalah (écho)',
+      'tajweed_legend_tafkhim_heavy': 'Tafkhim (lourd)',
       'tafsirs': 'Tafsirs',
       'lessons': 'Leçons',
       'reflections': 'Réflexions',
@@ -653,6 +677,7 @@ class AppStrings {
       'hizb_label': 'Hizb {hizb}',
       'surah_label': 'Sourate {surah}',
       'ayah_label': 'Ayah {ayah}',
+      'search_surah': 'Rechercher une sourate',
       'learn_title': "Plans d'apprentissage",
       'bookmarks_title': 'Signets',
       'failed_to_load_bookmarks': 'Échec du chargement des signets.',
@@ -779,6 +804,14 @@ class AppStrings {
       'select_reciter': 'Selecionar recitador',
       'search_reciter': 'Pesquisar recitador',
       'tajweed_colors': 'Cores de Tajweed',
+      'tajweed_legend_silent_letter': 'Letra silenciosa',
+      'tajweed_legend_normal_madd_2': 'Madd normal (2)',
+      'tajweed_legend_separated_madd_246': 'Madd separado (2/4/6)',
+      'tajweed_legend_connected_madd_45': 'Madd conectado (4/5)',
+      'tajweed_legend_necessary_madd_6': 'Madd necessário (6)',
+      'tajweed_legend_ghunna_ikhfa': "Ghunna/ikhfa'",
+      'tajweed_legend_qalqala_echo': 'Qalqala (eco)',
+      'tajweed_legend_tafkhim_heavy': 'Tafkhim (pesado)',
       'translation': 'Tradução',
       'arabic': 'Árabe',
       'word_by_word': 'Palavra por palavra',
@@ -803,6 +836,7 @@ class AppStrings {
       'total_time_label': 'Total {value}',
       'translation_label': 'Tradução: {label}',
       'page_label': 'Página {page}',
+      'search_surah': 'Pesquisar Surah',
       'learn_title': 'Planos de aprendizado',
       'bookmarks_title': 'Favoritos',
       'failed_to_load_bookmarks': 'Falha ao carregar favoritos.',
@@ -934,6 +968,14 @@ class AppStrings {
       'select_reciter': 'اختر القارئ',
       'search_reciter': 'ابحث عن قارئ',
       'tajweed_colors': 'ألوان التجويد',
+      'tajweed_legend_silent_letter': 'الحرف الساكن',
+      'tajweed_legend_normal_madd_2': 'مد حركتان',
+      'tajweed_legend_separated_madd_246': 'المد المنفصل (2 / 4 / 6 حركات)',
+      'tajweed_legend_connected_madd_45': 'المد المتصل (4 أو 5 حركات)',
+      'tajweed_legend_necessary_madd_6': 'المد اللازم (6 حركات)',
+      'tajweed_legend_ghunna_ikhfa': 'غنة / إخفاء',
+      'tajweed_legend_qalqala_echo': 'قلقلة',
+      'tajweed_legend_tafkhim_heavy': 'تفخيم الصوت',
       'translation': 'الترجمة',
       'arabic': 'العربية',
       'word_by_word': 'كلمة بكلمة',
@@ -971,6 +1013,7 @@ class AppStrings {
       'hizb_label': 'حزب {hizb}',
       'surah_label': 'سورة {surah}',
       'ayah_label': 'آية {ayah}',
+      'search_surah': 'ابحث عن سورة',
       'learn_title': 'خطط التعلّم',
       'bookmarks_title': 'العلامات',
       'failed_to_load_bookmarks': 'تعذر تحميل العلامات.',

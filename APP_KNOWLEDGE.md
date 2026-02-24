@@ -150,6 +150,21 @@ Behavior:
 Chapter header behavior:
 - Quran.com-style external chapter header on surah-start context.
 - Uses SurahNames font glyph + `assets/quran/bismillah.svg` when applicable.
+- Header title format follows Quran.com ordering:
+  - non-Arabic: `<chapter>. <name>` (example: `1. Al-Fatihah`)
+  - Arabic locale: Arabic name + chapter number.
+- Header subtitle uses chapter translated meaning (for example `The Opener`) when available.
+- Header bidi is explicit per locale to avoid punctuation inversion in mixed-script titles.
+
+Top controls and tajweed legend:
+- Listen and Translation remain in the top actions row.
+- `Tajweed colors` is rendered in a dedicated legend section.
+- Tajweed legend (colored dots + labels) appears only when Tajweed mode is active.
+
+Directionality and alignment:
+- Arabic ayah lines are rendered RTL and right-anchored.
+- Translation lines are forced LTR in all app locales (including Arabic UI) to avoid punctuation-order artifacts.
+- Arabic sidebar uses localized search placeholder and Arabic surah names.
 
 Translation behavior:
 - One default translation resource selected by app language:
@@ -255,7 +270,19 @@ Cache naming:
 - Translation-aware: `page_{page}_m{mushafId}_t{translationId}.json`
 - Juz index: `juz_index_m{mushafId}.json`
 
-### 4.2 QCF font manager
+### 4.2 Quran.com chapters service
+
+File: `lib/data/services/qurancom_chapters_service.dart`
+
+Responsibilities:
+- Fetch chapter labels and translated names from Quran.com:
+  - `https://api.quran.com/api/v4/chapters?language={code}`
+- Parse chapter presentation fields used by Reader header/sidebar:
+  - `name_simple`, `name_arabic`, `translated_name`.
+- Cache per-language chapter payloads in app support directory.
+- Fallback to cache if network fails; fallback again to bundled/local metadata in Reader if cache is missing.
+
+### 4.3 QCF font manager
 
 File: `lib/ui/qcf/qcf_font_manager.dart`
 

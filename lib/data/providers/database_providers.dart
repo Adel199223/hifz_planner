@@ -16,6 +16,7 @@ import '../services/forecast_simulation_service.dart';
 import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
 import '../services/qurancom_api.dart';
+import '../services/qurancom_chapters_service.dart';
 import '../services/quran_text_importer_service.dart';
 import '../services/surah_metadata_service.dart';
 import '../services/tajweed_tags_service.dart';
@@ -151,6 +152,12 @@ final surahMetadataServiceProvider = Provider<SurahMetadataService>((ref) {
 
 final quranComApiProvider = Provider<QuranComApi>((ref) {
   return QuranComApi();
+});
+
+final quranComChaptersServiceProvider = Provider<QuranComChaptersService>((
+  ref,
+) {
+  return QuranComChaptersService();
 });
 
 final qcfFontManagerProvider = Provider<QcfFontManager>((ref) {

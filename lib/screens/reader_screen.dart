@@ -12,6 +12,7 @@ import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/services/ayah_audio_service.dart';
 import '../data/services/qurancom_api.dart';
+import '../data/services/qurancom_chapters_service.dart';
 import '../l10n/app_language.dart';
 import '../l10n/app_strings.dart';
 import '../ui/audio/reciter_selection_list.dart';
@@ -50,6 +51,264 @@ const Map<int, String> _translationResourceLabelById = <int, String>{
   _translationResourceFrench: 'Muhammad Hamidullah',
   _translationResourcePortuguese: 'Samir El-Hayek',
 };
+
+const Color _tajweedLegendSilentLetterColor = Color(0xFF9CA3AF);
+const Color _tajweedLegendNormalMaddColor = Color(0xFFC59D22);
+const Color _tajweedLegendSeparatedMaddColor = Color(0xFFE88700);
+const Color _tajweedLegendConnectedMaddColor = Color(0xFFF11717);
+const Color _tajweedLegendNecessaryMaddColor = Color(0xFFB00020);
+const Color _tajweedLegendGhunnaColor = Color(0xFF0AA80A);
+const Color _tajweedLegendQalqalaColor = Color(0xFF10A7D8);
+const Color _tajweedLegendTafkhimColor = Color(0xFF2A61DF);
+
+const List<String> _fallbackSurahNamesEnglish = <String>[
+  "Al-Fatihah",
+  "Al-Baqarah",
+  "Ali 'Imran",
+  "An-Nisa",
+  "Al-Ma'idah",
+  "Al-An'am",
+  "Al-A'raf",
+  "Al-Anfal",
+  "At-Tawbah",
+  "Yunus",
+  "Hud",
+  "Yusuf",
+  "Ar-Ra'd",
+  "Ibrahim",
+  "Al-Hijr",
+  "An-Nahl",
+  "Al-Isra",
+  "Al-Kahf",
+  "Maryam",
+  "Taha",
+  "Al-Anbya",
+  "Al-Hajj",
+  "Al-Mu'minun",
+  "An-Nur",
+  "Al-Furqan",
+  "Ash-Shu'ara",
+  "An-Naml",
+  "Al-Qasas",
+  "Al-'Ankabut",
+  "Ar-Rum",
+  "Luqman",
+  "As-Sajdah",
+  "Al-Ahzab",
+  "Saba",
+  "Fatir",
+  "Ya-Sin",
+  "As-Saffat",
+  "Sad",
+  "Az-Zumar",
+  "Ghafir",
+  "Fussilat",
+  "Ash-Shuraa",
+  "Az-Zukhruf",
+  "Ad-Dukhan",
+  "Al-Jathiyah",
+  "Al-Ahqaf",
+  "Muhammad",
+  "Al-Fath",
+  "Al-Hujurat",
+  "Qaf",
+  "Adh-Dhariyat",
+  "At-Tur",
+  "An-Najm",
+  "Al-Qamar",
+  "Ar-Rahman",
+  "Al-Waqi'ah",
+  "Al-Hadid",
+  "Al-Mujadila",
+  "Al-Hashr",
+  "Al-Mumtahanah",
+  "As-Saf",
+  "Al-Jumu'ah",
+  "Al-Munafiqun",
+  "At-Taghabun",
+  "At-Talaq",
+  "At-Tahrim",
+  "Al-Mulk",
+  "Al-Qalam",
+  "Al-Haqqah",
+  "Al-Ma'arij",
+  "Nuh",
+  "Al-Jinn",
+  "Al-Muzzammil",
+  "Al-Muddaththir",
+  "Al-Qiyamah",
+  "Al-Insan",
+  "Al-Mursalat",
+  "An-Naba",
+  "An-Nazi'at",
+  "'Abasa",
+  "At-Takwir",
+  "Al-Infitar",
+  "Al-Mutaffifin",
+  "Al-Inshiqaq",
+  "Al-Buruj",
+  "At-Tariq",
+  "Al-A'la",
+  "Al-Ghashiyah",
+  "Al-Fajr",
+  "Al-Balad",
+  "Ash-Shams",
+  "Al-Layl",
+  "Ad-Duhaa",
+  "Ash-Sharh",
+  "At-Tin",
+  "Al-'Alaq",
+  "Al-Qadr",
+  "Al-Bayyinah",
+  "Az-Zalzalah",
+  "Al-'Adiyat",
+  "Al-Qari'ah",
+  "At-Takathur",
+  "Al-'Asr",
+  "Al-Humazah",
+  "Al-Fil",
+  "Quraysh",
+  "Al-Ma'un",
+  "Al-Kawthar",
+  "Al-Kafirun",
+  "An-Nasr",
+  "Al-Masad",
+  "Al-Ikhlas",
+  "Al-Falaq",
+  "An-Nas",
+];
+
+const List<String> _fallbackSurahNamesArabic = <String>[
+  "الفاتحة",
+  "البقرة",
+  "آل عمران",
+  "النساء",
+  "المائدة",
+  "الأنعام",
+  "الأعراف",
+  "الأنفال",
+  "التوبة",
+  "يونس",
+  "هود",
+  "يوسف",
+  "الرعد",
+  "ابراهيم",
+  "الحجر",
+  "النحل",
+  "الإسراء",
+  "الكهف",
+  "مريم",
+  "طه",
+  "الأنبياء",
+  "الحج",
+  "المؤمنون",
+  "النور",
+  "الفرقان",
+  "الشعراء",
+  "النمل",
+  "القصص",
+  "العنكبوت",
+  "الروم",
+  "لقمان",
+  "السجدة",
+  "الأحزاب",
+  "سبإ",
+  "فاطر",
+  "يس",
+  "الصافات",
+  "ص",
+  "الزمر",
+  "غافر",
+  "فصلت",
+  "الشورى",
+  "الزخرف",
+  "الدخان",
+  "الجاثية",
+  "الأحقاف",
+  "محمد",
+  "الفتح",
+  "الحجرات",
+  "ق",
+  "الذاريات",
+  "الطور",
+  "النجم",
+  "القمر",
+  "الرحمن",
+  "الواقعة",
+  "الحديد",
+  "المجادلة",
+  "الحشر",
+  "الممتحنة",
+  "الصف",
+  "الجمعة",
+  "المنافقون",
+  "التغابن",
+  "الطلاق",
+  "التحريم",
+  "الملك",
+  "القلم",
+  "الحاقة",
+  "المعارج",
+  "نوح",
+  "الجن",
+  "المزمل",
+  "المدثر",
+  "القيامة",
+  "الانسان",
+  "المرسلات",
+  "النبإ",
+  "النازعات",
+  "عبس",
+  "التكوير",
+  "الإنفطار",
+  "المطففين",
+  "الإنشقاق",
+  "البروج",
+  "الطارق",
+  "الأعلى",
+  "الغاشية",
+  "الفجر",
+  "البلد",
+  "الشمس",
+  "الليل",
+  "الضحى",
+  "الشرح",
+  "التين",
+  "العلق",
+  "القدر",
+  "البينة",
+  "الزلزلة",
+  "العاديات",
+  "القارعة",
+  "التكاثر",
+  "العصر",
+  "الهمزة",
+  "الفيل",
+  "قريش",
+  "الماعون",
+  "الكوثر",
+  "الكافرون",
+  "النصر",
+  "المسد",
+  "الإخلاص",
+  "الفلق",
+  "الناس",
+];
+
+const Map<int, String> _fallbackSurahMeaningsEnglish = <int, String>{
+  1: "The Opener",
+};
+
+Map<int, String> _indexedSurahMap(List<String> names) {
+  return <int, String>{
+    for (var index = 0; index < names.length; index++) index + 1: names[index],
+  };
+}
+
+final Map<int, String> _fallbackSurahNamesEnglishByNumber =
+    _indexedSurahMap(_fallbackSurahNamesEnglish);
+final Map<int, String> _fallbackSurahNamesArabicByNumber =
+    _indexedSurahMap(_fallbackSurahNamesArabic);
 
 const Map<int, Set<int>> _staticCenteredMushafLines = <int, Set<int>>{
   255: <int>{2},
@@ -105,8 +364,26 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   String _mushafVerseSearchQuery = '';
   String _mushafJuzSearchQuery = '';
   String _mushafPageSearchQuery = '';
-  final Map<int, String> _surahNamesEn = <int, String>{};
-  final Map<int, String> _surahNamesAr = <int, String>{};
+  final Map<AppLanguage, Map<int, String>> _surahNamesByLanguage =
+      <AppLanguage, Map<int, String>>{
+    AppLanguage.english:
+        Map<int, String>.from(_fallbackSurahNamesEnglishByNumber),
+    AppLanguage.french:
+        Map<int, String>.from(_fallbackSurahNamesEnglishByNumber),
+    AppLanguage.portuguese:
+        Map<int, String>.from(_fallbackSurahNamesEnglishByNumber),
+    AppLanguage.arabic:
+        Map<int, String>.from(_fallbackSurahNamesArabicByNumber),
+  };
+  final Map<AppLanguage, Map<int, String>> _surahMeaningsByLanguage =
+      <AppLanguage, Map<int, String>>{
+    AppLanguage.english:
+        Map<int, String>.from(_fallbackSurahMeaningsEnglish),
+    for (final language in AppLanguage.values.where(
+      (value) => value != AppLanguage.english,
+    ))
+      language: <int, String>{},
+  };
   int? _selectedPage;
   Future<List<int>>? _availablePagesFuture;
   Future<List<MushafJuzNavEntry>>? _juzIndexFuture;
@@ -640,37 +917,181 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _loadSurahMetadata() async {
+    final namesByLanguage = <AppLanguage, Map<int, String>>{
+      for (final language in AppLanguage.values)
+        language: Map<int, String>.from(_surahNamesByLanguage[language]!),
+    };
+    final meaningsByLanguage = <AppLanguage, Map<int, String>>{
+      for (final language in AppLanguage.values)
+        language: Map<int, String>.from(_surahMeaningsByLanguage[language]!),
+    };
+
     try {
       final metadata = ref.read(surahMetadataServiceProvider);
       await metadata.ensureLoaded();
+      for (final entry in metadata.getAll()) {
+        namesByLanguage[AppLanguage.english]![entry.number] = entry.en;
+        namesByLanguage[AppLanguage.french]![entry.number] = entry.en;
+        namesByLanguage[AppLanguage.portuguese]![entry.number] = entry.en;
+        namesByLanguage[AppLanguage.arabic]![entry.number] = entry.ar;
+
+        meaningsByLanguage[AppLanguage.french]![entry.number] = entry.fr;
+        meaningsByLanguage[AppLanguage.portuguese]![entry.number] = entry.pt;
+        meaningsByLanguage[AppLanguage.arabic]![entry.number] =
+            'سورة ${entry.ar}';
+      }
+
       if (!mounted) {
         return;
       }
-      final namesEn = <int, String>{};
-      final namesAr = <int, String>{};
-      for (final entry in metadata.getAll()) {
-        namesEn[entry.number] = entry.en;
-        namesAr[entry.number] = entry.ar;
-      }
       setState(() {
-        _surahNamesEn
-          ..clear()
-          ..addAll(namesEn);
-        _surahNamesAr
-          ..clear()
-          ..addAll(namesAr);
+        for (final language in AppLanguage.values) {
+          _surahNamesByLanguage[language]!
+            ..clear()
+            ..addAll(namesByLanguage[language]!);
+          _surahMeaningsByLanguage[language]!
+            ..clear()
+            ..addAll(meaningsByLanguage[language]!);
+        }
       });
+
+      final chaptersService = ref.read(quranComChaptersServiceProvider);
+      if (_isWidgetTestBinding() &&
+          chaptersService.runtimeType == QuranComChaptersService) {
+        return;
+      }
+
+      final chaptersByLanguage = await Future.wait<
+          List<QuranComChapterEntry>>(<Future<List<QuranComChapterEntry>>>[
+        for (final language in AppLanguage.values)
+          chaptersService.getChapters(languageCode: language.code),
+      ]);
+      for (var index = 0; index < AppLanguage.values.length; index++) {
+        final language = AppLanguage.values[index];
+        final entries = chaptersByLanguage[index];
+        for (final entry in entries) {
+          final localizedName = language == AppLanguage.arabic
+              ? _firstNonEmpty(
+                  entry.nameArabic,
+                  entry.translatedName,
+                  entry.nameSimple,
+                )
+              : _firstNonEmpty(entry.nameSimple, entry.nameArabic);
+          if (localizedName.isNotEmpty) {
+            namesByLanguage[language]![entry.id] = localizedName;
+          }
+
+          final translated = _firstNonEmpty(entry.translatedName);
+          if (translated.isNotEmpty) {
+            meaningsByLanguage[language]![entry.id] = translated;
+          }
+        }
+      }
     } catch (_) {
-      // Use "Surah N" fallback labels when metadata fails to load.
+      // Fall back to built-in labels when metadata cannot be loaded.
     }
+
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      for (final language in AppLanguage.values) {
+        final targetNames = _surahNamesByLanguage[language]!;
+        targetNames
+          ..clear()
+          ..addAll(namesByLanguage[language]!);
+
+        final targetMeanings = _surahMeaningsByLanguage[language]!;
+        targetMeanings
+          ..clear()
+          ..addAll(meaningsByLanguage[language]!);
+      }
+    });
+  }
+
+  bool _isWidgetTestBinding() {
+    final bindingName = WidgetsBinding.instance.runtimeType.toString();
+    return bindingName.contains('TestWidgetsFlutterBinding');
+  }
+
+  String _firstNonEmpty(String? first, [String? second, String? third]) {
+    for (final candidate in <String?>[first, second, third]) {
+      final normalized = (candidate ?? '').trim();
+      if (normalized.isNotEmpty) {
+        return normalized;
+      }
+    }
+    return '';
+  }
+
+  String _surahNameFor({
+    required int surahNumber,
+    required AppLanguage language,
+  }) {
+    final localized = _firstNonEmpty(
+      _surahNamesByLanguage[language]?[surahNumber],
+    );
+    if (localized.isNotEmpty) {
+      return localized;
+    }
+    final english = _firstNonEmpty(
+      _surahNamesByLanguage[AppLanguage.english]?[surahNumber],
+    );
+    if (english.isNotEmpty) {
+      return english;
+    }
+    final arabic = _firstNonEmpty(
+      _surahNamesByLanguage[AppLanguage.arabic]?[surahNumber],
+    );
+    if (arabic.isNotEmpty) {
+      return arabic;
+    }
+    return _strings.surahLabel(surahNumber);
+  }
+
+  String _surahMeaningFor({
+    required int surahNumber,
+    required AppLanguage language,
+  }) {
+    final localized = _firstNonEmpty(
+      _surahMeaningsByLanguage[language]?[surahNumber],
+    );
+    if (localized.isNotEmpty) {
+      return localized;
+    }
+    return '';
+  }
+
+  _ChapterHeaderPresentation _chapterHeaderPresentation(int chapter) {
+    final language = ref.read(appPreferencesProvider).language;
+    final surahName = _surahNameFor(
+      surahNumber: chapter,
+      language: language,
+    );
+    final subtitle = _surahMeaningFor(
+      surahNumber: chapter,
+      language: language,
+    );
+    final title = language == AppLanguage.arabic
+        ? '$surahName $chapter'
+        : '$chapter. $surahName';
+    return _ChapterHeaderPresentation(
+      title: title,
+      subtitle: subtitle,
+      isRtl: language == AppLanguage.arabic,
+    );
   }
 
   String _surahLabelFor(int surahNumber) {
-    final enName = _surahNamesEn[surahNumber];
-    if (enName == null || enName.trim().isEmpty) {
-      return '$surahNumber. ${_strings.surahLabel(surahNumber)}';
+    final language = ref.read(appPreferencesProvider).language;
+    final surahName = _surahNameFor(
+      surahNumber: surahNumber,
+      language: language,
+    );
+    if (language == AppLanguage.arabic) {
+      return '$surahName $surahNumber';
     }
-    return '$surahNumber. $enName';
+    return '$surahNumber. $surahName';
   }
 
   int _translationResourceIdForLanguage(AppLanguage language) {
@@ -1628,7 +2049,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       textDirection: TextDirection.rtl,
       spacing: _verseByVerseWordGap,
       runSpacing: _verseByVerseWordRunSpacing,
-      alignment: WrapAlignment.start,
+      alignment: WrapAlignment.end,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         for (var wordIndex = 0; wordIndex < data.words.length; wordIndex++)
@@ -1881,9 +2302,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
 
     final chapter = firstAyah.surah;
-    final transliterated =
-        _surahNamesEn[chapter] ?? _strings.surahLabel(chapter);
-    final translated = _strings.surahLabel(chapter);
+    final presentation = _chapterHeaderPresentation(chapter);
     final showBasmala = chapter != 1 && chapter != 9;
     final colorScheme = Theme.of(context).colorScheme;
     final headerTitleStyle =
@@ -1904,39 +2323,50 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Directionality(
-              textDirection: TextDirection.rtl,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      chapter.toString().padLeft(3, '0'),
-                      style: const TextStyle(
-                        fontFamily: 'SurahNames',
-                        fontSize: _mushafChapterIconFontSize,
-                        height: 0.9,
-                      ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                key: ValueKey('reader_verse_chapter_header_row_$chapter'),
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                textDirection: TextDirection.ltr,
+                children: [
+                  Text(
+                    chapter.toString().padLeft(3, '0'),
+                    key: ValueKey('reader_verse_chapter_icon_$chapter'),
+                    style: const TextStyle(
+                      fontFamily: 'SurahNames',
+                      fontSize: _mushafChapterIconFontSize,
+                      height: 0.9,
                     ),
-                    const SizedBox(width: 14),
-                    Column(
+                  ),
+                  const SizedBox(width: 14),
+                  Directionality(
+                    textDirection: presentation.isRtl
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: presentation.isRtl
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$chapter. $transliterated',
+                          presentation.title,
+                          key: ValueKey('reader_verse_chapter_title_$chapter'),
                           style: headerTitleStyle,
                         ),
-                        Text(
-                          translated,
-                          style: headerSubtitleStyle,
-                        ),
+                        if (presentation.subtitle.isNotEmpty)
+                          Text(
+                            presentation.subtitle,
+                            key: ValueKey(
+                                'reader_verse_chapter_subtitle_$chapter'),
+                            style: headerSubtitleStyle,
+                          ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             if (showBasmala) ...[
@@ -2014,22 +2444,29 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   ayahKey: ayahKey,
                 ),
                 const SizedBox(height: 8),
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: arabicWidget,
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: arabicWidget,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  translationText,
-                  key: ValueKey('reader_verse_translation_$ayahKey'),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w400,
-                          ) ??
-                      const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w400,
-                      ),
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    translationText,
+                    key: ValueKey('reader_verse_translation_$ayahKey'),
+                    textAlign: TextAlign.start,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w400,
+                            ) ??
+                        const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w400,
+                        ),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 _buildVerseByVerseBottomActionRow(ayahKey: ayahKey),
@@ -2279,78 +2716,185 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
+  Widget _buildTajweedLegendSection({
+    required String keyPrefix,
+    required bool showLegend,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final legendItems = <_TajweedLegendItem>[
+      _TajweedLegendItem(
+        color: _tajweedLegendSilentLetterColor,
+        label: _strings.tajweedLegendSilentLetter,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendNormalMaddColor,
+        label: _strings.tajweedLegendNormalMadd2,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendSeparatedMaddColor,
+        label: _strings.tajweedLegendSeparatedMadd246,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendConnectedMaddColor,
+        label: _strings.tajweedLegendConnectedMadd45,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendNecessaryMaddColor,
+        label: _strings.tajweedLegendNecessaryMadd6,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendGhunnaColor,
+        label: _strings.tajweedLegendGhunnaIkhfa,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendQalqalaColor,
+        label: _strings.tajweedLegendQalqalaEcho,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendTafkhimColor,
+        label: _strings.tajweedLegendTafkhimHeavy,
+      ),
+    ];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showLegend)
+          DecoratedBox(
+            key: ValueKey('${keyPrefix}_tajweed_legend'),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: SingleChildScrollView(
+                key: ValueKey('${keyPrefix}_tajweed_legend_scroll'),
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var index = 0; index < legendItems.length; index++) ...[
+                      if (index > 0) const SizedBox(width: 18),
+                      _buildTajweedLegendChip(item: legendItems[index]),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        if (showLegend) const SizedBox(height: 8),
+        KeyedSubtree(
+          key: ValueKey('${keyPrefix}_tajweed_colors'),
+          child: _ReaderAudioPill(label: _strings.tajweedColors),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTajweedLegendChip({
+    required _TajweedLegendItem item,
+  }) {
+    final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+        );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: item.color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          item.label,
+          style: textStyle,
+          softWrap: false,
+          maxLines: 1,
+          overflow: TextOverflow.fade,
+        ),
+      ],
+    );
+  }
+
   Widget _buildVerseByVerseTopActionsRow({
     required int translationResourceId,
     required AyahData? firstAyah,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     final translationLabel = _strings.translationLabel(
       _translationResourceLabelForId(translationResourceId),
     );
     final topActionsEndInset = _readerTopActionsEndInset();
 
-    return Padding(
-      padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
-      child: Row(
-        key: const ValueKey('reader_verse_top_actions'),
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              key: const ValueKey('reader_verse_top_actions_scroll'),
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  OutlinedButton.icon(
-                    key: const ValueKey('reader_verse_listen_button'),
-                    onPressed: firstAyah == null
-                        ? null
-                        : () => unawaited(_playFromAyahAudio(firstAyah)),
-                    icon: const Icon(Icons.play_arrow_rounded),
-                    label: Text(_strings.listen),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: Row(
+            key: const ValueKey('reader_verse_top_actions'),
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  key: const ValueKey('reader_verse_top_actions_scroll'),
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      OutlinedButton.icon(
+                        key: const ValueKey('reader_verse_listen_button'),
+                        onPressed: firstAyah == null
+                            ? null
+                            : () => unawaited(_playFromAyahAudio(firstAyah)),
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: Text(_strings.listen),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        key: const ValueKey('reader_verse_translation_button'),
+                        onPressed: () {
+                          setState(() {
+                            _setMushafSettingsOpen(true);
+                            _mushafSettingsTab = _MushafSettingsTab.translation;
+                          });
+                        },
+                        child: Text(translationLabel),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  OutlinedButton(
-                    key: const ValueKey('reader_verse_translation_button'),
-                    onPressed: () {
-                      setState(() {
-                        _setMushafSettingsOpen(true);
-                        _mushafSettingsTab = _MushafSettingsTab.translation;
-                      });
-                    },
-                    child: Text(translationLabel),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      _strings.tajweedColors,
-                      key: const ValueKey('reader_verse_tajweed_colors'),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              IconButton(
+                key: const ValueKey('reader_verse_settings_button'),
+                icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
+                tooltip: _mushafSettingsOpen
+                    ? _strings.closeSettings
+                    : _strings.openSettings,
+                onPressed: () {
+                  setState(() {
+                    _setMushafSettingsOpen(!_mushafSettingsOpen);
+                  });
+                },
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            key: const ValueKey('reader_verse_settings_button'),
-            icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
-            tooltip: _mushafSettingsOpen
-                ? _strings.closeSettings
-                : _strings.openSettings,
-            onPressed: () {
-              setState(() {
-                _setMushafSettingsOpen(!_mushafSettingsOpen);
-              });
-            },
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: _buildTajweedLegendSection(
+            keyPrefix: 'reader_verse',
+            showLegend: _arabicRenderMode == _ArabicRenderMode.tajweed,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -2575,74 +3119,75 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget _buildMushafTopActionsRow() {
-    final colorScheme = Theme.of(context).colorScheme;
     final topActionsEndInset = _readerTopActionsEndInset();
-    return Padding(
-      padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
-      child: Row(
-        key: const ValueKey('reader_mushaf_top_actions'),
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              key: const ValueKey('reader_mushaf_top_actions_scroll'),
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  OutlinedButton.icon(
-                    key: const ValueKey('reader_mushaf_listen_button'),
-                    onPressed: () => unawaited(_playFromCurrentMushafPage()),
-                    icon: const Icon(Icons.play_arrow_rounded),
-                    label: Text(_strings.listen),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: Row(
+            key: const ValueKey('reader_mushaf_top_actions'),
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  key: const ValueKey('reader_mushaf_top_actions_scroll'),
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      OutlinedButton.icon(
+                        key: const ValueKey('reader_mushaf_listen_button'),
+                        onPressed: () =>
+                            unawaited(_playFromCurrentMushafPage()),
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: Text(_strings.listen),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton(
+                        key: const ValueKey('reader_mushaf_language_arabic'),
+                        onPressed: () {},
+                        child: Text(_strings.arabic),
+                      ),
+                      const SizedBox(width: 6),
+                      OutlinedButton(
+                        key: const ValueKey(
+                            'reader_mushaf_language_translation'),
+                        onPressed: () {
+                          setState(() {
+                            _setMushafSettingsOpen(true);
+                            _mushafSettingsTab = _MushafSettingsTab.translation;
+                          });
+                        },
+                        child: Text(_strings.translation),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    key: const ValueKey('reader_mushaf_language_arabic'),
-                    onPressed: () {},
-                    child: Text(_strings.arabic),
-                  ),
-                  const SizedBox(width: 6),
-                  OutlinedButton(
-                    key: const ValueKey('reader_mushaf_language_translation'),
-                    onPressed: () {
-                      setState(() {
-                        _setMushafSettingsOpen(true);
-                        _mushafSettingsTab = _MushafSettingsTab.translation;
-                      });
-                    },
-                    child: Text(_strings.translation),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      _strings.tajweedColors,
-                      key: const ValueKey('reader_mushaf_tajweed_colors'),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              IconButton(
+                key: const ValueKey('reader_mushaf_settings_button'),
+                icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
+                tooltip: _mushafSettingsOpen
+                    ? _strings.closeSettings
+                    : _strings.openSettings,
+                onPressed: () {
+                  setState(() {
+                    _setMushafSettingsOpen(!_mushafSettingsOpen);
+                  });
+                },
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            key: const ValueKey('reader_mushaf_settings_button'),
-            icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
-            tooltip: _mushafSettingsOpen
-                ? _strings.closeSettings
-                : _strings.openSettings,
-            onPressed: () {
-              setState(() {
-                _setMushafSettingsOpen(!_mushafSettingsOpen);
-              });
-            },
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: _buildTajweedLegendSection(
+            keyPrefix: 'reader_mushaf',
+            showLegend: _arabicRenderMode == _ArabicRenderMode.tajweed,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -2711,9 +3256,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       return null;
     }
 
-    final transliterated =
-        _surahNamesEn[chapter] ?? _strings.surahLabel(chapter);
-    final translated = _strings.surahLabel(chapter);
+    final presentation = _chapterHeaderPresentation(chapter);
     final showBasmala = chapter != 1 && chapter != 9;
     final colorScheme = Theme.of(context).colorScheme;
     final headerTitleStyle =
@@ -2734,40 +3277,50 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Directionality(
-              textDirection: TextDirection.rtl,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      chapter.toString().padLeft(3, '0'),
-                      key: ValueKey('reader_mushaf_chapter_icon_$chapter'),
-                      style: const TextStyle(
-                        fontFamily: 'SurahNames',
-                        fontSize: _mushafChapterIconFontSize,
-                        height: 0.9,
-                      ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                key: ValueKey('reader_mushaf_chapter_header_row_$chapter'),
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                textDirection: TextDirection.ltr,
+                children: [
+                  Text(
+                    chapter.toString().padLeft(3, '0'),
+                    key: ValueKey('reader_mushaf_chapter_icon_$chapter'),
+                    style: const TextStyle(
+                      fontFamily: 'SurahNames',
+                      fontSize: _mushafChapterIconFontSize,
+                      height: 0.9,
                     ),
-                    const SizedBox(width: 14),
-                    Column(
+                  ),
+                  const SizedBox(width: 14),
+                  Directionality(
+                    textDirection: presentation.isRtl
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: presentation.isRtl
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$chapter. $transliterated',
+                          presentation.title,
+                          key: ValueKey('reader_mushaf_chapter_title_$chapter'),
                           style: headerTitleStyle,
                         ),
-                        Text(
-                          translated,
-                          style: headerSubtitleStyle,
-                        ),
+                        if (presentation.subtitle.isNotEmpty)
+                          Text(
+                            presentation.subtitle,
+                            key: ValueKey(
+                                'reader_mushaf_chapter_subtitle_$chapter'),
+                            style: headerSubtitleStyle,
+                          ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             if (showBasmala) ...[
@@ -3547,15 +4100,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   List<int> _filteredMushafSurahNumbers() {
     final query = _mushafSurahSearchQuery.trim().toLowerCase();
+    final language = ref.read(appPreferencesProvider).language;
     final all = List<int>.generate(114, (index) => index + 1);
     if (query.isEmpty) {
       return all;
     }
     return all.where((surah) {
       final numberMatch = surah.toString().contains(query);
-      final enName = (_surahNamesEn[surah] ?? '').toLowerCase();
-      final arName = (_surahNamesAr[surah] ?? '').toLowerCase();
-      return numberMatch || enName.contains(query) || arName.contains(query);
+      final localizedName =
+          (_surahNamesByLanguage[language]?[surah] ?? '').toLowerCase();
+      final enName = (_surahNamesByLanguage[AppLanguage.english]?[surah] ?? '')
+          .toLowerCase();
+      final arName = (_surahNamesByLanguage[AppLanguage.arabic]?[surah] ?? '')
+          .toLowerCase();
+      return numberMatch ||
+          localizedName.contains(query) ||
+          enName.contains(query) ||
+          arName.contains(query);
     }).toList(growable: false);
   }
 
@@ -3656,7 +4217,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   child: ListTile(
                     key: ValueKey('reader_mushaf_nav_surah_$surah'),
                     selected: selected,
-                    title: Text(_surahLabelFor(surah)),
+                    title: Text(
+                      _surahLabelFor(surah),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     onTap: () {
                       if (_viewMode == _ReaderViewMode.simple) {
                         _selectSurah(surah);
@@ -3684,6 +4249,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: DropdownButtonFormField<int>(
             key: const ValueKey('reader_mushaf_nav_verse_surah'),
+            isExpanded: true,
             value: _verseTabSelectedSurah,
             decoration: InputDecoration(
               labelText: _strings.surah,
@@ -3693,7 +4259,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               for (var surah = 1; surah <= 114; surah++)
                 DropdownMenuItem<int>(
                   value: surah,
-                  child: Text(_surahLabelFor(surah)),
+                  child: Text(
+                    _surahLabelFor(surah),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
             ],
             onChanged: (value) {
@@ -4451,6 +5021,16 @@ class _ReaderAudioPill extends StatelessWidget {
   }
 }
 
+class _TajweedLegendItem {
+  const _TajweedLegendItem({
+    required this.color,
+    required this.label,
+  });
+
+  final Color color;
+  final String label;
+}
+
 class _VerseByVerseRowRenderData {
   const _VerseByVerseRowRenderData({
     required this.qcfFamilyName,
@@ -4461,6 +5041,18 @@ class _VerseByVerseRowRenderData {
   final String qcfFamilyName;
   final List<MushafWord> words;
   final String translationText;
+}
+
+class _ChapterHeaderPresentation {
+  const _ChapterHeaderPresentation({
+    required this.title,
+    required this.subtitle,
+    required this.isRtl,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool isRtl;
 }
 
 class _MushafRenderData {

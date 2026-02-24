@@ -15,6 +15,7 @@ import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/bookmark_repo.dart';
 import 'package:hifz_planner/data/repositories/note_repo.dart';
 import 'package:hifz_planner/data/services/qurancom_api.dart';
+import 'package:hifz_planner/data/services/qurancom_chapters_service.dart';
 import 'package:hifz_planner/data/services/ayah_audio_service.dart';
 import 'package:hifz_planner/data/services/ayah_audio_source.dart';
 import 'package:hifz_planner/data/services/tajweed_tags_service.dart';
@@ -42,6 +43,7 @@ void main() {
 
     await _seedAyahs(db);
     await _pumpReader(tester, container);
+    await tester.pumpAndSettle();
 
     final surahList = find.byKey(const ValueKey('reader_surah_list'));
     expect(find.byKey(const ValueKey('surah_tile_1')), findsOneWidget);
@@ -273,6 +275,7 @@ void main() {
       container,
       locale: const Locale('ar'),
     );
+    await tester.pumpAndSettle();
 
     expect(find.text('آية بآية'), findsOneWidget);
     expect(find.text('القراءة'), findsOneWidget);
@@ -286,6 +289,160 @@ void main() {
     final context =
         tester.element(find.byKey(const ValueKey('reader_view_toggle')));
     expect(Directionality.of(context), TextDirection.rtl);
+  });
+
+  testWidgets('verse chapter header uses Quran.com title/subtitle and layout',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'en'),
+          ),
+        ),
+        quranComChaptersServiceProvider.overrideWithValue(
+          _FakeQuranComChaptersService(
+            byLanguageCode: <String, List<QuranComChapterEntry>>{
+              'en': const <QuranComChapterEntry>[
+                QuranComChapterEntry(
+                  id: 1,
+                  nameSimple: 'Al-Fatihah',
+                  nameArabic: 'الفاتحة',
+                  translatedName: 'The Opener',
+                  translatedLanguageName: 'english',
+                ),
+              ],
+            },
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    final iconFinder =
+        find.byKey(const ValueKey('reader_verse_chapter_icon_1'));
+    final titleFinder =
+        find.byKey(const ValueKey('reader_verse_chapter_title_1'));
+    final subtitleFinder =
+        find.byKey(const ValueKey('reader_verse_chapter_subtitle_1'));
+    await pumpUntilFound(tester, titleFinder);
+    expect(iconFinder, findsOneWidget);
+    expect(titleFinder, findsOneWidget);
+    expect(subtitleFinder, findsOneWidget);
+    final titleText = tester.widget<Text>(titleFinder);
+    final subtitleText = tester.widget<Text>(subtitleFinder);
+    expect(titleText.data, startsWith('1.'));
+    expect(titleText.data, contains('Al-Fatihah'));
+    expect(subtitleText.data, contains('Opener'));
+    expect(find.text('Surah 1'), findsNothing);
+    expect(
+      tester.getTopLeft(iconFinder).dx,
+      lessThan(tester.getTopLeft(titleFinder).dx),
+    );
+  });
+
+  testWidgets('tajweed legend appears only in tajweed mode', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+
+    expect(find.byKey(const ValueKey('reader_verse_tajweed_legend')),
+        findsNothing);
+    expect(find.byKey(const ValueKey('reader_verse_tajweed_colors')),
+        findsOneWidget);
+
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_settings_button')));
+    await tester.pumpAndSettle();
+    await tester
+        .tap(find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('reader_verse_tajweed_legend')),
+        findsOneWidget);
+    expect(find.text('Silent letter'), findsOneWidget);
+  });
+
+  testWidgets(
+      'arabic locale localizes surah search/list and keeps translation LTR',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'ar'),
+          ),
+        ),
+        quranComChaptersServiceProvider.overrideWithValue(
+          _FakeQuranComChaptersService(
+            byLanguageCode: <String, List<QuranComChapterEntry>>{
+              'ar': const <QuranComChapterEntry>[
+                QuranComChapterEntry(
+                  id: 1,
+                  nameSimple: 'Al-Fatihah',
+                  nameArabic: 'الفاتحة',
+                  translatedName: 'سورة الفاتحة',
+                  translatedLanguageName: 'arabic',
+                ),
+              ],
+            },
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      locale: const Locale('ar'),
+    );
+    await pumpUntilFound(tester, find.text('ابحث عن سورة'));
+    expect(find.text('ابحث عن سورة'), findsOneWidget);
+    final firstSurahTile =
+        find.byKey(const ValueKey('reader_mushaf_nav_surah_1'));
+    await pumpUntilFound(tester, firstSurahTile);
+    final firstSurahLabel = tester.widget<Text>(
+      find.descendant(of: firstSurahTile, matching: find.byType(Text)).first,
+    );
+    expect(firstSurahLabel.data, contains('الفاتحة'));
+    expect(find.text('سورة 1'), findsNothing);
+
+    final translationDirection = find.ancestor(
+      of: find.byKey(const ValueKey('reader_verse_translation_1:1')),
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is Directionality &&
+            widget.textDirection == TextDirection.ltr,
+      ),
+    );
+    expect(translationDirection, findsOneWidget);
   });
 
   testWidgets(
@@ -3583,6 +3740,36 @@ class _FakeQuranComApi extends QuranComApi {
             verseKey: '${index + 1}:1',
           ),
         );
+  }
+}
+
+class _FakeQuranComChaptersService extends QuranComChaptersService {
+  _FakeQuranComChaptersService({
+    required Map<String, List<QuranComChapterEntry>> byLanguageCode,
+  })  : _byLanguageCode = byLanguageCode,
+        super();
+
+  final Map<String, List<QuranComChapterEntry>> _byLanguageCode;
+
+  @override
+  Future<List<QuranComChapterEntry>> getChapters({
+    required String languageCode,
+  }) async {
+    return _byLanguageCode[languageCode] ?? const <QuranComChapterEntry>[];
+  }
+
+  @override
+  Future<QuranComChapterEntry?> getChapter({
+    required int chapterId,
+    required String languageCode,
+  }) async {
+    final chapters = await getChapters(languageCode: languageCode);
+    for (final chapter in chapters) {
+      if (chapter.id == chapterId) {
+        return chapter;
+      }
+    }
+    return null;
   }
 }
 
