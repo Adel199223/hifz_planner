@@ -100,6 +100,17 @@ Use this glossary to keep terminology consistent across Reader, planner/scheduli
 | `companion_stage2_recite_now` | Recite with minimal cue. | Recite avec indice minimal. | Recite com pista minima. | رتل بأقل تلميح. |
 | `companion_stage2_correction_required_message` | Correction playback is required before the next Stage-2 attempt. | La correction est requise avant le prochain essai de l'etape 2. | A correcao e obrigatoria antes da proxima tentativa da etapa 2. | يلزم تشغيل التصحيح قبل محاولة المرحلة 2 التالية. |
 | `companion_stage2_correction_action` | Play Stage-2 Correction | Lancer la correction etape 2 | Reproduzir correcao da etapa 2 | تشغيل تصحيح المرحلة 2 |
+| `companion_stage3_mode_label` | Stage 3 mode | Mode etape 3 | Modo da etapa 3 | وضع المرحلة 3 |
+| `companion_stage3_mode_weak_prelude` | Weak Prelude | Prelude faible | Preludio fraco | تمهيد ضعيف |
+| `companion_stage3_mode_hidden_recall` | Hidden Recall | Rappel cache | Recordacao oculta | استرجاع مخفي |
+| `companion_stage3_mode_linking` | Linking | Liaison | Ligacao | ربط |
+| `companion_stage3_mode_discrimination` | Discrimination | Discrimination | Discriminacao | تمييز |
+| `companion_stage3_mode_correction` | Correction | Correction | Correcao | تصحيح |
+| `companion_stage3_mode_checkpoint` | Checkpoint | Point de controle | Ponto de controle | نقطة تحقق |
+| `companion_stage3_mode_remediation` | Remediation | Remediation | Remediacao | معالجة |
+| `companion_stage3_recite_now` | Recite from hidden recall. | Recite depuis le rappel cache. | Recite a partir da recordacao oculta. | رتل من الاسترجاع المخفي. |
+| `companion_stage3_correction_required_message` | Correction playback is required before the next Stage-3 attempt. | La correction est requise avant le prochain essai de l'etape 3. | A correcao e obrigatoria antes da proxima tentativa da etapa 3. | يلزم تشغيل التصحيح قبل محاولة المرحلة 3 التالية. |
+| `companion_stage3_correction_action` | Play Stage-3 Correction | Lancer la correction etape 3 | Reproduzir correcao da etapa 3 | تشغيل تصحيح المرحلة 3 |
 | `companion_stage3_weak_prelude_banner` | Weak-prelude active: {count} verses must pass before normal hidden flow. | Prelude des versets faibles active : {count} versets doivent reussir avant le flux cache normal. | Preludio fraco ativo: {count} versos devem passar antes do fluxo oculto normal. | تم تفعيل تمهيد الآيات الضعيفة: يجب نجاح {count} آيات قبل التدفق المخفي الطبيعي. |
 | `companion_hint_button` | Hint | Indice | Dica | تلميح |
 | `companion_repeat_button` | Repeat | Repeter | Repetir | إعادة |

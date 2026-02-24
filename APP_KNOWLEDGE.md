@@ -448,9 +448,15 @@ Current capabilities:
       - telemetry-triggered discrimination checks + required linking pass (`k-1 -> k`)
       - correction gate after failures, checkpoint threshold (`0.75`), and failed-only remediation
       - budget fallback carries unresolved weak verses into guarded Stage-3 prelude
-    - Stage 3 `hidden_reveal`:
-      - hidden-first progressive reveal/interleave
-      - when `stage3WeakPreludeTargets` is populated, mandatory weak-prelude runs first (hint capped at `H1`) before normal hidden routing
+    - Stage 3 `hidden_reveal` (NEW mode runtime):
+      - deterministic Stage-3 runtime is active only for NEW runs (`state.stage3 != null`); review keeps the legacy hidden path unchanged
+      - guarded weak-prelude is mandatory when `stage3WeakPreludeTargets` is non-empty:
+        - prelude targets are consumed first in deterministic order
+        - hint cap remains `H1` until prelude targets clear
+      - Stage-3 modes are runtime-driven (`weak_prelude`, `hidden_recall`, `linking`, `discrimination`, `correction`, `checkpoint`, `remediation`)
+      - failure in any retrieval mode enforces correction exposure before next cold attempt
+      - counted-pass/readiness path remains strict (unassisted, hint-threshold limited, auto-check required by default)
+      - budget overflow is explicit (`budgetFallback` phase, non-terminal), preserving unresolved weak requirements for follow-up
   - review runs stay hidden-first (`mode=review`)
   - stage skip with confirmation logs telemetry and persists unlock stage
   - recitation controls:

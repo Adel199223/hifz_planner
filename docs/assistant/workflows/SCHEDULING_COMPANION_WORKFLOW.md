@@ -121,9 +121,20 @@ flutter test -j 1 -r expanded test/data/services/companion
     - per-verse readiness window + mandatory linking pass (`k-1 -> k`)
     - checkpoint (`>= 0.75`) + failed-only remediation + bounded remediation rounds
     - budget fallback carries unresolved weak verses into Stage-3 weak-prelude targets
-  - Stage 3 `hidden_reveal`:
-    - hidden-first reveal-on-pass with interleaving
-    - guarded weak-prelude runs first when `stage3WeakPreludeTargets` is non-empty (hint cap `H1`)
+  - Stage 3 `hidden_reveal` (NEW mode deterministic runtime):
+    - NEW runs route through Stage-3 runtime (`state.stage3 != null`); review runs stay on legacy hidden-first routing
+    - deterministic target priority:
+      - weak-prelude targets
+      - correction-required verses
+      - unresolved weak/risk verses
+      - linking deficits
+      - readiness deficits
+      - deterministic random probe
+      - fallback hidden interleave
+    - guarded weak-prelude is mandatory when `stage3WeakPreludeTargets` is non-empty (hint cap `H1`, no bypass)
+    - any failed Stage-3 retrieval mode requires correction exposure before the next cold attempt
+    - checkpoint/remediation remains failed-only with bounded remediation rounds
+    - budget overflow is explicit `budgetFallback` (non-terminal), not silent completion
 - Stage memory:
   - persist per-unit unlocked stage in `companion_unit_state`.
   - `mode=new` resumes at stored stage; `mode=review` ignores it.
@@ -142,7 +153,9 @@ flutter test -j 1 -r expanded test/data/services/companion
 
 - Keep retrieval strength derived from hint usage, response latency, and evaluator confidence.
 - Exclude Stage-1 `encode_echo` attempts from retrieval-strength aggregates.
+- Exclude Stage-3 `encode_echo` correction exposures from retrieval-strength aggregates.
 - Include Stage-1 elapsed chunk time in `new_memorization` calibration samples.
+- Keep Stage-3 semantics schema-free in `telemetry_json` (`stage3_mode`, `stage3_phase`, `stage3_step`, risk/readiness/lifecycle keys).
 - Avoid binary pass/fail-only calibration inputs; preserve graded signal to improve adaptation.
 - If constants are tuned, update both:
   - this workflow doc (policy notes)

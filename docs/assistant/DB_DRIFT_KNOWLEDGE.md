@@ -116,7 +116,7 @@ Tables:
     - `time_on_verse_ms`
     - `time_on_chunk_ms`
     - `telemetry_json` (non-core payload)
-  - Stage-2 semantics are encoded in `telemetry_json` (no schema change):
+  - Stage-2 and Stage-3 semantics are encoded in `telemetry_json` (no schema change):
     - `stage2_mode`
     - `stage2_phase`
     - `stage2_step`
@@ -127,6 +127,15 @@ Tables:
     - `link_prev_verse_order`
     - `readiness_counted_pass`
     - `lifecycle_hook` (`stage4_candidate`, `stage5_candidate`)
+    - `stage3_mode`
+    - `stage3_phase`
+    - `stage3_step` (`hidden_attempt`, `linking`, `discrimination`, `checkpoint`, `remediation`, `stage3_weak_prelude`, `correction_exposure`)
+    - `stage3_error_type`
+  - Stage-3 runtime keeps `attempt_type` within existing constraints:
+    - retrieval attempts remain `probe`/`checkpoint`
+    - correction exposure remains `encode_echo`
+  - stage-aware timing attribution uses existing typed columns:
+    - `time_on_verse_ms` and `time_on_chunk_ms` are written from the active runtime (Stage 1/2/3)
 - `companion_unit_state` stores per-unit unlocked stage for new memorization resume.
 - `companion_stage_event` stores stage transition telemetry (`auto_unlock`, `user_skip`, `resume_stage`).
 - `companion_step_proficiency` stores EMA proficiency at `(unit, surah, ayah)` granularity.
