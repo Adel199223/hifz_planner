@@ -2611,6 +2611,18 @@ class $AppSettingsTable extends AppSettings
       GeneratedColumn<String>(
           'typical_grade_distribution_json', aliasedName, true,
           type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _schedulingPrefsJsonMeta =
+      const VerificationMeta('schedulingPrefsJson');
+  @override
+  late final GeneratedColumn<String> schedulingPrefsJson =
+      GeneratedColumn<String>('scheduling_prefs_json', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _schedulingOverridesJsonMeta =
+      const VerificationMeta('schedulingOverridesJson');
+  @override
+  late final GeneratedColumn<String> schedulingOverridesJson =
+      GeneratedColumn<String>('scheduling_overrides_json', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _updatedAtDayMeta =
       const VerificationMeta('updatedAtDay');
   @override
@@ -2630,6 +2642,8 @@ class $AppSettingsTable extends AppSettings
         avgReviewMinutesPerAyah,
         requirePageMetadata,
         typicalGradeDistributionJson,
+        schedulingPrefsJson,
+        schedulingOverridesJson,
         updatedAtDay
       ];
   @override
@@ -2719,6 +2733,19 @@ class $AppSettingsTable extends AppSettings
               data['typical_grade_distribution_json']!,
               _typicalGradeDistributionJsonMeta));
     }
+    if (data.containsKey('scheduling_prefs_json')) {
+      context.handle(
+          _schedulingPrefsJsonMeta,
+          schedulingPrefsJson.isAcceptableOrUnknown(
+              data['scheduling_prefs_json']!, _schedulingPrefsJsonMeta));
+    }
+    if (data.containsKey('scheduling_overrides_json')) {
+      context.handle(
+          _schedulingOverridesJsonMeta,
+          schedulingOverridesJson.isAcceptableOrUnknown(
+              data['scheduling_overrides_json']!,
+              _schedulingOverridesJsonMeta));
+    }
     if (data.containsKey('updated_at_day')) {
       context.handle(
           _updatedAtDayMeta,
@@ -2762,6 +2789,11 @@ class $AppSettingsTable extends AppSettings
       typicalGradeDistributionJson: attachedDatabase.typeMapping.read(
           DriftSqlType.string,
           data['${effectivePrefix}typical_grade_distribution_json']),
+      schedulingPrefsJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}scheduling_prefs_json']),
+      schedulingOverridesJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}scheduling_overrides_json']),
       updatedAtDay: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}updated_at_day'])!,
     );
@@ -2785,6 +2817,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final double avgReviewMinutesPerAyah;
   final int requirePageMetadata;
   final String? typicalGradeDistributionJson;
+  final String? schedulingPrefsJson;
+  final String? schedulingOverridesJson;
   final int updatedAtDay;
   const AppSetting(
       {required this.id,
@@ -2798,6 +2832,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       required this.avgReviewMinutesPerAyah,
       required this.requirePageMetadata,
       this.typicalGradeDistributionJson,
+      this.schedulingPrefsJson,
+      this.schedulingOverridesJson,
       required this.updatedAtDay});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2818,6 +2854,13 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     if (!nullToAbsent || typicalGradeDistributionJson != null) {
       map['typical_grade_distribution_json'] =
           Variable<String>(typicalGradeDistributionJson);
+    }
+    if (!nullToAbsent || schedulingPrefsJson != null) {
+      map['scheduling_prefs_json'] = Variable<String>(schedulingPrefsJson);
+    }
+    if (!nullToAbsent || schedulingOverridesJson != null) {
+      map['scheduling_overrides_json'] =
+          Variable<String>(schedulingOverridesJson);
     }
     map['updated_at_day'] = Variable<int>(updatedAtDay);
     return map;
@@ -2841,6 +2884,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           typicalGradeDistributionJson == null && nullToAbsent
               ? const Value.absent()
               : Value(typicalGradeDistributionJson),
+      schedulingPrefsJson: schedulingPrefsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(schedulingPrefsJson),
+      schedulingOverridesJson: schedulingOverridesJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(schedulingOverridesJson),
       updatedAtDay: Value(updatedAtDay),
     );
   }
@@ -2866,6 +2915,10 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           serializer.fromJson<int>(json['requirePageMetadata']),
       typicalGradeDistributionJson:
           serializer.fromJson<String?>(json['typicalGradeDistributionJson']),
+      schedulingPrefsJson:
+          serializer.fromJson<String?>(json['schedulingPrefsJson']),
+      schedulingOverridesJson:
+          serializer.fromJson<String?>(json['schedulingOverridesJson']),
       updatedAtDay: serializer.fromJson<int>(json['updatedAtDay']),
     );
   }
@@ -2886,6 +2939,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'requirePageMetadata': serializer.toJson<int>(requirePageMetadata),
       'typicalGradeDistributionJson':
           serializer.toJson<String?>(typicalGradeDistributionJson),
+      'schedulingPrefsJson': serializer.toJson<String?>(schedulingPrefsJson),
+      'schedulingOverridesJson':
+          serializer.toJson<String?>(schedulingOverridesJson),
       'updatedAtDay': serializer.toJson<int>(updatedAtDay),
     };
   }
@@ -2902,6 +2958,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           double? avgReviewMinutesPerAyah,
           int? requirePageMetadata,
           Value<String?> typicalGradeDistributionJson = const Value.absent(),
+          Value<String?> schedulingPrefsJson = const Value.absent(),
+          Value<String?> schedulingOverridesJson = const Value.absent(),
           int? updatedAtDay}) =>
       AppSetting(
         id: id ?? this.id,
@@ -2920,6 +2978,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
         typicalGradeDistributionJson: typicalGradeDistributionJson.present
             ? typicalGradeDistributionJson.value
             : this.typicalGradeDistributionJson,
+        schedulingPrefsJson: schedulingPrefsJson.present
+            ? schedulingPrefsJson.value
+            : this.schedulingPrefsJson,
+        schedulingOverridesJson: schedulingOverridesJson.present
+            ? schedulingOverridesJson.value
+            : this.schedulingOverridesJson,
         updatedAtDay: updatedAtDay ?? this.updatedAtDay,
       );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
@@ -2953,6 +3017,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       typicalGradeDistributionJson: data.typicalGradeDistributionJson.present
           ? data.typicalGradeDistributionJson.value
           : this.typicalGradeDistributionJson,
+      schedulingPrefsJson: data.schedulingPrefsJson.present
+          ? data.schedulingPrefsJson.value
+          : this.schedulingPrefsJson,
+      schedulingOverridesJson: data.schedulingOverridesJson.present
+          ? data.schedulingOverridesJson.value
+          : this.schedulingOverridesJson,
       updatedAtDay: data.updatedAtDay.present
           ? data.updatedAtDay.value
           : this.updatedAtDay,
@@ -2974,6 +3044,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('requirePageMetadata: $requirePageMetadata, ')
           ..write(
               'typicalGradeDistributionJson: $typicalGradeDistributionJson, ')
+          ..write('schedulingPrefsJson: $schedulingPrefsJson, ')
+          ..write('schedulingOverridesJson: $schedulingOverridesJson, ')
           ..write('updatedAtDay: $updatedAtDay')
           ..write(')'))
         .toString();
@@ -2992,6 +3064,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       avgReviewMinutesPerAyah,
       requirePageMetadata,
       typicalGradeDistributionJson,
+      schedulingPrefsJson,
+      schedulingOverridesJson,
       updatedAtDay);
   @override
   bool operator ==(Object other) =>
@@ -3009,6 +3083,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.requirePageMetadata == this.requirePageMetadata &&
           other.typicalGradeDistributionJson ==
               this.typicalGradeDistributionJson &&
+          other.schedulingPrefsJson == this.schedulingPrefsJson &&
+          other.schedulingOverridesJson == this.schedulingOverridesJson &&
           other.updatedAtDay == this.updatedAtDay);
 }
 
@@ -3024,6 +3100,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<double> avgReviewMinutesPerAyah;
   final Value<int> requirePageMetadata;
   final Value<String?> typicalGradeDistributionJson;
+  final Value<String?> schedulingPrefsJson;
+  final Value<String?> schedulingOverridesJson;
   final Value<int> updatedAtDay;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
@@ -3037,6 +3115,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.avgReviewMinutesPerAyah = const Value.absent(),
     this.requirePageMetadata = const Value.absent(),
     this.typicalGradeDistributionJson = const Value.absent(),
+    this.schedulingPrefsJson = const Value.absent(),
+    this.schedulingOverridesJson = const Value.absent(),
     this.updatedAtDay = const Value.absent(),
   });
   AppSettingsCompanion.insert({
@@ -3051,6 +3131,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     required double avgReviewMinutesPerAyah,
     this.requirePageMetadata = const Value.absent(),
     this.typicalGradeDistributionJson = const Value.absent(),
+    this.schedulingPrefsJson = const Value.absent(),
+    this.schedulingOverridesJson = const Value.absent(),
     required int updatedAtDay,
   })  : profile = Value(profile),
         forceRevisionOnly = Value(forceRevisionOnly),
@@ -3072,6 +3154,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<double>? avgReviewMinutesPerAyah,
     Expression<int>? requirePageMetadata,
     Expression<String>? typicalGradeDistributionJson,
+    Expression<String>? schedulingPrefsJson,
+    Expression<String>? schedulingOverridesJson,
     Expression<int>? updatedAtDay,
   }) {
     return RawValuesInsertable({
@@ -3092,6 +3176,10 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
         'require_page_metadata': requirePageMetadata,
       if (typicalGradeDistributionJson != null)
         'typical_grade_distribution_json': typicalGradeDistributionJson,
+      if (schedulingPrefsJson != null)
+        'scheduling_prefs_json': schedulingPrefsJson,
+      if (schedulingOverridesJson != null)
+        'scheduling_overrides_json': schedulingOverridesJson,
       if (updatedAtDay != null) 'updated_at_day': updatedAtDay,
     });
   }
@@ -3108,6 +3196,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       Value<double>? avgReviewMinutesPerAyah,
       Value<int>? requirePageMetadata,
       Value<String?>? typicalGradeDistributionJson,
+      Value<String?>? schedulingPrefsJson,
+      Value<String?>? schedulingOverridesJson,
       Value<int>? updatedAtDay}) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -3123,6 +3213,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       requirePageMetadata: requirePageMetadata ?? this.requirePageMetadata,
       typicalGradeDistributionJson:
           typicalGradeDistributionJson ?? this.typicalGradeDistributionJson,
+      schedulingPrefsJson: schedulingPrefsJson ?? this.schedulingPrefsJson,
+      schedulingOverridesJson:
+          schedulingOverridesJson ?? this.schedulingOverridesJson,
       updatedAtDay: updatedAtDay ?? this.updatedAtDay,
     );
   }
@@ -3167,6 +3260,14 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       map['typical_grade_distribution_json'] =
           Variable<String>(typicalGradeDistributionJson.value);
     }
+    if (schedulingPrefsJson.present) {
+      map['scheduling_prefs_json'] =
+          Variable<String>(schedulingPrefsJson.value);
+    }
+    if (schedulingOverridesJson.present) {
+      map['scheduling_overrides_json'] =
+          Variable<String>(schedulingOverridesJson.value);
+    }
     if (updatedAtDay.present) {
       map['updated_at_day'] = Variable<int>(updatedAtDay.value);
     }
@@ -3188,6 +3289,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('requirePageMetadata: $requirePageMetadata, ')
           ..write(
               'typicalGradeDistributionJson: $typicalGradeDistributionJson, ')
+          ..write('schedulingPrefsJson: $schedulingPrefsJson, ')
+          ..write('schedulingOverridesJson: $schedulingOverridesJson, ')
           ..write('updatedAtDay: $updatedAtDay')
           ..write(')'))
         .toString();
@@ -4231,6 +4334,3229 @@ class PendingCalibrationUpdateCompanion
   }
 }
 
+class $CompanionChainSessionTable extends CompanionChainSession
+    with TableInfo<$CompanionChainSessionTable, CompanionChainSessionData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionChainSessionTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _unitIdMeta = const VerificationMeta('unitId');
+  @override
+  late final GeneratedColumn<int> unitId = GeneratedColumn<int>(
+      'unit_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES mem_unit (id) ON DELETE CASCADE'));
+  static const VerificationMeta _targetVerseCountMeta =
+      const VerificationMeta('targetVerseCount');
+  @override
+  late final GeneratedColumn<int> targetVerseCount = GeneratedColumn<int>(
+      'target_verse_count', aliasedName, false,
+      check: () => ComparableExpr(targetVerseCount).isBiggerThanValue(0),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  static const VerificationMeta _passedVerseCountMeta =
+      const VerificationMeta('passedVerseCount');
+  @override
+  late final GeneratedColumn<int> passedVerseCount = GeneratedColumn<int>(
+      'passed_verse_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _chainResultMeta =
+      const VerificationMeta('chainResult');
+  @override
+  late final GeneratedColumn<String> chainResult = GeneratedColumn<String>(
+      'chain_result', aliasedName, false,
+      check: () =>
+          chainResult.isIn(const ['completed', 'partial', 'abandoned']),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _retrievalStrengthMeta =
+      const VerificationMeta('retrievalStrength');
+  @override
+  late final GeneratedColumn<double> retrievalStrength =
+      GeneratedColumn<double>('retrieval_strength', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
+  static const VerificationMeta _startedAtSecondsMeta =
+      const VerificationMeta('startedAtSeconds');
+  @override
+  late final GeneratedColumn<int> startedAtSeconds = GeneratedColumn<int>(
+      'started_at_seconds', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _endedAtSecondsMeta =
+      const VerificationMeta('endedAtSeconds');
+  @override
+  late final GeneratedColumn<int> endedAtSeconds = GeneratedColumn<int>(
+      'ended_at_seconds', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtDayMeta =
+      const VerificationMeta('createdAtDay');
+  @override
+  late final GeneratedColumn<int> createdAtDay = GeneratedColumn<int>(
+      'created_at_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtDayMeta =
+      const VerificationMeta('updatedAtDay');
+  @override
+  late final GeneratedColumn<int> updatedAtDay = GeneratedColumn<int>(
+      'updated_at_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        unitId,
+        targetVerseCount,
+        passedVerseCount,
+        chainResult,
+        retrievalStrength,
+        startedAtSeconds,
+        endedAtSeconds,
+        createdAtDay,
+        updatedAtDay
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companion_chain_session';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CompanionChainSessionData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('unit_id')) {
+      context.handle(_unitIdMeta,
+          unitId.isAcceptableOrUnknown(data['unit_id']!, _unitIdMeta));
+    } else if (isInserting) {
+      context.missing(_unitIdMeta);
+    }
+    if (data.containsKey('target_verse_count')) {
+      context.handle(
+          _targetVerseCountMeta,
+          targetVerseCount.isAcceptableOrUnknown(
+              data['target_verse_count']!, _targetVerseCountMeta));
+    } else if (isInserting) {
+      context.missing(_targetVerseCountMeta);
+    }
+    if (data.containsKey('passed_verse_count')) {
+      context.handle(
+          _passedVerseCountMeta,
+          passedVerseCount.isAcceptableOrUnknown(
+              data['passed_verse_count']!, _passedVerseCountMeta));
+    }
+    if (data.containsKey('chain_result')) {
+      context.handle(
+          _chainResultMeta,
+          chainResult.isAcceptableOrUnknown(
+              data['chain_result']!, _chainResultMeta));
+    } else if (isInserting) {
+      context.missing(_chainResultMeta);
+    }
+    if (data.containsKey('retrieval_strength')) {
+      context.handle(
+          _retrievalStrengthMeta,
+          retrievalStrength.isAcceptableOrUnknown(
+              data['retrieval_strength']!, _retrievalStrengthMeta));
+    }
+    if (data.containsKey('started_at_seconds')) {
+      context.handle(
+          _startedAtSecondsMeta,
+          startedAtSeconds.isAcceptableOrUnknown(
+              data['started_at_seconds']!, _startedAtSecondsMeta));
+    }
+    if (data.containsKey('ended_at_seconds')) {
+      context.handle(
+          _endedAtSecondsMeta,
+          endedAtSeconds.isAcceptableOrUnknown(
+              data['ended_at_seconds']!, _endedAtSecondsMeta));
+    }
+    if (data.containsKey('created_at_day')) {
+      context.handle(
+          _createdAtDayMeta,
+          createdAtDay.isAcceptableOrUnknown(
+              data['created_at_day']!, _createdAtDayMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtDayMeta);
+    }
+    if (data.containsKey('updated_at_day')) {
+      context.handle(
+          _updatedAtDayMeta,
+          updatedAtDay.isAcceptableOrUnknown(
+              data['updated_at_day']!, _updatedAtDayMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtDayMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CompanionChainSessionData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CompanionChainSessionData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      unitId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unit_id'])!,
+      targetVerseCount: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}target_verse_count'])!,
+      passedVerseCount: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}passed_verse_count'])!,
+      chainResult: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}chain_result'])!,
+      retrievalStrength: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}retrieval_strength'])!,
+      startedAtSeconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}started_at_seconds']),
+      endedAtSeconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ended_at_seconds']),
+      createdAtDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at_day'])!,
+      updatedAtDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at_day'])!,
+    );
+  }
+
+  @override
+  $CompanionChainSessionTable createAlias(String alias) {
+    return $CompanionChainSessionTable(attachedDatabase, alias);
+  }
+}
+
+class CompanionChainSessionData extends DataClass
+    implements Insertable<CompanionChainSessionData> {
+  final int id;
+  final int unitId;
+  final int targetVerseCount;
+  final int passedVerseCount;
+  final String chainResult;
+  final double retrievalStrength;
+  final int? startedAtSeconds;
+  final int? endedAtSeconds;
+  final int createdAtDay;
+  final int updatedAtDay;
+  const CompanionChainSessionData(
+      {required this.id,
+      required this.unitId,
+      required this.targetVerseCount,
+      required this.passedVerseCount,
+      required this.chainResult,
+      required this.retrievalStrength,
+      this.startedAtSeconds,
+      this.endedAtSeconds,
+      required this.createdAtDay,
+      required this.updatedAtDay});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['unit_id'] = Variable<int>(unitId);
+    map['target_verse_count'] = Variable<int>(targetVerseCount);
+    map['passed_verse_count'] = Variable<int>(passedVerseCount);
+    map['chain_result'] = Variable<String>(chainResult);
+    map['retrieval_strength'] = Variable<double>(retrievalStrength);
+    if (!nullToAbsent || startedAtSeconds != null) {
+      map['started_at_seconds'] = Variable<int>(startedAtSeconds);
+    }
+    if (!nullToAbsent || endedAtSeconds != null) {
+      map['ended_at_seconds'] = Variable<int>(endedAtSeconds);
+    }
+    map['created_at_day'] = Variable<int>(createdAtDay);
+    map['updated_at_day'] = Variable<int>(updatedAtDay);
+    return map;
+  }
+
+  CompanionChainSessionCompanion toCompanion(bool nullToAbsent) {
+    return CompanionChainSessionCompanion(
+      id: Value(id),
+      unitId: Value(unitId),
+      targetVerseCount: Value(targetVerseCount),
+      passedVerseCount: Value(passedVerseCount),
+      chainResult: Value(chainResult),
+      retrievalStrength: Value(retrievalStrength),
+      startedAtSeconds: startedAtSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startedAtSeconds),
+      endedAtSeconds: endedAtSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endedAtSeconds),
+      createdAtDay: Value(createdAtDay),
+      updatedAtDay: Value(updatedAtDay),
+    );
+  }
+
+  factory CompanionChainSessionData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CompanionChainSessionData(
+      id: serializer.fromJson<int>(json['id']),
+      unitId: serializer.fromJson<int>(json['unitId']),
+      targetVerseCount: serializer.fromJson<int>(json['targetVerseCount']),
+      passedVerseCount: serializer.fromJson<int>(json['passedVerseCount']),
+      chainResult: serializer.fromJson<String>(json['chainResult']),
+      retrievalStrength: serializer.fromJson<double>(json['retrievalStrength']),
+      startedAtSeconds: serializer.fromJson<int?>(json['startedAtSeconds']),
+      endedAtSeconds: serializer.fromJson<int?>(json['endedAtSeconds']),
+      createdAtDay: serializer.fromJson<int>(json['createdAtDay']),
+      updatedAtDay: serializer.fromJson<int>(json['updatedAtDay']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'unitId': serializer.toJson<int>(unitId),
+      'targetVerseCount': serializer.toJson<int>(targetVerseCount),
+      'passedVerseCount': serializer.toJson<int>(passedVerseCount),
+      'chainResult': serializer.toJson<String>(chainResult),
+      'retrievalStrength': serializer.toJson<double>(retrievalStrength),
+      'startedAtSeconds': serializer.toJson<int?>(startedAtSeconds),
+      'endedAtSeconds': serializer.toJson<int?>(endedAtSeconds),
+      'createdAtDay': serializer.toJson<int>(createdAtDay),
+      'updatedAtDay': serializer.toJson<int>(updatedAtDay),
+    };
+  }
+
+  CompanionChainSessionData copyWith(
+          {int? id,
+          int? unitId,
+          int? targetVerseCount,
+          int? passedVerseCount,
+          String? chainResult,
+          double? retrievalStrength,
+          Value<int?> startedAtSeconds = const Value.absent(),
+          Value<int?> endedAtSeconds = const Value.absent(),
+          int? createdAtDay,
+          int? updatedAtDay}) =>
+      CompanionChainSessionData(
+        id: id ?? this.id,
+        unitId: unitId ?? this.unitId,
+        targetVerseCount: targetVerseCount ?? this.targetVerseCount,
+        passedVerseCount: passedVerseCount ?? this.passedVerseCount,
+        chainResult: chainResult ?? this.chainResult,
+        retrievalStrength: retrievalStrength ?? this.retrievalStrength,
+        startedAtSeconds: startedAtSeconds.present
+            ? startedAtSeconds.value
+            : this.startedAtSeconds,
+        endedAtSeconds:
+            endedAtSeconds.present ? endedAtSeconds.value : this.endedAtSeconds,
+        createdAtDay: createdAtDay ?? this.createdAtDay,
+        updatedAtDay: updatedAtDay ?? this.updatedAtDay,
+      );
+  CompanionChainSessionData copyWithCompanion(
+      CompanionChainSessionCompanion data) {
+    return CompanionChainSessionData(
+      id: data.id.present ? data.id.value : this.id,
+      unitId: data.unitId.present ? data.unitId.value : this.unitId,
+      targetVerseCount: data.targetVerseCount.present
+          ? data.targetVerseCount.value
+          : this.targetVerseCount,
+      passedVerseCount: data.passedVerseCount.present
+          ? data.passedVerseCount.value
+          : this.passedVerseCount,
+      chainResult:
+          data.chainResult.present ? data.chainResult.value : this.chainResult,
+      retrievalStrength: data.retrievalStrength.present
+          ? data.retrievalStrength.value
+          : this.retrievalStrength,
+      startedAtSeconds: data.startedAtSeconds.present
+          ? data.startedAtSeconds.value
+          : this.startedAtSeconds,
+      endedAtSeconds: data.endedAtSeconds.present
+          ? data.endedAtSeconds.value
+          : this.endedAtSeconds,
+      createdAtDay: data.createdAtDay.present
+          ? data.createdAtDay.value
+          : this.createdAtDay,
+      updatedAtDay: data.updatedAtDay.present
+          ? data.updatedAtDay.value
+          : this.updatedAtDay,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionChainSessionData(')
+          ..write('id: $id, ')
+          ..write('unitId: $unitId, ')
+          ..write('targetVerseCount: $targetVerseCount, ')
+          ..write('passedVerseCount: $passedVerseCount, ')
+          ..write('chainResult: $chainResult, ')
+          ..write('retrievalStrength: $retrievalStrength, ')
+          ..write('startedAtSeconds: $startedAtSeconds, ')
+          ..write('endedAtSeconds: $endedAtSeconds, ')
+          ..write('createdAtDay: $createdAtDay, ')
+          ..write('updatedAtDay: $updatedAtDay')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      unitId,
+      targetVerseCount,
+      passedVerseCount,
+      chainResult,
+      retrievalStrength,
+      startedAtSeconds,
+      endedAtSeconds,
+      createdAtDay,
+      updatedAtDay);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CompanionChainSessionData &&
+          other.id == this.id &&
+          other.unitId == this.unitId &&
+          other.targetVerseCount == this.targetVerseCount &&
+          other.passedVerseCount == this.passedVerseCount &&
+          other.chainResult == this.chainResult &&
+          other.retrievalStrength == this.retrievalStrength &&
+          other.startedAtSeconds == this.startedAtSeconds &&
+          other.endedAtSeconds == this.endedAtSeconds &&
+          other.createdAtDay == this.createdAtDay &&
+          other.updatedAtDay == this.updatedAtDay);
+}
+
+class CompanionChainSessionCompanion
+    extends UpdateCompanion<CompanionChainSessionData> {
+  final Value<int> id;
+  final Value<int> unitId;
+  final Value<int> targetVerseCount;
+  final Value<int> passedVerseCount;
+  final Value<String> chainResult;
+  final Value<double> retrievalStrength;
+  final Value<int?> startedAtSeconds;
+  final Value<int?> endedAtSeconds;
+  final Value<int> createdAtDay;
+  final Value<int> updatedAtDay;
+  const CompanionChainSessionCompanion({
+    this.id = const Value.absent(),
+    this.unitId = const Value.absent(),
+    this.targetVerseCount = const Value.absent(),
+    this.passedVerseCount = const Value.absent(),
+    this.chainResult = const Value.absent(),
+    this.retrievalStrength = const Value.absent(),
+    this.startedAtSeconds = const Value.absent(),
+    this.endedAtSeconds = const Value.absent(),
+    this.createdAtDay = const Value.absent(),
+    this.updatedAtDay = const Value.absent(),
+  });
+  CompanionChainSessionCompanion.insert({
+    this.id = const Value.absent(),
+    required int unitId,
+    required int targetVerseCount,
+    this.passedVerseCount = const Value.absent(),
+    required String chainResult,
+    this.retrievalStrength = const Value.absent(),
+    this.startedAtSeconds = const Value.absent(),
+    this.endedAtSeconds = const Value.absent(),
+    required int createdAtDay,
+    required int updatedAtDay,
+  })  : unitId = Value(unitId),
+        targetVerseCount = Value(targetVerseCount),
+        chainResult = Value(chainResult),
+        createdAtDay = Value(createdAtDay),
+        updatedAtDay = Value(updatedAtDay);
+  static Insertable<CompanionChainSessionData> custom({
+    Expression<int>? id,
+    Expression<int>? unitId,
+    Expression<int>? targetVerseCount,
+    Expression<int>? passedVerseCount,
+    Expression<String>? chainResult,
+    Expression<double>? retrievalStrength,
+    Expression<int>? startedAtSeconds,
+    Expression<int>? endedAtSeconds,
+    Expression<int>? createdAtDay,
+    Expression<int>? updatedAtDay,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (unitId != null) 'unit_id': unitId,
+      if (targetVerseCount != null) 'target_verse_count': targetVerseCount,
+      if (passedVerseCount != null) 'passed_verse_count': passedVerseCount,
+      if (chainResult != null) 'chain_result': chainResult,
+      if (retrievalStrength != null) 'retrieval_strength': retrievalStrength,
+      if (startedAtSeconds != null) 'started_at_seconds': startedAtSeconds,
+      if (endedAtSeconds != null) 'ended_at_seconds': endedAtSeconds,
+      if (createdAtDay != null) 'created_at_day': createdAtDay,
+      if (updatedAtDay != null) 'updated_at_day': updatedAtDay,
+    });
+  }
+
+  CompanionChainSessionCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? unitId,
+      Value<int>? targetVerseCount,
+      Value<int>? passedVerseCount,
+      Value<String>? chainResult,
+      Value<double>? retrievalStrength,
+      Value<int?>? startedAtSeconds,
+      Value<int?>? endedAtSeconds,
+      Value<int>? createdAtDay,
+      Value<int>? updatedAtDay}) {
+    return CompanionChainSessionCompanion(
+      id: id ?? this.id,
+      unitId: unitId ?? this.unitId,
+      targetVerseCount: targetVerseCount ?? this.targetVerseCount,
+      passedVerseCount: passedVerseCount ?? this.passedVerseCount,
+      chainResult: chainResult ?? this.chainResult,
+      retrievalStrength: retrievalStrength ?? this.retrievalStrength,
+      startedAtSeconds: startedAtSeconds ?? this.startedAtSeconds,
+      endedAtSeconds: endedAtSeconds ?? this.endedAtSeconds,
+      createdAtDay: createdAtDay ?? this.createdAtDay,
+      updatedAtDay: updatedAtDay ?? this.updatedAtDay,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (unitId.present) {
+      map['unit_id'] = Variable<int>(unitId.value);
+    }
+    if (targetVerseCount.present) {
+      map['target_verse_count'] = Variable<int>(targetVerseCount.value);
+    }
+    if (passedVerseCount.present) {
+      map['passed_verse_count'] = Variable<int>(passedVerseCount.value);
+    }
+    if (chainResult.present) {
+      map['chain_result'] = Variable<String>(chainResult.value);
+    }
+    if (retrievalStrength.present) {
+      map['retrieval_strength'] = Variable<double>(retrievalStrength.value);
+    }
+    if (startedAtSeconds.present) {
+      map['started_at_seconds'] = Variable<int>(startedAtSeconds.value);
+    }
+    if (endedAtSeconds.present) {
+      map['ended_at_seconds'] = Variable<int>(endedAtSeconds.value);
+    }
+    if (createdAtDay.present) {
+      map['created_at_day'] = Variable<int>(createdAtDay.value);
+    }
+    if (updatedAtDay.present) {
+      map['updated_at_day'] = Variable<int>(updatedAtDay.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionChainSessionCompanion(')
+          ..write('id: $id, ')
+          ..write('unitId: $unitId, ')
+          ..write('targetVerseCount: $targetVerseCount, ')
+          ..write('passedVerseCount: $passedVerseCount, ')
+          ..write('chainResult: $chainResult, ')
+          ..write('retrievalStrength: $retrievalStrength, ')
+          ..write('startedAtSeconds: $startedAtSeconds, ')
+          ..write('endedAtSeconds: $endedAtSeconds, ')
+          ..write('createdAtDay: $createdAtDay, ')
+          ..write('updatedAtDay: $updatedAtDay')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CompanionVerseAttemptTable extends CompanionVerseAttempt
+    with TableInfo<$CompanionVerseAttemptTable, CompanionVerseAttemptData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionVerseAttemptTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _sessionIdMeta =
+      const VerificationMeta('sessionId');
+  @override
+  late final GeneratedColumn<int> sessionId = GeneratedColumn<int>(
+      'session_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES companion_chain_session (id) ON DELETE CASCADE'));
+  static const VerificationMeta _unitIdMeta = const VerificationMeta('unitId');
+  @override
+  late final GeneratedColumn<int> unitId = GeneratedColumn<int>(
+      'unit_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES mem_unit (id) ON DELETE CASCADE'));
+  static const VerificationMeta _verseOrderMeta =
+      const VerificationMeta('verseOrder');
+  @override
+  late final GeneratedColumn<int> verseOrder = GeneratedColumn<int>(
+      'verse_order', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _surahMeta = const VerificationMeta('surah');
+  @override
+  late final GeneratedColumn<int> surah = GeneratedColumn<int>(
+      'surah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _ayahMeta = const VerificationMeta('ayah');
+  @override
+  late final GeneratedColumn<int> ayah = GeneratedColumn<int>(
+      'ayah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _attemptIndexMeta =
+      const VerificationMeta('attemptIndex');
+  @override
+  late final GeneratedColumn<int> attemptIndex = GeneratedColumn<int>(
+      'attempt_index', aliasedName, false,
+      check: () => ComparableExpr(attemptIndex).isBiggerThanValue(0),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  static const VerificationMeta _stageCodeMeta =
+      const VerificationMeta('stageCode');
+  @override
+  late final GeneratedColumn<String> stageCode = GeneratedColumn<String>(
+      'stage_code', aliasedName, false,
+      check: () => stageCode
+          .isIn(const ['guided_visible', 'cued_recall', 'hidden_reveal']),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('hidden_reveal'));
+  static const VerificationMeta _attemptTypeMeta =
+      const VerificationMeta('attemptType');
+  @override
+  late final GeneratedColumn<String> attemptType = GeneratedColumn<String>(
+      'attempt_type', aliasedName, false,
+      check: () => attemptType
+          .isIn(const ['encode_echo', 'probe', 'spaced_reprobe', 'checkpoint']),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('probe'));
+  static const VerificationMeta _hintLevelMeta =
+      const VerificationMeta('hintLevel');
+  @override
+  late final GeneratedColumn<String> hintLevel = GeneratedColumn<String>(
+      'hint_level', aliasedName, false,
+      check: () => hintLevel.isIn(const [
+            'h0',
+            'letters',
+            'first_word',
+            'meaning_cue',
+            'chunk_text',
+            'full_text'
+          ]),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _assistedFlagMeta =
+      const VerificationMeta('assistedFlag');
+  @override
+  late final GeneratedColumn<int> assistedFlag = GeneratedColumn<int>(
+      'assisted_flag', aliasedName, false,
+      check: () => assistedFlag.isIn(const [0, 1]),
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _latencyToStartMsMeta =
+      const VerificationMeta('latencyToStartMs');
+  @override
+  late final GeneratedColumn<int> latencyToStartMs = GeneratedColumn<int>(
+      'latency_to_start_ms', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _stopsCountMeta =
+      const VerificationMeta('stopsCount');
+  @override
+  late final GeneratedColumn<int> stopsCount = GeneratedColumn<int>(
+      'stops_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _selfCorrectionsCountMeta =
+      const VerificationMeta('selfCorrectionsCount');
+  @override
+  late final GeneratedColumn<int> selfCorrectionsCount = GeneratedColumn<int>(
+      'self_corrections_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _evaluatorModeMeta =
+      const VerificationMeta('evaluatorMode');
+  @override
+  late final GeneratedColumn<String> evaluatorMode = GeneratedColumn<String>(
+      'evaluator_mode', aliasedName, false,
+      check: () => evaluatorMode.isIn(const ['manual_fallback', 'asr']),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _evaluatorPassedMeta =
+      const VerificationMeta('evaluatorPassed');
+  @override
+  late final GeneratedColumn<int> evaluatorPassed = GeneratedColumn<int>(
+      'evaluator_passed', aliasedName, false,
+      check: () => evaluatorPassed.isIn(const [0, 1]),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  static const VerificationMeta _evaluatorConfidenceMeta =
+      const VerificationMeta('evaluatorConfidence');
+  @override
+  late final GeneratedColumn<double> evaluatorConfidence =
+      GeneratedColumn<double>('evaluator_confidence', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _autoCheckTypeMeta =
+      const VerificationMeta('autoCheckType');
+  @override
+  late final GeneratedColumn<String> autoCheckType = GeneratedColumn<String>(
+      'auto_check_type', aliasedName, true,
+      check: () => autoCheckType
+          .isIn(const ['next_word_mcq', 'one_word_cloze', 'ordering']),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _autoCheckResultMeta =
+      const VerificationMeta('autoCheckResult');
+  @override
+  late final GeneratedColumn<String> autoCheckResult = GeneratedColumn<String>(
+      'auto_check_result', aliasedName, true,
+      check: () => autoCheckResult.isIn(const ['pass', 'fail']),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _revealedAfterAttemptMeta =
+      const VerificationMeta('revealedAfterAttempt');
+  @override
+  late final GeneratedColumn<int> revealedAfterAttempt = GeneratedColumn<int>(
+      'revealed_after_attempt', aliasedName, false,
+      check: () => revealedAfterAttempt.isIn(const [0, 1]),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  static const VerificationMeta _retrievalStrengthMeta =
+      const VerificationMeta('retrievalStrength');
+  @override
+  late final GeneratedColumn<double> retrievalStrength =
+      GeneratedColumn<double>('retrieval_strength', aliasedName, false,
+          type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _timeOnVerseMsMeta =
+      const VerificationMeta('timeOnVerseMs');
+  @override
+  late final GeneratedColumn<int> timeOnVerseMs = GeneratedColumn<int>(
+      'time_on_verse_ms', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _timeOnChunkMsMeta =
+      const VerificationMeta('timeOnChunkMs');
+  @override
+  late final GeneratedColumn<int> timeOnChunkMs = GeneratedColumn<int>(
+      'time_on_chunk_ms', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _telemetryJsonMeta =
+      const VerificationMeta('telemetryJson');
+  @override
+  late final GeneratedColumn<String> telemetryJson = GeneratedColumn<String>(
+      'telemetry_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _attemptDayMeta =
+      const VerificationMeta('attemptDay');
+  @override
+  late final GeneratedColumn<int> attemptDay = GeneratedColumn<int>(
+      'attempt_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _attemptSecondsMeta =
+      const VerificationMeta('attemptSeconds');
+  @override
+  late final GeneratedColumn<int> attemptSeconds = GeneratedColumn<int>(
+      'attempt_seconds', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        sessionId,
+        unitId,
+        verseOrder,
+        surah,
+        ayah,
+        attemptIndex,
+        stageCode,
+        attemptType,
+        hintLevel,
+        assistedFlag,
+        latencyToStartMs,
+        stopsCount,
+        selfCorrectionsCount,
+        evaluatorMode,
+        evaluatorPassed,
+        evaluatorConfidence,
+        autoCheckType,
+        autoCheckResult,
+        revealedAfterAttempt,
+        retrievalStrength,
+        timeOnVerseMs,
+        timeOnChunkMs,
+        telemetryJson,
+        attemptDay,
+        attemptSeconds
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companion_verse_attempt';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CompanionVerseAttemptData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(_sessionIdMeta,
+          sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('unit_id')) {
+      context.handle(_unitIdMeta,
+          unitId.isAcceptableOrUnknown(data['unit_id']!, _unitIdMeta));
+    } else if (isInserting) {
+      context.missing(_unitIdMeta);
+    }
+    if (data.containsKey('verse_order')) {
+      context.handle(
+          _verseOrderMeta,
+          verseOrder.isAcceptableOrUnknown(
+              data['verse_order']!, _verseOrderMeta));
+    } else if (isInserting) {
+      context.missing(_verseOrderMeta);
+    }
+    if (data.containsKey('surah')) {
+      context.handle(
+          _surahMeta, surah.isAcceptableOrUnknown(data['surah']!, _surahMeta));
+    } else if (isInserting) {
+      context.missing(_surahMeta);
+    }
+    if (data.containsKey('ayah')) {
+      context.handle(
+          _ayahMeta, ayah.isAcceptableOrUnknown(data['ayah']!, _ayahMeta));
+    } else if (isInserting) {
+      context.missing(_ayahMeta);
+    }
+    if (data.containsKey('attempt_index')) {
+      context.handle(
+          _attemptIndexMeta,
+          attemptIndex.isAcceptableOrUnknown(
+              data['attempt_index']!, _attemptIndexMeta));
+    } else if (isInserting) {
+      context.missing(_attemptIndexMeta);
+    }
+    if (data.containsKey('stage_code')) {
+      context.handle(_stageCodeMeta,
+          stageCode.isAcceptableOrUnknown(data['stage_code']!, _stageCodeMeta));
+    }
+    if (data.containsKey('attempt_type')) {
+      context.handle(
+          _attemptTypeMeta,
+          attemptType.isAcceptableOrUnknown(
+              data['attempt_type']!, _attemptTypeMeta));
+    }
+    if (data.containsKey('hint_level')) {
+      context.handle(_hintLevelMeta,
+          hintLevel.isAcceptableOrUnknown(data['hint_level']!, _hintLevelMeta));
+    } else if (isInserting) {
+      context.missing(_hintLevelMeta);
+    }
+    if (data.containsKey('assisted_flag')) {
+      context.handle(
+          _assistedFlagMeta,
+          assistedFlag.isAcceptableOrUnknown(
+              data['assisted_flag']!, _assistedFlagMeta));
+    }
+    if (data.containsKey('latency_to_start_ms')) {
+      context.handle(
+          _latencyToStartMsMeta,
+          latencyToStartMs.isAcceptableOrUnknown(
+              data['latency_to_start_ms']!, _latencyToStartMsMeta));
+    }
+    if (data.containsKey('stops_count')) {
+      context.handle(
+          _stopsCountMeta,
+          stopsCount.isAcceptableOrUnknown(
+              data['stops_count']!, _stopsCountMeta));
+    }
+    if (data.containsKey('self_corrections_count')) {
+      context.handle(
+          _selfCorrectionsCountMeta,
+          selfCorrectionsCount.isAcceptableOrUnknown(
+              data['self_corrections_count']!, _selfCorrectionsCountMeta));
+    }
+    if (data.containsKey('evaluator_mode')) {
+      context.handle(
+          _evaluatorModeMeta,
+          evaluatorMode.isAcceptableOrUnknown(
+              data['evaluator_mode']!, _evaluatorModeMeta));
+    } else if (isInserting) {
+      context.missing(_evaluatorModeMeta);
+    }
+    if (data.containsKey('evaluator_passed')) {
+      context.handle(
+          _evaluatorPassedMeta,
+          evaluatorPassed.isAcceptableOrUnknown(
+              data['evaluator_passed']!, _evaluatorPassedMeta));
+    } else if (isInserting) {
+      context.missing(_evaluatorPassedMeta);
+    }
+    if (data.containsKey('evaluator_confidence')) {
+      context.handle(
+          _evaluatorConfidenceMeta,
+          evaluatorConfidence.isAcceptableOrUnknown(
+              data['evaluator_confidence']!, _evaluatorConfidenceMeta));
+    }
+    if (data.containsKey('auto_check_type')) {
+      context.handle(
+          _autoCheckTypeMeta,
+          autoCheckType.isAcceptableOrUnknown(
+              data['auto_check_type']!, _autoCheckTypeMeta));
+    }
+    if (data.containsKey('auto_check_result')) {
+      context.handle(
+          _autoCheckResultMeta,
+          autoCheckResult.isAcceptableOrUnknown(
+              data['auto_check_result']!, _autoCheckResultMeta));
+    }
+    if (data.containsKey('revealed_after_attempt')) {
+      context.handle(
+          _revealedAfterAttemptMeta,
+          revealedAfterAttempt.isAcceptableOrUnknown(
+              data['revealed_after_attempt']!, _revealedAfterAttemptMeta));
+    } else if (isInserting) {
+      context.missing(_revealedAfterAttemptMeta);
+    }
+    if (data.containsKey('retrieval_strength')) {
+      context.handle(
+          _retrievalStrengthMeta,
+          retrievalStrength.isAcceptableOrUnknown(
+              data['retrieval_strength']!, _retrievalStrengthMeta));
+    } else if (isInserting) {
+      context.missing(_retrievalStrengthMeta);
+    }
+    if (data.containsKey('time_on_verse_ms')) {
+      context.handle(
+          _timeOnVerseMsMeta,
+          timeOnVerseMs.isAcceptableOrUnknown(
+              data['time_on_verse_ms']!, _timeOnVerseMsMeta));
+    }
+    if (data.containsKey('time_on_chunk_ms')) {
+      context.handle(
+          _timeOnChunkMsMeta,
+          timeOnChunkMs.isAcceptableOrUnknown(
+              data['time_on_chunk_ms']!, _timeOnChunkMsMeta));
+    }
+    if (data.containsKey('telemetry_json')) {
+      context.handle(
+          _telemetryJsonMeta,
+          telemetryJson.isAcceptableOrUnknown(
+              data['telemetry_json']!, _telemetryJsonMeta));
+    }
+    if (data.containsKey('attempt_day')) {
+      context.handle(
+          _attemptDayMeta,
+          attemptDay.isAcceptableOrUnknown(
+              data['attempt_day']!, _attemptDayMeta));
+    } else if (isInserting) {
+      context.missing(_attemptDayMeta);
+    }
+    if (data.containsKey('attempt_seconds')) {
+      context.handle(
+          _attemptSecondsMeta,
+          attemptSeconds.isAcceptableOrUnknown(
+              data['attempt_seconds']!, _attemptSecondsMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CompanionVerseAttemptData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CompanionVerseAttemptData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      sessionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}session_id'])!,
+      unitId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unit_id'])!,
+      verseOrder: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}verse_order'])!,
+      surah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}surah'])!,
+      ayah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ayah'])!,
+      attemptIndex: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempt_index'])!,
+      stageCode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}stage_code'])!,
+      attemptType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}attempt_type'])!,
+      hintLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}hint_level'])!,
+      assistedFlag: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}assisted_flag'])!,
+      latencyToStartMs: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}latency_to_start_ms'])!,
+      stopsCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}stops_count'])!,
+      selfCorrectionsCount: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}self_corrections_count'])!,
+      evaluatorMode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}evaluator_mode'])!,
+      evaluatorPassed: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}evaluator_passed'])!,
+      evaluatorConfidence: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}evaluator_confidence']),
+      autoCheckType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}auto_check_type']),
+      autoCheckResult: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}auto_check_result']),
+      revealedAfterAttempt: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}revealed_after_attempt'])!,
+      retrievalStrength: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}retrieval_strength'])!,
+      timeOnVerseMs: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}time_on_verse_ms'])!,
+      timeOnChunkMs: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}time_on_chunk_ms'])!,
+      telemetryJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}telemetry_json']),
+      attemptDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempt_day'])!,
+      attemptSeconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempt_seconds']),
+    );
+  }
+
+  @override
+  $CompanionVerseAttemptTable createAlias(String alias) {
+    return $CompanionVerseAttemptTable(attachedDatabase, alias);
+  }
+}
+
+class CompanionVerseAttemptData extends DataClass
+    implements Insertable<CompanionVerseAttemptData> {
+  final int id;
+  final int sessionId;
+  final int unitId;
+  final int verseOrder;
+  final int surah;
+  final int ayah;
+  final int attemptIndex;
+  final String stageCode;
+  final String attemptType;
+  final String hintLevel;
+  final int assistedFlag;
+  final int latencyToStartMs;
+  final int stopsCount;
+  final int selfCorrectionsCount;
+  final String evaluatorMode;
+  final int evaluatorPassed;
+  final double? evaluatorConfidence;
+  final String? autoCheckType;
+  final String? autoCheckResult;
+  final int revealedAfterAttempt;
+  final double retrievalStrength;
+  final int timeOnVerseMs;
+  final int timeOnChunkMs;
+  final String? telemetryJson;
+  final int attemptDay;
+  final int? attemptSeconds;
+  const CompanionVerseAttemptData(
+      {required this.id,
+      required this.sessionId,
+      required this.unitId,
+      required this.verseOrder,
+      required this.surah,
+      required this.ayah,
+      required this.attemptIndex,
+      required this.stageCode,
+      required this.attemptType,
+      required this.hintLevel,
+      required this.assistedFlag,
+      required this.latencyToStartMs,
+      required this.stopsCount,
+      required this.selfCorrectionsCount,
+      required this.evaluatorMode,
+      required this.evaluatorPassed,
+      this.evaluatorConfidence,
+      this.autoCheckType,
+      this.autoCheckResult,
+      required this.revealedAfterAttempt,
+      required this.retrievalStrength,
+      required this.timeOnVerseMs,
+      required this.timeOnChunkMs,
+      this.telemetryJson,
+      required this.attemptDay,
+      this.attemptSeconds});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['session_id'] = Variable<int>(sessionId);
+    map['unit_id'] = Variable<int>(unitId);
+    map['verse_order'] = Variable<int>(verseOrder);
+    map['surah'] = Variable<int>(surah);
+    map['ayah'] = Variable<int>(ayah);
+    map['attempt_index'] = Variable<int>(attemptIndex);
+    map['stage_code'] = Variable<String>(stageCode);
+    map['attempt_type'] = Variable<String>(attemptType);
+    map['hint_level'] = Variable<String>(hintLevel);
+    map['assisted_flag'] = Variable<int>(assistedFlag);
+    map['latency_to_start_ms'] = Variable<int>(latencyToStartMs);
+    map['stops_count'] = Variable<int>(stopsCount);
+    map['self_corrections_count'] = Variable<int>(selfCorrectionsCount);
+    map['evaluator_mode'] = Variable<String>(evaluatorMode);
+    map['evaluator_passed'] = Variable<int>(evaluatorPassed);
+    if (!nullToAbsent || evaluatorConfidence != null) {
+      map['evaluator_confidence'] = Variable<double>(evaluatorConfidence);
+    }
+    if (!nullToAbsent || autoCheckType != null) {
+      map['auto_check_type'] = Variable<String>(autoCheckType);
+    }
+    if (!nullToAbsent || autoCheckResult != null) {
+      map['auto_check_result'] = Variable<String>(autoCheckResult);
+    }
+    map['revealed_after_attempt'] = Variable<int>(revealedAfterAttempt);
+    map['retrieval_strength'] = Variable<double>(retrievalStrength);
+    map['time_on_verse_ms'] = Variable<int>(timeOnVerseMs);
+    map['time_on_chunk_ms'] = Variable<int>(timeOnChunkMs);
+    if (!nullToAbsent || telemetryJson != null) {
+      map['telemetry_json'] = Variable<String>(telemetryJson);
+    }
+    map['attempt_day'] = Variable<int>(attemptDay);
+    if (!nullToAbsent || attemptSeconds != null) {
+      map['attempt_seconds'] = Variable<int>(attemptSeconds);
+    }
+    return map;
+  }
+
+  CompanionVerseAttemptCompanion toCompanion(bool nullToAbsent) {
+    return CompanionVerseAttemptCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      unitId: Value(unitId),
+      verseOrder: Value(verseOrder),
+      surah: Value(surah),
+      ayah: Value(ayah),
+      attemptIndex: Value(attemptIndex),
+      stageCode: Value(stageCode),
+      attemptType: Value(attemptType),
+      hintLevel: Value(hintLevel),
+      assistedFlag: Value(assistedFlag),
+      latencyToStartMs: Value(latencyToStartMs),
+      stopsCount: Value(stopsCount),
+      selfCorrectionsCount: Value(selfCorrectionsCount),
+      evaluatorMode: Value(evaluatorMode),
+      evaluatorPassed: Value(evaluatorPassed),
+      evaluatorConfidence: evaluatorConfidence == null && nullToAbsent
+          ? const Value.absent()
+          : Value(evaluatorConfidence),
+      autoCheckType: autoCheckType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(autoCheckType),
+      autoCheckResult: autoCheckResult == null && nullToAbsent
+          ? const Value.absent()
+          : Value(autoCheckResult),
+      revealedAfterAttempt: Value(revealedAfterAttempt),
+      retrievalStrength: Value(retrievalStrength),
+      timeOnVerseMs: Value(timeOnVerseMs),
+      timeOnChunkMs: Value(timeOnChunkMs),
+      telemetryJson: telemetryJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(telemetryJson),
+      attemptDay: Value(attemptDay),
+      attemptSeconds: attemptSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(attemptSeconds),
+    );
+  }
+
+  factory CompanionVerseAttemptData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CompanionVerseAttemptData(
+      id: serializer.fromJson<int>(json['id']),
+      sessionId: serializer.fromJson<int>(json['sessionId']),
+      unitId: serializer.fromJson<int>(json['unitId']),
+      verseOrder: serializer.fromJson<int>(json['verseOrder']),
+      surah: serializer.fromJson<int>(json['surah']),
+      ayah: serializer.fromJson<int>(json['ayah']),
+      attemptIndex: serializer.fromJson<int>(json['attemptIndex']),
+      stageCode: serializer.fromJson<String>(json['stageCode']),
+      attemptType: serializer.fromJson<String>(json['attemptType']),
+      hintLevel: serializer.fromJson<String>(json['hintLevel']),
+      assistedFlag: serializer.fromJson<int>(json['assistedFlag']),
+      latencyToStartMs: serializer.fromJson<int>(json['latencyToStartMs']),
+      stopsCount: serializer.fromJson<int>(json['stopsCount']),
+      selfCorrectionsCount:
+          serializer.fromJson<int>(json['selfCorrectionsCount']),
+      evaluatorMode: serializer.fromJson<String>(json['evaluatorMode']),
+      evaluatorPassed: serializer.fromJson<int>(json['evaluatorPassed']),
+      evaluatorConfidence:
+          serializer.fromJson<double?>(json['evaluatorConfidence']),
+      autoCheckType: serializer.fromJson<String?>(json['autoCheckType']),
+      autoCheckResult: serializer.fromJson<String?>(json['autoCheckResult']),
+      revealedAfterAttempt:
+          serializer.fromJson<int>(json['revealedAfterAttempt']),
+      retrievalStrength: serializer.fromJson<double>(json['retrievalStrength']),
+      timeOnVerseMs: serializer.fromJson<int>(json['timeOnVerseMs']),
+      timeOnChunkMs: serializer.fromJson<int>(json['timeOnChunkMs']),
+      telemetryJson: serializer.fromJson<String?>(json['telemetryJson']),
+      attemptDay: serializer.fromJson<int>(json['attemptDay']),
+      attemptSeconds: serializer.fromJson<int?>(json['attemptSeconds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'sessionId': serializer.toJson<int>(sessionId),
+      'unitId': serializer.toJson<int>(unitId),
+      'verseOrder': serializer.toJson<int>(verseOrder),
+      'surah': serializer.toJson<int>(surah),
+      'ayah': serializer.toJson<int>(ayah),
+      'attemptIndex': serializer.toJson<int>(attemptIndex),
+      'stageCode': serializer.toJson<String>(stageCode),
+      'attemptType': serializer.toJson<String>(attemptType),
+      'hintLevel': serializer.toJson<String>(hintLevel),
+      'assistedFlag': serializer.toJson<int>(assistedFlag),
+      'latencyToStartMs': serializer.toJson<int>(latencyToStartMs),
+      'stopsCount': serializer.toJson<int>(stopsCount),
+      'selfCorrectionsCount': serializer.toJson<int>(selfCorrectionsCount),
+      'evaluatorMode': serializer.toJson<String>(evaluatorMode),
+      'evaluatorPassed': serializer.toJson<int>(evaluatorPassed),
+      'evaluatorConfidence': serializer.toJson<double?>(evaluatorConfidence),
+      'autoCheckType': serializer.toJson<String?>(autoCheckType),
+      'autoCheckResult': serializer.toJson<String?>(autoCheckResult),
+      'revealedAfterAttempt': serializer.toJson<int>(revealedAfterAttempt),
+      'retrievalStrength': serializer.toJson<double>(retrievalStrength),
+      'timeOnVerseMs': serializer.toJson<int>(timeOnVerseMs),
+      'timeOnChunkMs': serializer.toJson<int>(timeOnChunkMs),
+      'telemetryJson': serializer.toJson<String?>(telemetryJson),
+      'attemptDay': serializer.toJson<int>(attemptDay),
+      'attemptSeconds': serializer.toJson<int?>(attemptSeconds),
+    };
+  }
+
+  CompanionVerseAttemptData copyWith(
+          {int? id,
+          int? sessionId,
+          int? unitId,
+          int? verseOrder,
+          int? surah,
+          int? ayah,
+          int? attemptIndex,
+          String? stageCode,
+          String? attemptType,
+          String? hintLevel,
+          int? assistedFlag,
+          int? latencyToStartMs,
+          int? stopsCount,
+          int? selfCorrectionsCount,
+          String? evaluatorMode,
+          int? evaluatorPassed,
+          Value<double?> evaluatorConfidence = const Value.absent(),
+          Value<String?> autoCheckType = const Value.absent(),
+          Value<String?> autoCheckResult = const Value.absent(),
+          int? revealedAfterAttempt,
+          double? retrievalStrength,
+          int? timeOnVerseMs,
+          int? timeOnChunkMs,
+          Value<String?> telemetryJson = const Value.absent(),
+          int? attemptDay,
+          Value<int?> attemptSeconds = const Value.absent()}) =>
+      CompanionVerseAttemptData(
+        id: id ?? this.id,
+        sessionId: sessionId ?? this.sessionId,
+        unitId: unitId ?? this.unitId,
+        verseOrder: verseOrder ?? this.verseOrder,
+        surah: surah ?? this.surah,
+        ayah: ayah ?? this.ayah,
+        attemptIndex: attemptIndex ?? this.attemptIndex,
+        stageCode: stageCode ?? this.stageCode,
+        attemptType: attemptType ?? this.attemptType,
+        hintLevel: hintLevel ?? this.hintLevel,
+        assistedFlag: assistedFlag ?? this.assistedFlag,
+        latencyToStartMs: latencyToStartMs ?? this.latencyToStartMs,
+        stopsCount: stopsCount ?? this.stopsCount,
+        selfCorrectionsCount: selfCorrectionsCount ?? this.selfCorrectionsCount,
+        evaluatorMode: evaluatorMode ?? this.evaluatorMode,
+        evaluatorPassed: evaluatorPassed ?? this.evaluatorPassed,
+        evaluatorConfidence: evaluatorConfidence.present
+            ? evaluatorConfidence.value
+            : this.evaluatorConfidence,
+        autoCheckType:
+            autoCheckType.present ? autoCheckType.value : this.autoCheckType,
+        autoCheckResult: autoCheckResult.present
+            ? autoCheckResult.value
+            : this.autoCheckResult,
+        revealedAfterAttempt: revealedAfterAttempt ?? this.revealedAfterAttempt,
+        retrievalStrength: retrievalStrength ?? this.retrievalStrength,
+        timeOnVerseMs: timeOnVerseMs ?? this.timeOnVerseMs,
+        timeOnChunkMs: timeOnChunkMs ?? this.timeOnChunkMs,
+        telemetryJson:
+            telemetryJson.present ? telemetryJson.value : this.telemetryJson,
+        attemptDay: attemptDay ?? this.attemptDay,
+        attemptSeconds:
+            attemptSeconds.present ? attemptSeconds.value : this.attemptSeconds,
+      );
+  CompanionVerseAttemptData copyWithCompanion(
+      CompanionVerseAttemptCompanion data) {
+    return CompanionVerseAttemptData(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      unitId: data.unitId.present ? data.unitId.value : this.unitId,
+      verseOrder:
+          data.verseOrder.present ? data.verseOrder.value : this.verseOrder,
+      surah: data.surah.present ? data.surah.value : this.surah,
+      ayah: data.ayah.present ? data.ayah.value : this.ayah,
+      attemptIndex: data.attemptIndex.present
+          ? data.attemptIndex.value
+          : this.attemptIndex,
+      stageCode: data.stageCode.present ? data.stageCode.value : this.stageCode,
+      attemptType:
+          data.attemptType.present ? data.attemptType.value : this.attemptType,
+      hintLevel: data.hintLevel.present ? data.hintLevel.value : this.hintLevel,
+      assistedFlag: data.assistedFlag.present
+          ? data.assistedFlag.value
+          : this.assistedFlag,
+      latencyToStartMs: data.latencyToStartMs.present
+          ? data.latencyToStartMs.value
+          : this.latencyToStartMs,
+      stopsCount:
+          data.stopsCount.present ? data.stopsCount.value : this.stopsCount,
+      selfCorrectionsCount: data.selfCorrectionsCount.present
+          ? data.selfCorrectionsCount.value
+          : this.selfCorrectionsCount,
+      evaluatorMode: data.evaluatorMode.present
+          ? data.evaluatorMode.value
+          : this.evaluatorMode,
+      evaluatorPassed: data.evaluatorPassed.present
+          ? data.evaluatorPassed.value
+          : this.evaluatorPassed,
+      evaluatorConfidence: data.evaluatorConfidence.present
+          ? data.evaluatorConfidence.value
+          : this.evaluatorConfidence,
+      autoCheckType: data.autoCheckType.present
+          ? data.autoCheckType.value
+          : this.autoCheckType,
+      autoCheckResult: data.autoCheckResult.present
+          ? data.autoCheckResult.value
+          : this.autoCheckResult,
+      revealedAfterAttempt: data.revealedAfterAttempt.present
+          ? data.revealedAfterAttempt.value
+          : this.revealedAfterAttempt,
+      retrievalStrength: data.retrievalStrength.present
+          ? data.retrievalStrength.value
+          : this.retrievalStrength,
+      timeOnVerseMs: data.timeOnVerseMs.present
+          ? data.timeOnVerseMs.value
+          : this.timeOnVerseMs,
+      timeOnChunkMs: data.timeOnChunkMs.present
+          ? data.timeOnChunkMs.value
+          : this.timeOnChunkMs,
+      telemetryJson: data.telemetryJson.present
+          ? data.telemetryJson.value
+          : this.telemetryJson,
+      attemptDay:
+          data.attemptDay.present ? data.attemptDay.value : this.attemptDay,
+      attemptSeconds: data.attemptSeconds.present
+          ? data.attemptSeconds.value
+          : this.attemptSeconds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionVerseAttemptData(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('unitId: $unitId, ')
+          ..write('verseOrder: $verseOrder, ')
+          ..write('surah: $surah, ')
+          ..write('ayah: $ayah, ')
+          ..write('attemptIndex: $attemptIndex, ')
+          ..write('stageCode: $stageCode, ')
+          ..write('attemptType: $attemptType, ')
+          ..write('hintLevel: $hintLevel, ')
+          ..write('assistedFlag: $assistedFlag, ')
+          ..write('latencyToStartMs: $latencyToStartMs, ')
+          ..write('stopsCount: $stopsCount, ')
+          ..write('selfCorrectionsCount: $selfCorrectionsCount, ')
+          ..write('evaluatorMode: $evaluatorMode, ')
+          ..write('evaluatorPassed: $evaluatorPassed, ')
+          ..write('evaluatorConfidence: $evaluatorConfidence, ')
+          ..write('autoCheckType: $autoCheckType, ')
+          ..write('autoCheckResult: $autoCheckResult, ')
+          ..write('revealedAfterAttempt: $revealedAfterAttempt, ')
+          ..write('retrievalStrength: $retrievalStrength, ')
+          ..write('timeOnVerseMs: $timeOnVerseMs, ')
+          ..write('timeOnChunkMs: $timeOnChunkMs, ')
+          ..write('telemetryJson: $telemetryJson, ')
+          ..write('attemptDay: $attemptDay, ')
+          ..write('attemptSeconds: $attemptSeconds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+        id,
+        sessionId,
+        unitId,
+        verseOrder,
+        surah,
+        ayah,
+        attemptIndex,
+        stageCode,
+        attemptType,
+        hintLevel,
+        assistedFlag,
+        latencyToStartMs,
+        stopsCount,
+        selfCorrectionsCount,
+        evaluatorMode,
+        evaluatorPassed,
+        evaluatorConfidence,
+        autoCheckType,
+        autoCheckResult,
+        revealedAfterAttempt,
+        retrievalStrength,
+        timeOnVerseMs,
+        timeOnChunkMs,
+        telemetryJson,
+        attemptDay,
+        attemptSeconds
+      ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CompanionVerseAttemptData &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.unitId == this.unitId &&
+          other.verseOrder == this.verseOrder &&
+          other.surah == this.surah &&
+          other.ayah == this.ayah &&
+          other.attemptIndex == this.attemptIndex &&
+          other.stageCode == this.stageCode &&
+          other.attemptType == this.attemptType &&
+          other.hintLevel == this.hintLevel &&
+          other.assistedFlag == this.assistedFlag &&
+          other.latencyToStartMs == this.latencyToStartMs &&
+          other.stopsCount == this.stopsCount &&
+          other.selfCorrectionsCount == this.selfCorrectionsCount &&
+          other.evaluatorMode == this.evaluatorMode &&
+          other.evaluatorPassed == this.evaluatorPassed &&
+          other.evaluatorConfidence == this.evaluatorConfidence &&
+          other.autoCheckType == this.autoCheckType &&
+          other.autoCheckResult == this.autoCheckResult &&
+          other.revealedAfterAttempt == this.revealedAfterAttempt &&
+          other.retrievalStrength == this.retrievalStrength &&
+          other.timeOnVerseMs == this.timeOnVerseMs &&
+          other.timeOnChunkMs == this.timeOnChunkMs &&
+          other.telemetryJson == this.telemetryJson &&
+          other.attemptDay == this.attemptDay &&
+          other.attemptSeconds == this.attemptSeconds);
+}
+
+class CompanionVerseAttemptCompanion
+    extends UpdateCompanion<CompanionVerseAttemptData> {
+  final Value<int> id;
+  final Value<int> sessionId;
+  final Value<int> unitId;
+  final Value<int> verseOrder;
+  final Value<int> surah;
+  final Value<int> ayah;
+  final Value<int> attemptIndex;
+  final Value<String> stageCode;
+  final Value<String> attemptType;
+  final Value<String> hintLevel;
+  final Value<int> assistedFlag;
+  final Value<int> latencyToStartMs;
+  final Value<int> stopsCount;
+  final Value<int> selfCorrectionsCount;
+  final Value<String> evaluatorMode;
+  final Value<int> evaluatorPassed;
+  final Value<double?> evaluatorConfidence;
+  final Value<String?> autoCheckType;
+  final Value<String?> autoCheckResult;
+  final Value<int> revealedAfterAttempt;
+  final Value<double> retrievalStrength;
+  final Value<int> timeOnVerseMs;
+  final Value<int> timeOnChunkMs;
+  final Value<String?> telemetryJson;
+  final Value<int> attemptDay;
+  final Value<int?> attemptSeconds;
+  const CompanionVerseAttemptCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.unitId = const Value.absent(),
+    this.verseOrder = const Value.absent(),
+    this.surah = const Value.absent(),
+    this.ayah = const Value.absent(),
+    this.attemptIndex = const Value.absent(),
+    this.stageCode = const Value.absent(),
+    this.attemptType = const Value.absent(),
+    this.hintLevel = const Value.absent(),
+    this.assistedFlag = const Value.absent(),
+    this.latencyToStartMs = const Value.absent(),
+    this.stopsCount = const Value.absent(),
+    this.selfCorrectionsCount = const Value.absent(),
+    this.evaluatorMode = const Value.absent(),
+    this.evaluatorPassed = const Value.absent(),
+    this.evaluatorConfidence = const Value.absent(),
+    this.autoCheckType = const Value.absent(),
+    this.autoCheckResult = const Value.absent(),
+    this.revealedAfterAttempt = const Value.absent(),
+    this.retrievalStrength = const Value.absent(),
+    this.timeOnVerseMs = const Value.absent(),
+    this.timeOnChunkMs = const Value.absent(),
+    this.telemetryJson = const Value.absent(),
+    this.attemptDay = const Value.absent(),
+    this.attemptSeconds = const Value.absent(),
+  });
+  CompanionVerseAttemptCompanion.insert({
+    this.id = const Value.absent(),
+    required int sessionId,
+    required int unitId,
+    required int verseOrder,
+    required int surah,
+    required int ayah,
+    required int attemptIndex,
+    this.stageCode = const Value.absent(),
+    this.attemptType = const Value.absent(),
+    required String hintLevel,
+    this.assistedFlag = const Value.absent(),
+    this.latencyToStartMs = const Value.absent(),
+    this.stopsCount = const Value.absent(),
+    this.selfCorrectionsCount = const Value.absent(),
+    required String evaluatorMode,
+    required int evaluatorPassed,
+    this.evaluatorConfidence = const Value.absent(),
+    this.autoCheckType = const Value.absent(),
+    this.autoCheckResult = const Value.absent(),
+    required int revealedAfterAttempt,
+    required double retrievalStrength,
+    this.timeOnVerseMs = const Value.absent(),
+    this.timeOnChunkMs = const Value.absent(),
+    this.telemetryJson = const Value.absent(),
+    required int attemptDay,
+    this.attemptSeconds = const Value.absent(),
+  })  : sessionId = Value(sessionId),
+        unitId = Value(unitId),
+        verseOrder = Value(verseOrder),
+        surah = Value(surah),
+        ayah = Value(ayah),
+        attemptIndex = Value(attemptIndex),
+        hintLevel = Value(hintLevel),
+        evaluatorMode = Value(evaluatorMode),
+        evaluatorPassed = Value(evaluatorPassed),
+        revealedAfterAttempt = Value(revealedAfterAttempt),
+        retrievalStrength = Value(retrievalStrength),
+        attemptDay = Value(attemptDay);
+  static Insertable<CompanionVerseAttemptData> custom({
+    Expression<int>? id,
+    Expression<int>? sessionId,
+    Expression<int>? unitId,
+    Expression<int>? verseOrder,
+    Expression<int>? surah,
+    Expression<int>? ayah,
+    Expression<int>? attemptIndex,
+    Expression<String>? stageCode,
+    Expression<String>? attemptType,
+    Expression<String>? hintLevel,
+    Expression<int>? assistedFlag,
+    Expression<int>? latencyToStartMs,
+    Expression<int>? stopsCount,
+    Expression<int>? selfCorrectionsCount,
+    Expression<String>? evaluatorMode,
+    Expression<int>? evaluatorPassed,
+    Expression<double>? evaluatorConfidence,
+    Expression<String>? autoCheckType,
+    Expression<String>? autoCheckResult,
+    Expression<int>? revealedAfterAttempt,
+    Expression<double>? retrievalStrength,
+    Expression<int>? timeOnVerseMs,
+    Expression<int>? timeOnChunkMs,
+    Expression<String>? telemetryJson,
+    Expression<int>? attemptDay,
+    Expression<int>? attemptSeconds,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (unitId != null) 'unit_id': unitId,
+      if (verseOrder != null) 'verse_order': verseOrder,
+      if (surah != null) 'surah': surah,
+      if (ayah != null) 'ayah': ayah,
+      if (attemptIndex != null) 'attempt_index': attemptIndex,
+      if (stageCode != null) 'stage_code': stageCode,
+      if (attemptType != null) 'attempt_type': attemptType,
+      if (hintLevel != null) 'hint_level': hintLevel,
+      if (assistedFlag != null) 'assisted_flag': assistedFlag,
+      if (latencyToStartMs != null) 'latency_to_start_ms': latencyToStartMs,
+      if (stopsCount != null) 'stops_count': stopsCount,
+      if (selfCorrectionsCount != null)
+        'self_corrections_count': selfCorrectionsCount,
+      if (evaluatorMode != null) 'evaluator_mode': evaluatorMode,
+      if (evaluatorPassed != null) 'evaluator_passed': evaluatorPassed,
+      if (evaluatorConfidence != null)
+        'evaluator_confidence': evaluatorConfidence,
+      if (autoCheckType != null) 'auto_check_type': autoCheckType,
+      if (autoCheckResult != null) 'auto_check_result': autoCheckResult,
+      if (revealedAfterAttempt != null)
+        'revealed_after_attempt': revealedAfterAttempt,
+      if (retrievalStrength != null) 'retrieval_strength': retrievalStrength,
+      if (timeOnVerseMs != null) 'time_on_verse_ms': timeOnVerseMs,
+      if (timeOnChunkMs != null) 'time_on_chunk_ms': timeOnChunkMs,
+      if (telemetryJson != null) 'telemetry_json': telemetryJson,
+      if (attemptDay != null) 'attempt_day': attemptDay,
+      if (attemptSeconds != null) 'attempt_seconds': attemptSeconds,
+    });
+  }
+
+  CompanionVerseAttemptCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? sessionId,
+      Value<int>? unitId,
+      Value<int>? verseOrder,
+      Value<int>? surah,
+      Value<int>? ayah,
+      Value<int>? attemptIndex,
+      Value<String>? stageCode,
+      Value<String>? attemptType,
+      Value<String>? hintLevel,
+      Value<int>? assistedFlag,
+      Value<int>? latencyToStartMs,
+      Value<int>? stopsCount,
+      Value<int>? selfCorrectionsCount,
+      Value<String>? evaluatorMode,
+      Value<int>? evaluatorPassed,
+      Value<double?>? evaluatorConfidence,
+      Value<String?>? autoCheckType,
+      Value<String?>? autoCheckResult,
+      Value<int>? revealedAfterAttempt,
+      Value<double>? retrievalStrength,
+      Value<int>? timeOnVerseMs,
+      Value<int>? timeOnChunkMs,
+      Value<String?>? telemetryJson,
+      Value<int>? attemptDay,
+      Value<int?>? attemptSeconds}) {
+    return CompanionVerseAttemptCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      unitId: unitId ?? this.unitId,
+      verseOrder: verseOrder ?? this.verseOrder,
+      surah: surah ?? this.surah,
+      ayah: ayah ?? this.ayah,
+      attemptIndex: attemptIndex ?? this.attemptIndex,
+      stageCode: stageCode ?? this.stageCode,
+      attemptType: attemptType ?? this.attemptType,
+      hintLevel: hintLevel ?? this.hintLevel,
+      assistedFlag: assistedFlag ?? this.assistedFlag,
+      latencyToStartMs: latencyToStartMs ?? this.latencyToStartMs,
+      stopsCount: stopsCount ?? this.stopsCount,
+      selfCorrectionsCount: selfCorrectionsCount ?? this.selfCorrectionsCount,
+      evaluatorMode: evaluatorMode ?? this.evaluatorMode,
+      evaluatorPassed: evaluatorPassed ?? this.evaluatorPassed,
+      evaluatorConfidence: evaluatorConfidence ?? this.evaluatorConfidence,
+      autoCheckType: autoCheckType ?? this.autoCheckType,
+      autoCheckResult: autoCheckResult ?? this.autoCheckResult,
+      revealedAfterAttempt: revealedAfterAttempt ?? this.revealedAfterAttempt,
+      retrievalStrength: retrievalStrength ?? this.retrievalStrength,
+      timeOnVerseMs: timeOnVerseMs ?? this.timeOnVerseMs,
+      timeOnChunkMs: timeOnChunkMs ?? this.timeOnChunkMs,
+      telemetryJson: telemetryJson ?? this.telemetryJson,
+      attemptDay: attemptDay ?? this.attemptDay,
+      attemptSeconds: attemptSeconds ?? this.attemptSeconds,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<int>(sessionId.value);
+    }
+    if (unitId.present) {
+      map['unit_id'] = Variable<int>(unitId.value);
+    }
+    if (verseOrder.present) {
+      map['verse_order'] = Variable<int>(verseOrder.value);
+    }
+    if (surah.present) {
+      map['surah'] = Variable<int>(surah.value);
+    }
+    if (ayah.present) {
+      map['ayah'] = Variable<int>(ayah.value);
+    }
+    if (attemptIndex.present) {
+      map['attempt_index'] = Variable<int>(attemptIndex.value);
+    }
+    if (stageCode.present) {
+      map['stage_code'] = Variable<String>(stageCode.value);
+    }
+    if (attemptType.present) {
+      map['attempt_type'] = Variable<String>(attemptType.value);
+    }
+    if (hintLevel.present) {
+      map['hint_level'] = Variable<String>(hintLevel.value);
+    }
+    if (assistedFlag.present) {
+      map['assisted_flag'] = Variable<int>(assistedFlag.value);
+    }
+    if (latencyToStartMs.present) {
+      map['latency_to_start_ms'] = Variable<int>(latencyToStartMs.value);
+    }
+    if (stopsCount.present) {
+      map['stops_count'] = Variable<int>(stopsCount.value);
+    }
+    if (selfCorrectionsCount.present) {
+      map['self_corrections_count'] = Variable<int>(selfCorrectionsCount.value);
+    }
+    if (evaluatorMode.present) {
+      map['evaluator_mode'] = Variable<String>(evaluatorMode.value);
+    }
+    if (evaluatorPassed.present) {
+      map['evaluator_passed'] = Variable<int>(evaluatorPassed.value);
+    }
+    if (evaluatorConfidence.present) {
+      map['evaluator_confidence'] = Variable<double>(evaluatorConfidence.value);
+    }
+    if (autoCheckType.present) {
+      map['auto_check_type'] = Variable<String>(autoCheckType.value);
+    }
+    if (autoCheckResult.present) {
+      map['auto_check_result'] = Variable<String>(autoCheckResult.value);
+    }
+    if (revealedAfterAttempt.present) {
+      map['revealed_after_attempt'] = Variable<int>(revealedAfterAttempt.value);
+    }
+    if (retrievalStrength.present) {
+      map['retrieval_strength'] = Variable<double>(retrievalStrength.value);
+    }
+    if (timeOnVerseMs.present) {
+      map['time_on_verse_ms'] = Variable<int>(timeOnVerseMs.value);
+    }
+    if (timeOnChunkMs.present) {
+      map['time_on_chunk_ms'] = Variable<int>(timeOnChunkMs.value);
+    }
+    if (telemetryJson.present) {
+      map['telemetry_json'] = Variable<String>(telemetryJson.value);
+    }
+    if (attemptDay.present) {
+      map['attempt_day'] = Variable<int>(attemptDay.value);
+    }
+    if (attemptSeconds.present) {
+      map['attempt_seconds'] = Variable<int>(attemptSeconds.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionVerseAttemptCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('unitId: $unitId, ')
+          ..write('verseOrder: $verseOrder, ')
+          ..write('surah: $surah, ')
+          ..write('ayah: $ayah, ')
+          ..write('attemptIndex: $attemptIndex, ')
+          ..write('stageCode: $stageCode, ')
+          ..write('attemptType: $attemptType, ')
+          ..write('hintLevel: $hintLevel, ')
+          ..write('assistedFlag: $assistedFlag, ')
+          ..write('latencyToStartMs: $latencyToStartMs, ')
+          ..write('stopsCount: $stopsCount, ')
+          ..write('selfCorrectionsCount: $selfCorrectionsCount, ')
+          ..write('evaluatorMode: $evaluatorMode, ')
+          ..write('evaluatorPassed: $evaluatorPassed, ')
+          ..write('evaluatorConfidence: $evaluatorConfidence, ')
+          ..write('autoCheckType: $autoCheckType, ')
+          ..write('autoCheckResult: $autoCheckResult, ')
+          ..write('revealedAfterAttempt: $revealedAfterAttempt, ')
+          ..write('retrievalStrength: $retrievalStrength, ')
+          ..write('timeOnVerseMs: $timeOnVerseMs, ')
+          ..write('timeOnChunkMs: $timeOnChunkMs, ')
+          ..write('telemetryJson: $telemetryJson, ')
+          ..write('attemptDay: $attemptDay, ')
+          ..write('attemptSeconds: $attemptSeconds')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CompanionUnitStateTable extends CompanionUnitState
+    with TableInfo<$CompanionUnitStateTable, CompanionUnitStateData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionUnitStateTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _unitIdMeta = const VerificationMeta('unitId');
+  @override
+  late final GeneratedColumn<int> unitId = GeneratedColumn<int>(
+      'unit_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES mem_unit (id) ON DELETE CASCADE'));
+  static const VerificationMeta _unlockedStageMeta =
+      const VerificationMeta('unlockedStage');
+  @override
+  late final GeneratedColumn<int> unlockedStage = GeneratedColumn<int>(
+      'unlocked_stage', aliasedName, false,
+      check: () =>
+          ComparableExpr(unlockedStage).isBiggerOrEqualValue(1) &
+          ComparableExpr(unlockedStage).isSmallerOrEqualValue(3),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtDayMeta =
+      const VerificationMeta('updatedAtDay');
+  @override
+  late final GeneratedColumn<int> updatedAtDay = GeneratedColumn<int>(
+      'updated_at_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtSecondsMeta =
+      const VerificationMeta('updatedAtSeconds');
+  @override
+  late final GeneratedColumn<int> updatedAtSeconds = GeneratedColumn<int>(
+      'updated_at_seconds', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [unitId, unlockedStage, updatedAtDay, updatedAtSeconds];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companion_unit_state';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CompanionUnitStateData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('unit_id')) {
+      context.handle(_unitIdMeta,
+          unitId.isAcceptableOrUnknown(data['unit_id']!, _unitIdMeta));
+    }
+    if (data.containsKey('unlocked_stage')) {
+      context.handle(
+          _unlockedStageMeta,
+          unlockedStage.isAcceptableOrUnknown(
+              data['unlocked_stage']!, _unlockedStageMeta));
+    } else if (isInserting) {
+      context.missing(_unlockedStageMeta);
+    }
+    if (data.containsKey('updated_at_day')) {
+      context.handle(
+          _updatedAtDayMeta,
+          updatedAtDay.isAcceptableOrUnknown(
+              data['updated_at_day']!, _updatedAtDayMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtDayMeta);
+    }
+    if (data.containsKey('updated_at_seconds')) {
+      context.handle(
+          _updatedAtSecondsMeta,
+          updatedAtSeconds.isAcceptableOrUnknown(
+              data['updated_at_seconds']!, _updatedAtSecondsMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtSecondsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {unitId};
+  @override
+  CompanionUnitStateData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CompanionUnitStateData(
+      unitId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unit_id'])!,
+      unlockedStage: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unlocked_stage'])!,
+      updatedAtDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at_day'])!,
+      updatedAtSeconds: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}updated_at_seconds'])!,
+    );
+  }
+
+  @override
+  $CompanionUnitStateTable createAlias(String alias) {
+    return $CompanionUnitStateTable(attachedDatabase, alias);
+  }
+}
+
+class CompanionUnitStateData extends DataClass
+    implements Insertable<CompanionUnitStateData> {
+  final int unitId;
+  final int unlockedStage;
+  final int updatedAtDay;
+  final int updatedAtSeconds;
+  const CompanionUnitStateData(
+      {required this.unitId,
+      required this.unlockedStage,
+      required this.updatedAtDay,
+      required this.updatedAtSeconds});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['unit_id'] = Variable<int>(unitId);
+    map['unlocked_stage'] = Variable<int>(unlockedStage);
+    map['updated_at_day'] = Variable<int>(updatedAtDay);
+    map['updated_at_seconds'] = Variable<int>(updatedAtSeconds);
+    return map;
+  }
+
+  CompanionUnitStateCompanion toCompanion(bool nullToAbsent) {
+    return CompanionUnitStateCompanion(
+      unitId: Value(unitId),
+      unlockedStage: Value(unlockedStage),
+      updatedAtDay: Value(updatedAtDay),
+      updatedAtSeconds: Value(updatedAtSeconds),
+    );
+  }
+
+  factory CompanionUnitStateData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CompanionUnitStateData(
+      unitId: serializer.fromJson<int>(json['unitId']),
+      unlockedStage: serializer.fromJson<int>(json['unlockedStage']),
+      updatedAtDay: serializer.fromJson<int>(json['updatedAtDay']),
+      updatedAtSeconds: serializer.fromJson<int>(json['updatedAtSeconds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'unitId': serializer.toJson<int>(unitId),
+      'unlockedStage': serializer.toJson<int>(unlockedStage),
+      'updatedAtDay': serializer.toJson<int>(updatedAtDay),
+      'updatedAtSeconds': serializer.toJson<int>(updatedAtSeconds),
+    };
+  }
+
+  CompanionUnitStateData copyWith(
+          {int? unitId,
+          int? unlockedStage,
+          int? updatedAtDay,
+          int? updatedAtSeconds}) =>
+      CompanionUnitStateData(
+        unitId: unitId ?? this.unitId,
+        unlockedStage: unlockedStage ?? this.unlockedStage,
+        updatedAtDay: updatedAtDay ?? this.updatedAtDay,
+        updatedAtSeconds: updatedAtSeconds ?? this.updatedAtSeconds,
+      );
+  CompanionUnitStateData copyWithCompanion(CompanionUnitStateCompanion data) {
+    return CompanionUnitStateData(
+      unitId: data.unitId.present ? data.unitId.value : this.unitId,
+      unlockedStage: data.unlockedStage.present
+          ? data.unlockedStage.value
+          : this.unlockedStage,
+      updatedAtDay: data.updatedAtDay.present
+          ? data.updatedAtDay.value
+          : this.updatedAtDay,
+      updatedAtSeconds: data.updatedAtSeconds.present
+          ? data.updatedAtSeconds.value
+          : this.updatedAtSeconds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionUnitStateData(')
+          ..write('unitId: $unitId, ')
+          ..write('unlockedStage: $unlockedStage, ')
+          ..write('updatedAtDay: $updatedAtDay, ')
+          ..write('updatedAtSeconds: $updatedAtSeconds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(unitId, unlockedStage, updatedAtDay, updatedAtSeconds);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CompanionUnitStateData &&
+          other.unitId == this.unitId &&
+          other.unlockedStage == this.unlockedStage &&
+          other.updatedAtDay == this.updatedAtDay &&
+          other.updatedAtSeconds == this.updatedAtSeconds);
+}
+
+class CompanionUnitStateCompanion
+    extends UpdateCompanion<CompanionUnitStateData> {
+  final Value<int> unitId;
+  final Value<int> unlockedStage;
+  final Value<int> updatedAtDay;
+  final Value<int> updatedAtSeconds;
+  const CompanionUnitStateCompanion({
+    this.unitId = const Value.absent(),
+    this.unlockedStage = const Value.absent(),
+    this.updatedAtDay = const Value.absent(),
+    this.updatedAtSeconds = const Value.absent(),
+  });
+  CompanionUnitStateCompanion.insert({
+    this.unitId = const Value.absent(),
+    required int unlockedStage,
+    required int updatedAtDay,
+    required int updatedAtSeconds,
+  })  : unlockedStage = Value(unlockedStage),
+        updatedAtDay = Value(updatedAtDay),
+        updatedAtSeconds = Value(updatedAtSeconds);
+  static Insertable<CompanionUnitStateData> custom({
+    Expression<int>? unitId,
+    Expression<int>? unlockedStage,
+    Expression<int>? updatedAtDay,
+    Expression<int>? updatedAtSeconds,
+  }) {
+    return RawValuesInsertable({
+      if (unitId != null) 'unit_id': unitId,
+      if (unlockedStage != null) 'unlocked_stage': unlockedStage,
+      if (updatedAtDay != null) 'updated_at_day': updatedAtDay,
+      if (updatedAtSeconds != null) 'updated_at_seconds': updatedAtSeconds,
+    });
+  }
+
+  CompanionUnitStateCompanion copyWith(
+      {Value<int>? unitId,
+      Value<int>? unlockedStage,
+      Value<int>? updatedAtDay,
+      Value<int>? updatedAtSeconds}) {
+    return CompanionUnitStateCompanion(
+      unitId: unitId ?? this.unitId,
+      unlockedStage: unlockedStage ?? this.unlockedStage,
+      updatedAtDay: updatedAtDay ?? this.updatedAtDay,
+      updatedAtSeconds: updatedAtSeconds ?? this.updatedAtSeconds,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (unitId.present) {
+      map['unit_id'] = Variable<int>(unitId.value);
+    }
+    if (unlockedStage.present) {
+      map['unlocked_stage'] = Variable<int>(unlockedStage.value);
+    }
+    if (updatedAtDay.present) {
+      map['updated_at_day'] = Variable<int>(updatedAtDay.value);
+    }
+    if (updatedAtSeconds.present) {
+      map['updated_at_seconds'] = Variable<int>(updatedAtSeconds.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionUnitStateCompanion(')
+          ..write('unitId: $unitId, ')
+          ..write('unlockedStage: $unlockedStage, ')
+          ..write('updatedAtDay: $updatedAtDay, ')
+          ..write('updatedAtSeconds: $updatedAtSeconds')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CompanionStageEventTable extends CompanionStageEvent
+    with TableInfo<$CompanionStageEventTable, CompanionStageEventData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionStageEventTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _sessionIdMeta =
+      const VerificationMeta('sessionId');
+  @override
+  late final GeneratedColumn<int> sessionId = GeneratedColumn<int>(
+      'session_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES companion_chain_session (id) ON DELETE CASCADE'));
+  static const VerificationMeta _unitIdMeta = const VerificationMeta('unitId');
+  @override
+  late final GeneratedColumn<int> unitId = GeneratedColumn<int>(
+      'unit_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES mem_unit (id) ON DELETE CASCADE'));
+  static const VerificationMeta _fromStageMeta =
+      const VerificationMeta('fromStage');
+  @override
+  late final GeneratedColumn<int> fromStage = GeneratedColumn<int>(
+      'from_stage', aliasedName, false,
+      check: () =>
+          ComparableExpr(fromStage).isBiggerOrEqualValue(1) &
+          ComparableExpr(fromStage).isSmallerOrEqualValue(3),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  static const VerificationMeta _toStageMeta =
+      const VerificationMeta('toStage');
+  @override
+  late final GeneratedColumn<int> toStage = GeneratedColumn<int>(
+      'to_stage', aliasedName, false,
+      check: () =>
+          ComparableExpr(toStage).isBiggerOrEqualValue(1) &
+          ComparableExpr(toStage).isSmallerOrEqualValue(3),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  static const VerificationMeta _eventTypeMeta =
+      const VerificationMeta('eventType');
+  @override
+  late final GeneratedColumn<String> eventType = GeneratedColumn<String>(
+      'event_type', aliasedName, false,
+      check: () =>
+          eventType.isIn(const ['auto_unlock', 'user_skip', 'resume_stage']),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _triggerVerseOrderMeta =
+      const VerificationMeta('triggerVerseOrder');
+  @override
+  late final GeneratedColumn<int> triggerVerseOrder = GeneratedColumn<int>(
+      'trigger_verse_order', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _createdDayMeta =
+      const VerificationMeta('createdDay');
+  @override
+  late final GeneratedColumn<int> createdDay = GeneratedColumn<int>(
+      'created_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _createdSecondsMeta =
+      const VerificationMeta('createdSeconds');
+  @override
+  late final GeneratedColumn<int> createdSeconds = GeneratedColumn<int>(
+      'created_seconds', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        sessionId,
+        unitId,
+        fromStage,
+        toStage,
+        eventType,
+        triggerVerseOrder,
+        createdDay,
+        createdSeconds
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companion_stage_event';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CompanionStageEventData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(_sessionIdMeta,
+          sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('unit_id')) {
+      context.handle(_unitIdMeta,
+          unitId.isAcceptableOrUnknown(data['unit_id']!, _unitIdMeta));
+    } else if (isInserting) {
+      context.missing(_unitIdMeta);
+    }
+    if (data.containsKey('from_stage')) {
+      context.handle(_fromStageMeta,
+          fromStage.isAcceptableOrUnknown(data['from_stage']!, _fromStageMeta));
+    } else if (isInserting) {
+      context.missing(_fromStageMeta);
+    }
+    if (data.containsKey('to_stage')) {
+      context.handle(_toStageMeta,
+          toStage.isAcceptableOrUnknown(data['to_stage']!, _toStageMeta));
+    } else if (isInserting) {
+      context.missing(_toStageMeta);
+    }
+    if (data.containsKey('event_type')) {
+      context.handle(_eventTypeMeta,
+          eventType.isAcceptableOrUnknown(data['event_type']!, _eventTypeMeta));
+    } else if (isInserting) {
+      context.missing(_eventTypeMeta);
+    }
+    if (data.containsKey('trigger_verse_order')) {
+      context.handle(
+          _triggerVerseOrderMeta,
+          triggerVerseOrder.isAcceptableOrUnknown(
+              data['trigger_verse_order']!, _triggerVerseOrderMeta));
+    }
+    if (data.containsKey('created_day')) {
+      context.handle(
+          _createdDayMeta,
+          createdDay.isAcceptableOrUnknown(
+              data['created_day']!, _createdDayMeta));
+    } else if (isInserting) {
+      context.missing(_createdDayMeta);
+    }
+    if (data.containsKey('created_seconds')) {
+      context.handle(
+          _createdSecondsMeta,
+          createdSeconds.isAcceptableOrUnknown(
+              data['created_seconds']!, _createdSecondsMeta));
+    } else if (isInserting) {
+      context.missing(_createdSecondsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CompanionStageEventData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CompanionStageEventData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      sessionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}session_id'])!,
+      unitId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unit_id'])!,
+      fromStage: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}from_stage'])!,
+      toStage: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}to_stage'])!,
+      eventType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}event_type'])!,
+      triggerVerseOrder: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}trigger_verse_order']),
+      createdDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_day'])!,
+      createdSeconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_seconds'])!,
+    );
+  }
+
+  @override
+  $CompanionStageEventTable createAlias(String alias) {
+    return $CompanionStageEventTable(attachedDatabase, alias);
+  }
+}
+
+class CompanionStageEventData extends DataClass
+    implements Insertable<CompanionStageEventData> {
+  final int id;
+  final int sessionId;
+  final int unitId;
+  final int fromStage;
+  final int toStage;
+  final String eventType;
+  final int? triggerVerseOrder;
+  final int createdDay;
+  final int createdSeconds;
+  const CompanionStageEventData(
+      {required this.id,
+      required this.sessionId,
+      required this.unitId,
+      required this.fromStage,
+      required this.toStage,
+      required this.eventType,
+      this.triggerVerseOrder,
+      required this.createdDay,
+      required this.createdSeconds});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['session_id'] = Variable<int>(sessionId);
+    map['unit_id'] = Variable<int>(unitId);
+    map['from_stage'] = Variable<int>(fromStage);
+    map['to_stage'] = Variable<int>(toStage);
+    map['event_type'] = Variable<String>(eventType);
+    if (!nullToAbsent || triggerVerseOrder != null) {
+      map['trigger_verse_order'] = Variable<int>(triggerVerseOrder);
+    }
+    map['created_day'] = Variable<int>(createdDay);
+    map['created_seconds'] = Variable<int>(createdSeconds);
+    return map;
+  }
+
+  CompanionStageEventCompanion toCompanion(bool nullToAbsent) {
+    return CompanionStageEventCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      unitId: Value(unitId),
+      fromStage: Value(fromStage),
+      toStage: Value(toStage),
+      eventType: Value(eventType),
+      triggerVerseOrder: triggerVerseOrder == null && nullToAbsent
+          ? const Value.absent()
+          : Value(triggerVerseOrder),
+      createdDay: Value(createdDay),
+      createdSeconds: Value(createdSeconds),
+    );
+  }
+
+  factory CompanionStageEventData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CompanionStageEventData(
+      id: serializer.fromJson<int>(json['id']),
+      sessionId: serializer.fromJson<int>(json['sessionId']),
+      unitId: serializer.fromJson<int>(json['unitId']),
+      fromStage: serializer.fromJson<int>(json['fromStage']),
+      toStage: serializer.fromJson<int>(json['toStage']),
+      eventType: serializer.fromJson<String>(json['eventType']),
+      triggerVerseOrder: serializer.fromJson<int?>(json['triggerVerseOrder']),
+      createdDay: serializer.fromJson<int>(json['createdDay']),
+      createdSeconds: serializer.fromJson<int>(json['createdSeconds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'sessionId': serializer.toJson<int>(sessionId),
+      'unitId': serializer.toJson<int>(unitId),
+      'fromStage': serializer.toJson<int>(fromStage),
+      'toStage': serializer.toJson<int>(toStage),
+      'eventType': serializer.toJson<String>(eventType),
+      'triggerVerseOrder': serializer.toJson<int?>(triggerVerseOrder),
+      'createdDay': serializer.toJson<int>(createdDay),
+      'createdSeconds': serializer.toJson<int>(createdSeconds),
+    };
+  }
+
+  CompanionStageEventData copyWith(
+          {int? id,
+          int? sessionId,
+          int? unitId,
+          int? fromStage,
+          int? toStage,
+          String? eventType,
+          Value<int?> triggerVerseOrder = const Value.absent(),
+          int? createdDay,
+          int? createdSeconds}) =>
+      CompanionStageEventData(
+        id: id ?? this.id,
+        sessionId: sessionId ?? this.sessionId,
+        unitId: unitId ?? this.unitId,
+        fromStage: fromStage ?? this.fromStage,
+        toStage: toStage ?? this.toStage,
+        eventType: eventType ?? this.eventType,
+        triggerVerseOrder: triggerVerseOrder.present
+            ? triggerVerseOrder.value
+            : this.triggerVerseOrder,
+        createdDay: createdDay ?? this.createdDay,
+        createdSeconds: createdSeconds ?? this.createdSeconds,
+      );
+  CompanionStageEventData copyWithCompanion(CompanionStageEventCompanion data) {
+    return CompanionStageEventData(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      unitId: data.unitId.present ? data.unitId.value : this.unitId,
+      fromStage: data.fromStage.present ? data.fromStage.value : this.fromStage,
+      toStage: data.toStage.present ? data.toStage.value : this.toStage,
+      eventType: data.eventType.present ? data.eventType.value : this.eventType,
+      triggerVerseOrder: data.triggerVerseOrder.present
+          ? data.triggerVerseOrder.value
+          : this.triggerVerseOrder,
+      createdDay:
+          data.createdDay.present ? data.createdDay.value : this.createdDay,
+      createdSeconds: data.createdSeconds.present
+          ? data.createdSeconds.value
+          : this.createdSeconds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionStageEventData(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('unitId: $unitId, ')
+          ..write('fromStage: $fromStage, ')
+          ..write('toStage: $toStage, ')
+          ..write('eventType: $eventType, ')
+          ..write('triggerVerseOrder: $triggerVerseOrder, ')
+          ..write('createdDay: $createdDay, ')
+          ..write('createdSeconds: $createdSeconds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, sessionId, unitId, fromStage, toStage,
+      eventType, triggerVerseOrder, createdDay, createdSeconds);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CompanionStageEventData &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.unitId == this.unitId &&
+          other.fromStage == this.fromStage &&
+          other.toStage == this.toStage &&
+          other.eventType == this.eventType &&
+          other.triggerVerseOrder == this.triggerVerseOrder &&
+          other.createdDay == this.createdDay &&
+          other.createdSeconds == this.createdSeconds);
+}
+
+class CompanionStageEventCompanion
+    extends UpdateCompanion<CompanionStageEventData> {
+  final Value<int> id;
+  final Value<int> sessionId;
+  final Value<int> unitId;
+  final Value<int> fromStage;
+  final Value<int> toStage;
+  final Value<String> eventType;
+  final Value<int?> triggerVerseOrder;
+  final Value<int> createdDay;
+  final Value<int> createdSeconds;
+  const CompanionStageEventCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.unitId = const Value.absent(),
+    this.fromStage = const Value.absent(),
+    this.toStage = const Value.absent(),
+    this.eventType = const Value.absent(),
+    this.triggerVerseOrder = const Value.absent(),
+    this.createdDay = const Value.absent(),
+    this.createdSeconds = const Value.absent(),
+  });
+  CompanionStageEventCompanion.insert({
+    this.id = const Value.absent(),
+    required int sessionId,
+    required int unitId,
+    required int fromStage,
+    required int toStage,
+    required String eventType,
+    this.triggerVerseOrder = const Value.absent(),
+    required int createdDay,
+    required int createdSeconds,
+  })  : sessionId = Value(sessionId),
+        unitId = Value(unitId),
+        fromStage = Value(fromStage),
+        toStage = Value(toStage),
+        eventType = Value(eventType),
+        createdDay = Value(createdDay),
+        createdSeconds = Value(createdSeconds);
+  static Insertable<CompanionStageEventData> custom({
+    Expression<int>? id,
+    Expression<int>? sessionId,
+    Expression<int>? unitId,
+    Expression<int>? fromStage,
+    Expression<int>? toStage,
+    Expression<String>? eventType,
+    Expression<int>? triggerVerseOrder,
+    Expression<int>? createdDay,
+    Expression<int>? createdSeconds,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (unitId != null) 'unit_id': unitId,
+      if (fromStage != null) 'from_stage': fromStage,
+      if (toStage != null) 'to_stage': toStage,
+      if (eventType != null) 'event_type': eventType,
+      if (triggerVerseOrder != null) 'trigger_verse_order': triggerVerseOrder,
+      if (createdDay != null) 'created_day': createdDay,
+      if (createdSeconds != null) 'created_seconds': createdSeconds,
+    });
+  }
+
+  CompanionStageEventCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? sessionId,
+      Value<int>? unitId,
+      Value<int>? fromStage,
+      Value<int>? toStage,
+      Value<String>? eventType,
+      Value<int?>? triggerVerseOrder,
+      Value<int>? createdDay,
+      Value<int>? createdSeconds}) {
+    return CompanionStageEventCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      unitId: unitId ?? this.unitId,
+      fromStage: fromStage ?? this.fromStage,
+      toStage: toStage ?? this.toStage,
+      eventType: eventType ?? this.eventType,
+      triggerVerseOrder: triggerVerseOrder ?? this.triggerVerseOrder,
+      createdDay: createdDay ?? this.createdDay,
+      createdSeconds: createdSeconds ?? this.createdSeconds,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<int>(sessionId.value);
+    }
+    if (unitId.present) {
+      map['unit_id'] = Variable<int>(unitId.value);
+    }
+    if (fromStage.present) {
+      map['from_stage'] = Variable<int>(fromStage.value);
+    }
+    if (toStage.present) {
+      map['to_stage'] = Variable<int>(toStage.value);
+    }
+    if (eventType.present) {
+      map['event_type'] = Variable<String>(eventType.value);
+    }
+    if (triggerVerseOrder.present) {
+      map['trigger_verse_order'] = Variable<int>(triggerVerseOrder.value);
+    }
+    if (createdDay.present) {
+      map['created_day'] = Variable<int>(createdDay.value);
+    }
+    if (createdSeconds.present) {
+      map['created_seconds'] = Variable<int>(createdSeconds.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionStageEventCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('unitId: $unitId, ')
+          ..write('fromStage: $fromStage, ')
+          ..write('toStage: $toStage, ')
+          ..write('eventType: $eventType, ')
+          ..write('triggerVerseOrder: $triggerVerseOrder, ')
+          ..write('createdDay: $createdDay, ')
+          ..write('createdSeconds: $createdSeconds')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CompanionStepProficiencyTable extends CompanionStepProficiency
+    with
+        TableInfo<$CompanionStepProficiencyTable,
+            CompanionStepProficiencyData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionStepProficiencyTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _unitIdMeta = const VerificationMeta('unitId');
+  @override
+  late final GeneratedColumn<int> unitId = GeneratedColumn<int>(
+      'unit_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES mem_unit (id) ON DELETE CASCADE'));
+  static const VerificationMeta _surahMeta = const VerificationMeta('surah');
+  @override
+  late final GeneratedColumn<int> surah = GeneratedColumn<int>(
+      'surah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _ayahMeta = const VerificationMeta('ayah');
+  @override
+  late final GeneratedColumn<int> ayah = GeneratedColumn<int>(
+      'ayah', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _proficiencyEmaMeta =
+      const VerificationMeta('proficiencyEma');
+  @override
+  late final GeneratedColumn<double> proficiencyEma = GeneratedColumn<double>(
+      'proficiency_ema', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _lastHintLevelMeta =
+      const VerificationMeta('lastHintLevel');
+  @override
+  late final GeneratedColumn<String> lastHintLevel = GeneratedColumn<String>(
+      'last_hint_level', aliasedName, true,
+      check: () => lastHintLevel.isIn(const [
+            'h0',
+            'letters',
+            'first_word',
+            'meaning_cue',
+            'chunk_text',
+            'full_text'
+          ]),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _lastEvaluatorConfidenceMeta =
+      const VerificationMeta('lastEvaluatorConfidence');
+  @override
+  late final GeneratedColumn<double> lastEvaluatorConfidence =
+      GeneratedColumn<double>('last_evaluator_confidence', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _lastLatencyToStartMsMeta =
+      const VerificationMeta('lastLatencyToStartMs');
+  @override
+  late final GeneratedColumn<int> lastLatencyToStartMs = GeneratedColumn<int>(
+      'last_latency_to_start_ms', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _attemptsCountMeta =
+      const VerificationMeta('attemptsCount');
+  @override
+  late final GeneratedColumn<int> attemptsCount = GeneratedColumn<int>(
+      'attempts_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _passesCountMeta =
+      const VerificationMeta('passesCount');
+  @override
+  late final GeneratedColumn<int> passesCount = GeneratedColumn<int>(
+      'passes_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lastUpdatedDayMeta =
+      const VerificationMeta('lastUpdatedDay');
+  @override
+  late final GeneratedColumn<int> lastUpdatedDay = GeneratedColumn<int>(
+      'last_updated_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _lastSessionIdMeta =
+      const VerificationMeta('lastSessionId');
+  @override
+  late final GeneratedColumn<int> lastSessionId = GeneratedColumn<int>(
+      'last_session_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES companion_chain_session (id)'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        unitId,
+        surah,
+        ayah,
+        proficiencyEma,
+        lastHintLevel,
+        lastEvaluatorConfidence,
+        lastLatencyToStartMs,
+        attemptsCount,
+        passesCount,
+        lastUpdatedDay,
+        lastSessionId
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companion_step_proficiency';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CompanionStepProficiencyData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('unit_id')) {
+      context.handle(_unitIdMeta,
+          unitId.isAcceptableOrUnknown(data['unit_id']!, _unitIdMeta));
+    } else if (isInserting) {
+      context.missing(_unitIdMeta);
+    }
+    if (data.containsKey('surah')) {
+      context.handle(
+          _surahMeta, surah.isAcceptableOrUnknown(data['surah']!, _surahMeta));
+    } else if (isInserting) {
+      context.missing(_surahMeta);
+    }
+    if (data.containsKey('ayah')) {
+      context.handle(
+          _ayahMeta, ayah.isAcceptableOrUnknown(data['ayah']!, _ayahMeta));
+    } else if (isInserting) {
+      context.missing(_ayahMeta);
+    }
+    if (data.containsKey('proficiency_ema')) {
+      context.handle(
+          _proficiencyEmaMeta,
+          proficiencyEma.isAcceptableOrUnknown(
+              data['proficiency_ema']!, _proficiencyEmaMeta));
+    }
+    if (data.containsKey('last_hint_level')) {
+      context.handle(
+          _lastHintLevelMeta,
+          lastHintLevel.isAcceptableOrUnknown(
+              data['last_hint_level']!, _lastHintLevelMeta));
+    }
+    if (data.containsKey('last_evaluator_confidence')) {
+      context.handle(
+          _lastEvaluatorConfidenceMeta,
+          lastEvaluatorConfidence.isAcceptableOrUnknown(
+              data['last_evaluator_confidence']!,
+              _lastEvaluatorConfidenceMeta));
+    }
+    if (data.containsKey('last_latency_to_start_ms')) {
+      context.handle(
+          _lastLatencyToStartMsMeta,
+          lastLatencyToStartMs.isAcceptableOrUnknown(
+              data['last_latency_to_start_ms']!, _lastLatencyToStartMsMeta));
+    }
+    if (data.containsKey('attempts_count')) {
+      context.handle(
+          _attemptsCountMeta,
+          attemptsCount.isAcceptableOrUnknown(
+              data['attempts_count']!, _attemptsCountMeta));
+    }
+    if (data.containsKey('passes_count')) {
+      context.handle(
+          _passesCountMeta,
+          passesCount.isAcceptableOrUnknown(
+              data['passes_count']!, _passesCountMeta));
+    }
+    if (data.containsKey('last_updated_day')) {
+      context.handle(
+          _lastUpdatedDayMeta,
+          lastUpdatedDay.isAcceptableOrUnknown(
+              data['last_updated_day']!, _lastUpdatedDayMeta));
+    } else if (isInserting) {
+      context.missing(_lastUpdatedDayMeta);
+    }
+    if (data.containsKey('last_session_id')) {
+      context.handle(
+          _lastSessionIdMeta,
+          lastSessionId.isAcceptableOrUnknown(
+              data['last_session_id']!, _lastSessionIdMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {unitId, surah, ayah},
+      ];
+  @override
+  CompanionStepProficiencyData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CompanionStepProficiencyData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      unitId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unit_id'])!,
+      surah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}surah'])!,
+      ayah: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ayah'])!,
+      proficiencyEma: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}proficiency_ema'])!,
+      lastHintLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}last_hint_level']),
+      lastEvaluatorConfidence: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}last_evaluator_confidence']),
+      lastLatencyToStartMs: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}last_latency_to_start_ms']),
+      attemptsCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempts_count'])!,
+      passesCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}passes_count'])!,
+      lastUpdatedDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}last_updated_day'])!,
+      lastSessionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}last_session_id']),
+    );
+  }
+
+  @override
+  $CompanionStepProficiencyTable createAlias(String alias) {
+    return $CompanionStepProficiencyTable(attachedDatabase, alias);
+  }
+}
+
+class CompanionStepProficiencyData extends DataClass
+    implements Insertable<CompanionStepProficiencyData> {
+  final int id;
+  final int unitId;
+  final int surah;
+  final int ayah;
+  final double proficiencyEma;
+  final String? lastHintLevel;
+  final double? lastEvaluatorConfidence;
+  final int? lastLatencyToStartMs;
+  final int attemptsCount;
+  final int passesCount;
+  final int lastUpdatedDay;
+  final int? lastSessionId;
+  const CompanionStepProficiencyData(
+      {required this.id,
+      required this.unitId,
+      required this.surah,
+      required this.ayah,
+      required this.proficiencyEma,
+      this.lastHintLevel,
+      this.lastEvaluatorConfidence,
+      this.lastLatencyToStartMs,
+      required this.attemptsCount,
+      required this.passesCount,
+      required this.lastUpdatedDay,
+      this.lastSessionId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['unit_id'] = Variable<int>(unitId);
+    map['surah'] = Variable<int>(surah);
+    map['ayah'] = Variable<int>(ayah);
+    map['proficiency_ema'] = Variable<double>(proficiencyEma);
+    if (!nullToAbsent || lastHintLevel != null) {
+      map['last_hint_level'] = Variable<String>(lastHintLevel);
+    }
+    if (!nullToAbsent || lastEvaluatorConfidence != null) {
+      map['last_evaluator_confidence'] =
+          Variable<double>(lastEvaluatorConfidence);
+    }
+    if (!nullToAbsent || lastLatencyToStartMs != null) {
+      map['last_latency_to_start_ms'] = Variable<int>(lastLatencyToStartMs);
+    }
+    map['attempts_count'] = Variable<int>(attemptsCount);
+    map['passes_count'] = Variable<int>(passesCount);
+    map['last_updated_day'] = Variable<int>(lastUpdatedDay);
+    if (!nullToAbsent || lastSessionId != null) {
+      map['last_session_id'] = Variable<int>(lastSessionId);
+    }
+    return map;
+  }
+
+  CompanionStepProficiencyCompanion toCompanion(bool nullToAbsent) {
+    return CompanionStepProficiencyCompanion(
+      id: Value(id),
+      unitId: Value(unitId),
+      surah: Value(surah),
+      ayah: Value(ayah),
+      proficiencyEma: Value(proficiencyEma),
+      lastHintLevel: lastHintLevel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastHintLevel),
+      lastEvaluatorConfidence: lastEvaluatorConfidence == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastEvaluatorConfidence),
+      lastLatencyToStartMs: lastLatencyToStartMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastLatencyToStartMs),
+      attemptsCount: Value(attemptsCount),
+      passesCount: Value(passesCount),
+      lastUpdatedDay: Value(lastUpdatedDay),
+      lastSessionId: lastSessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSessionId),
+    );
+  }
+
+  factory CompanionStepProficiencyData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CompanionStepProficiencyData(
+      id: serializer.fromJson<int>(json['id']),
+      unitId: serializer.fromJson<int>(json['unitId']),
+      surah: serializer.fromJson<int>(json['surah']),
+      ayah: serializer.fromJson<int>(json['ayah']),
+      proficiencyEma: serializer.fromJson<double>(json['proficiencyEma']),
+      lastHintLevel: serializer.fromJson<String?>(json['lastHintLevel']),
+      lastEvaluatorConfidence:
+          serializer.fromJson<double?>(json['lastEvaluatorConfidence']),
+      lastLatencyToStartMs:
+          serializer.fromJson<int?>(json['lastLatencyToStartMs']),
+      attemptsCount: serializer.fromJson<int>(json['attemptsCount']),
+      passesCount: serializer.fromJson<int>(json['passesCount']),
+      lastUpdatedDay: serializer.fromJson<int>(json['lastUpdatedDay']),
+      lastSessionId: serializer.fromJson<int?>(json['lastSessionId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'unitId': serializer.toJson<int>(unitId),
+      'surah': serializer.toJson<int>(surah),
+      'ayah': serializer.toJson<int>(ayah),
+      'proficiencyEma': serializer.toJson<double>(proficiencyEma),
+      'lastHintLevel': serializer.toJson<String?>(lastHintLevel),
+      'lastEvaluatorConfidence':
+          serializer.toJson<double?>(lastEvaluatorConfidence),
+      'lastLatencyToStartMs': serializer.toJson<int?>(lastLatencyToStartMs),
+      'attemptsCount': serializer.toJson<int>(attemptsCount),
+      'passesCount': serializer.toJson<int>(passesCount),
+      'lastUpdatedDay': serializer.toJson<int>(lastUpdatedDay),
+      'lastSessionId': serializer.toJson<int?>(lastSessionId),
+    };
+  }
+
+  CompanionStepProficiencyData copyWith(
+          {int? id,
+          int? unitId,
+          int? surah,
+          int? ayah,
+          double? proficiencyEma,
+          Value<String?> lastHintLevel = const Value.absent(),
+          Value<double?> lastEvaluatorConfidence = const Value.absent(),
+          Value<int?> lastLatencyToStartMs = const Value.absent(),
+          int? attemptsCount,
+          int? passesCount,
+          int? lastUpdatedDay,
+          Value<int?> lastSessionId = const Value.absent()}) =>
+      CompanionStepProficiencyData(
+        id: id ?? this.id,
+        unitId: unitId ?? this.unitId,
+        surah: surah ?? this.surah,
+        ayah: ayah ?? this.ayah,
+        proficiencyEma: proficiencyEma ?? this.proficiencyEma,
+        lastHintLevel:
+            lastHintLevel.present ? lastHintLevel.value : this.lastHintLevel,
+        lastEvaluatorConfidence: lastEvaluatorConfidence.present
+            ? lastEvaluatorConfidence.value
+            : this.lastEvaluatorConfidence,
+        lastLatencyToStartMs: lastLatencyToStartMs.present
+            ? lastLatencyToStartMs.value
+            : this.lastLatencyToStartMs,
+        attemptsCount: attemptsCount ?? this.attemptsCount,
+        passesCount: passesCount ?? this.passesCount,
+        lastUpdatedDay: lastUpdatedDay ?? this.lastUpdatedDay,
+        lastSessionId:
+            lastSessionId.present ? lastSessionId.value : this.lastSessionId,
+      );
+  CompanionStepProficiencyData copyWithCompanion(
+      CompanionStepProficiencyCompanion data) {
+    return CompanionStepProficiencyData(
+      id: data.id.present ? data.id.value : this.id,
+      unitId: data.unitId.present ? data.unitId.value : this.unitId,
+      surah: data.surah.present ? data.surah.value : this.surah,
+      ayah: data.ayah.present ? data.ayah.value : this.ayah,
+      proficiencyEma: data.proficiencyEma.present
+          ? data.proficiencyEma.value
+          : this.proficiencyEma,
+      lastHintLevel: data.lastHintLevel.present
+          ? data.lastHintLevel.value
+          : this.lastHintLevel,
+      lastEvaluatorConfidence: data.lastEvaluatorConfidence.present
+          ? data.lastEvaluatorConfidence.value
+          : this.lastEvaluatorConfidence,
+      lastLatencyToStartMs: data.lastLatencyToStartMs.present
+          ? data.lastLatencyToStartMs.value
+          : this.lastLatencyToStartMs,
+      attemptsCount: data.attemptsCount.present
+          ? data.attemptsCount.value
+          : this.attemptsCount,
+      passesCount:
+          data.passesCount.present ? data.passesCount.value : this.passesCount,
+      lastUpdatedDay: data.lastUpdatedDay.present
+          ? data.lastUpdatedDay.value
+          : this.lastUpdatedDay,
+      lastSessionId: data.lastSessionId.present
+          ? data.lastSessionId.value
+          : this.lastSessionId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionStepProficiencyData(')
+          ..write('id: $id, ')
+          ..write('unitId: $unitId, ')
+          ..write('surah: $surah, ')
+          ..write('ayah: $ayah, ')
+          ..write('proficiencyEma: $proficiencyEma, ')
+          ..write('lastHintLevel: $lastHintLevel, ')
+          ..write('lastEvaluatorConfidence: $lastEvaluatorConfidence, ')
+          ..write('lastLatencyToStartMs: $lastLatencyToStartMs, ')
+          ..write('attemptsCount: $attemptsCount, ')
+          ..write('passesCount: $passesCount, ')
+          ..write('lastUpdatedDay: $lastUpdatedDay, ')
+          ..write('lastSessionId: $lastSessionId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      unitId,
+      surah,
+      ayah,
+      proficiencyEma,
+      lastHintLevel,
+      lastEvaluatorConfidence,
+      lastLatencyToStartMs,
+      attemptsCount,
+      passesCount,
+      lastUpdatedDay,
+      lastSessionId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CompanionStepProficiencyData &&
+          other.id == this.id &&
+          other.unitId == this.unitId &&
+          other.surah == this.surah &&
+          other.ayah == this.ayah &&
+          other.proficiencyEma == this.proficiencyEma &&
+          other.lastHintLevel == this.lastHintLevel &&
+          other.lastEvaluatorConfidence == this.lastEvaluatorConfidence &&
+          other.lastLatencyToStartMs == this.lastLatencyToStartMs &&
+          other.attemptsCount == this.attemptsCount &&
+          other.passesCount == this.passesCount &&
+          other.lastUpdatedDay == this.lastUpdatedDay &&
+          other.lastSessionId == this.lastSessionId);
+}
+
+class CompanionStepProficiencyCompanion
+    extends UpdateCompanion<CompanionStepProficiencyData> {
+  final Value<int> id;
+  final Value<int> unitId;
+  final Value<int> surah;
+  final Value<int> ayah;
+  final Value<double> proficiencyEma;
+  final Value<String?> lastHintLevel;
+  final Value<double?> lastEvaluatorConfidence;
+  final Value<int?> lastLatencyToStartMs;
+  final Value<int> attemptsCount;
+  final Value<int> passesCount;
+  final Value<int> lastUpdatedDay;
+  final Value<int?> lastSessionId;
+  const CompanionStepProficiencyCompanion({
+    this.id = const Value.absent(),
+    this.unitId = const Value.absent(),
+    this.surah = const Value.absent(),
+    this.ayah = const Value.absent(),
+    this.proficiencyEma = const Value.absent(),
+    this.lastHintLevel = const Value.absent(),
+    this.lastEvaluatorConfidence = const Value.absent(),
+    this.lastLatencyToStartMs = const Value.absent(),
+    this.attemptsCount = const Value.absent(),
+    this.passesCount = const Value.absent(),
+    this.lastUpdatedDay = const Value.absent(),
+    this.lastSessionId = const Value.absent(),
+  });
+  CompanionStepProficiencyCompanion.insert({
+    this.id = const Value.absent(),
+    required int unitId,
+    required int surah,
+    required int ayah,
+    this.proficiencyEma = const Value.absent(),
+    this.lastHintLevel = const Value.absent(),
+    this.lastEvaluatorConfidence = const Value.absent(),
+    this.lastLatencyToStartMs = const Value.absent(),
+    this.attemptsCount = const Value.absent(),
+    this.passesCount = const Value.absent(),
+    required int lastUpdatedDay,
+    this.lastSessionId = const Value.absent(),
+  })  : unitId = Value(unitId),
+        surah = Value(surah),
+        ayah = Value(ayah),
+        lastUpdatedDay = Value(lastUpdatedDay);
+  static Insertable<CompanionStepProficiencyData> custom({
+    Expression<int>? id,
+    Expression<int>? unitId,
+    Expression<int>? surah,
+    Expression<int>? ayah,
+    Expression<double>? proficiencyEma,
+    Expression<String>? lastHintLevel,
+    Expression<double>? lastEvaluatorConfidence,
+    Expression<int>? lastLatencyToStartMs,
+    Expression<int>? attemptsCount,
+    Expression<int>? passesCount,
+    Expression<int>? lastUpdatedDay,
+    Expression<int>? lastSessionId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (unitId != null) 'unit_id': unitId,
+      if (surah != null) 'surah': surah,
+      if (ayah != null) 'ayah': ayah,
+      if (proficiencyEma != null) 'proficiency_ema': proficiencyEma,
+      if (lastHintLevel != null) 'last_hint_level': lastHintLevel,
+      if (lastEvaluatorConfidence != null)
+        'last_evaluator_confidence': lastEvaluatorConfidence,
+      if (lastLatencyToStartMs != null)
+        'last_latency_to_start_ms': lastLatencyToStartMs,
+      if (attemptsCount != null) 'attempts_count': attemptsCount,
+      if (passesCount != null) 'passes_count': passesCount,
+      if (lastUpdatedDay != null) 'last_updated_day': lastUpdatedDay,
+      if (lastSessionId != null) 'last_session_id': lastSessionId,
+    });
+  }
+
+  CompanionStepProficiencyCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? unitId,
+      Value<int>? surah,
+      Value<int>? ayah,
+      Value<double>? proficiencyEma,
+      Value<String?>? lastHintLevel,
+      Value<double?>? lastEvaluatorConfidence,
+      Value<int?>? lastLatencyToStartMs,
+      Value<int>? attemptsCount,
+      Value<int>? passesCount,
+      Value<int>? lastUpdatedDay,
+      Value<int?>? lastSessionId}) {
+    return CompanionStepProficiencyCompanion(
+      id: id ?? this.id,
+      unitId: unitId ?? this.unitId,
+      surah: surah ?? this.surah,
+      ayah: ayah ?? this.ayah,
+      proficiencyEma: proficiencyEma ?? this.proficiencyEma,
+      lastHintLevel: lastHintLevel ?? this.lastHintLevel,
+      lastEvaluatorConfidence:
+          lastEvaluatorConfidence ?? this.lastEvaluatorConfidence,
+      lastLatencyToStartMs: lastLatencyToStartMs ?? this.lastLatencyToStartMs,
+      attemptsCount: attemptsCount ?? this.attemptsCount,
+      passesCount: passesCount ?? this.passesCount,
+      lastUpdatedDay: lastUpdatedDay ?? this.lastUpdatedDay,
+      lastSessionId: lastSessionId ?? this.lastSessionId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (unitId.present) {
+      map['unit_id'] = Variable<int>(unitId.value);
+    }
+    if (surah.present) {
+      map['surah'] = Variable<int>(surah.value);
+    }
+    if (ayah.present) {
+      map['ayah'] = Variable<int>(ayah.value);
+    }
+    if (proficiencyEma.present) {
+      map['proficiency_ema'] = Variable<double>(proficiencyEma.value);
+    }
+    if (lastHintLevel.present) {
+      map['last_hint_level'] = Variable<String>(lastHintLevel.value);
+    }
+    if (lastEvaluatorConfidence.present) {
+      map['last_evaluator_confidence'] =
+          Variable<double>(lastEvaluatorConfidence.value);
+    }
+    if (lastLatencyToStartMs.present) {
+      map['last_latency_to_start_ms'] =
+          Variable<int>(lastLatencyToStartMs.value);
+    }
+    if (attemptsCount.present) {
+      map['attempts_count'] = Variable<int>(attemptsCount.value);
+    }
+    if (passesCount.present) {
+      map['passes_count'] = Variable<int>(passesCount.value);
+    }
+    if (lastUpdatedDay.present) {
+      map['last_updated_day'] = Variable<int>(lastUpdatedDay.value);
+    }
+    if (lastSessionId.present) {
+      map['last_session_id'] = Variable<int>(lastSessionId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionStepProficiencyCompanion(')
+          ..write('id: $id, ')
+          ..write('unitId: $unitId, ')
+          ..write('surah: $surah, ')
+          ..write('ayah: $ayah, ')
+          ..write('proficiencyEma: $proficiencyEma, ')
+          ..write('lastHintLevel: $lastHintLevel, ')
+          ..write('lastEvaluatorConfidence: $lastEvaluatorConfidence, ')
+          ..write('lastLatencyToStartMs: $lastLatencyToStartMs, ')
+          ..write('attemptsCount: $attemptsCount, ')
+          ..write('passesCount: $passesCount, ')
+          ..write('lastUpdatedDay: $lastUpdatedDay, ')
+          ..write('lastSessionId: $lastSessionId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4246,6 +7572,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $CalibrationSampleTable(this);
   late final $PendingCalibrationUpdateTable pendingCalibrationUpdate =
       $PendingCalibrationUpdateTable(this);
+  late final $CompanionChainSessionTable companionChainSession =
+      $CompanionChainSessionTable(this);
+  late final $CompanionVerseAttemptTable companionVerseAttempt =
+      $CompanionVerseAttemptTable(this);
+  late final $CompanionUnitStateTable companionUnitState =
+      $CompanionUnitStateTable(this);
+  late final $CompanionStageEventTable companionStageEvent =
+      $CompanionStageEventTable(this);
+  late final $CompanionStepProficiencyTable companionStepProficiency =
+      $CompanionStepProficiencyTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4260,7 +7596,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         appSettings,
         memProgress,
         calibrationSample,
-        pendingCalibrationUpdate
+        pendingCalibrationUpdate,
+        companionChainSession,
+        companionVerseAttempt,
+        companionUnitState,
+        companionStageEvent,
+        companionStepProficiency
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -4277,6 +7618,56 @@ abstract class _$AppDatabase extends GeneratedDatabase {
                 limitUpdateKind: UpdateKind.delete),
             result: [
               TableUpdate('review_log', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('mem_unit',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_chain_session', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('companion_chain_session',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_verse_attempt', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('mem_unit',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_verse_attempt', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('mem_unit',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_unit_state', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('companion_chain_session',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_stage_event', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('mem_unit',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_stage_event', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('mem_unit',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_step_proficiency',
+                  kind: UpdateKind.delete),
             ],
           ),
         ],
@@ -4836,6 +8227,99 @@ final class $$MemUnitTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$CompanionChainSessionTable,
+      List<CompanionChainSessionData>> _companionChainSessionRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionChainSession,
+          aliasName: $_aliasNameGenerator(
+              db.memUnit.id, db.companionChainSession.unitId));
+
+  $$CompanionChainSessionTableProcessedTableManager
+      get companionChainSessionRefs {
+    final manager = $$CompanionChainSessionTableTableManager(
+            $_db, $_db.companionChainSession)
+        .filter((f) => f.unitId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionChainSessionRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CompanionVerseAttemptTable,
+      List<CompanionVerseAttemptData>> _companionVerseAttemptRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionVerseAttempt,
+          aliasName: $_aliasNameGenerator(
+              db.memUnit.id, db.companionVerseAttempt.unitId));
+
+  $$CompanionVerseAttemptTableProcessedTableManager
+      get companionVerseAttemptRefs {
+    final manager = $$CompanionVerseAttemptTableTableManager(
+            $_db, $_db.companionVerseAttempt)
+        .filter((f) => f.unitId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionVerseAttemptRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CompanionUnitStateTable,
+      List<CompanionUnitStateData>> _companionUnitStateRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionUnitState,
+          aliasName: $_aliasNameGenerator(
+              db.memUnit.id, db.companionUnitState.unitId));
+
+  $$CompanionUnitStateTableProcessedTableManager get companionUnitStateRefs {
+    final manager =
+        $$CompanionUnitStateTableTableManager($_db, $_db.companionUnitState)
+            .filter((f) => f.unitId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionUnitStateRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CompanionStageEventTable,
+      List<CompanionStageEventData>> _companionStageEventRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionStageEvent,
+          aliasName: $_aliasNameGenerator(
+              db.memUnit.id, db.companionStageEvent.unitId));
+
+  $$CompanionStageEventTableProcessedTableManager get companionStageEventRefs {
+    final manager =
+        $$CompanionStageEventTableTableManager($_db, $_db.companionStageEvent)
+            .filter((f) => f.unitId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionStageEventRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CompanionStepProficiencyTable,
+      List<CompanionStepProficiencyData>> _companionStepProficiencyRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionStepProficiency,
+          aliasName: $_aliasNameGenerator(
+              db.memUnit.id, db.companionStepProficiency.unitId));
+
+  $$CompanionStepProficiencyTableProcessedTableManager
+      get companionStepProficiencyRefs {
+    final manager = $$CompanionStepProficiencyTableTableManager(
+            $_db, $_db.companionStepProficiency)
+        .filter((f) => f.unitId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionStepProficiencyRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$MemUnitTableFilterComposer
@@ -4928,6 +8412,117 @@ class $$MemUnitTableFilterComposer
               $removeJoinBuilderFromRootComposer:
                   $removeJoinBuilderFromRootComposer,
             ));
+    return f(composer);
+  }
+
+  Expression<bool> companionChainSessionRefs(
+      Expression<bool> Function($$CompanionChainSessionTableFilterComposer f)
+          f) {
+    final $$CompanionChainSessionTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> companionVerseAttemptRefs(
+      Expression<bool> Function($$CompanionVerseAttemptTableFilterComposer f)
+          f) {
+    final $$CompanionVerseAttemptTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionVerseAttempt,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionVerseAttemptTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionVerseAttempt,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> companionUnitStateRefs(
+      Expression<bool> Function($$CompanionUnitStateTableFilterComposer f) f) {
+    final $$CompanionUnitStateTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.companionUnitState,
+        getReferencedColumn: (t) => t.unitId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CompanionUnitStateTableFilterComposer(
+              $db: $db,
+              $table: $db.companionUnitState,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> companionStageEventRefs(
+      Expression<bool> Function($$CompanionStageEventTableFilterComposer f) f) {
+    final $$CompanionStageEventTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.companionStageEvent,
+        getReferencedColumn: (t) => t.unitId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CompanionStageEventTableFilterComposer(
+              $db: $db,
+              $table: $db.companionStageEvent,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> companionStepProficiencyRefs(
+      Expression<bool> Function($$CompanionStepProficiencyTableFilterComposer f)
+          f) {
+    final $$CompanionStepProficiencyTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStepProficiency,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStepProficiencyTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionStepProficiency,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
     return f(composer);
   }
 }
@@ -5078,6 +8673,121 @@ class $$MemUnitTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> companionChainSessionRefs<T extends Object>(
+      Expression<T> Function($$CompanionChainSessionTableAnnotationComposer a)
+          f) {
+    final $$CompanionChainSessionTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> companionVerseAttemptRefs<T extends Object>(
+      Expression<T> Function($$CompanionVerseAttemptTableAnnotationComposer a)
+          f) {
+    final $$CompanionVerseAttemptTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionVerseAttempt,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionVerseAttemptTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionVerseAttempt,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> companionUnitStateRefs<T extends Object>(
+      Expression<T> Function($$CompanionUnitStateTableAnnotationComposer a) f) {
+    final $$CompanionUnitStateTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionUnitState,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionUnitStateTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionUnitState,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> companionStageEventRefs<T extends Object>(
+      Expression<T> Function($$CompanionStageEventTableAnnotationComposer a)
+          f) {
+    final $$CompanionStageEventTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStageEvent,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStageEventTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionStageEvent,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> companionStepProficiencyRefs<T extends Object>(
+      Expression<T> Function(
+              $$CompanionStepProficiencyTableAnnotationComposer a)
+          f) {
+    final $$CompanionStepProficiencyTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStepProficiency,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStepProficiencyTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionStepProficiency,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$MemUnitTableTableManager extends RootTableManager<
@@ -5091,7 +8801,14 @@ class $$MemUnitTableTableManager extends RootTableManager<
     $$MemUnitTableUpdateCompanionBuilder,
     (MemUnitData, $$MemUnitTableReferences),
     MemUnitData,
-    PrefetchHooks Function({bool scheduleStateRefs, bool reviewLogRefs})> {
+    PrefetchHooks Function(
+        {bool scheduleStateRefs,
+        bool reviewLogRefs,
+        bool companionChainSessionRefs,
+        bool companionVerseAttemptRefs,
+        bool companionUnitStateRefs,
+        bool companionStageEventRefs,
+        bool companionStepProficiencyRefs})> {
   $$MemUnitTableTableManager(_$AppDatabase db, $MemUnitTable table)
       : super(TableManagerState(
           db: db,
@@ -5171,12 +8888,23 @@ class $$MemUnitTableTableManager extends RootTableManager<
                   (e.readTable(table), $$MemUnitTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: (
-              {scheduleStateRefs = false, reviewLogRefs = false}) {
+              {scheduleStateRefs = false,
+              reviewLogRefs = false,
+              companionChainSessionRefs = false,
+              companionVerseAttemptRefs = false,
+              companionUnitStateRefs = false,
+              companionStageEventRefs = false,
+              companionStepProficiencyRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (scheduleStateRefs) db.scheduleState,
-                if (reviewLogRefs) db.reviewLog
+                if (reviewLogRefs) db.reviewLog,
+                if (companionChainSessionRefs) db.companionChainSession,
+                if (companionVerseAttemptRefs) db.companionVerseAttempt,
+                if (companionUnitStateRefs) db.companionUnitState,
+                if (companionStageEventRefs) db.companionStageEvent,
+                if (companionStepProficiencyRefs) db.companionStepProficiency
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -5206,6 +8934,71 @@ class $$MemUnitTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem: (item,
                                 referencedItems) =>
                             referencedItems.where((e) => e.unitId == item.id),
+                        typedResults: items),
+                  if (companionChainSessionRefs)
+                    await $_getPrefetchedData<MemUnitData, $MemUnitTable,
+                            CompanionChainSessionData>(
+                        currentTable: table,
+                        referencedTable: $$MemUnitTableReferences
+                            ._companionChainSessionRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$MemUnitTableReferences(db, table, p0)
+                                .companionChainSessionRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.unitId == item.id),
+                        typedResults: items),
+                  if (companionVerseAttemptRefs)
+                    await $_getPrefetchedData<MemUnitData, $MemUnitTable,
+                            CompanionVerseAttemptData>(
+                        currentTable: table,
+                        referencedTable: $$MemUnitTableReferences
+                            ._companionVerseAttemptRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$MemUnitTableReferences(db, table, p0)
+                                .companionVerseAttemptRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.unitId == item.id),
+                        typedResults: items),
+                  if (companionUnitStateRefs)
+                    await $_getPrefetchedData<MemUnitData, $MemUnitTable,
+                            CompanionUnitStateData>(
+                        currentTable: table,
+                        referencedTable: $$MemUnitTableReferences
+                            ._companionUnitStateRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$MemUnitTableReferences(db, table, p0)
+                                .companionUnitStateRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.unitId == item.id),
+                        typedResults: items),
+                  if (companionStageEventRefs)
+                    await $_getPrefetchedData<MemUnitData, $MemUnitTable,
+                            CompanionStageEventData>(
+                        currentTable: table,
+                        referencedTable: $$MemUnitTableReferences
+                            ._companionStageEventRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$MemUnitTableReferences(db, table, p0)
+                                .companionStageEventRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.unitId == item.id),
+                        typedResults: items),
+                  if (companionStepProficiencyRefs)
+                    await $_getPrefetchedData<MemUnitData, $MemUnitTable,
+                            CompanionStepProficiencyData>(
+                        currentTable: table,
+                        referencedTable: $$MemUnitTableReferences
+                            ._companionStepProficiencyRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$MemUnitTableReferences(db, table, p0)
+                                .companionStepProficiencyRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.unitId == item.id),
                         typedResults: items)
                 ];
               },
@@ -5225,7 +9018,14 @@ typedef $$MemUnitTableProcessedTableManager = ProcessedTableManager<
     $$MemUnitTableUpdateCompanionBuilder,
     (MemUnitData, $$MemUnitTableReferences),
     MemUnitData,
-    PrefetchHooks Function({bool scheduleStateRefs, bool reviewLogRefs})>;
+    PrefetchHooks Function(
+        {bool scheduleStateRefs,
+        bool reviewLogRefs,
+        bool companionChainSessionRefs,
+        bool companionVerseAttemptRefs,
+        bool companionUnitStateRefs,
+        bool companionStageEventRefs,
+        bool companionStepProficiencyRefs})>;
 typedef $$ScheduleStateTableCreateCompanionBuilder = ScheduleStateCompanion
     Function({
   Value<int> unitId,
@@ -5886,6 +9686,8 @@ typedef $$AppSettingsTableCreateCompanionBuilder = AppSettingsCompanion
   required double avgReviewMinutesPerAyah,
   Value<int> requirePageMetadata,
   Value<String?> typicalGradeDistributionJson,
+  Value<String?> schedulingPrefsJson,
+  Value<String?> schedulingOverridesJson,
   required int updatedAtDay,
 });
 typedef $$AppSettingsTableUpdateCompanionBuilder = AppSettingsCompanion
@@ -5901,6 +9703,8 @@ typedef $$AppSettingsTableUpdateCompanionBuilder = AppSettingsCompanion
   Value<double> avgReviewMinutesPerAyah,
   Value<int> requirePageMetadata,
   Value<String?> typicalGradeDistributionJson,
+  Value<String?> schedulingPrefsJson,
+  Value<String?> schedulingOverridesJson,
   Value<int> updatedAtDay,
 });
 
@@ -5953,6 +9757,14 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get typicalGradeDistributionJson => $composableBuilder(
       column: $table.typicalGradeDistributionJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get schedulingPrefsJson => $composableBuilder(
+      column: $table.schedulingPrefsJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get schedulingOverridesJson => $composableBuilder(
+      column: $table.schedulingOverridesJson,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get updatedAtDay => $composableBuilder(
@@ -6011,6 +9823,14 @@ class $$AppSettingsTableOrderingComposer
           column: $table.typicalGradeDistributionJson,
           builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get schedulingPrefsJson => $composableBuilder(
+      column: $table.schedulingPrefsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get schedulingOverridesJson => $composableBuilder(
+      column: $table.schedulingOverridesJson,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get updatedAtDay => $composableBuilder(
       column: $table.updatedAtDay,
       builder: (column) => ColumnOrderings(column));
@@ -6060,6 +9880,12 @@ class $$AppSettingsTableAnnotationComposer
           column: $table.typicalGradeDistributionJson,
           builder: (column) => column);
 
+  GeneratedColumn<String> get schedulingPrefsJson => $composableBuilder(
+      column: $table.schedulingPrefsJson, builder: (column) => column);
+
+  GeneratedColumn<String> get schedulingOverridesJson => $composableBuilder(
+      column: $table.schedulingOverridesJson, builder: (column) => column);
+
   GeneratedColumn<int> get updatedAtDay => $composableBuilder(
       column: $table.updatedAtDay, builder: (column) => column);
 }
@@ -6098,6 +9924,8 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             Value<double> avgReviewMinutesPerAyah = const Value.absent(),
             Value<int> requirePageMetadata = const Value.absent(),
             Value<String?> typicalGradeDistributionJson = const Value.absent(),
+            Value<String?> schedulingPrefsJson = const Value.absent(),
+            Value<String?> schedulingOverridesJson = const Value.absent(),
             Value<int> updatedAtDay = const Value.absent(),
           }) =>
               AppSettingsCompanion(
@@ -6112,6 +9940,8 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             avgReviewMinutesPerAyah: avgReviewMinutesPerAyah,
             requirePageMetadata: requirePageMetadata,
             typicalGradeDistributionJson: typicalGradeDistributionJson,
+            schedulingPrefsJson: schedulingPrefsJson,
+            schedulingOverridesJson: schedulingOverridesJson,
             updatedAtDay: updatedAtDay,
           ),
           createCompanionCallback: ({
@@ -6126,6 +9956,8 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             required double avgReviewMinutesPerAyah,
             Value<int> requirePageMetadata = const Value.absent(),
             Value<String?> typicalGradeDistributionJson = const Value.absent(),
+            Value<String?> schedulingPrefsJson = const Value.absent(),
+            Value<String?> schedulingOverridesJson = const Value.absent(),
             required int updatedAtDay,
           }) =>
               AppSettingsCompanion.insert(
@@ -6140,6 +9972,8 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             avgReviewMinutesPerAyah: avgReviewMinutesPerAyah,
             requirePageMetadata: requirePageMetadata,
             typicalGradeDistributionJson: typicalGradeDistributionJson,
+            schedulingPrefsJson: schedulingPrefsJson,
+            schedulingOverridesJson: schedulingOverridesJson,
             updatedAtDay: updatedAtDay,
           ),
           withReferenceMapper: (p0) => p0
@@ -6705,6 +10539,2475 @@ typedef $$PendingCalibrationUpdateTableProcessedTableManager
         ),
         PendingCalibrationUpdateData,
         PrefetchHooks Function()>;
+typedef $$CompanionChainSessionTableCreateCompanionBuilder
+    = CompanionChainSessionCompanion Function({
+  Value<int> id,
+  required int unitId,
+  required int targetVerseCount,
+  Value<int> passedVerseCount,
+  required String chainResult,
+  Value<double> retrievalStrength,
+  Value<int?> startedAtSeconds,
+  Value<int?> endedAtSeconds,
+  required int createdAtDay,
+  required int updatedAtDay,
+});
+typedef $$CompanionChainSessionTableUpdateCompanionBuilder
+    = CompanionChainSessionCompanion Function({
+  Value<int> id,
+  Value<int> unitId,
+  Value<int> targetVerseCount,
+  Value<int> passedVerseCount,
+  Value<String> chainResult,
+  Value<double> retrievalStrength,
+  Value<int?> startedAtSeconds,
+  Value<int?> endedAtSeconds,
+  Value<int> createdAtDay,
+  Value<int> updatedAtDay,
+});
+
+final class $$CompanionChainSessionTableReferences extends BaseReferences<
+    _$AppDatabase, $CompanionChainSessionTable, CompanionChainSessionData> {
+  $$CompanionChainSessionTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $MemUnitTable _unitIdTable(_$AppDatabase db) => db.memUnit.createAlias(
+      $_aliasNameGenerator(db.companionChainSession.unitId, db.memUnit.id));
+
+  $$MemUnitTableProcessedTableManager get unitId {
+    final $_column = $_itemColumn<int>('unit_id')!;
+
+    final manager = $$MemUnitTableTableManager($_db, $_db.memUnit)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_unitIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$CompanionVerseAttemptTable,
+      List<CompanionVerseAttemptData>> _companionVerseAttemptRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionVerseAttempt,
+          aliasName: $_aliasNameGenerator(
+              db.companionChainSession.id, db.companionVerseAttempt.sessionId));
+
+  $$CompanionVerseAttemptTableProcessedTableManager
+      get companionVerseAttemptRefs {
+    final manager = $$CompanionVerseAttemptTableTableManager(
+            $_db, $_db.companionVerseAttempt)
+        .filter((f) => f.sessionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionVerseAttemptRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CompanionStageEventTable,
+      List<CompanionStageEventData>> _companionStageEventRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionStageEvent,
+          aliasName: $_aliasNameGenerator(
+              db.companionChainSession.id, db.companionStageEvent.sessionId));
+
+  $$CompanionStageEventTableProcessedTableManager get companionStageEventRefs {
+    final manager =
+        $$CompanionStageEventTableTableManager($_db, $_db.companionStageEvent)
+            .filter((f) => f.sessionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionStageEventRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CompanionStepProficiencyTable,
+      List<CompanionStepProficiencyData>> _companionStepProficiencyRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionStepProficiency,
+          aliasName: $_aliasNameGenerator(db.companionChainSession.id,
+              db.companionStepProficiency.lastSessionId));
+
+  $$CompanionStepProficiencyTableProcessedTableManager
+      get companionStepProficiencyRefs {
+    final manager = $$CompanionStepProficiencyTableTableManager(
+            $_db, $_db.companionStepProficiency)
+        .filter((f) => f.lastSessionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionStepProficiencyRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$CompanionChainSessionTableFilterComposer
+    extends Composer<_$AppDatabase, $CompanionChainSessionTable> {
+  $$CompanionChainSessionTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get targetVerseCount => $composableBuilder(
+      column: $table.targetVerseCount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get passedVerseCount => $composableBuilder(
+      column: $table.passedVerseCount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get chainResult => $composableBuilder(
+      column: $table.chainResult, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get retrievalStrength => $composableBuilder(
+      column: $table.retrievalStrength,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get startedAtSeconds => $composableBuilder(
+      column: $table.startedAtSeconds,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get endedAtSeconds => $composableBuilder(
+      column: $table.endedAtSeconds,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAtDay => $composableBuilder(
+      column: $table.createdAtDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAtDay => $composableBuilder(
+      column: $table.updatedAtDay, builder: (column) => ColumnFilters(column));
+
+  $$MemUnitTableFilterComposer get unitId {
+    final $$MemUnitTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableFilterComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> companionVerseAttemptRefs(
+      Expression<bool> Function($$CompanionVerseAttemptTableFilterComposer f)
+          f) {
+    final $$CompanionVerseAttemptTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionVerseAttempt,
+            getReferencedColumn: (t) => t.sessionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionVerseAttemptTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionVerseAttempt,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> companionStageEventRefs(
+      Expression<bool> Function($$CompanionStageEventTableFilterComposer f) f) {
+    final $$CompanionStageEventTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.companionStageEvent,
+        getReferencedColumn: (t) => t.sessionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CompanionStageEventTableFilterComposer(
+              $db: $db,
+              $table: $db.companionStageEvent,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> companionStepProficiencyRefs(
+      Expression<bool> Function($$CompanionStepProficiencyTableFilterComposer f)
+          f) {
+    final $$CompanionStepProficiencyTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStepProficiency,
+            getReferencedColumn: (t) => t.lastSessionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStepProficiencyTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionStepProficiency,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$CompanionChainSessionTableOrderingComposer
+    extends Composer<_$AppDatabase, $CompanionChainSessionTable> {
+  $$CompanionChainSessionTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get targetVerseCount => $composableBuilder(
+      column: $table.targetVerseCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get passedVerseCount => $composableBuilder(
+      column: $table.passedVerseCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get chainResult => $composableBuilder(
+      column: $table.chainResult, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get retrievalStrength => $composableBuilder(
+      column: $table.retrievalStrength,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get startedAtSeconds => $composableBuilder(
+      column: $table.startedAtSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get endedAtSeconds => $composableBuilder(
+      column: $table.endedAtSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAtDay => $composableBuilder(
+      column: $table.createdAtDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAtDay => $composableBuilder(
+      column: $table.updatedAtDay,
+      builder: (column) => ColumnOrderings(column));
+
+  $$MemUnitTableOrderingComposer get unitId {
+    final $$MemUnitTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableOrderingComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionChainSessionTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CompanionChainSessionTable> {
+  $$CompanionChainSessionTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get targetVerseCount => $composableBuilder(
+      column: $table.targetVerseCount, builder: (column) => column);
+
+  GeneratedColumn<int> get passedVerseCount => $composableBuilder(
+      column: $table.passedVerseCount, builder: (column) => column);
+
+  GeneratedColumn<String> get chainResult => $composableBuilder(
+      column: $table.chainResult, builder: (column) => column);
+
+  GeneratedColumn<double> get retrievalStrength => $composableBuilder(
+      column: $table.retrievalStrength, builder: (column) => column);
+
+  GeneratedColumn<int> get startedAtSeconds => $composableBuilder(
+      column: $table.startedAtSeconds, builder: (column) => column);
+
+  GeneratedColumn<int> get endedAtSeconds => $composableBuilder(
+      column: $table.endedAtSeconds, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtDay => $composableBuilder(
+      column: $table.createdAtDay, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtDay => $composableBuilder(
+      column: $table.updatedAtDay, builder: (column) => column);
+
+  $$MemUnitTableAnnotationComposer get unitId {
+    final $$MemUnitTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableAnnotationComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> companionVerseAttemptRefs<T extends Object>(
+      Expression<T> Function($$CompanionVerseAttemptTableAnnotationComposer a)
+          f) {
+    final $$CompanionVerseAttemptTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionVerseAttempt,
+            getReferencedColumn: (t) => t.sessionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionVerseAttemptTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionVerseAttempt,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> companionStageEventRefs<T extends Object>(
+      Expression<T> Function($$CompanionStageEventTableAnnotationComposer a)
+          f) {
+    final $$CompanionStageEventTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStageEvent,
+            getReferencedColumn: (t) => t.sessionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStageEventTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionStageEvent,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> companionStepProficiencyRefs<T extends Object>(
+      Expression<T> Function(
+              $$CompanionStepProficiencyTableAnnotationComposer a)
+          f) {
+    final $$CompanionStepProficiencyTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStepProficiency,
+            getReferencedColumn: (t) => t.lastSessionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStepProficiencyTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionStepProficiency,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$CompanionChainSessionTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CompanionChainSessionTable,
+    CompanionChainSessionData,
+    $$CompanionChainSessionTableFilterComposer,
+    $$CompanionChainSessionTableOrderingComposer,
+    $$CompanionChainSessionTableAnnotationComposer,
+    $$CompanionChainSessionTableCreateCompanionBuilder,
+    $$CompanionChainSessionTableUpdateCompanionBuilder,
+    (CompanionChainSessionData, $$CompanionChainSessionTableReferences),
+    CompanionChainSessionData,
+    PrefetchHooks Function(
+        {bool unitId,
+        bool companionVerseAttemptRefs,
+        bool companionStageEventRefs,
+        bool companionStepProficiencyRefs})> {
+  $$CompanionChainSessionTableTableManager(
+      _$AppDatabase db, $CompanionChainSessionTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CompanionChainSessionTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CompanionChainSessionTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CompanionChainSessionTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> unitId = const Value.absent(),
+            Value<int> targetVerseCount = const Value.absent(),
+            Value<int> passedVerseCount = const Value.absent(),
+            Value<String> chainResult = const Value.absent(),
+            Value<double> retrievalStrength = const Value.absent(),
+            Value<int?> startedAtSeconds = const Value.absent(),
+            Value<int?> endedAtSeconds = const Value.absent(),
+            Value<int> createdAtDay = const Value.absent(),
+            Value<int> updatedAtDay = const Value.absent(),
+          }) =>
+              CompanionChainSessionCompanion(
+            id: id,
+            unitId: unitId,
+            targetVerseCount: targetVerseCount,
+            passedVerseCount: passedVerseCount,
+            chainResult: chainResult,
+            retrievalStrength: retrievalStrength,
+            startedAtSeconds: startedAtSeconds,
+            endedAtSeconds: endedAtSeconds,
+            createdAtDay: createdAtDay,
+            updatedAtDay: updatedAtDay,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int unitId,
+            required int targetVerseCount,
+            Value<int> passedVerseCount = const Value.absent(),
+            required String chainResult,
+            Value<double> retrievalStrength = const Value.absent(),
+            Value<int?> startedAtSeconds = const Value.absent(),
+            Value<int?> endedAtSeconds = const Value.absent(),
+            required int createdAtDay,
+            required int updatedAtDay,
+          }) =>
+              CompanionChainSessionCompanion.insert(
+            id: id,
+            unitId: unitId,
+            targetVerseCount: targetVerseCount,
+            passedVerseCount: passedVerseCount,
+            chainResult: chainResult,
+            retrievalStrength: retrievalStrength,
+            startedAtSeconds: startedAtSeconds,
+            endedAtSeconds: endedAtSeconds,
+            createdAtDay: createdAtDay,
+            updatedAtDay: updatedAtDay,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$CompanionChainSessionTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {unitId = false,
+              companionVerseAttemptRefs = false,
+              companionStageEventRefs = false,
+              companionStepProficiencyRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (companionVerseAttemptRefs) db.companionVerseAttempt,
+                if (companionStageEventRefs) db.companionStageEvent,
+                if (companionStepProficiencyRefs) db.companionStepProficiency
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (unitId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.unitId,
+                    referencedTable:
+                        $$CompanionChainSessionTableReferences._unitIdTable(db),
+                    referencedColumn: $$CompanionChainSessionTableReferences
+                        ._unitIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (companionVerseAttemptRefs)
+                    await $_getPrefetchedData<
+                            CompanionChainSessionData,
+                            $CompanionChainSessionTable,
+                            CompanionVerseAttemptData>(
+                        currentTable: table,
+                        referencedTable: $$CompanionChainSessionTableReferences
+                            ._companionVerseAttemptRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CompanionChainSessionTableReferences(
+                                    db, table, p0)
+                                .companionVerseAttemptRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.sessionId == item.id),
+                        typedResults: items),
+                  if (companionStageEventRefs)
+                    await $_getPrefetchedData<
+                            CompanionChainSessionData,
+                            $CompanionChainSessionTable,
+                            CompanionStageEventData>(
+                        currentTable: table,
+                        referencedTable: $$CompanionChainSessionTableReferences
+                            ._companionStageEventRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CompanionChainSessionTableReferences(
+                                    db, table, p0)
+                                .companionStageEventRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.sessionId == item.id),
+                        typedResults: items),
+                  if (companionStepProficiencyRefs)
+                    await $_getPrefetchedData<
+                            CompanionChainSessionData,
+                            $CompanionChainSessionTable,
+                            CompanionStepProficiencyData>(
+                        currentTable: table,
+                        referencedTable: $$CompanionChainSessionTableReferences
+                            ._companionStepProficiencyRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CompanionChainSessionTableReferences(
+                                    db, table, p0)
+                                .companionStepProficiencyRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.lastSessionId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CompanionChainSessionTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $CompanionChainSessionTable,
+        CompanionChainSessionData,
+        $$CompanionChainSessionTableFilterComposer,
+        $$CompanionChainSessionTableOrderingComposer,
+        $$CompanionChainSessionTableAnnotationComposer,
+        $$CompanionChainSessionTableCreateCompanionBuilder,
+        $$CompanionChainSessionTableUpdateCompanionBuilder,
+        (CompanionChainSessionData, $$CompanionChainSessionTableReferences),
+        CompanionChainSessionData,
+        PrefetchHooks Function(
+            {bool unitId,
+            bool companionVerseAttemptRefs,
+            bool companionStageEventRefs,
+            bool companionStepProficiencyRefs})>;
+typedef $$CompanionVerseAttemptTableCreateCompanionBuilder
+    = CompanionVerseAttemptCompanion Function({
+  Value<int> id,
+  required int sessionId,
+  required int unitId,
+  required int verseOrder,
+  required int surah,
+  required int ayah,
+  required int attemptIndex,
+  Value<String> stageCode,
+  Value<String> attemptType,
+  required String hintLevel,
+  Value<int> assistedFlag,
+  Value<int> latencyToStartMs,
+  Value<int> stopsCount,
+  Value<int> selfCorrectionsCount,
+  required String evaluatorMode,
+  required int evaluatorPassed,
+  Value<double?> evaluatorConfidence,
+  Value<String?> autoCheckType,
+  Value<String?> autoCheckResult,
+  required int revealedAfterAttempt,
+  required double retrievalStrength,
+  Value<int> timeOnVerseMs,
+  Value<int> timeOnChunkMs,
+  Value<String?> telemetryJson,
+  required int attemptDay,
+  Value<int?> attemptSeconds,
+});
+typedef $$CompanionVerseAttemptTableUpdateCompanionBuilder
+    = CompanionVerseAttemptCompanion Function({
+  Value<int> id,
+  Value<int> sessionId,
+  Value<int> unitId,
+  Value<int> verseOrder,
+  Value<int> surah,
+  Value<int> ayah,
+  Value<int> attemptIndex,
+  Value<String> stageCode,
+  Value<String> attemptType,
+  Value<String> hintLevel,
+  Value<int> assistedFlag,
+  Value<int> latencyToStartMs,
+  Value<int> stopsCount,
+  Value<int> selfCorrectionsCount,
+  Value<String> evaluatorMode,
+  Value<int> evaluatorPassed,
+  Value<double?> evaluatorConfidence,
+  Value<String?> autoCheckType,
+  Value<String?> autoCheckResult,
+  Value<int> revealedAfterAttempt,
+  Value<double> retrievalStrength,
+  Value<int> timeOnVerseMs,
+  Value<int> timeOnChunkMs,
+  Value<String?> telemetryJson,
+  Value<int> attemptDay,
+  Value<int?> attemptSeconds,
+});
+
+final class $$CompanionVerseAttemptTableReferences extends BaseReferences<
+    _$AppDatabase, $CompanionVerseAttemptTable, CompanionVerseAttemptData> {
+  $$CompanionVerseAttemptTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $CompanionChainSessionTable _sessionIdTable(_$AppDatabase db) =>
+      db.companionChainSession.createAlias($_aliasNameGenerator(
+          db.companionVerseAttempt.sessionId, db.companionChainSession.id));
+
+  $$CompanionChainSessionTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<int>('session_id')!;
+
+    final manager = $$CompanionChainSessionTableTableManager(
+            $_db, $_db.companionChainSession)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $MemUnitTable _unitIdTable(_$AppDatabase db) => db.memUnit.createAlias(
+      $_aliasNameGenerator(db.companionVerseAttempt.unitId, db.memUnit.id));
+
+  $$MemUnitTableProcessedTableManager get unitId {
+    final $_column = $_itemColumn<int>('unit_id')!;
+
+    final manager = $$MemUnitTableTableManager($_db, $_db.memUnit)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_unitIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CompanionVerseAttemptTableFilterComposer
+    extends Composer<_$AppDatabase, $CompanionVerseAttemptTable> {
+  $$CompanionVerseAttemptTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get verseOrder => $composableBuilder(
+      column: $table.verseOrder, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get attemptIndex => $composableBuilder(
+      column: $table.attemptIndex, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get stageCode => $composableBuilder(
+      column: $table.stageCode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get attemptType => $composableBuilder(
+      column: $table.attemptType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get hintLevel => $composableBuilder(
+      column: $table.hintLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get assistedFlag => $composableBuilder(
+      column: $table.assistedFlag, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get latencyToStartMs => $composableBuilder(
+      column: $table.latencyToStartMs,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stopsCount => $composableBuilder(
+      column: $table.stopsCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get selfCorrectionsCount => $composableBuilder(
+      column: $table.selfCorrectionsCount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get evaluatorMode => $composableBuilder(
+      column: $table.evaluatorMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get evaluatorPassed => $composableBuilder(
+      column: $table.evaluatorPassed,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get evaluatorConfidence => $composableBuilder(
+      column: $table.evaluatorConfidence,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get autoCheckType => $composableBuilder(
+      column: $table.autoCheckType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get autoCheckResult => $composableBuilder(
+      column: $table.autoCheckResult,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get revealedAfterAttempt => $composableBuilder(
+      column: $table.revealedAfterAttempt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get retrievalStrength => $composableBuilder(
+      column: $table.retrievalStrength,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get timeOnVerseMs => $composableBuilder(
+      column: $table.timeOnVerseMs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get timeOnChunkMs => $composableBuilder(
+      column: $table.timeOnChunkMs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get telemetryJson => $composableBuilder(
+      column: $table.telemetryJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get attemptDay => $composableBuilder(
+      column: $table.attemptDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get attemptSeconds => $composableBuilder(
+      column: $table.attemptSeconds,
+      builder: (column) => ColumnFilters(column));
+
+  $$CompanionChainSessionTableFilterComposer get sessionId {
+    final $$CompanionChainSessionTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.sessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$MemUnitTableFilterComposer get unitId {
+    final $$MemUnitTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableFilterComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionVerseAttemptTableOrderingComposer
+    extends Composer<_$AppDatabase, $CompanionVerseAttemptTable> {
+  $$CompanionVerseAttemptTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get verseOrder => $composableBuilder(
+      column: $table.verseOrder, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get attemptIndex => $composableBuilder(
+      column: $table.attemptIndex,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get stageCode => $composableBuilder(
+      column: $table.stageCode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get attemptType => $composableBuilder(
+      column: $table.attemptType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get hintLevel => $composableBuilder(
+      column: $table.hintLevel, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get assistedFlag => $composableBuilder(
+      column: $table.assistedFlag,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get latencyToStartMs => $composableBuilder(
+      column: $table.latencyToStartMs,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stopsCount => $composableBuilder(
+      column: $table.stopsCount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get selfCorrectionsCount => $composableBuilder(
+      column: $table.selfCorrectionsCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get evaluatorMode => $composableBuilder(
+      column: $table.evaluatorMode,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get evaluatorPassed => $composableBuilder(
+      column: $table.evaluatorPassed,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get evaluatorConfidence => $composableBuilder(
+      column: $table.evaluatorConfidence,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get autoCheckType => $composableBuilder(
+      column: $table.autoCheckType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get autoCheckResult => $composableBuilder(
+      column: $table.autoCheckResult,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get revealedAfterAttempt => $composableBuilder(
+      column: $table.revealedAfterAttempt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get retrievalStrength => $composableBuilder(
+      column: $table.retrievalStrength,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get timeOnVerseMs => $composableBuilder(
+      column: $table.timeOnVerseMs,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get timeOnChunkMs => $composableBuilder(
+      column: $table.timeOnChunkMs,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get telemetryJson => $composableBuilder(
+      column: $table.telemetryJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get attemptDay => $composableBuilder(
+      column: $table.attemptDay, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get attemptSeconds => $composableBuilder(
+      column: $table.attemptSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  $$CompanionChainSessionTableOrderingComposer get sessionId {
+    final $$CompanionChainSessionTableOrderingComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.sessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableOrderingComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$MemUnitTableOrderingComposer get unitId {
+    final $$MemUnitTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableOrderingComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionVerseAttemptTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CompanionVerseAttemptTable> {
+  $$CompanionVerseAttemptTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get verseOrder => $composableBuilder(
+      column: $table.verseOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get surah =>
+      $composableBuilder(column: $table.surah, builder: (column) => column);
+
+  GeneratedColumn<int> get ayah =>
+      $composableBuilder(column: $table.ayah, builder: (column) => column);
+
+  GeneratedColumn<int> get attemptIndex => $composableBuilder(
+      column: $table.attemptIndex, builder: (column) => column);
+
+  GeneratedColumn<String> get stageCode =>
+      $composableBuilder(column: $table.stageCode, builder: (column) => column);
+
+  GeneratedColumn<String> get attemptType => $composableBuilder(
+      column: $table.attemptType, builder: (column) => column);
+
+  GeneratedColumn<String> get hintLevel =>
+      $composableBuilder(column: $table.hintLevel, builder: (column) => column);
+
+  GeneratedColumn<int> get assistedFlag => $composableBuilder(
+      column: $table.assistedFlag, builder: (column) => column);
+
+  GeneratedColumn<int> get latencyToStartMs => $composableBuilder(
+      column: $table.latencyToStartMs, builder: (column) => column);
+
+  GeneratedColumn<int> get stopsCount => $composableBuilder(
+      column: $table.stopsCount, builder: (column) => column);
+
+  GeneratedColumn<int> get selfCorrectionsCount => $composableBuilder(
+      column: $table.selfCorrectionsCount, builder: (column) => column);
+
+  GeneratedColumn<String> get evaluatorMode => $composableBuilder(
+      column: $table.evaluatorMode, builder: (column) => column);
+
+  GeneratedColumn<int> get evaluatorPassed => $composableBuilder(
+      column: $table.evaluatorPassed, builder: (column) => column);
+
+  GeneratedColumn<double> get evaluatorConfidence => $composableBuilder(
+      column: $table.evaluatorConfidence, builder: (column) => column);
+
+  GeneratedColumn<String> get autoCheckType => $composableBuilder(
+      column: $table.autoCheckType, builder: (column) => column);
+
+  GeneratedColumn<String> get autoCheckResult => $composableBuilder(
+      column: $table.autoCheckResult, builder: (column) => column);
+
+  GeneratedColumn<int> get revealedAfterAttempt => $composableBuilder(
+      column: $table.revealedAfterAttempt, builder: (column) => column);
+
+  GeneratedColumn<double> get retrievalStrength => $composableBuilder(
+      column: $table.retrievalStrength, builder: (column) => column);
+
+  GeneratedColumn<int> get timeOnVerseMs => $composableBuilder(
+      column: $table.timeOnVerseMs, builder: (column) => column);
+
+  GeneratedColumn<int> get timeOnChunkMs => $composableBuilder(
+      column: $table.timeOnChunkMs, builder: (column) => column);
+
+  GeneratedColumn<String> get telemetryJson => $composableBuilder(
+      column: $table.telemetryJson, builder: (column) => column);
+
+  GeneratedColumn<int> get attemptDay => $composableBuilder(
+      column: $table.attemptDay, builder: (column) => column);
+
+  GeneratedColumn<int> get attemptSeconds => $composableBuilder(
+      column: $table.attemptSeconds, builder: (column) => column);
+
+  $$CompanionChainSessionTableAnnotationComposer get sessionId {
+    final $$CompanionChainSessionTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.sessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$MemUnitTableAnnotationComposer get unitId {
+    final $$MemUnitTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableAnnotationComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionVerseAttemptTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CompanionVerseAttemptTable,
+    CompanionVerseAttemptData,
+    $$CompanionVerseAttemptTableFilterComposer,
+    $$CompanionVerseAttemptTableOrderingComposer,
+    $$CompanionVerseAttemptTableAnnotationComposer,
+    $$CompanionVerseAttemptTableCreateCompanionBuilder,
+    $$CompanionVerseAttemptTableUpdateCompanionBuilder,
+    (CompanionVerseAttemptData, $$CompanionVerseAttemptTableReferences),
+    CompanionVerseAttemptData,
+    PrefetchHooks Function({bool sessionId, bool unitId})> {
+  $$CompanionVerseAttemptTableTableManager(
+      _$AppDatabase db, $CompanionVerseAttemptTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CompanionVerseAttemptTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CompanionVerseAttemptTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CompanionVerseAttemptTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> sessionId = const Value.absent(),
+            Value<int> unitId = const Value.absent(),
+            Value<int> verseOrder = const Value.absent(),
+            Value<int> surah = const Value.absent(),
+            Value<int> ayah = const Value.absent(),
+            Value<int> attemptIndex = const Value.absent(),
+            Value<String> stageCode = const Value.absent(),
+            Value<String> attemptType = const Value.absent(),
+            Value<String> hintLevel = const Value.absent(),
+            Value<int> assistedFlag = const Value.absent(),
+            Value<int> latencyToStartMs = const Value.absent(),
+            Value<int> stopsCount = const Value.absent(),
+            Value<int> selfCorrectionsCount = const Value.absent(),
+            Value<String> evaluatorMode = const Value.absent(),
+            Value<int> evaluatorPassed = const Value.absent(),
+            Value<double?> evaluatorConfidence = const Value.absent(),
+            Value<String?> autoCheckType = const Value.absent(),
+            Value<String?> autoCheckResult = const Value.absent(),
+            Value<int> revealedAfterAttempt = const Value.absent(),
+            Value<double> retrievalStrength = const Value.absent(),
+            Value<int> timeOnVerseMs = const Value.absent(),
+            Value<int> timeOnChunkMs = const Value.absent(),
+            Value<String?> telemetryJson = const Value.absent(),
+            Value<int> attemptDay = const Value.absent(),
+            Value<int?> attemptSeconds = const Value.absent(),
+          }) =>
+              CompanionVerseAttemptCompanion(
+            id: id,
+            sessionId: sessionId,
+            unitId: unitId,
+            verseOrder: verseOrder,
+            surah: surah,
+            ayah: ayah,
+            attemptIndex: attemptIndex,
+            stageCode: stageCode,
+            attemptType: attemptType,
+            hintLevel: hintLevel,
+            assistedFlag: assistedFlag,
+            latencyToStartMs: latencyToStartMs,
+            stopsCount: stopsCount,
+            selfCorrectionsCount: selfCorrectionsCount,
+            evaluatorMode: evaluatorMode,
+            evaluatorPassed: evaluatorPassed,
+            evaluatorConfidence: evaluatorConfidence,
+            autoCheckType: autoCheckType,
+            autoCheckResult: autoCheckResult,
+            revealedAfterAttempt: revealedAfterAttempt,
+            retrievalStrength: retrievalStrength,
+            timeOnVerseMs: timeOnVerseMs,
+            timeOnChunkMs: timeOnChunkMs,
+            telemetryJson: telemetryJson,
+            attemptDay: attemptDay,
+            attemptSeconds: attemptSeconds,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int sessionId,
+            required int unitId,
+            required int verseOrder,
+            required int surah,
+            required int ayah,
+            required int attemptIndex,
+            Value<String> stageCode = const Value.absent(),
+            Value<String> attemptType = const Value.absent(),
+            required String hintLevel,
+            Value<int> assistedFlag = const Value.absent(),
+            Value<int> latencyToStartMs = const Value.absent(),
+            Value<int> stopsCount = const Value.absent(),
+            Value<int> selfCorrectionsCount = const Value.absent(),
+            required String evaluatorMode,
+            required int evaluatorPassed,
+            Value<double?> evaluatorConfidence = const Value.absent(),
+            Value<String?> autoCheckType = const Value.absent(),
+            Value<String?> autoCheckResult = const Value.absent(),
+            required int revealedAfterAttempt,
+            required double retrievalStrength,
+            Value<int> timeOnVerseMs = const Value.absent(),
+            Value<int> timeOnChunkMs = const Value.absent(),
+            Value<String?> telemetryJson = const Value.absent(),
+            required int attemptDay,
+            Value<int?> attemptSeconds = const Value.absent(),
+          }) =>
+              CompanionVerseAttemptCompanion.insert(
+            id: id,
+            sessionId: sessionId,
+            unitId: unitId,
+            verseOrder: verseOrder,
+            surah: surah,
+            ayah: ayah,
+            attemptIndex: attemptIndex,
+            stageCode: stageCode,
+            attemptType: attemptType,
+            hintLevel: hintLevel,
+            assistedFlag: assistedFlag,
+            latencyToStartMs: latencyToStartMs,
+            stopsCount: stopsCount,
+            selfCorrectionsCount: selfCorrectionsCount,
+            evaluatorMode: evaluatorMode,
+            evaluatorPassed: evaluatorPassed,
+            evaluatorConfidence: evaluatorConfidence,
+            autoCheckType: autoCheckType,
+            autoCheckResult: autoCheckResult,
+            revealedAfterAttempt: revealedAfterAttempt,
+            retrievalStrength: retrievalStrength,
+            timeOnVerseMs: timeOnVerseMs,
+            timeOnChunkMs: timeOnChunkMs,
+            telemetryJson: telemetryJson,
+            attemptDay: attemptDay,
+            attemptSeconds: attemptSeconds,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$CompanionVerseAttemptTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false, unitId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (sessionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sessionId,
+                    referencedTable: $$CompanionVerseAttemptTableReferences
+                        ._sessionIdTable(db),
+                    referencedColumn: $$CompanionVerseAttemptTableReferences
+                        ._sessionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (unitId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.unitId,
+                    referencedTable:
+                        $$CompanionVerseAttemptTableReferences._unitIdTable(db),
+                    referencedColumn: $$CompanionVerseAttemptTableReferences
+                        ._unitIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CompanionVerseAttemptTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $CompanionVerseAttemptTable,
+        CompanionVerseAttemptData,
+        $$CompanionVerseAttemptTableFilterComposer,
+        $$CompanionVerseAttemptTableOrderingComposer,
+        $$CompanionVerseAttemptTableAnnotationComposer,
+        $$CompanionVerseAttemptTableCreateCompanionBuilder,
+        $$CompanionVerseAttemptTableUpdateCompanionBuilder,
+        (CompanionVerseAttemptData, $$CompanionVerseAttemptTableReferences),
+        CompanionVerseAttemptData,
+        PrefetchHooks Function({bool sessionId, bool unitId})>;
+typedef $$CompanionUnitStateTableCreateCompanionBuilder
+    = CompanionUnitStateCompanion Function({
+  Value<int> unitId,
+  required int unlockedStage,
+  required int updatedAtDay,
+  required int updatedAtSeconds,
+});
+typedef $$CompanionUnitStateTableUpdateCompanionBuilder
+    = CompanionUnitStateCompanion Function({
+  Value<int> unitId,
+  Value<int> unlockedStage,
+  Value<int> updatedAtDay,
+  Value<int> updatedAtSeconds,
+});
+
+final class $$CompanionUnitStateTableReferences extends BaseReferences<
+    _$AppDatabase, $CompanionUnitStateTable, CompanionUnitStateData> {
+  $$CompanionUnitStateTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $MemUnitTable _unitIdTable(_$AppDatabase db) => db.memUnit.createAlias(
+      $_aliasNameGenerator(db.companionUnitState.unitId, db.memUnit.id));
+
+  $$MemUnitTableProcessedTableManager get unitId {
+    final $_column = $_itemColumn<int>('unit_id')!;
+
+    final manager = $$MemUnitTableTableManager($_db, $_db.memUnit)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_unitIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CompanionUnitStateTableFilterComposer
+    extends Composer<_$AppDatabase, $CompanionUnitStateTable> {
+  $$CompanionUnitStateTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get unlockedStage => $composableBuilder(
+      column: $table.unlockedStage, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAtDay => $composableBuilder(
+      column: $table.updatedAtDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAtSeconds => $composableBuilder(
+      column: $table.updatedAtSeconds,
+      builder: (column) => ColumnFilters(column));
+
+  $$MemUnitTableFilterComposer get unitId {
+    final $$MemUnitTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableFilterComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionUnitStateTableOrderingComposer
+    extends Composer<_$AppDatabase, $CompanionUnitStateTable> {
+  $$CompanionUnitStateTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get unlockedStage => $composableBuilder(
+      column: $table.unlockedStage,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAtDay => $composableBuilder(
+      column: $table.updatedAtDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAtSeconds => $composableBuilder(
+      column: $table.updatedAtSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  $$MemUnitTableOrderingComposer get unitId {
+    final $$MemUnitTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableOrderingComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionUnitStateTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CompanionUnitStateTable> {
+  $$CompanionUnitStateTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get unlockedStage => $composableBuilder(
+      column: $table.unlockedStage, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtDay => $composableBuilder(
+      column: $table.updatedAtDay, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtSeconds => $composableBuilder(
+      column: $table.updatedAtSeconds, builder: (column) => column);
+
+  $$MemUnitTableAnnotationComposer get unitId {
+    final $$MemUnitTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableAnnotationComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionUnitStateTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CompanionUnitStateTable,
+    CompanionUnitStateData,
+    $$CompanionUnitStateTableFilterComposer,
+    $$CompanionUnitStateTableOrderingComposer,
+    $$CompanionUnitStateTableAnnotationComposer,
+    $$CompanionUnitStateTableCreateCompanionBuilder,
+    $$CompanionUnitStateTableUpdateCompanionBuilder,
+    (CompanionUnitStateData, $$CompanionUnitStateTableReferences),
+    CompanionUnitStateData,
+    PrefetchHooks Function({bool unitId})> {
+  $$CompanionUnitStateTableTableManager(
+      _$AppDatabase db, $CompanionUnitStateTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CompanionUnitStateTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CompanionUnitStateTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CompanionUnitStateTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> unitId = const Value.absent(),
+            Value<int> unlockedStage = const Value.absent(),
+            Value<int> updatedAtDay = const Value.absent(),
+            Value<int> updatedAtSeconds = const Value.absent(),
+          }) =>
+              CompanionUnitStateCompanion(
+            unitId: unitId,
+            unlockedStage: unlockedStage,
+            updatedAtDay: updatedAtDay,
+            updatedAtSeconds: updatedAtSeconds,
+          ),
+          createCompanionCallback: ({
+            Value<int> unitId = const Value.absent(),
+            required int unlockedStage,
+            required int updatedAtDay,
+            required int updatedAtSeconds,
+          }) =>
+              CompanionUnitStateCompanion.insert(
+            unitId: unitId,
+            unlockedStage: unlockedStage,
+            updatedAtDay: updatedAtDay,
+            updatedAtSeconds: updatedAtSeconds,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$CompanionUnitStateTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({unitId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (unitId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.unitId,
+                    referencedTable:
+                        $$CompanionUnitStateTableReferences._unitIdTable(db),
+                    referencedColumn:
+                        $$CompanionUnitStateTableReferences._unitIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CompanionUnitStateTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CompanionUnitStateTable,
+    CompanionUnitStateData,
+    $$CompanionUnitStateTableFilterComposer,
+    $$CompanionUnitStateTableOrderingComposer,
+    $$CompanionUnitStateTableAnnotationComposer,
+    $$CompanionUnitStateTableCreateCompanionBuilder,
+    $$CompanionUnitStateTableUpdateCompanionBuilder,
+    (CompanionUnitStateData, $$CompanionUnitStateTableReferences),
+    CompanionUnitStateData,
+    PrefetchHooks Function({bool unitId})>;
+typedef $$CompanionStageEventTableCreateCompanionBuilder
+    = CompanionStageEventCompanion Function({
+  Value<int> id,
+  required int sessionId,
+  required int unitId,
+  required int fromStage,
+  required int toStage,
+  required String eventType,
+  Value<int?> triggerVerseOrder,
+  required int createdDay,
+  required int createdSeconds,
+});
+typedef $$CompanionStageEventTableUpdateCompanionBuilder
+    = CompanionStageEventCompanion Function({
+  Value<int> id,
+  Value<int> sessionId,
+  Value<int> unitId,
+  Value<int> fromStage,
+  Value<int> toStage,
+  Value<String> eventType,
+  Value<int?> triggerVerseOrder,
+  Value<int> createdDay,
+  Value<int> createdSeconds,
+});
+
+final class $$CompanionStageEventTableReferences extends BaseReferences<
+    _$AppDatabase, $CompanionStageEventTable, CompanionStageEventData> {
+  $$CompanionStageEventTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $CompanionChainSessionTable _sessionIdTable(_$AppDatabase db) =>
+      db.companionChainSession.createAlias($_aliasNameGenerator(
+          db.companionStageEvent.sessionId, db.companionChainSession.id));
+
+  $$CompanionChainSessionTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<int>('session_id')!;
+
+    final manager = $$CompanionChainSessionTableTableManager(
+            $_db, $_db.companionChainSession)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $MemUnitTable _unitIdTable(_$AppDatabase db) => db.memUnit.createAlias(
+      $_aliasNameGenerator(db.companionStageEvent.unitId, db.memUnit.id));
+
+  $$MemUnitTableProcessedTableManager get unitId {
+    final $_column = $_itemColumn<int>('unit_id')!;
+
+    final manager = $$MemUnitTableTableManager($_db, $_db.memUnit)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_unitIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CompanionStageEventTableFilterComposer
+    extends Composer<_$AppDatabase, $CompanionStageEventTable> {
+  $$CompanionStageEventTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get fromStage => $composableBuilder(
+      column: $table.fromStage, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get toStage => $composableBuilder(
+      column: $table.toStage, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get eventType => $composableBuilder(
+      column: $table.eventType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get triggerVerseOrder => $composableBuilder(
+      column: $table.triggerVerseOrder,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdDay => $composableBuilder(
+      column: $table.createdDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdSeconds => $composableBuilder(
+      column: $table.createdSeconds,
+      builder: (column) => ColumnFilters(column));
+
+  $$CompanionChainSessionTableFilterComposer get sessionId {
+    final $$CompanionChainSessionTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.sessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$MemUnitTableFilterComposer get unitId {
+    final $$MemUnitTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableFilterComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionStageEventTableOrderingComposer
+    extends Composer<_$AppDatabase, $CompanionStageEventTable> {
+  $$CompanionStageEventTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get fromStage => $composableBuilder(
+      column: $table.fromStage, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get toStage => $composableBuilder(
+      column: $table.toStage, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get eventType => $composableBuilder(
+      column: $table.eventType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get triggerVerseOrder => $composableBuilder(
+      column: $table.triggerVerseOrder,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdDay => $composableBuilder(
+      column: $table.createdDay, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdSeconds => $composableBuilder(
+      column: $table.createdSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  $$CompanionChainSessionTableOrderingComposer get sessionId {
+    final $$CompanionChainSessionTableOrderingComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.sessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableOrderingComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$MemUnitTableOrderingComposer get unitId {
+    final $$MemUnitTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableOrderingComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionStageEventTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CompanionStageEventTable> {
+  $$CompanionStageEventTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get fromStage =>
+      $composableBuilder(column: $table.fromStage, builder: (column) => column);
+
+  GeneratedColumn<int> get toStage =>
+      $composableBuilder(column: $table.toStage, builder: (column) => column);
+
+  GeneratedColumn<String> get eventType =>
+      $composableBuilder(column: $table.eventType, builder: (column) => column);
+
+  GeneratedColumn<int> get triggerVerseOrder => $composableBuilder(
+      column: $table.triggerVerseOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get createdDay => $composableBuilder(
+      column: $table.createdDay, builder: (column) => column);
+
+  GeneratedColumn<int> get createdSeconds => $composableBuilder(
+      column: $table.createdSeconds, builder: (column) => column);
+
+  $$CompanionChainSessionTableAnnotationComposer get sessionId {
+    final $$CompanionChainSessionTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.sessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$MemUnitTableAnnotationComposer get unitId {
+    final $$MemUnitTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableAnnotationComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionStageEventTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CompanionStageEventTable,
+    CompanionStageEventData,
+    $$CompanionStageEventTableFilterComposer,
+    $$CompanionStageEventTableOrderingComposer,
+    $$CompanionStageEventTableAnnotationComposer,
+    $$CompanionStageEventTableCreateCompanionBuilder,
+    $$CompanionStageEventTableUpdateCompanionBuilder,
+    (CompanionStageEventData, $$CompanionStageEventTableReferences),
+    CompanionStageEventData,
+    PrefetchHooks Function({bool sessionId, bool unitId})> {
+  $$CompanionStageEventTableTableManager(
+      _$AppDatabase db, $CompanionStageEventTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CompanionStageEventTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CompanionStageEventTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CompanionStageEventTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> sessionId = const Value.absent(),
+            Value<int> unitId = const Value.absent(),
+            Value<int> fromStage = const Value.absent(),
+            Value<int> toStage = const Value.absent(),
+            Value<String> eventType = const Value.absent(),
+            Value<int?> triggerVerseOrder = const Value.absent(),
+            Value<int> createdDay = const Value.absent(),
+            Value<int> createdSeconds = const Value.absent(),
+          }) =>
+              CompanionStageEventCompanion(
+            id: id,
+            sessionId: sessionId,
+            unitId: unitId,
+            fromStage: fromStage,
+            toStage: toStage,
+            eventType: eventType,
+            triggerVerseOrder: triggerVerseOrder,
+            createdDay: createdDay,
+            createdSeconds: createdSeconds,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int sessionId,
+            required int unitId,
+            required int fromStage,
+            required int toStage,
+            required String eventType,
+            Value<int?> triggerVerseOrder = const Value.absent(),
+            required int createdDay,
+            required int createdSeconds,
+          }) =>
+              CompanionStageEventCompanion.insert(
+            id: id,
+            sessionId: sessionId,
+            unitId: unitId,
+            fromStage: fromStage,
+            toStage: toStage,
+            eventType: eventType,
+            triggerVerseOrder: triggerVerseOrder,
+            createdDay: createdDay,
+            createdSeconds: createdSeconds,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$CompanionStageEventTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false, unitId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (sessionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sessionId,
+                    referencedTable: $$CompanionStageEventTableReferences
+                        ._sessionIdTable(db),
+                    referencedColumn: $$CompanionStageEventTableReferences
+                        ._sessionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (unitId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.unitId,
+                    referencedTable:
+                        $$CompanionStageEventTableReferences._unitIdTable(db),
+                    referencedColumn: $$CompanionStageEventTableReferences
+                        ._unitIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CompanionStageEventTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CompanionStageEventTable,
+    CompanionStageEventData,
+    $$CompanionStageEventTableFilterComposer,
+    $$CompanionStageEventTableOrderingComposer,
+    $$CompanionStageEventTableAnnotationComposer,
+    $$CompanionStageEventTableCreateCompanionBuilder,
+    $$CompanionStageEventTableUpdateCompanionBuilder,
+    (CompanionStageEventData, $$CompanionStageEventTableReferences),
+    CompanionStageEventData,
+    PrefetchHooks Function({bool sessionId, bool unitId})>;
+typedef $$CompanionStepProficiencyTableCreateCompanionBuilder
+    = CompanionStepProficiencyCompanion Function({
+  Value<int> id,
+  required int unitId,
+  required int surah,
+  required int ayah,
+  Value<double> proficiencyEma,
+  Value<String?> lastHintLevel,
+  Value<double?> lastEvaluatorConfidence,
+  Value<int?> lastLatencyToStartMs,
+  Value<int> attemptsCount,
+  Value<int> passesCount,
+  required int lastUpdatedDay,
+  Value<int?> lastSessionId,
+});
+typedef $$CompanionStepProficiencyTableUpdateCompanionBuilder
+    = CompanionStepProficiencyCompanion Function({
+  Value<int> id,
+  Value<int> unitId,
+  Value<int> surah,
+  Value<int> ayah,
+  Value<double> proficiencyEma,
+  Value<String?> lastHintLevel,
+  Value<double?> lastEvaluatorConfidence,
+  Value<int?> lastLatencyToStartMs,
+  Value<int> attemptsCount,
+  Value<int> passesCount,
+  Value<int> lastUpdatedDay,
+  Value<int?> lastSessionId,
+});
+
+final class $$CompanionStepProficiencyTableReferences extends BaseReferences<
+    _$AppDatabase,
+    $CompanionStepProficiencyTable,
+    CompanionStepProficiencyData> {
+  $$CompanionStepProficiencyTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $MemUnitTable _unitIdTable(_$AppDatabase db) => db.memUnit.createAlias(
+      $_aliasNameGenerator(db.companionStepProficiency.unitId, db.memUnit.id));
+
+  $$MemUnitTableProcessedTableManager get unitId {
+    final $_column = $_itemColumn<int>('unit_id')!;
+
+    final manager = $$MemUnitTableTableManager($_db, $_db.memUnit)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_unitIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CompanionChainSessionTable _lastSessionIdTable(_$AppDatabase db) =>
+      db.companionChainSession.createAlias($_aliasNameGenerator(
+          db.companionStepProficiency.lastSessionId,
+          db.companionChainSession.id));
+
+  $$CompanionChainSessionTableProcessedTableManager? get lastSessionId {
+    final $_column = $_itemColumn<int>('last_session_id');
+    if ($_column == null) return null;
+    final manager = $$CompanionChainSessionTableTableManager(
+            $_db, $_db.companionChainSession)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_lastSessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CompanionStepProficiencyTableFilterComposer
+    extends Composer<_$AppDatabase, $CompanionStepProficiencyTable> {
+  $$CompanionStepProficiencyTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get proficiencyEma => $composableBuilder(
+      column: $table.proficiencyEma,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastHintLevel => $composableBuilder(
+      column: $table.lastHintLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get lastEvaluatorConfidence => $composableBuilder(
+      column: $table.lastEvaluatorConfidence,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastLatencyToStartMs => $composableBuilder(
+      column: $table.lastLatencyToStartMs,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get attemptsCount => $composableBuilder(
+      column: $table.attemptsCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get passesCount => $composableBuilder(
+      column: $table.passesCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastUpdatedDay => $composableBuilder(
+      column: $table.lastUpdatedDay,
+      builder: (column) => ColumnFilters(column));
+
+  $$MemUnitTableFilterComposer get unitId {
+    final $$MemUnitTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableFilterComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CompanionChainSessionTableFilterComposer get lastSessionId {
+    final $$CompanionChainSessionTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.lastSessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+}
+
+class $$CompanionStepProficiencyTableOrderingComposer
+    extends Composer<_$AppDatabase, $CompanionStepProficiencyTable> {
+  $$CompanionStepProficiencyTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get surah => $composableBuilder(
+      column: $table.surah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get ayah => $composableBuilder(
+      column: $table.ayah, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get proficiencyEma => $composableBuilder(
+      column: $table.proficiencyEma,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastHintLevel => $composableBuilder(
+      column: $table.lastHintLevel,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get lastEvaluatorConfidence => $composableBuilder(
+      column: $table.lastEvaluatorConfidence,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastLatencyToStartMs => $composableBuilder(
+      column: $table.lastLatencyToStartMs,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get attemptsCount => $composableBuilder(
+      column: $table.attemptsCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get passesCount => $composableBuilder(
+      column: $table.passesCount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastUpdatedDay => $composableBuilder(
+      column: $table.lastUpdatedDay,
+      builder: (column) => ColumnOrderings(column));
+
+  $$MemUnitTableOrderingComposer get unitId {
+    final $$MemUnitTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableOrderingComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CompanionChainSessionTableOrderingComposer get lastSessionId {
+    final $$CompanionChainSessionTableOrderingComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.lastSessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableOrderingComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+}
+
+class $$CompanionStepProficiencyTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CompanionStepProficiencyTable> {
+  $$CompanionStepProficiencyTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get surah =>
+      $composableBuilder(column: $table.surah, builder: (column) => column);
+
+  GeneratedColumn<int> get ayah =>
+      $composableBuilder(column: $table.ayah, builder: (column) => column);
+
+  GeneratedColumn<double> get proficiencyEma => $composableBuilder(
+      column: $table.proficiencyEma, builder: (column) => column);
+
+  GeneratedColumn<String> get lastHintLevel => $composableBuilder(
+      column: $table.lastHintLevel, builder: (column) => column);
+
+  GeneratedColumn<double> get lastEvaluatorConfidence => $composableBuilder(
+      column: $table.lastEvaluatorConfidence, builder: (column) => column);
+
+  GeneratedColumn<int> get lastLatencyToStartMs => $composableBuilder(
+      column: $table.lastLatencyToStartMs, builder: (column) => column);
+
+  GeneratedColumn<int> get attemptsCount => $composableBuilder(
+      column: $table.attemptsCount, builder: (column) => column);
+
+  GeneratedColumn<int> get passesCount => $composableBuilder(
+      column: $table.passesCount, builder: (column) => column);
+
+  GeneratedColumn<int> get lastUpdatedDay => $composableBuilder(
+      column: $table.lastUpdatedDay, builder: (column) => column);
+
+  $$MemUnitTableAnnotationComposer get unitId {
+    final $$MemUnitTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableAnnotationComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CompanionChainSessionTableAnnotationComposer get lastSessionId {
+    final $$CompanionChainSessionTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.lastSessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+}
+
+class $$CompanionStepProficiencyTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CompanionStepProficiencyTable,
+    CompanionStepProficiencyData,
+    $$CompanionStepProficiencyTableFilterComposer,
+    $$CompanionStepProficiencyTableOrderingComposer,
+    $$CompanionStepProficiencyTableAnnotationComposer,
+    $$CompanionStepProficiencyTableCreateCompanionBuilder,
+    $$CompanionStepProficiencyTableUpdateCompanionBuilder,
+    (CompanionStepProficiencyData, $$CompanionStepProficiencyTableReferences),
+    CompanionStepProficiencyData,
+    PrefetchHooks Function({bool unitId, bool lastSessionId})> {
+  $$CompanionStepProficiencyTableTableManager(
+      _$AppDatabase db, $CompanionStepProficiencyTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CompanionStepProficiencyTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CompanionStepProficiencyTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CompanionStepProficiencyTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> unitId = const Value.absent(),
+            Value<int> surah = const Value.absent(),
+            Value<int> ayah = const Value.absent(),
+            Value<double> proficiencyEma = const Value.absent(),
+            Value<String?> lastHintLevel = const Value.absent(),
+            Value<double?> lastEvaluatorConfidence = const Value.absent(),
+            Value<int?> lastLatencyToStartMs = const Value.absent(),
+            Value<int> attemptsCount = const Value.absent(),
+            Value<int> passesCount = const Value.absent(),
+            Value<int> lastUpdatedDay = const Value.absent(),
+            Value<int?> lastSessionId = const Value.absent(),
+          }) =>
+              CompanionStepProficiencyCompanion(
+            id: id,
+            unitId: unitId,
+            surah: surah,
+            ayah: ayah,
+            proficiencyEma: proficiencyEma,
+            lastHintLevel: lastHintLevel,
+            lastEvaluatorConfidence: lastEvaluatorConfidence,
+            lastLatencyToStartMs: lastLatencyToStartMs,
+            attemptsCount: attemptsCount,
+            passesCount: passesCount,
+            lastUpdatedDay: lastUpdatedDay,
+            lastSessionId: lastSessionId,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int unitId,
+            required int surah,
+            required int ayah,
+            Value<double> proficiencyEma = const Value.absent(),
+            Value<String?> lastHintLevel = const Value.absent(),
+            Value<double?> lastEvaluatorConfidence = const Value.absent(),
+            Value<int?> lastLatencyToStartMs = const Value.absent(),
+            Value<int> attemptsCount = const Value.absent(),
+            Value<int> passesCount = const Value.absent(),
+            required int lastUpdatedDay,
+            Value<int?> lastSessionId = const Value.absent(),
+          }) =>
+              CompanionStepProficiencyCompanion.insert(
+            id: id,
+            unitId: unitId,
+            surah: surah,
+            ayah: ayah,
+            proficiencyEma: proficiencyEma,
+            lastHintLevel: lastHintLevel,
+            lastEvaluatorConfidence: lastEvaluatorConfidence,
+            lastLatencyToStartMs: lastLatencyToStartMs,
+            attemptsCount: attemptsCount,
+            passesCount: passesCount,
+            lastUpdatedDay: lastUpdatedDay,
+            lastSessionId: lastSessionId,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$CompanionStepProficiencyTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({unitId = false, lastSessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (unitId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.unitId,
+                    referencedTable: $$CompanionStepProficiencyTableReferences
+                        ._unitIdTable(db),
+                    referencedColumn: $$CompanionStepProficiencyTableReferences
+                        ._unitIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (lastSessionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.lastSessionId,
+                    referencedTable: $$CompanionStepProficiencyTableReferences
+                        ._lastSessionIdTable(db),
+                    referencedColumn: $$CompanionStepProficiencyTableReferences
+                        ._lastSessionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CompanionStepProficiencyTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $CompanionStepProficiencyTable,
+        CompanionStepProficiencyData,
+        $$CompanionStepProficiencyTableFilterComposer,
+        $$CompanionStepProficiencyTableOrderingComposer,
+        $$CompanionStepProficiencyTableAnnotationComposer,
+        $$CompanionStepProficiencyTableCreateCompanionBuilder,
+        $$CompanionStepProficiencyTableUpdateCompanionBuilder,
+        (
+          CompanionStepProficiencyData,
+          $$CompanionStepProficiencyTableReferences
+        ),
+        CompanionStepProficiencyData,
+        PrefetchHooks Function({bool unitId, bool lastSessionId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6728,4 +13031,15 @@ class $AppDatabaseManager {
   $$PendingCalibrationUpdateTableTableManager get pendingCalibrationUpdate =>
       $$PendingCalibrationUpdateTableTableManager(
           _db, _db.pendingCalibrationUpdate);
+  $$CompanionChainSessionTableTableManager get companionChainSession =>
+      $$CompanionChainSessionTableTableManager(_db, _db.companionChainSession);
+  $$CompanionVerseAttemptTableTableManager get companionVerseAttempt =>
+      $$CompanionVerseAttemptTableTableManager(_db, _db.companionVerseAttempt);
+  $$CompanionUnitStateTableTableManager get companionUnitState =>
+      $$CompanionUnitStateTableTableManager(_db, _db.companionUnitState);
+  $$CompanionStageEventTableTableManager get companionStageEvent =>
+      $$CompanionStageEventTableTableManager(_db, _db.companionStageEvent);
+  $$CompanionStepProficiencyTableTableManager get companionStepProficiency =>
+      $$CompanionStepProficiencyTableTableManager(
+          _db, _db.companionStepProficiency);
 }

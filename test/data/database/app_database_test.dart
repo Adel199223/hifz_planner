@@ -33,6 +33,11 @@ void main() {
     expect(tableNames.contains('mem_progress'), isTrue);
     expect(tableNames.contains('calibration_sample'), isTrue);
     expect(tableNames.contains('pending_calibration_update'), isTrue);
+    expect(tableNames.contains('companion_chain_session'), isTrue);
+    expect(tableNames.contains('companion_verse_attempt'), isTrue);
+    expect(tableNames.contains('companion_unit_state'), isTrue);
+    expect(tableNames.contains('companion_stage_event'), isTrue);
+    expect(tableNames.contains('companion_step_proficiency'), isTrue);
   });
 
   test('enforces unique(surah, ayah) on ayah table', () async {
@@ -116,6 +121,31 @@ void main() {
     expect(indexNames.contains('idx_schedule_state_is_suspended'), isTrue);
     expect(indexNames.contains('idx_review_log_unit_id_ts_day'), isTrue);
     expect(indexNames.contains('idx_calibration_sample_kind_day_id'), isTrue);
+    expect(
+      indexNames.contains(
+        'idx_companion_chain_session_unit_id_created_day',
+      ),
+      isTrue,
+    );
+    expect(
+      indexNames.contains(
+        'idx_companion_verse_attempt_session_verse_attempt',
+      ),
+      isTrue,
+    );
+    expect(
+      indexNames.contains(
+        'idx_companion_verse_attempt_session_stage_verse_attempt',
+      ),
+      isTrue,
+    );
+    expect(
+      indexNames.contains('idx_companion_verse_attempt_unit_day'),
+      isTrue,
+    );
+    expect(indexNames.contains('idx_companion_step_proficiency_unit'), isTrue);
+    expect(indexNames.contains('idx_companion_unit_state_unit_id'), isTrue);
+    expect(indexNames.contains('idx_companion_stage_event_session_created'), isTrue);
   });
 
   test('app_settings includes typical_grade_distribution_json column',
@@ -128,6 +158,19 @@ void main() {
     final names = rows.map((row) => row.read<String>('name')).toSet();
 
     expect(names.contains('typical_grade_distribution_json'), isTrue);
+    expect(names.contains('scheduling_prefs_json'), isTrue);
+    expect(names.contains('scheduling_overrides_json'), isTrue);
+  });
+
+  test('companion_verse_attempt includes stage_code column', () async {
+    final rows = await db
+        .customSelect(
+          "PRAGMA table_info('companion_verse_attempt')",
+        )
+        .get();
+    final names = rows.map((row) => row.read<String>('name')).toSet();
+
+    expect(names.contains('stage_code'), isTrue);
   });
 
   test('deleting mem_unit cascades schedule_state and review_log rows',

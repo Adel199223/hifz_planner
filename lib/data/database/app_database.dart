@@ -203,6 +203,12 @@ class AppSettings extends Table {
   TextColumn get typicalGradeDistributionJson =>
       text().named('typical_grade_distribution_json').nullable()();
 
+  TextColumn get schedulingPrefsJson =>
+      text().named('scheduling_prefs_json').nullable()();
+
+  TextColumn get schedulingOverridesJson =>
+      text().named('scheduling_overrides_json').nullable()();
+
   IntColumn get updatedAtDay => integer().named('updated_at_day')();
 
   @override
@@ -257,6 +263,241 @@ class PendingCalibrationUpdate extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class CompanionChainSession extends Table {
+  @override
+  String get tableName => 'companion_chain_session';
+
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get unitId =>
+      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get targetVerseCount =>
+      integer().named('target_verse_count').check(targetVerseCount.isBiggerThanValue(0))();
+
+  IntColumn get passedVerseCount =>
+      integer().named('passed_verse_count').withDefault(const Constant(0))();
+
+  TextColumn get chainResult => text().named('chain_result').check(
+        chainResult.isIn(const ['completed', 'partial', 'abandoned']),
+      )();
+
+  RealColumn get retrievalStrength =>
+      real().named('retrieval_strength').withDefault(const Constant(0.0))();
+
+  IntColumn get startedAtSeconds => integer().named('started_at_seconds').nullable()();
+
+  IntColumn get endedAtSeconds => integer().named('ended_at_seconds').nullable()();
+
+  IntColumn get createdAtDay => integer().named('created_at_day')();
+
+  IntColumn get updatedAtDay => integer().named('updated_at_day')();
+}
+
+class CompanionVerseAttempt extends Table {
+  @override
+  String get tableName => 'companion_verse_attempt';
+
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get sessionId => integer()
+      .named('session_id')
+      .references(CompanionChainSession, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get unitId =>
+      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get verseOrder => integer().named('verse_order')();
+
+  IntColumn get surah => integer()();
+
+  IntColumn get ayah => integer()();
+
+  IntColumn get attemptIndex =>
+      integer().named('attempt_index').check(attemptIndex.isBiggerThanValue(0))();
+
+  TextColumn get stageCode => text().named('stage_code').withDefault(
+        const Constant('hidden_reveal'),
+      ).check(
+        stageCode.isIn(
+          const ['guided_visible', 'cued_recall', 'hidden_reveal'],
+        ),
+      )();
+
+  TextColumn get attemptType => text().named('attempt_type').withDefault(
+        const Constant('probe'),
+      ).check(
+        attemptType.isIn(
+          const ['encode_echo', 'probe', 'spaced_reprobe', 'checkpoint'],
+        ),
+      )();
+
+  TextColumn get hintLevel => text().named('hint_level').check(
+        hintLevel.isIn(
+          const ['h0', 'letters', 'first_word', 'meaning_cue', 'chunk_text', 'full_text'],
+        ),
+      )();
+
+  IntColumn get assistedFlag => integer()
+      .named('assisted_flag')
+      .withDefault(const Constant(0))
+      .check(assistedFlag.isIn(const [0, 1]))();
+
+  IntColumn get latencyToStartMs =>
+      integer().named('latency_to_start_ms').withDefault(const Constant(0))();
+
+  IntColumn get stopsCount => integer().named('stops_count').withDefault(const Constant(0))();
+
+  IntColumn get selfCorrectionsCount =>
+      integer().named('self_corrections_count').withDefault(const Constant(0))();
+
+  TextColumn get evaluatorMode => text().named('evaluator_mode').check(
+        evaluatorMode.isIn(const ['manual_fallback', 'asr']),
+      )();
+
+  IntColumn get evaluatorPassed => integer()
+      .named('evaluator_passed')
+      .check(evaluatorPassed.isIn(const [0, 1]))();
+
+  RealColumn get evaluatorConfidence =>
+      real().named('evaluator_confidence').nullable()();
+
+  TextColumn get autoCheckType => text().named('auto_check_type').nullable().check(
+        autoCheckType.isIn(
+          const ['next_word_mcq', 'one_word_cloze', 'ordering'],
+        ),
+      )();
+
+  TextColumn get autoCheckResult => text().named('auto_check_result').nullable().check(
+        autoCheckResult.isIn(
+          const ['pass', 'fail'],
+        ),
+      )();
+
+  IntColumn get revealedAfterAttempt => integer()
+      .named('revealed_after_attempt')
+      .check(revealedAfterAttempt.isIn(const [0, 1]))();
+
+  RealColumn get retrievalStrength => real().named('retrieval_strength')();
+
+  IntColumn get timeOnVerseMs =>
+      integer().named('time_on_verse_ms').withDefault(const Constant(0))();
+
+  IntColumn get timeOnChunkMs =>
+      integer().named('time_on_chunk_ms').withDefault(const Constant(0))();
+
+  TextColumn get telemetryJson => text().named('telemetry_json').nullable()();
+
+  IntColumn get attemptDay => integer().named('attempt_day')();
+
+  IntColumn get attemptSeconds => integer().named('attempt_seconds').nullable()();
+}
+
+class CompanionUnitState extends Table {
+  @override
+  String get tableName => 'companion_unit_state';
+
+  IntColumn get unitId =>
+      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get unlockedStage =>
+      integer()
+          .named('unlocked_stage')
+          .check(
+            unlockedStage.isBiggerOrEqualValue(1) &
+                unlockedStage.isSmallerOrEqualValue(3),
+          )();
+
+  IntColumn get updatedAtDay => integer().named('updated_at_day')();
+
+  IntColumn get updatedAtSeconds => integer().named('updated_at_seconds')();
+
+  @override
+  Set<Column> get primaryKey => {unitId};
+}
+
+class CompanionStageEvent extends Table {
+  @override
+  String get tableName => 'companion_stage_event';
+
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get sessionId => integer()
+      .named('session_id')
+      .references(CompanionChainSession, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get unitId =>
+      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get fromStage =>
+      integer()
+          .named('from_stage')
+          .check(
+            fromStage.isBiggerOrEqualValue(1) & fromStage.isSmallerOrEqualValue(3),
+          )();
+
+  IntColumn get toStage =>
+      integer()
+          .named('to_stage')
+          .check(toStage.isBiggerOrEqualValue(1) & toStage.isSmallerOrEqualValue(3))();
+
+  TextColumn get eventType => text().named('event_type').check(
+        eventType.isIn(const ['auto_unlock', 'user_skip', 'resume_stage']),
+      )();
+
+  IntColumn get triggerVerseOrder => integer().named('trigger_verse_order').nullable()();
+
+  IntColumn get createdDay => integer().named('created_day')();
+
+  IntColumn get createdSeconds => integer().named('created_seconds')();
+}
+
+class CompanionStepProficiency extends Table {
+  @override
+  String get tableName => 'companion_step_proficiency';
+
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get unitId =>
+      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get surah => integer()();
+
+  IntColumn get ayah => integer()();
+
+  RealColumn get proficiencyEma =>
+      real().named('proficiency_ema').withDefault(const Constant(0.0))();
+
+  TextColumn get lastHintLevel =>
+      text().named('last_hint_level').nullable().check(
+            lastHintLevel.isIn(
+              const ['h0', 'letters', 'first_word', 'meaning_cue', 'chunk_text', 'full_text'],
+            ),
+          )();
+
+  RealColumn get lastEvaluatorConfidence =>
+      real().named('last_evaluator_confidence').nullable()();
+
+  IntColumn get lastLatencyToStartMs =>
+      integer().named('last_latency_to_start_ms').nullable()();
+
+  IntColumn get attemptsCount =>
+      integer().named('attempts_count').withDefault(const Constant(0))();
+
+  IntColumn get passesCount =>
+      integer().named('passes_count').withDefault(const Constant(0))();
+
+  IntColumn get lastUpdatedDay => integer().named('last_updated_day')();
+
+  IntColumn get lastSessionId =>
+      integer().named('last_session_id').nullable().references(CompanionChainSession, #id)();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {unitId, surah, ayah},
+      ];
+}
+
 class MemProgress extends Table {
   @override
   String get tableName => 'mem_progress';
@@ -285,13 +526,18 @@ class MemProgress extends Table {
     MemProgress,
     CalibrationSample,
     PendingCalibrationUpdate,
+    CompanionChainSession,
+    CompanionVerseAttempt,
+    CompanionUnitState,
+    CompanionStageEvent,
+    CompanionStepProficiency,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -299,6 +545,7 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
           await _createMemorizationIndexes();
           await _createCalibrationIndexes();
+          await _createCompanionIndexes();
           await ensureSingletonRows();
         },
         onUpgrade: (Migrator m, int from, int to) async {
@@ -319,8 +566,73 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(calibrationSample);
             await m.createTable(pendingCalibrationUpdate);
           }
+          if (from < 4) {
+            if (from >= 2) {
+              await m.addColumn(
+                appSettings,
+                appSettings.schedulingPrefsJson,
+              );
+              await m.addColumn(
+                appSettings,
+                appSettings.schedulingOverridesJson,
+              );
+            }
+            await m.createTable(companionChainSession);
+            await m.createTable(companionVerseAttempt);
+            await m.createTable(companionStepProficiency);
+          }
+          if (from < 5) {
+            if (from >= 4) {
+              await m.addColumn(
+                companionVerseAttempt,
+                companionVerseAttempt.stageCode,
+              );
+            }
+            await m.createTable(companionUnitState);
+            await m.createTable(companionStageEvent);
+          }
+          if (from < 6) {
+            if (from >= 4) {
+              await m.addColumn(
+                companionVerseAttempt,
+                companionVerseAttempt.attemptType
+                    as GeneratedColumn<Object>,
+              );
+              await m.addColumn(
+                companionVerseAttempt,
+                companionVerseAttempt.assistedFlag
+                    as GeneratedColumn<Object>,
+              );
+              await m.addColumn(
+                companionVerseAttempt,
+                companionVerseAttempt.autoCheckType
+                    as GeneratedColumn<Object>,
+              );
+              await m.addColumn(
+                companionVerseAttempt,
+                companionVerseAttempt.autoCheckResult
+                    as GeneratedColumn<Object>,
+              );
+              await m.addColumn(
+                companionVerseAttempt,
+                companionVerseAttempt.timeOnVerseMs
+                    as GeneratedColumn<Object>,
+              );
+              await m.addColumn(
+                companionVerseAttempt,
+                companionVerseAttempt.timeOnChunkMs
+                    as GeneratedColumn<Object>,
+              );
+              await m.addColumn(
+                companionVerseAttempt,
+                companionVerseAttempt.telemetryJson
+                    as GeneratedColumn<Object>,
+              );
+            }
+          }
           await _createMemorizationIndexes();
           await _createCalibrationIndexes();
+          await _createCompanionIndexes();
           await ensureSingletonRows();
         },
         beforeOpen: (OpeningDetails details) async {
@@ -377,6 +689,41 @@ class AppDatabase extends _$AppDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_calibration_sample_kind_day_id '
       'ON calibration_sample(sample_kind, created_at_day, id)',
+    );
+  }
+
+  Future<void> _createCompanionIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_chain_session_unit_id_created_day '
+      'ON companion_chain_session(unit_id, created_at_day)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_verse_attempt_session_verse_attempt '
+      'ON companion_verse_attempt(session_id, verse_order, attempt_index)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_verse_attempt_session_stage_verse_attempt '
+      'ON companion_verse_attempt(session_id, stage_code, verse_order, attempt_index)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_verse_attempt_session_attempt_type '
+      'ON companion_verse_attempt(session_id, attempt_type, verse_order, attempt_index)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_verse_attempt_unit_day '
+      'ON companion_verse_attempt(unit_id, attempt_day)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_step_proficiency_unit '
+      'ON companion_step_proficiency(unit_id, surah, ayah)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_unit_state_unit_id '
+      'ON companion_unit_state(unit_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_stage_event_session_created '
+      'ON companion_stage_event(session_id, created_day, id)',
     );
   }
 }
