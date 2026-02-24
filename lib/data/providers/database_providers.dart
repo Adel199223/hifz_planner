@@ -14,6 +14,7 @@ import '../repositories/settings_repo.dart';
 import '../services/calibration_service.dart';
 import '../services/companion/companion_calibration_bridge.dart';
 import '../services/companion/progressive_reveal_chain_engine.dart';
+import '../services/companion/stage1_auto_check_engine.dart';
 import '../services/companion/verse_evaluator.dart';
 import '../services/daily_planner.dart';
 import '../services/forecast_simulation_service.dart';
@@ -158,12 +159,21 @@ final manualFallbackVerseEvaluatorProvider = Provider<VerseEvaluator>((ref) {
   return const ManualFallbackVerseEvaluator();
 });
 
+final stage1AutoCheckEngineProvider = Provider<Stage1AutoCheckEngine>((ref) {
+  return const Stage1AutoCheckEngine();
+});
+
 final progressiveRevealChainEngineProvider =
     Provider<ProgressiveRevealChainEngine>(
   (ref) {
     final companionRepo = ref.watch(companionRepoProvider);
     final calibrationBridge = ref.watch(companionCalibrationBridgeProvider);
-    return ProgressiveRevealChainEngine(companionRepo, calibrationBridge);
+    final autoCheckEngine = ref.watch(stage1AutoCheckEngineProvider);
+    return ProgressiveRevealChainEngine(
+      companionRepo,
+      calibrationBridge,
+      autoCheckEngine: autoCheckEngine,
+    );
   },
 );
 

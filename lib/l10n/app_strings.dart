@@ -571,6 +571,84 @@ class AppStrings {
       _t('companion_autoplay_off', 'Autoplay off');
   String get companionRecordStart =>
       _t('companion_record_start', 'Record / Start');
+  String get companionStage1ModeLabel =>
+      _t('companion_stage1_mode_label', 'Stage 1 mode');
+  String get companionStage1ModeModelEcho =>
+      _t('companion_stage1_mode_model_echo', 'Model + Echo');
+  String get companionStage1ModeColdProbe =>
+      _t('companion_stage1_mode_cold_probe', 'Cold Probe');
+  String get companionStage1ModeCorrection =>
+      _t('companion_stage1_mode_correction', 'Correction');
+  String get companionStage1ModeSpacedReprobe =>
+      _t('companion_stage1_mode_spaced_reprobe', 'Spaced Re-probe');
+  String get companionStage1ModeCheckpoint =>
+      _t('companion_stage1_mode_checkpoint', 'Checkpoint');
+  String get companionStage1ModeCumulative =>
+      _t('companion_stage1_mode_cumulative', 'Cumulative Check');
+  String get companionStage1ReciteNow =>
+      _t('companion_stage1_recite_now', 'Recite now.');
+  String get companionStage1ReciteNowHiddenPrompt => _t(
+        'companion_stage1_recite_now_hidden_prompt',
+        'Recite now (text hidden).',
+      );
+  String get companionStage1CorrectionRequiredMessage => _t(
+        'companion_stage1_correction_required_message',
+        'Correction playback is required before the next cold attempt.',
+      );
+  String get companionStage1CorrectionAction => _t(
+        'companion_stage1_correction_action',
+        'Play Correction',
+      );
+  String get companionStage1AutoCheckTitle =>
+      _t('companion_stage1_auto_check_title', 'Micro-check');
+  String get companionStage1AutoCheckRequiredSelection => _t(
+        'companion_stage1_auto_check_required_selection',
+        'Select an answer for the micro-check first.',
+      );
+  String get companionStage1HintLockedMessage => _t(
+        'companion_stage1_hint_locked_message',
+        'Hints unlock after the first cold attempt.',
+      );
+  String companionStage1WeakVerses(int count) => _fmt(
+        _t(
+          'companion_stage1_weak_verses',
+          'Weak verses flagged for reinforcement: {count}',
+        ),
+        <String, Object>{'count': count},
+      );
+  String get companionStage2ModeLabel =>
+      _t('companion_stage2_mode_label', 'Stage 2 mode');
+  String get companionStage2ModeMinimalCueRecall => _t(
+        'companion_stage2_mode_minimal_cue_recall',
+        'Minimal-Cue Recall',
+      );
+  String get companionStage2ModeDiscrimination =>
+      _t('companion_stage2_mode_discrimination', 'Discrimination');
+  String get companionStage2ModeLinking =>
+      _t('companion_stage2_mode_linking', 'Linking (Rabt-lite)');
+  String get companionStage2ModeCorrection =>
+      _t('companion_stage2_mode_correction', 'Correction');
+  String get companionStage2ModeCheckpoint =>
+      _t('companion_stage2_mode_checkpoint', 'Checkpoint');
+  String get companionStage2ModeRemediation =>
+      _t('companion_stage2_mode_remediation', 'Remediation');
+  String get companionStage2ReciteNow =>
+      _t('companion_stage2_recite_now', 'Recite with minimal cue.');
+  String get companionStage2CorrectionRequiredMessage => _t(
+        'companion_stage2_correction_required_message',
+        'Correction playback is required before the next Stage-2 attempt.',
+      );
+  String get companionStage2CorrectionAction => _t(
+        'companion_stage2_correction_action',
+        'Play Stage-2 Correction',
+      );
+  String companionStage3WeakPreludeBanner(int count) => _fmt(
+        _t(
+          'companion_stage3_weak_prelude_banner',
+          'Weak-prelude active: {count} verses must pass before normal hidden flow.',
+        ),
+        <String, Object>{'count': count},
+      );
   String get companionHintButton => _t('companion_hint_button', 'Hint');
   String get companionRepeatButton => _t('companion_repeat_button', 'Repeat');
   String get companionNextButton => _t('companion_next_button', 'Next');

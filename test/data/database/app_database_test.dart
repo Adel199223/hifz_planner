@@ -173,6 +173,23 @@ void main() {
     expect(names.contains('stage_code'), isTrue);
   });
 
+  test('companion_verse_attempt includes Stage-1 telemetry columns', () async {
+    final rows = await db
+        .customSelect(
+          "PRAGMA table_info('companion_verse_attempt')",
+        )
+        .get();
+    final names = rows.map((row) => row.read<String>('name')).toSet();
+
+    expect(names.contains('attempt_type'), isTrue);
+    expect(names.contains('assisted_flag'), isTrue);
+    expect(names.contains('auto_check_type'), isTrue);
+    expect(names.contains('auto_check_result'), isTrue);
+    expect(names.contains('time_on_verse_ms'), isTrue);
+    expect(names.contains('time_on_chunk_ms'), isTrue);
+    expect(names.contains('telemetry_json'), isTrue);
+  });
+
   test('deleting mem_unit cascades schedule_state and review_log rows',
       () async {
     final unitId = await db.into(db.memUnit).insert(

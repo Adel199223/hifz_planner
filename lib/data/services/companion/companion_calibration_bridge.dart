@@ -18,17 +18,46 @@ class CompanionCalibrationBridge {
       return;
     }
 
+    final stageOneAttempts = attempts
+        .where(
+          (attempt) => attempt.stageCode == CompanionStage.guidedVisible.code,
+        )
+        .toList(growable: false);
+    final stage1DurationMs = stageOneAttempts.fold<int>(
+      0,
+      (maxValue, attempt) =>
+          attempt.timeOnChunkMs > maxValue ? attempt.timeOnChunkMs : maxValue,
+    );
+    if (stage1DurationMs > 0) {
+      final newDurationSeconds = (stage1DurationMs / 1000).round().clamp(1, 86400);
+      await _calibrationRepo.insertSample(
+        sampleKind: 'new_memorization',
+        durationSeconds: newDurationSeconds,
+        ayahCount: ayahCount,
+        createdAtDay: localDayIndex((nowLocal ?? DateTime.now()).toLocal()),
+        createdAtSeconds:
+            nowLocalSecondsSinceMidnight((nowLocal ?? DateTime.now()).toLocal()),
+      );
+    }
+
     final stageThreePassedAttempts = attempts
         .where(
           (attempt) =>
               attempt.stageCode == CompanionStage.hiddenReveal.code &&
+              attempt.attemptType != 'encode_echo' &&
               attempt.evaluatorPassed == 1,
         )
         .toList(growable: false);
 
     final preferredAttempts = stageThreePassedAttempts.isNotEmpty
         ? stageThreePassedAttempts
-        : attempts.where((attempt) => attempt.evaluatorPassed == 1).toList(
+        : attempts
+            .where(
+              (attempt) =>
+                  attempt.attemptType != 'encode_echo' &&
+                  attempt.evaluatorPassed == 1,
+            )
+            .toList(
               growable: false,
             );
 

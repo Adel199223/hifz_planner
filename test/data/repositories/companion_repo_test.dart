@@ -50,15 +50,22 @@ void main() {
       ayah: 1,
       attemptIndex: 1,
       stageCode: CompanionStage.hiddenReveal.code,
+      attemptType: 'checkpoint',
       hintLevel: 'letters',
+      assistedFlag: 1,
       latencyToStartMs: 900,
       stopsCount: 1,
       selfCorrectionsCount: 1,
       evaluatorMode: 'manual_fallback',
       evaluatorPassed: 1,
       evaluatorConfidence: 0.7,
+      autoCheckType: 'next_word_mcq',
+      autoCheckResult: 'pass',
       revealedAfterAttempt: 1,
       retrievalStrength: 0.8,
+      timeOnVerseMs: 32000,
+      timeOnChunkMs: 64000,
+      telemetryJson: '{"stage1_mode":"checkpoint"}',
       attemptDay: 100,
       attemptSeconds: 340,
     );
@@ -81,7 +88,59 @@ void main() {
     expect(attempts.length, 1);
     expect(attempts.single.hintLevel, 'letters');
     expect(attempts.single.stageCode, CompanionStage.hiddenReveal.code);
+    expect(attempts.single.attemptType, 'checkpoint');
+    expect(attempts.single.assistedFlag, 1);
+    expect(attempts.single.autoCheckType, 'next_word_mcq');
+    expect(attempts.single.autoCheckResult, 'pass');
+    expect(attempts.single.timeOnVerseMs, 32000);
+    expect(attempts.single.timeOnChunkMs, 64000);
+    expect(attempts.single.telemetryJson, '{"stage1_mode":"checkpoint"}');
     expect(attempts.single.retrievalStrength, 0.8);
+  });
+
+  test('persists Stage-2 telemetry payload in telemetry_json', () async {
+    final unitId = await createUnit();
+    final sessionId = await repo.startChainSession(
+      unitId: unitId,
+      targetVerseCount: 1,
+      createdAtDay: 100,
+      startedAtSeconds: 360,
+    );
+
+    await repo.insertVerseAttempt(
+      sessionId: sessionId,
+      unitId: unitId,
+      verseOrder: 0,
+      surah: 1,
+      ayah: 1,
+      attemptIndex: 1,
+      stageCode: CompanionStage.cuedRecall.code,
+      attemptType: 'probe',
+      hintLevel: HintLevel.letters.code,
+      assistedFlag: 0,
+      latencyToStartMs: 600,
+      stopsCount: 0,
+      selfCorrectionsCount: 0,
+      evaluatorMode: EvaluatorMode.manualFallback.code,
+      evaluatorPassed: 1,
+      evaluatorConfidence: 0.8,
+      autoCheckType: 'one_word_cloze',
+      autoCheckResult: 'pass',
+      revealedAfterAttempt: 0,
+      retrievalStrength: 0.6,
+      timeOnVerseMs: 18000,
+      timeOnChunkMs: 42000,
+      telemetryJson:
+          '{"stage2_mode":"linking","stage2_step":"linking","weak_target":true}',
+      attemptDay: 100,
+      attemptSeconds: 390,
+    );
+
+    final attempts = await repo.getAttemptsForSession(sessionId);
+    expect(attempts.length, 1);
+    expect(attempts.single.stageCode, CompanionStage.cuedRecall.code);
+    expect(attempts.single.telemetryJson, contains('"stage2_mode":"linking"'));
+    expect(attempts.single.telemetryJson, contains('"weak_target":true'));
   });
 
   test('upsertStepProficiency updates same unit/surah/ayah row', () async {

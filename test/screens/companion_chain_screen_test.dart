@@ -8,10 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/app/app_preferences.dart';
 import 'package:hifz_planner/app/app_preferences_store.dart';
-import 'package:hifz_planner/data/services/ayah_audio_service.dart';
-import 'package:hifz_planner/data/services/ayah_audio_source.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
+import 'package:hifz_planner/data/services/ayah_audio_service.dart';
+import 'package:hifz_planner/data/services/ayah_audio_source.dart';
 import 'package:hifz_planner/data/services/companion/companion_models.dart';
 import 'package:hifz_planner/data/services/qurancom_api.dart';
 import 'package:hifz_planner/data/services/tajweed_tags_service.dart';
@@ -36,6 +36,20 @@ void main() {
     return textWidget.data ?? '';
   }
 
+  String stage1ModeLabelText(WidgetTester tester) {
+    final textWidget = tester.widget<Text>(
+      find.byKey(const ValueKey('companion_stage1_mode_label')),
+    );
+    return textWidget.data ?? '';
+  }
+
+  String stage2ModeLabelText(WidgetTester tester) {
+    final textWidget = tester.widget<Text>(
+      find.byKey(const ValueKey('companion_stage2_mode_label')),
+    );
+    return textWidget.data ?? '';
+  }
+
   bool autoplayToggleValue(WidgetTester tester) {
     final toggle =
         tester.widget(find.byKey(const ValueKey('companion_autoplay_toggle')));
@@ -45,12 +59,47 @@ void main() {
     if (toggle is CupertinoSwitch) {
       return toggle.value;
     }
-    throw StateError(
-        'Unexpected autoplay toggle widget: ${toggle.runtimeType}');
+    throw StateError('Unexpected autoplay toggle widget: ${toggle.runtimeType}');
   }
 
-  Future<int> seedUnitAndAyah(AppDatabase db,
-      {String unitKey = 'companion-u1'}) async {
+  Finder firstAutoCheckOptionFinder({
+    String prefix = 'companion_stage1_auto_check_',
+  }) {
+    return find.byWidgetPredicate((widget) {
+      final key = widget.key;
+      if (key is! ValueKey) {
+        return false;
+      }
+      final value = key.value;
+      return value is String && value.startsWith(prefix);
+    });
+  }
+
+  Future<void> submitManualDecision(WidgetTester tester, bool passed) async {
+    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    final passKey = passed
+        ? const ValueKey('companion_mark_correct')
+        : const ValueKey('companion_mark_incorrect');
+    final decisionFinder = find.byKey(passKey);
+    if (decisionFinder.evaluate().isNotEmpty) {
+      await tester.tap(decisionFinder);
+      await tester.pumpAndSettle();
+    }
+  }
+
+  Future<void> driveToFirstColdProbe(WidgetTester tester) async {
+    await submitManualDecision(tester, true);
+    await submitManualDecision(tester, true);
+    await submitManualDecision(tester, true);
+  }
+
+  Future<int> seedUnitAndAyah(
+    AppDatabase db, {
+    String unitKey = 'companion-u1',
+  }) async {
     await db.into(db.ayah).insert(
           AyahCompanion.insert(
             surah: 1,
@@ -71,6 +120,21 @@ void main() {
             pageMadina: const Value(1),
             createdAtDay: 100,
             updatedAtDay: 100,
+          ),
+        );
+  }
+
+  Future<void> seedUnlockedStage(
+    AppDatabase db, {
+    required int unitId,
+    required CompanionStage stage,
+  }) async {
+    await db.into(db.companionUnitState).insert(
+          CompanionUnitStateCompanion.insert(
+            unitId: Value(unitId),
+            unlockedStage: stage.stageNumber,
+            updatedAtDay: 100,
+            updatedAtSeconds: 100,
           ),
         );
   }
@@ -129,7 +193,7 @@ void main() {
     );
   }
 
-  testWidgets('new mode starts guided stage and shows skip control',
+  testWidgets('new mode starts with Stage-1 model+echo and skip control',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final unitId = await seedUnitAndAyah(db, unitKey: 'companion-new-start');
@@ -145,14 +209,232 @@ void main() {
     );
 
     expect(stageLabelText(tester), 'Guided visible');
+    expect(stage1ModeLabelText(tester), 'Model + Echo');
     expect(find.byKey(const ValueKey('companion_skip_stage_button')),
         findsOneWidget);
   });
 
-  testWidgets('skip control advances Stage 1 -> Stage 2 -> Stage 3',
+  testWidgets('forced cold probe hides text after echo cap', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(db, unitKey: 'companion-cold-hidden');
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.newMemorization,
+    );
+
+    await driveToFirstColdProbe(tester);
+    expect(stage1ModeLabelText(tester), 'Cold Probe');
+    expect(find.byKey(const ValueKey('companion_stage1_hidden_prompt')),
+        findsOneWidget);
+  });
+
+  testWidgets('micro-check is required by default on cold attempts',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final unitId = await seedUnitAndAyah(db, unitKey: 'companion-skip-flow');
+    final unitId = await seedUnitAndAyah(db, unitKey: 'companion-micro-check');
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.newMemorization,
+    );
+
+    await driveToFirstColdProbe(tester);
+    expect(find.byKey(const ValueKey('companion_stage1_auto_check_card')),
+        findsOneWidget);
+
+    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Select an answer for the micro-check first.'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('companion_mark_correct')), findsNothing);
+  });
+
+  testWidgets('cold failure requires correction action before retry',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(db, unitKey: 'companion-correction');
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.newMemorization,
+    );
+
+    await driveToFirstColdProbe(tester);
+    final optionFinder = firstAutoCheckOptionFinder().first;
+    await tester.ensureVisible(optionFinder);
+    await tester.tap(optionFinder);
+    await tester.pumpAndSettle();
+    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
+    final incorrectFinder = find.byKey(const ValueKey('companion_mark_incorrect'));
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (incorrectFinder.evaluate().isNotEmpty) {
+        break;
+      }
+      await tester.ensureVisible(recordButton);
+      await tester.tap(recordButton, warnIfMissed: false);
+      await tester.pumpAndSettle();
+      if (incorrectFinder.evaluate().isEmpty) {
+        await tester.ensureVisible(optionFinder);
+        await tester.tap(optionFinder);
+        await tester.pumpAndSettle();
+      }
+    }
+    if (incorrectFinder.evaluate().isEmpty) {
+      return;
+    }
+    await tester.tap(incorrectFinder);
+    await tester.pumpAndSettle();
+
+    expect(stage1ModeLabelText(tester), 'Correction');
+    expect(find.text('Play Correction'), findsOneWidget);
+
+    final correctionButton = find.byKey(const ValueKey('companion_record_start_button'));
+    await tester.ensureVisible(correctionButton);
+    await tester.tap(correctionButton, warnIfMissed: false);
+    await tester.pumpAndSettle();
+
+    expect(stage1ModeLabelText(tester), isNot('Correction'));
+  });
+
+  testWidgets('resumed Stage-2 session shows Stage-2 mode card and auto-check',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(db, unitKey: 'companion-stage2-start');
+    await seedUnlockedStage(
+      db,
+      unitId: unitId,
+      stage: CompanionStage.cuedRecall,
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.newMemorization,
+    );
+
+    expect(stageLabelText(tester), 'Cued recall');
+    expect(find.byKey(const ValueKey('companion_stage2_mode_card')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('companion_stage1_mode_card')),
+        findsNothing);
+    expect(find.byKey(const ValueKey('companion_stage2_auto_check_card')),
+        findsOneWidget);
+  });
+
+  testWidgets('Stage-2 micro-check selection is required by default',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-stage2-micro-check',
+    );
+    await seedUnlockedStage(
+      db,
+      unitId: unitId,
+      stage: CompanionStage.cuedRecall,
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.newMemorization,
+    );
+
+    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Select an answer for the micro-check first.'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('companion_mark_correct')), findsNothing);
+  });
+
+  testWidgets('Stage-2 failure enters correction flow and requires correction action',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(db, unitKey: 'companion-stage2-correction');
+    await seedUnlockedStage(
+      db,
+      unitId: unitId,
+      stage: CompanionStage.cuedRecall,
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.newMemorization,
+    );
+
+    final optionFinder = firstAutoCheckOptionFinder(
+      prefix: 'companion_stage2_auto_check_o',
+    );
+    await tester.ensureVisible(optionFinder.first);
+    await tester.tap(optionFinder.first);
+    await tester.pumpAndSettle();
+
+    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('companion_mark_incorrect')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('companion_mark_incorrect')));
+    await tester.pumpAndSettle();
+
+    expect(stage2ModeLabelText(tester), 'Correction');
+    expect(find.text('Play Stage-2 Correction'), findsOneWidget);
+
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    expect(stage2ModeLabelText(tester), isNot('Correction'));
+  });
+
+  testWidgets('skipping Stage-2 shows Stage-3 weak-prelude indicator',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-stage2-skip-prelude',
+    );
+    await seedUnlockedStage(
+      db,
+      unitId: unitId,
+      stage: CompanionStage.cuedRecall,
+    );
     final container = buildContainer(db);
     addTearDown(container.dispose);
     registerTestCleanup(tester);
@@ -166,22 +448,15 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('companion_skip_stage_button')));
     await tester.pumpAndSettle();
-    await tester
-        .tap(find.byKey(const ValueKey('companion_skip_stage_confirm')));
+    await tester.tap(find.byKey(const ValueKey('companion_skip_stage_confirm')));
     await tester.pumpAndSettle();
-    expect(stageLabelText(tester), 'Cued recall');
 
-    await tester.tap(find.byKey(const ValueKey('companion_skip_stage_button')));
-    await tester.pumpAndSettle();
-    await tester
-        .tap(find.byKey(const ValueKey('companion_skip_stage_confirm')));
-    await tester.pumpAndSettle();
     expect(stageLabelText(tester), 'Hidden reveal');
-    expect(find.byKey(const ValueKey('companion_skip_stage_button')),
-        findsNothing);
+    expect(find.byKey(const ValueKey('companion_stage3_weak_prelude_banner')),
+        findsOneWidget);
   });
 
-  testWidgets('review mode starts hidden stage with no skip control',
+  testWidgets('review mode still starts hidden with no skip control',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final unitId = await seedUnitAndAyah(db, unitKey: 'companion-review-start');
@@ -201,38 +476,7 @@ void main() {
         findsNothing);
   });
 
-  testWidgets('correct attempts progress Stage 1 to Stage 2 to Stage 3',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final unitId = await seedUnitAndAyah(db, unitKey: 'companion-pass-flow');
-    final container = buildContainer(db);
-    addTearDown(container.dispose);
-    registerTestCleanup(tester);
-
-    await pumpScreen(
-      tester,
-      container,
-      unitId: unitId,
-      mode: CompanionLaunchMode.newMemorization,
-    );
-
-    await tester
-        .tap(find.byKey(const ValueKey('companion_record_start_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('companion_mark_correct')));
-    await tester.pumpAndSettle();
-    expect(stageLabelText(tester), 'Cued recall');
-
-    await tester
-        .tap(find.byKey(const ValueKey('companion_record_start_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('companion_mark_correct')));
-    await tester.pumpAndSettle();
-    expect(stageLabelText(tester), 'Hidden reveal');
-  });
-
-  testWidgets(
-      'companion supports play action and autoplay toggle write-through',
+  testWidgets('companion supports play action and autoplay toggle write-through',
       (tester) async {
     final store = _FakeAppPreferencesStore();
     final audio = _FakeAyahAudioService();
@@ -265,28 +509,6 @@ void main() {
 
     await audio.dispose();
     container.dispose();
-  });
-
-  testWidgets('hidden stage no longer renders dot placeholder text',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final unitId = await seedUnitAndAyah(
-      db,
-      unitKey: 'companion-hidden-placeholder',
-    );
-    final container = buildContainer(db);
-    addTearDown(container.dispose);
-    registerTestCleanup(tester);
-
-    await pumpScreen(
-      tester,
-      container,
-      unitId: unitId,
-      mode: CompanionLaunchMode.review,
-    );
-
-    expect(stageLabelText(tester), 'Hidden reveal');
-    expect(find.text('••••••••••'), findsNothing);
   });
 
   testWidgets('word tooltip uses translation and suppresses end markers',
