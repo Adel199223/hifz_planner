@@ -20,41 +20,41 @@ Measurable outcomes for Stage 3 completion (defaults, tunable in Stage3Config):
 Current repo truth that this spec must preserve:
 
 1. Stage code and hint ladder:
-- `enum HintLevel` in [`companion_models.dart`](/c:/dev/hifz_planner/lib/data/services/companion/companion_models.dart:1)
-- `enum CompanionStage` with `hidden_reveal` in [`companion_models.dart`](/c:/dev/hifz_planner/lib/data/services/companion/companion_models.dart:101)
+- `enum HintLevel` in `lib/data/services/companion/companion_models.dart:1`
+- `enum CompanionStage` with `hidden_reveal` in `lib/data/services/companion/companion_models.dart:101`
 
 2. Existing Stage-3 weak-prelude state:
 - `ChainRunState.stage3WeakPreludeTargets`
 - `ChainRunState.stage3WeakPreludeCursor`
-- in [`companion_models.dart`](/c:/dev/hifz_planner/lib/data/services/companion/companion_models.dart:1064)
+- in `lib/data/services/companion/companion_models.dart:1064`
 
 3. Current hidden-stage execution path:
-- `submitAttempt(...)` entrypoint in [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart:534)
-- fallback into `_submitLegacyAttempt(...)` in [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart:593)
-- legacy hidden handler `_submitLegacyAttempt(...)` in [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart:1746)
+- `submitAttempt(...)` entrypoint in `lib/data/services/companion/progressive_reveal_chain_engine.dart:534`
+- fallback into `_submitLegacyAttempt(...)` in `lib/data/services/companion/progressive_reveal_chain_engine.dart:593`
+- legacy hidden handler `_submitLegacyAttempt(...)` in `lib/data/services/companion/progressive_reveal_chain_engine.dart:1746`
 
 4. Guarded weak-prelude routing + `H1` cap:
-- weak-prelude active check and hint cap in legacy path around [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart:1762)
-- `_routeStage3WeakPrelude(...)` in [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart:3143)
-- prelude routing uses `HintLevel.letters` at [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart:3174)
+- weak-prelude active check and hint cap in legacy path around `lib/data/services/companion/progressive_reveal_chain_engine.dart:1762`
+- `_routeStage3WeakPrelude(...)` in `lib/data/services/companion/progressive_reveal_chain_engine.dart:3143`
+- prelude routing uses `HintLevel.letters` at `lib/data/services/companion/progressive_reveal_chain_engine.dart:3174`
 
 5. Existing hidden interleave routing:
-- `_routeNextHiddenVerse(...)` in [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart:3222)
-- interleave controls from config (`maxAttemptsBeforeInterleave`, `maxInterleaveCyclesPerVerse`) around [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart:3258)
+- `_routeNextHiddenVerse(...)` in `lib/data/services/companion/progressive_reveal_chain_engine.dart:3222`
+- interleave controls from config (`maxAttemptsBeforeInterleave`, `maxInterleaveCyclesPerVerse`) around `lib/data/services/companion/progressive_reveal_chain_engine.dart:3258`
 
 6. Attempt persistence path:
-- engine persistence helper `_persistAttempt(...)` in [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart:2844)
-- repo insert API `insertVerseAttempt(...)` in [`companion_repo.dart`](/c:/dev/hifz_planner/lib/data/repositories/companion_repo.dart:53)
+- engine persistence helper `_persistAttempt(...)` in `lib/data/services/companion/progressive_reveal_chain_engine.dart:2844`
+- repo insert API `insertVerseAttempt(...)` in `lib/data/repositories/companion_repo.dart:53`
 
 7. Typed telemetry column constraints:
-- `CompanionVerseAttempt` table in [`app_database.dart`](/c:/dev/hifz_planner/lib/data/database/app_database.dart:297)
-- `stage_code` allowed set in [`app_database.dart`](/c:/dev/hifz_planner/lib/data/database/app_database.dart:319)
-- `attempt_type` allowed set in [`app_database.dart`](/c:/dev/hifz_planner/lib/data/database/app_database.dart:327)
-- `telemetry_json` in [`app_database.dart`](/c:/dev/hifz_planner/lib/data/database/app_database.dart:389)
+- `CompanionVerseAttempt` table in `lib/data/database/app_database.dart:297`
+- `stage_code` allowed set in `lib/data/database/app_database.dart:319`
+- `attempt_type` allowed set in `lib/data/database/app_database.dart:327`
+- `telemetry_json` in `lib/data/database/app_database.dart:389`
 
 8. Existing Stage-3 UI signal:
-- weak-prelude banner key `companion_stage3_weak_prelude_banner` in [`companion_chain_screen.dart`](/c:/dev/hifz_planner/lib/screens/companion_chain_screen.dart:1164)
-- dynamic prelude baseline and effective hint capping in [`companion_chain_screen.dart`](/c:/dev/hifz_planner/lib/screens/companion_chain_screen.dart:668)
+- weak-prelude banner key `companion_stage3_weak_prelude_banner` in `lib/screens/companion_chain_screen.dart:1164`
+- dynamic prelude baseline and effective hint capping in `lib/screens/companion_chain_screen.dart:668`
 
 ## Deterministic Stage-3 state machine (phases + transitions)
 Proposed implementation-phase state machine (not implemented in this task):
@@ -214,71 +214,59 @@ Metrics interpretation defaults:
 3. `encode_echo` remains excluded from retrieval-strength aggregates (invariant preserved).
 
 ## Stage-1/2 alignment contract + minimal required adjustments
-1. Stage-2 handoff contract:
-- Stage 3 must consume `stage3WeakPreludeTargets` first.
-- No bypass of unresolved prelude targets.
+Locked statements:
+1. `stage3WeakPreludeTargets` must be consumed first with no bypass.
+2. Review mode remains hidden-fast and unchanged.
+3. Future patch note (spec-only, not implemented now): make `time_on_verse_ms` / `time_on_chunk_ms` attribution stage-aware for Stage-3 attempts.
 
-2. Review-mode contract:
-- Review remains hidden-fast and unchanged by Stage-3 runtime proposal.
-
-3. Minimal future patch note (not implemented here):
-- make `time_on_verse_ms` / `time_on_chunk_ms` attribution stage-aware for Stage-3 attempts to avoid Stage-1 clock bias in Stage-3 analytics.
-
-4. Compatibility:
-- Keep stage codes and hint ladder unchanged.
-- Keep typed telemetry columns unchanged; use `telemetry_json` for Stage-3 detail.
+Minimal compatibility notes:
+1. Keep stage codes and hint ladder unchanged.
+2. Keep typed telemetry columns unchanged and encode Stage-3 semantics in `telemetry_json`.
 
 ## Serious gamification model
-Design principles:
-1. Reward correctness and consistency, not speed.
-2. Reinforce habit quality with low-pressure streaks.
-3. Preserve reverence and reduce gamified pressure artifacts.
+Design rules:
+1. Rewards correctness and consistency over speed.
+2. Uses gentle streak cues to support adherence without punitive collapse.
+3. Preserves reverence and avoids mechanics that incentivize sloppy throughput.
 
-Proposed model:
-1. Quality streaks:
-- Increment only on counted passes.
-- Soft decay on misses; avoid punitive full-reset mechanics by default.
+Quests (exact examples):
+1. `3 cold-start H0 passes`
+2. `1 linking set`
+3. `1 discrimination set`
 
-2. Quests:
-- Daily/session quests such as:
-  - `3 H0 hidden counted passes`
-  - `1 linking set`
-  - `1 discrimination set`
+Mastery indicators:
+1. Verse/chunk mastery indicators map directly to Stage-3 readiness and stability criteria.
 
-3. Mastery indicators:
-- Verse/chunk indicators tied to readiness and stability criteria.
-
-Explicitly disallowed:
-1. Speed bonuses.
-2. Default leaderboards.
-3. Hearts/lives punishment loops.
+Explicit bans:
+1. speed bonuses
+2. default leaderboard
+3. hearts/lives punishment loops
 
 ## Risks/failure modes + mitigations
-1. Cue dependency risk:
-- Mitigation: strict counted-pass rules, cue cap in weak-prelude, mandatory return from temporary relief.
+1. cue dependence
+- Mitigation: counted-pass strictness requires low-hint unassisted performance.
+- Mitigation: weak-prelude enforces `H1` cap and requires successful clearance before normal flow.
 
-2. Infinite remediation loops:
-- Mitigation: remediation round caps + budgetFallback outcome.
+2. infinite remediation loops
+- Mitigation: remediation rounds are bounded by configurable caps.
+- Mitigation: explicit `budgetFallback` terminal path prevents endless retries.
 
-3. Silent weak bypass:
-- Mitigation: mandatory prelude-first routing and explicit unresolved checks in completion gate.
+3. silent weak bypass
+- Mitigation: prelude targets are mandatory-first and cannot be bypassed.
+- Mitigation: checkpoint completion requires no unresolved weak targets.
 
-4. Non-deterministic behavior:
-- Mitigation: deterministic priority order and deterministic probe scheduling/selection.
+4. nondeterminism
+- Mitigation: deterministic target-priority ordering is fixed and explicit.
+- Mitigation: deterministic random-start probe scheduling uses stable seeding.
 
-5. Telemetry drift:
-- Mitigation: locked key contract in `telemetry_json` and explicit retrieval-strength invariants.
-
-6. Over-hard difficulty collapse:
-- Mitigation: tunable defaults and temporary relief logic under controlled rules.
+5. telemetry drift
+- Mitigation: lock `telemetry_json` key contract for Stage-3 semantics.
+- Mitigation: preserve retrieval aggregate invariants (`encode_echo` excluded).
 
 ## References (baseline report + inspected repo files)
-Baseline report:
-1. [`STAGE3_RESEARCH_BASELINE.md`](/c:/dev/hifz_planner/docs/assistant/research/STAGE3_RESEARCH_BASELINE.md)
-
-Inspected repo sources:
-1. [`companion_models.dart`](/c:/dev/hifz_planner/lib/data/services/companion/companion_models.dart)
-2. [`progressive_reveal_chain_engine.dart`](/c:/dev/hifz_planner/lib/data/services/companion/progressive_reveal_chain_engine.dart)
-3. [`companion_chain_screen.dart`](/c:/dev/hifz_planner/lib/screens/companion_chain_screen.dart)
-4. [`companion_repo.dart`](/c:/dev/hifz_planner/lib/data/repositories/companion_repo.dart)
-5. [`app_database.dart`](/c:/dev/hifz_planner/lib/data/database/app_database.dart)
+1. `docs/assistant/research/STAGE3_RESEARCH_BASELINE.md`
+2. `lib/data/services/companion/companion_models.dart`
+3. `lib/data/services/companion/progressive_reveal_chain_engine.dart`
+4. `lib/screens/companion_chain_screen.dart`
+5. `lib/data/repositories/companion_repo.dart`
+6. `lib/data/database/app_database.dart`
