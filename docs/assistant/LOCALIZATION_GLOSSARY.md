@@ -75,6 +75,32 @@ Use this glossary to keep terminology consistent across Reader, planner/scheduli
 | `companion_autoplay_on` | Autoplay on | Lecture auto activee | Reproducao auto ativada | التشغيل التلقائي مفعل |
 | `companion_autoplay_off` | Autoplay off | Lecture auto desactivee | Reproducao auto desativada | التشغيل التلقائي متوقف |
 | `companion_record_start` | Record / Start | Enregistrer / Demarrer | Gravar / Iniciar | تسجيل / بدء |
+| `companion_stage1_mode_label` | Stage 1 mode | Mode etape 1 | Modo da etapa 1 | وضع المرحلة 1 |
+| `companion_stage1_mode_model_echo` | Model + Echo | Modele + echo | Modelo + eco | نموذج + ترديد |
+| `companion_stage1_mode_cold_probe` | Cold Probe | Sonde a froid | Sondagem fria | اختبار بارد |
+| `companion_stage1_mode_correction` | Correction | Correction | Correcao | تصحيح |
+| `companion_stage1_mode_spaced_reprobe` | Spaced Re-probe | Re-sondage espace | Re-sondagem espacada | إعادة اختبار متباعدة |
+| `companion_stage1_mode_checkpoint` | Checkpoint | Point de controle | Ponto de controle | نقطة تحقق |
+| `companion_stage1_mode_cumulative` | Cumulative Check | Verification cumulative | Verificacao cumulativa | تحقق تراكمي |
+| `companion_stage1_auto_check_title` | Micro-check | Micro-verification | Microverificacao | تحقق مصغر |
+| `companion_stage1_correction_action` | Play Correction | Lancer la correction | Reproduzir correcao | تشغيل التصحيح |
+| `companion_stage1_recite_now` | Recite now. | Recite maintenant. | Recite agora. | رتل الآن. |
+| `companion_stage1_recite_now_hidden_prompt` | Recite now (text hidden). | Recite maintenant (texte cache). | Recite agora (texto oculto). | رتل الآن (النص مخفي). |
+| `companion_stage1_correction_required_message` | Correction playback is required before the next cold attempt. | La correction est requise avant le prochain essai a froid. | A correcao e obrigatoria antes da proxima tentativa fria. | يلزم تشغيل التصحيح قبل المحاولة الباردة التالية. |
+| `companion_stage1_auto_check_required_selection` | Select an answer for the micro-check first. | Selectionnez une reponse pour la micro-verification d'abord. | Selecione uma resposta para a microverificacao primeiro. | اختر إجابة للتحقق المصغر أولاً. |
+| `companion_stage1_hint_locked_message` | Hints unlock after the first cold attempt. | Les indices se debloquent apres la premiere tentative a froid. | As dicas desbloqueiam apos a primeira tentativa fria. | تُفتح التلميحات بعد أول محاولة باردة. |
+| `companion_stage1_weak_verses` | Weak verses flagged for reinforcement: {count} | Versets faibles marques pour renforcement : {count} | Versos fracos marcados para reforco: {count} | تم تمييز الآيات الضعيفة للتقوية: {count} |
+| `companion_stage2_mode_label` | Stage 2 mode | Mode etape 2 | Modo da etapa 2 | وضع المرحلة 2 |
+| `companion_stage2_mode_minimal_cue_recall` | Minimal-Cue Recall | Rappel a indice minimal | Recordacao com pista minima | استرجاع بأقل تلميح |
+| `companion_stage2_mode_discrimination` | Discrimination | Discrimination | Discriminacao | تمييز |
+| `companion_stage2_mode_linking` | Linking (Rabt-lite) | Liaison (rabt leger) | Ligacao (rabt leve) | ربط (خفيف) |
+| `companion_stage2_mode_correction` | Correction | Correction | Correcao | تصحيح |
+| `companion_stage2_mode_checkpoint` | Checkpoint | Point de controle | Ponto de controle | نقطة تحقق |
+| `companion_stage2_mode_remediation` | Remediation | Remediation | Remediacao | معالجة |
+| `companion_stage2_recite_now` | Recite with minimal cue. | Recite avec indice minimal. | Recite com pista minima. | رتل بأقل تلميح. |
+| `companion_stage2_correction_required_message` | Correction playback is required before the next Stage-2 attempt. | La correction est requise avant le prochain essai de l'etape 2. | A correcao e obrigatoria antes da proxima tentativa da etapa 2. | يلزم تشغيل التصحيح قبل محاولة المرحلة 2 التالية. |
+| `companion_stage2_correction_action` | Play Stage-2 Correction | Lancer la correction etape 2 | Reproduzir correcao da etapa 2 | تشغيل تصحيح المرحلة 2 |
+| `companion_stage3_weak_prelude_banner` | Weak-prelude active: {count} verses must pass before normal hidden flow. | Prelude des versets faibles active : {count} versets doivent reussir avant le flux cache normal. | Preludio fraco ativo: {count} versos devem passar antes do fluxo oculto normal. | تم تفعيل تمهيد الآيات الضعيفة: يجب نجاح {count} آيات قبل التدفق المخفي الطبيعي. |
 | `companion_hint_button` | Hint | Indice | Dica | تلميح |
 | `companion_repeat_button` | Repeat | Repeter | Repetir | إعادة |
 | `companion_mark_correct` | Mark correct | Marquer correct | Marcar correto | تحديد كصحيح |

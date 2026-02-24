@@ -306,7 +306,7 @@ Note:
 ## 5) Local Data Model (Drift)
 
 Database file: `lib/data/database/app_database.dart`
-Schema version: `5`
+Schema version: `6`
 
 Tables:
 - `ayah` (Quran text + optional `page_madina`)
@@ -332,6 +332,14 @@ Key points:
   - `scheduling_overrides_json`
 - companion persistence now includes:
   - per-attempt `stage_code` (`guided_visible`, `cued_recall`, `hidden_reveal`)
+  - Stage-1 telemetry columns on `companion_verse_attempt`:
+    - `attempt_type` (`encode_echo`, `probe`, `spaced_reprobe`, `checkpoint`)
+    - `assisted_flag`
+    - `auto_check_type`
+    - `auto_check_result`
+    - `time_on_verse_ms`
+    - `time_on_chunk_ms`
+    - `telemetry_json`
   - per-unit staged unlock state (`companion_unit_state`)
   - stage transition/skip/resume telemetry (`companion_stage_event`)
 - companion attempt/proficiency tables are indexed for session/verse/unit lookup.
@@ -428,9 +436,21 @@ Current capabilities:
   - list notes + edit dialog + go-to verse/page actions
 - `lib/screens/companion_chain_screen.dart`
   - staged companion flow for new units:
-    - Stage 1 `guided_visible` (full text visible, graded)
-    - Stage 2 `cued_recall` (first-word cue baseline, graded)
-    - Stage 3 `hidden_reveal` (hidden-first progressive reveal)
+    - Stage 1 `guided_visible` uses internal deterministic sub-modes:
+      - `Model+Echo` (talqin exposure, capped loops)
+      - mandatory H0 hidden cold probes with required micro-check by default
+      - correction gate after failed cold attempts
+      - per-verse time-based spaced confirmation
+      - chunk checkpoint + targeted remediation + short cumulative hidden check
+      - budget fallback marks weak verses and advances to Stage 2
+    - Stage 2 `cued_recall` (deterministic minimal-cue bridge):
+      - adaptive cue baseline (`H2` weak / `H1` non-weak) with cue fading toward `H0`
+      - telemetry-triggered discrimination checks + required linking pass (`k-1 -> k`)
+      - correction gate after failures, checkpoint threshold (`0.75`), and failed-only remediation
+      - budget fallback carries unresolved weak verses into guarded Stage-3 prelude
+    - Stage 3 `hidden_reveal`:
+      - hidden-first progressive reveal/interleave
+      - when `stage3WeakPreludeTargets` is populated, mandatory weak-prelude runs first (hint capped at `H1`) before normal hidden routing
   - review runs stay hidden-first (`mode=review`)
   - stage skip with confirmation logs telemetry and persists unlock stage
   - recitation controls:

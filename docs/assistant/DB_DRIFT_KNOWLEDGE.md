@@ -42,7 +42,7 @@ Do not rely on this doc alone when:
 
 Database:
 - class: `AppDatabase`
-- schema version: `3`
+- schema version: `6`
 
 Tables:
 1. `ayah`
@@ -55,6 +55,11 @@ Tables:
 8. `calibration_sample`
 9. `pending_calibration_update`
 10. `mem_progress`
+11. `companion_chain_session`
+12. `companion_verse_attempt`
+13. `companion_unit_state`
+14. `companion_stage_event`
+15. `companion_step_proficiency`
 
 ## Invariants and Constraints
 
@@ -99,11 +104,45 @@ Tables:
 - `pending_calibration_update` stores deferred settings updates
 - singleton policy on `pending_calibration_update` via `id == 1`
 
+### Companion tables
+- `companion_chain_session` stores run-level completion and strength summary.
+- `companion_verse_attempt` stores per-attempt telemetry.
+  - core staged fields: `stage_code`, `hint_level`, evaluator and retrieval fields
+  - Stage-1 and Stage-2 telemetry fields:
+    - `attempt_type` (`encode_echo`, `probe`, `spaced_reprobe`, `checkpoint`)
+    - `assisted_flag`
+    - `auto_check_type`
+    - `auto_check_result`
+    - `time_on_verse_ms`
+    - `time_on_chunk_ms`
+    - `telemetry_json` (non-core payload)
+  - Stage-2 semantics are encoded in `telemetry_json` (no schema change):
+    - `stage2_mode`
+    - `stage2_phase`
+    - `stage2_step`
+    - `cue_baseline`
+    - `cue_rotated_from`
+    - `weak_target`
+    - `risk_trigger`
+    - `link_prev_verse_order`
+    - `readiness_counted_pass`
+    - `lifecycle_hook` (`stage4_candidate`, `stage5_candidate`)
+- `companion_unit_state` stores per-unit unlocked stage for new memorization resume.
+- `companion_stage_event` stores stage transition telemetry (`auto_unlock`, `user_skip`, `resume_stage`).
+- `companion_step_proficiency` stores EMA proficiency at `(unit, surah, ayah)` granularity.
+
 ### Indexes (created in migration helpers)
 - `idx_schedule_state_due_day`
 - `idx_schedule_state_is_suspended`
 - `idx_review_log_unit_id_ts_day`
 - `idx_calibration_sample_kind_day_id`
+- `idx_companion_chain_session_unit_id_created_day`
+- `idx_companion_verse_attempt_session_verse_attempt`
+- `idx_companion_verse_attempt_session_stage_verse_attempt`
+- `idx_companion_verse_attempt_unit_day`
+- `idx_companion_step_proficiency_unit`
+- `idx_companion_unit_state_unit_id`
+- `idx_companion_stage_event_session_created`
 
 ## Migration and Codegen Workflow
 

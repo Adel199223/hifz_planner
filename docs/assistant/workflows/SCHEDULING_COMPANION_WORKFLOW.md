@@ -69,6 +69,7 @@ flutter test -j 1 -r expanded test/data/services/forecast_simulation_service_tes
 flutter test -j 1 -r expanded test/data/database/app_database_test.dart
 flutter test -j 1 -r expanded test/data/repositories/settings_repo_test.dart
 flutter test -j 1 -r expanded test/data/repositories/companion_repo_test.dart
+flutter test -j 1 -r expanded test/data/services/companion/stage1_auto_check_engine_test.dart
 flutter test -j 1 -r expanded test/data/services/scheduling
 flutter test -j 1 -r expanded test/data/services/companion
 ```
@@ -84,7 +85,7 @@ flutter test -j 1 -r expanded test/data/services/companion
 4. Symptoms: companion chain gets stuck on one verse.
    - Check interleave threshold/cycle limits and active index transitions in `progressive_reveal_chain_engine.dart`.
 5. Symptoms: telemetry/proficiency rows fail to persist.
-   - Verify companion FK references and indexes in schema v5 migrations.
+   - Verify companion FK references and indexes in schema v6 migrations.
 6. Symptoms: black circles still appear in Companion or Verse-by-Verse mode.
    - Verify hidden-stage placeholder text is not rendered and end-marker words are suppressed in shared word widget usage.
 7. Symptoms: autoplay toggle resets after restart.
@@ -107,9 +108,22 @@ flutter test -j 1 -r expanded test/data/services/companion
   - `/companion/chain?unitId=<id>&mode=new` -> staged ramp for new units.
   - `/companion/chain?unitId=<id>&mode=review` -> hidden-first fast retrieval.
 - Stage sequence for `mode=new`:
-  - Stage 1 `guided_visible`: full text visible, graded pass per verse.
-  - Stage 2 `cued_recall`: first-word baseline cue, graded pass per verse.
-  - Stage 3 `hidden_reveal`: hidden-first reveal-on-pass with interleaving.
+  - Stage 1 `guided_visible` (Talqin + Retrieval-first):
+    - capped `model_echo` exposures, then forced hidden H0 probe
+    - hints are user-triggered and locked for the first cold attempt in a probe cycle
+    - failed cold attempts require correction exposure before retry
+    - per-verse spaced H0 confirmation is time-based (`>= minSpacingMs`, default 120s)
+    - checkpoint requires H0+auto-check performance and runs targeted remediation on failed verses only
+    - budget fallback seeds unseen verses, marks weak verses, then advances to Stage 2
+  - Stage 2 `cued_recall` (deterministic minimal-cue bridge):
+    - adaptive cue baseline (`H2` weak / `H1` non-weak) with fading toward `H0`
+    - required auto-check by default (until ASR), correction gate, and telemetry-triggered discrimination
+    - per-verse readiness window + mandatory linking pass (`k-1 -> k`)
+    - checkpoint (`>= 0.75`) + failed-only remediation + bounded remediation rounds
+    - budget fallback carries unresolved weak verses into Stage-3 weak-prelude targets
+  - Stage 3 `hidden_reveal`:
+    - hidden-first reveal-on-pass with interleaving
+    - guarded weak-prelude runs first when `stage3WeakPreludeTargets` is non-empty (hint cap `H1`)
 - Stage memory:
   - persist per-unit unlocked stage in `companion_unit_state`.
   - `mode=new` resumes at stored stage; `mode=review` ignores it.
@@ -122,10 +136,13 @@ flutter test -j 1 -r expanded test/data/services/companion
   - skip is only allowed in Stage 1 and Stage 2.
   - skip requires explicit confirm UI and applies to remaining verses in that stage for the current run.
   - skip writes telemetry event and advances immediately.
+  - Stage-2 skip carries unresolved verses into Stage-3 weak-prelude targets.
 
 ## Retrieval-Strength Scoring Policy
 
 - Keep retrieval strength derived from hint usage, response latency, and evaluator confidence.
+- Exclude Stage-1 `encode_echo` attempts from retrieval-strength aggregates.
+- Include Stage-1 elapsed chunk time in `new_memorization` calibration samples.
 - Avoid binary pass/fail-only calibration inputs; preserve graded signal to improve adaptation.
 - If constants are tuned, update both:
   - this workflow doc (policy notes)
