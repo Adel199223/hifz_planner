@@ -23,6 +23,7 @@ Workflow runbooks:
 - Localization/i18n: `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
 - Quran.com data/cache/fonts: `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md`
 - Planner/scheduler: `docs/assistant/workflows/PLANNER_WORKFLOW.md`
+- Scheduling + companion engine: `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`
 - Workspace performance: `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
 - Reference discovery: `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
 - Docs maintenance: `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`
@@ -78,6 +79,7 @@ Defined in `lib/app/router.dart`:
 - `/quran-radio`
 - `/reciters`
 - `/today`
+- `/companion/chain`
 - `/settings`
 - `/about`
 
@@ -87,11 +89,17 @@ Defined in `lib/app/router.dart`:
 - `highlightStartSurah`, `highlightStartAyah`
 - `highlightEndSurah`, `highlightEndAyah`
 
+`/companion/chain` query params:
+- `unitId` (required)
+- `mode` (`new` or `review`, defaults to review if omitted)
+
 ### Global Preferences (persisted)
 - Language options (fully wired for app UI strings):
   - English, Français, العربية, Português
 - Theme options:
   - Sepia, Dark
+- Companion options:
+  - `Autoplay next ayah` toggle for Companion recitation (default off)
 - Stored via SharedPreferences and restored on startup.
 
 Files:
@@ -143,6 +151,7 @@ Per-verse cell includes:
 Behavior:
 - Visible source is Quran.com pipeline.
 - Hidden per-verse fallback to local rendering if Quran.com data/font fails.
+- Verse-by-Verse suppresses Quran.com end-marker circle tokens (`char_type_name=end`) at display time.
 - No "whole-row tap opens old sheet" behavior.
 - Bookmark/note/copy are wired to existing logic.
 - Play/share/extra actions are scaffold-safe where backend is not ready.
@@ -297,7 +306,7 @@ Note:
 ## 5) Local Data Model (Drift)
 
 Database file: `lib/data/database/app_database.dart`
-Schema version: `3`
+Schema version: `5`
 
 Tables:
 - `ayah` (Quran text + optional `page_madina`)
@@ -310,9 +319,22 @@ Tables:
 - `mem_progress` (singleton row id=1)
 - `calibration_sample`
 - `pending_calibration_update`
+- `companion_chain_session`
+- `companion_verse_attempt`
+- `companion_unit_state`
+- `companion_stage_event`
+- `companion_step_proficiency`
 
 Key points:
 - `ayah` unique key: `(surah, ayah)`
+- `app_settings` now persists scheduling contracts:
+  - `scheduling_prefs_json`
+  - `scheduling_overrides_json`
+- companion persistence now includes:
+  - per-attempt `stage_code` (`guided_visible`, `cued_recall`, `hidden_reveal`)
+  - per-unit staged unlock state (`companion_unit_state`)
+  - stage transition/skip/resume telemetry (`companion_stage_event`)
+- companion attempt/proficiency tables are indexed for session/verse/unit lookup.
 - schedule/review/calibration indexes are created in migration helpers
 - singleton rows are enforced via `ensureSingletonRows()`
 
@@ -335,6 +357,7 @@ Important repos/services:
   - `settings_repo.dart`
   - `progress_repo.dart`
   - `calibration_repo.dart`
+  - `companion_repo.dart`
 - Services:
   - `quran_text_importer_service.dart`
   - `page_metadata_importer_service.dart`
@@ -343,6 +366,14 @@ Important repos/services:
   - `calibration_service.dart`
   - `forecast_simulation_service.dart`
   - `new_unit_generator.dart`
+  - `scheduling/planning_projection_engine.dart`
+  - `scheduling/availability_interpreter.dart`
+  - `scheduling/weekly_plan_generator.dart`
+  - `scheduling/daily_content_allocator.dart`
+  - `scheduling/scheduling_preferences_codec.dart`
+  - `companion/progressive_reveal_chain_engine.dart`
+  - `companion/verse_evaluator.dart`
+  - `companion/companion_calibration_bridge.dart`
   - `tajweed_tags_service.dart`
   - `surah_metadata_service.dart`
   - `qurancom_api.dart`
@@ -355,6 +386,13 @@ File: `lib/screens/plan_screen.dart`
 Current capabilities:
 - Onboarding-like questionnaire inputs
 - Activate/update settings (`profile`, minutes, caps, etc.)
+- Basic + Advanced scheduling preferences:
+  - default `2 sessions/day`
+  - optional fixed times
+  - enabled study days + revision-only days
+  - availability models: minutes/day, minutes/week, specific windows
+- Weekly calendar (rolling next 7 days) with session focus/minutes/status
+- Per-day override shell (skip/holiday + per-session time override)
 - Calibration sample logging and apply timing
 - Forecast simulation display
 
@@ -364,8 +402,13 @@ File: `lib/screens/today_screen.dart`
 Current capabilities:
 - Build today plan from scheduler/planner
 - Render planned reviews and planned new memorization
+- Render sessionized day blocks (timed or untimed) with recovery signal
 - Save grades (`q=5/4/3/2/0`)
 - "Open in Reader" deep-link with page mode + verse range highlight params
+- "Open Companion Chain" action for review/new rows
+- Companion route launch:
+  - review: `/companion/chain?unitId=...&mode=review`
+  - new memorization: `/companion/chain?unitId=...&mode=new`
 
 ## 8) Other Screens
 
@@ -383,6 +426,22 @@ Current capabilities:
   - list bookmarks with go-to verse/page actions
 - `lib/screens/notes_screen.dart`
   - list notes + edit dialog + go-to verse/page actions
+- `lib/screens/companion_chain_screen.dart`
+  - staged companion flow for new units:
+    - Stage 1 `guided_visible` (full text visible, graded)
+    - Stage 2 `cued_recall` (first-word cue baseline, graded)
+    - Stage 3 `hidden_reveal` (hidden-first progressive reveal)
+  - review runs stay hidden-first (`mode=review`)
+  - stage skip with confirmation logs telemetry and persists unlock stage
+  - recitation controls:
+    - `Play current ayah` button
+    - persisted `Autoplay next ayah` toggle (SharedPreferences)
+  - shared word-hover parity with Reader Verse-by-Verse:
+    - per-word hover highlight
+    - per-word translation tooltip
+    - end-marker suppression (`char_type_name=end`) in Companion + Reader Verse-by-Verse scope
+  - hidden verses render without dot placeholders
+  - Arabic rendering parity with tajweed colors by default (no reader action-chip parity)
 - `lib/screens/about_screen.dart`
   - placeholder
 
@@ -390,7 +449,7 @@ Current capabilities:
 
 ### Key assets
 - `assets/quran/tanzil_uthmani.txt` (optional at runtime in some environments)
-- `assets/quran/tajweed_uthmani_tags.json` (generated optional tajweed overlay data)
+- `assets/quran/tajweed_uthmani_tags.json` (bundled generated tajweed overlay data for offline-by-default coloring)
 - `assets/quran/bismillah.svg`
 - `assets/fonts/UthmanicHafs1Ver18.ttf`
 - `assets/fonts/sura_names.ttf`
@@ -422,6 +481,26 @@ Common focused suite:
 
 ```powershell
 flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
+```
+
+Scheduling + companion focused validation:
+
+```powershell
+flutter test -j 1 -r expanded test/app/app_preferences_test.dart
+flutter test -j 1 -r expanded test/screens/plan_screen_test.dart
+flutter test -j 1 -r expanded test/screens/today_screen_test.dart
+flutter test -j 1 -r expanded test/screens/companion_chain_screen_test.dart
+flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
+flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart
+flutter test -j 1 -r expanded test/data/services/tajweed_tags_service_test.dart
+flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart
+flutter test -j 1 -r expanded test/data/services/spaced_repetition_scheduler_test.dart
+flutter test -j 1 -r expanded test/data/database/app_database_test.dart
+flutter test -j 1 -r expanded test/data/repositories/companion_repo_test.dart
+flutter test -j 1 -r expanded test/data/services/scheduling
+flutter test -j 1 -r expanded test/data/services/companion
+dart run tooling/validate_localization.dart
+dart run tooling/validate_agent_docs.dart
 ```
 
 Why `-j 1`:
@@ -488,6 +567,8 @@ Representative files:
   - `.gitignore`
 - Reader UI and behavior:
   - `lib/screens/reader_screen.dart`
+  - `lib/ui/quran/quran_word_wrap.dart`
+  - `lib/data/services/quran_wording.dart`
 - Quran.com fetch/cache/parsing:
   - `lib/data/services/qurancom_api.dart`
 - QCF fonts:
@@ -495,8 +576,21 @@ Representative files:
 - Planning:
   - `lib/screens/plan_screen.dart`
   - `lib/screens/today_screen.dart`
+  - `lib/screens/companion_chain_screen.dart`
+  - `lib/ui/quran/quran_word_wrap.dart`
   - `lib/data/services/daily_planner.dart`
+  - `lib/data/services/forecast_simulation_service.dart`
   - `lib/data/services/spaced_repetition_scheduler.dart`
+  - `lib/data/services/scheduling/planning_projection_engine.dart`
+  - `lib/data/services/scheduling/availability_interpreter.dart`
+  - `lib/data/services/scheduling/weekly_plan_generator.dart`
+  - `lib/data/services/scheduling/daily_content_allocator.dart`
+  - `lib/data/services/scheduling/scheduling_preferences_codec.dart`
+  - `lib/data/services/companion/progressive_reveal_chain_engine.dart`
+  - `lib/data/services/companion/verse_evaluator.dart`
+  - `lib/data/services/companion/companion_calibration_bridge.dart`
+  - `lib/data/repositories/companion_repo.dart`
+  - `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`
 - DB schema:
   - `lib/data/database/app_database.dart`
 

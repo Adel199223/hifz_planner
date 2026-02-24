@@ -1,12 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:drift/drift.dart' show Value;
 
 import '../app/app_preferences.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/repositories/schedule_repo.dart';
 import '../data/services/daily_planner.dart';
+import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
 import '../l10n/app_strings.dart';
 
@@ -19,6 +22,7 @@ class TodayScreen extends ConsumerStatefulWidget {
 
 class _TodayScreenState extends ConsumerState<TodayScreen> {
   bool _isLoading = true;
+  bool _isSeedingDebugUnit = false;
   String? _errorMessage;
   TodayPlan? _plan;
   List<DueUnitRow> _remainingReviews = const <DueUnitRow>[];
@@ -263,6 +267,20 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             const SizedBox(height: 4),
             Text(strings.dueDayLabel(dueRow.schedule.dueDay)),
             const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton(
+                  key: ValueKey('today_open_companion_review_$unitId'),
+                  onPressed: () {
+                    context.go('/companion/chain?unitId=$unitId&mode=review');
+                  },
+                  child: Text(strings.openCompanionChain),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
             _buildGradeButtons(
               strings: strings,
               unitId: unitId,
@@ -298,6 +316,19 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               strings.newMemorization,
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            if (kDebugMode) ...[
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                key: const ValueKey('today_debug_seed_new_unit'),
+                onPressed: _isSeedingDebugUnit ? null : _seedDebugNewUnit,
+                icon: const Icon(Icons.bug_report_outlined),
+                label: Text(
+                  _isSeedingDebugUnit
+                      ? 'Debug: Generating...'
+                      : 'Debug: Generate test new unit',
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             if (_remainingNewUnits.isEmpty)
               Text(strings.noPlannedNewUnitsLeft)
@@ -314,6 +345,125 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _seedDebugNewUnit() async {
+    if (_isSeedingDebugUnit) {
+      return;
+    }
+
+    setState(() {
+      _isSeedingDebugUnit = true;
+    });
+
+    final now = DateTime.now().toLocal();
+    final todayDay = localDayIndex(now);
+
+    try {
+      final db = ref.read(appDatabaseProvider);
+      final quranRepo = ref.read(quranRepoProvider);
+      final memUnitRepo = ref.read(memUnitRepoProvider);
+      final scheduleRepo = ref.read(scheduleRepoProvider);
+      final progressRepo = ref.read(progressRepoProvider);
+
+      final cursor = await progressRepo.getCursor();
+      final ayahWindow = await quranRepo.getAyahsFromCursor(
+        startSurah: cursor.nextSurah,
+        startAyah: cursor.nextAyah,
+        limit: 8,
+      );
+
+      if (ayahWindow.isEmpty) {
+        _showSnackBar('Debug: No ayahs available from current cursor.');
+        return;
+      }
+
+      final anchor = ayahWindow.first;
+      final unitAyahs = _takeDebugUnitAyahs(ayahWindow, anchor.pageMadina);
+      final start = unitAyahs.first;
+      final end = unitAyahs.last;
+      final page = anchor.pageMadina;
+      final unitKey = 'debug_seed:p${page ?? 0}:s${start.surah}a${start.ayah}'
+          '-s${end.surah}a${end.ayah}:${now.millisecondsSinceEpoch}';
+
+      MemUnitData? seededUnit;
+
+      await db.transaction(() async {
+        final unitId = await memUnitRepo.create(
+          MemUnitCompanion.insert(
+            kind: 'page_segment',
+            pageMadina: page == null ? const Value.absent() : Value(page),
+            startSurah: Value(start.surah),
+            startAyah: Value(start.ayah),
+            endSurah: Value(end.surah),
+            endAyah: Value(end.ayah),
+            unitKey: unitKey,
+            createdAtDay: todayDay,
+            updatedAtDay: todayDay,
+          ),
+        );
+
+        await scheduleRepo.upsertInitialStateForNewUnit(
+          unitId: unitId,
+          dueDay: todayDay,
+          ef: 2.5,
+          reps: 0,
+          intervalDays: 0,
+        );
+        seededUnit = await memUnitRepo.get(unitId);
+
+        final nextAyah = await quranRepo.getAyahsFromCursor(
+          startSurah: end.surah,
+          startAyah: end.ayah + 1,
+          limit: 1,
+        );
+        if (nextAyah.isNotEmpty) {
+          await progressRepo.updateCursor(
+            nextSurah: nextAyah.first.surah,
+            nextAyah: nextAyah.first.ayah,
+            updatedAtDay: todayDay,
+          );
+        }
+      });
+
+      if (seededUnit != null && mounted) {
+        setState(() {
+          _remainingNewUnits = <MemUnitData>[
+            ..._remainingNewUnits,
+            seededUnit!,
+          ];
+        });
+      }
+      _showSnackBar('Debug: Added one test new memorization unit.');
+    } catch (error) {
+      _showSnackBar('Debug: Failed to add test unit ($error).');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSeedingDebugUnit = false;
+        });
+      }
+    }
+  }
+
+  List<AyahData> _takeDebugUnitAyahs(List<AyahData> ayahs, int? pageMadina) {
+    if (ayahs.isEmpty) {
+      return const <AyahData>[];
+    }
+
+    if (pageMadina == null) {
+      final limit = ayahs.length < 4 ? ayahs.length : 4;
+      return ayahs.take(limit).toList(growable: false);
+    }
+
+    final pageAyahs = <AyahData>[];
+    for (final ayah in ayahs) {
+      if (ayah.pageMadina != pageMadina) {
+        break;
+      }
+      pageAyahs.add(ayah);
+    }
+    return pageAyahs.isEmpty ? <AyahData>[ayahs.first] : pageAyahs;
   }
 
   Widget _buildNewUnitRow(MemUnitData unit, AppStrings strings) {
@@ -354,6 +504,13 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                         }
                       : null,
                   child: Text(strings.openInReader),
+                ),
+                OutlinedButton(
+                  key: ValueKey('today_open_companion_new_$unitId'),
+                  onPressed: () {
+                    context.go('/companion/chain?unitId=$unitId&mode=new');
+                  },
+                  child: Text(strings.openCompanionChain),
                 ),
               ],
             ),
@@ -450,6 +607,20 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   plan.minutesPlannedNew.toStringAsFixed(1),
                 ),
               ),
+              Text(
+                strings.reviewPressureLabel(
+                  plan.reviewPressure.toStringAsFixed(2),
+                ),
+              ),
+              if (plan.recoveryMode)
+                Text(
+                  strings.recoveryModeActive,
+                  key: const ValueKey('today_recovery_mode_badge'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               if (plan.message != null) ...[
                 const SizedBox(height: 6),
                 Text(
@@ -461,6 +632,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 ),
               ],
               const SizedBox(height: 12),
+              _buildSessionSection(strings, plan),
+              const SizedBox(height: 12),
             ],
             _buildReviewSection(strings),
             const SizedBox(height: 16),
@@ -469,6 +642,94 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildSessionSection(AppStrings strings, TodayPlan plan) {
+    return Card(
+      key: const ValueKey('today_sessions_section'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.todaySessions,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 10),
+            if (plan.sessions.isEmpty)
+              Text(strings.noSessionsPlanned)
+            else
+              Column(
+                children: [
+                  for (var i = 0; i < plan.sessions.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: i == plan.sessions.length - 1 ? 0 : 8,
+                      ),
+                      child: _buildSessionRow(plan.sessions[i], strings, i),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSessionRow(
+    PlannedSession session,
+    AppStrings strings,
+    int index,
+  ) {
+    final sessionLabel = session.sessionLabel;
+    final focusCode = session.focus.code;
+    final focus = focusCode == 'review_only'
+        ? strings.reviewOnlyFocus
+        : strings.newAndReviewFocus;
+    final statusCode = session.status.code;
+    final status = statusCode == 'due_soon'
+        ? strings.sessionStatusDueSoon
+        : strings.sessionStatusPending;
+    final minutes = session.plannedMinutes;
+    final isTimed = session.isTimed;
+    final minuteOfDay = session.startMinuteOfDay;
+
+    return DecoratedBox(
+      key: ValueKey('today_session_$index'),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$sessionLabel • $focus',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            Text(strings.sessionMinutes(minutes)),
+            const SizedBox(width: 8),
+            Text(isTimed && minuteOfDay != null
+                ? _formatMinuteOfDay(minuteOfDay)
+                : strings.untimedSessionLabel),
+            const SizedBox(width: 8),
+            Text(status),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatMinuteOfDay(int minuteOfDay) {
+    final hour = (minuteOfDay ~/ 60).toString().padLeft(2, '0');
+    final minute = (minuteOfDay % 60).toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   List<_GradeOption> _gradeOptions(AppStrings strings) {

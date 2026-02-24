@@ -392,6 +392,7 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   StoredAppPreferences _stored;
   String? savedLanguageCode;
   String? savedThemeCode;
+  bool? savedCompanionAutoReciteEnabled;
 
   @override
   Future<StoredAppPreferences> load() async {
@@ -404,6 +405,7 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
     _stored = StoredAppPreferences(
       languageCode: code,
       themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
     );
   }
 
@@ -413,6 +415,17 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
     _stored = StoredAppPreferences(
       languageCode: _stored.languageCode,
       themeCode: code,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+    );
+  }
+
+  @override
+  Future<void> saveCompanionAutoReciteEnabled(bool value) async {
+    savedCompanionAutoReciteEnabled = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: value,
     );
   }
 }

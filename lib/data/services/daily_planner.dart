@@ -1,12 +1,12 @@
-import 'dart:convert';
 import 'dart:math' as math;
 
 import '../database/app_database.dart';
-import '../repositories/mem_unit_repo.dart';
 import '../repositories/progress_repo.dart';
 import '../repositories/quran_repo.dart';
 import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
+import 'scheduling/planning_projection_engine.dart';
+import 'scheduling/weekly_plan_generator.dart';
 import 'new_unit_generator.dart';
 
 class TodayPlan {
@@ -16,6 +16,9 @@ class TodayPlan {
     required this.revisionOnly,
     required this.minutesPlannedReviews,
     required this.minutesPlannedNew,
+    this.sessions = const <PlannedSession>[],
+    this.reviewPressure = 0,
+    this.recoveryMode = false,
     this.message,
   });
 
@@ -24,6 +27,9 @@ class TodayPlan {
   final bool revisionOnly;
   final double minutesPlannedReviews;
   final double minutesPlannedNew;
+  final List<PlannedSession> sessions;
+  final double reviewPressure;
+  final bool recoveryMode;
   final String? message;
 }
 
@@ -34,8 +40,8 @@ class DailyPlanner {
     this._progressRepo,
     this._scheduleRepo,
     this._quranRepo,
-    this._memUnitRepo,
     this._newUnitGenerator,
+    this._projectionEngine,
   );
 
   final AppDatabase _db;
@@ -43,20 +49,72 @@ class DailyPlanner {
   final ProgressRepo _progressRepo;
   final ScheduleRepo _scheduleRepo;
   final QuranRepo _quranRepo;
-  final MemUnitRepo _memUnitRepo;
   final NewUnitGenerator _newUnitGenerator;
+  final PlanningProjectionEngine _projectionEngine;
 
   Future<TodayPlan> planToday({required int todayDay}) {
     return _db.transaction(() async {
-      final settings = await _settingsRepo.getSettings();
+      final settings =
+          await _settingsRepo.getSettings(todayDayOverride: todayDay);
       final cursor = await _progressRepo.getCursor();
       final dueUnits = await _scheduleRepo.getDueUnits(todayDay);
 
       final sortedDueUnits = [...dueUnits]
         ..sort((a, b) => _compareDueRows(a, b, todayDay));
 
-      final dailyMinutes = _resolveDailyMinutes(settings, todayDay);
-      final reviewBudgetMinutes = dailyMinutes * _reviewBudgetRatio(settings);
+      final schedulingPreferences =
+          _projectionEngine.preferencesFromSettings(settings);
+      final schedulingOverrides =
+          _projectionEngine.overridesFromSettings(settings);
+      final weeklyPlan = await _projectionEngine.generateWeeklyPlan(
+        startDay: todayDay,
+        horizonDays: 1,
+        settings: settings,
+        scheduleRepo: _scheduleRepo,
+        quranRepo: _quranRepo,
+        preferences: schedulingPreferences,
+        overrides: schedulingOverrides,
+      );
+      final todaySchedule =
+          weeklyPlan.days.isNotEmpty ? weeklyPlan.days.first : null;
+
+      final dailyMinutes = (todaySchedule?.totalPlannedMinutes ??
+              _projectionEngine.resolveMinutesForDay(
+                dayIndex: todayDay,
+                preferences: schedulingPreferences,
+                overrides: schedulingOverrides,
+              ))
+          .toDouble();
+
+      if (dailyMinutes <= 0 ||
+          (todaySchedule != null && !todaySchedule.enabledStudyDay)) {
+        return TodayPlan(
+          plannedReviews: const <DueUnitRow>[],
+          plannedNewUnits: const <MemUnitData>[],
+          revisionOnly: false,
+          minutesPlannedReviews: 0,
+          minutesPlannedNew: 0,
+          sessions: todaySchedule?.sessions ?? const <PlannedSession>[],
+          message: todaySchedule?.skipDay == true
+              ? 'Day marked as holiday'
+              : 'No study sessions planned for today',
+        );
+      }
+
+      final dueReviewMinutes =
+          await _projectionEngine.estimateReviewMinutesForRows(
+        dueRows: sortedDueUnits,
+        quranRepo: _quranRepo,
+        avgReviewMinutesPerAyah: settings.avgReviewMinutesPerAyah,
+      );
+      final allocation = _projectionEngine.allocateDailyContent(
+        dailyMinutes: dailyMinutes,
+        dueReviewMinutes: dueReviewMinutes,
+        profile: settings.profile,
+        forceRevisionOnly: settings.forceRevisionOnly == 1 ||
+            (todaySchedule?.revisionOnlyDay ?? false),
+      );
+      final reviewBudgetMinutes = allocation.reviewCapacityMinutes;
 
       final plannedReviews = <DueUnitRow>[];
       var minutesPlannedReviews = 0.0;
@@ -72,8 +130,8 @@ class DailyPlanner {
         minutesPlannedReviews += estimated;
       }
 
-      final dueOverflow = sortedDueUnits.length > plannedReviews.length;
-      final revisionOnly = dueOverflow && settings.forceRevisionOnly == 1;
+      final revisionOnly =
+          (todaySchedule?.revisionOnlyDay ?? false) || allocation.recoveryMode;
 
       var plannedNewUnits = <MemUnitData>[];
       var minutesPlannedNew = 0.0;
@@ -87,8 +145,13 @@ class DailyPlanner {
         if (metadataBlocked) {
           message = 'Import page metadata first';
         } else {
-          final remainingNewMinutes =
-              math.max(0.0, dailyMinutes - minutesPlannedReviews);
+          final remainingNewMinutes = math.max(
+            0.0,
+            math.min(
+              allocation.newBudgetMinutes,
+              dailyMinutes - minutesPlannedReviews,
+            ),
+          );
           final generation = await _newUnitGenerator.generate(
             todayDay: todayDay,
             cursor: cursor,
@@ -111,12 +174,22 @@ class DailyPlanner {
         }
       }
 
+      final syncedSessions = _syncSessionsWithActualMinutes(
+        template: todaySchedule?.sessions ?? const <PlannedSession>[],
+        minutesPlannedReviews: minutesPlannedReviews,
+        minutesPlannedNew: minutesPlannedNew,
+        revisionOnly: revisionOnly,
+      );
+
       return TodayPlan(
         plannedReviews: plannedReviews,
         plannedNewUnits: plannedNewUnits,
         revisionOnly: revisionOnly,
         minutesPlannedReviews: minutesPlannedReviews,
         minutesPlannedNew: minutesPlannedNew,
+        sessions: syncedSessions,
+        reviewPressure: allocation.reviewPressure,
+        recoveryMode: allocation.recoveryMode,
         message: message,
       );
     });
@@ -141,53 +214,6 @@ class DailyPlanner {
     }
 
     return a.schedule.unitId.compareTo(b.schedule.unitId);
-  }
-
-  double _resolveDailyMinutes(AppSettingsData settings, int todayDay) {
-    final defaultMinutes = settings.dailyMinutesDefault.toDouble();
-    final rawJson = settings.minutesByWeekdayJson;
-    if (rawJson == null || rawJson.trim().isEmpty) {
-      return defaultMinutes;
-    }
-
-    try {
-      final decoded = jsonDecode(rawJson);
-      if (decoded is! Map) {
-        return defaultMinutes;
-      }
-
-      final weekdayKey = _weekdayKeyForDay(todayDay);
-      final value = decoded[weekdayKey];
-      if (value is num) {
-        return value.toDouble();
-      }
-      return defaultMinutes;
-    } catch (_) {
-      return defaultMinutes;
-    }
-  }
-
-  String _weekdayKeyForDay(int todayDay) {
-    final date = DateTime(1970, 1, 1).add(Duration(days: todayDay));
-    return switch (date.weekday) {
-      DateTime.monday => 'mon',
-      DateTime.tuesday => 'tue',
-      DateTime.wednesday => 'wed',
-      DateTime.thursday => 'thu',
-      DateTime.friday => 'fri',
-      DateTime.saturday => 'sat',
-      DateTime.sunday => 'sun',
-      _ => 'mon',
-    };
-  }
-
-  double _reviewBudgetRatio(AppSettingsData settings) {
-    return switch (settings.profile) {
-      'support' => 0.80,
-      'standard' => 0.70,
-      'accelerated' => 0.60,
-      _ => 0.70,
-    };
   }
 
   double _initialEfForProfile(String profile) {
@@ -263,5 +289,80 @@ class DailyPlanner {
     final withPage = coverageWindow.where((ayah) => ayah.pageMadina != null);
     final coverage = withPage.length / coverageWindow.length;
     return coverage < 0.90;
+  }
+
+  List<PlannedSession> _syncSessionsWithActualMinutes({
+    required List<PlannedSession> template,
+    required double minutesPlannedReviews,
+    required double minutesPlannedNew,
+    required bool revisionOnly,
+  }) {
+    if (template.isEmpty) {
+      return const <PlannedSession>[];
+    }
+
+    final reviewTotal = minutesPlannedReviews.round();
+    final newTotal = revisionOnly ? 0 : minutesPlannedNew.round();
+
+    final totalTemplateReview = template
+        .map((session) => session.plannedReviewMinutes)
+        .fold<int>(0, (sum, value) => sum + value);
+    final totalTemplateNew = template
+        .map((session) => session.plannedNewMinutes)
+        .fold<int>(0, (sum, value) => sum + value);
+
+    var reviewAssigned = 0;
+    var newAssigned = 0;
+
+    final sessions = <PlannedSession>[];
+    for (var i = 0; i < template.length; i++) {
+      final session = template[i];
+      final isLast = i == template.length - 1;
+
+      int assignedReview;
+      if (isLast) {
+        assignedReview = reviewTotal - reviewAssigned;
+      } else if (totalTemplateReview > 0) {
+        final weight = session.plannedReviewMinutes / totalTemplateReview;
+        assignedReview = (reviewTotal * weight).round();
+      } else {
+        assignedReview = (reviewTotal / template.length).round();
+      }
+      assignedReview = assignedReview.clamp(0, reviewTotal - reviewAssigned);
+      reviewAssigned += assignedReview;
+
+      int assignedNew = 0;
+      if (!revisionOnly) {
+        if (isLast) {
+          assignedNew = newTotal - newAssigned;
+        } else if (totalTemplateNew > 0) {
+          final weight = session.plannedNewMinutes / totalTemplateNew;
+          assignedNew = (newTotal * weight).round();
+        } else {
+          assignedNew = (newTotal / template.length).round();
+        }
+        assignedNew = assignedNew.clamp(0, newTotal - newAssigned);
+        newAssigned += assignedNew;
+      }
+
+      final focus = revisionOnly || assignedNew == 0
+          ? PlannedSessionFocus.reviewOnly
+          : PlannedSessionFocus.newAndReview;
+
+      sessions.add(
+        PlannedSession(
+          sessionLabel: session.sessionLabel,
+          focus: focus,
+          plannedMinutes: assignedReview + assignedNew,
+          plannedReviewMinutes: assignedReview,
+          plannedNewMinutes: assignedNew,
+          isTimed: session.isTimed,
+          startMinuteOfDay: session.startMinuteOfDay,
+          status: session.status,
+        ),
+      );
+    }
+
+    return sessions;
   }
 }

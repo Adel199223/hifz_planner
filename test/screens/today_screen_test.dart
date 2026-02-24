@@ -40,7 +40,13 @@ void main() {
     expect(find.byKey(const ValueKey('today_screen_root')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_reviews_section')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_new_section')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('today_sessions_section')), findsOneWidget);
     expect(find.byKey(ValueKey('today_review_row_$dueUnitId')), findsOneWidget);
+    expect(
+      find.byKey(ValueKey('today_open_companion_review_$dueUnitId')),
+      findsOneWidget,
+    );
     expect(find.textContaining('page_segment'), findsWidgets);
   });
 
@@ -73,8 +79,7 @@ void main() {
     );
     await pumpUntilFound(tester, gradeButton);
 
-    await tester.tap(gradeButton);
-    await tester.pumpAndSettle();
+    await _tapVisible(tester, gradeButton);
 
     final logs = await (db.select(db.reviewLog)
           ..where((tbl) => tbl.unitId.equals(dueUnitId))
@@ -127,8 +132,7 @@ void main() {
     final gradeButton = find.byKey(ValueKey('today_new_grade_${unitId}_q4'));
     await pumpUntilFound(tester, gradeButton);
 
-    await tester.tap(gradeButton);
-    await tester.pumpAndSettle();
+    await _tapVisible(tester, gradeButton);
 
     final logs = await (db.select(db.reviewLog)
           ..where((tbl) => tbl.unitId.equals(unitId))
@@ -194,7 +198,7 @@ void main() {
     final unit = plannedNewUnits.first;
     final openButton = find.byKey(ValueKey('today_open_reader_${unit.id}'));
     await pumpUntilFound(tester, openButton);
-    await tester.tap(openButton);
+    await _tapVisible(tester, openButton);
 
     final expectedRouteText = 'Reader route mode=page page=${unit.pageMadina} '
         'target=${unit.startSurah}:${unit.startAyah} '
@@ -202,6 +206,106 @@ void main() {
     await pumpUntilFound(tester, find.text(expectedRouteText));
 
     expect(find.text(expectedRouteText), findsOneWidget);
+  });
+
+  testWidgets('open companion review action navigates with mode=review',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_reviews_section')),
+    );
+
+    final companionButton =
+        find.byKey(ValueKey('today_open_companion_review_$dueUnitId'));
+    await pumpUntilFound(tester, companionButton);
+    await _tapVisible(tester, companionButton);
+
+    expect(
+      find.text('Companion route unitId=$dueUnitId mode=review'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('open companion new action navigates with mode=new',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_new_section')),
+    );
+
+    final plannedNewUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
+    expect(plannedNewUnits, isNotEmpty);
+
+    final unitId = plannedNewUnits.first.id;
+    final companionButton = find.byKey(ValueKey('today_open_companion_new_$unitId'));
+    await pumpUntilFound(tester, companionButton);
+    await _tapVisible(tester, companionButton);
+
+    expect(
+      find.text('Companion route unitId=$unitId mode=new'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('open in reader button is disabled when page metadata is missing',
@@ -240,6 +344,56 @@ void main() {
     expect(
       find.text('Page metadata required to open in Reader.'),
       findsWidgets,
+    );
+  });
+
+  testWidgets('debug seed button generates one new memorization unit',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 0,
+      maxNewPagesPerDay: 0,
+    );
+
+    await _pumpToday(tester, container);
+    expect(find.text('No planned new units left.'), findsOneWidget);
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('today_debug_seed_new_unit')),
+    );
+
+    final seededUnits = await (db.select(db.memUnit)
+          ..where(
+            (tbl) =>
+                tbl.kind.equals('page_segment') &
+                tbl.createdAtDay.equals(todayDay),
+          )
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+        .get();
+    expect(seededUnits, isNotEmpty);
+
+    final seededUnit = seededUnits.first;
+    expect(
+        find.byKey(ValueKey('today_new_row_${seededUnit.id}')), findsOneWidget);
+    expect(
+      find.byKey(ValueKey('today_open_companion_new_${seededUnit.id}')),
+      findsOneWidget,
     );
   });
 }
@@ -355,6 +509,13 @@ Future<void> _pumpToday(
   );
 }
 
+Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
 GoRouter _buildTodayRouter() {
   return GoRouter(
     initialLocation: '/today',
@@ -384,6 +545,18 @@ GoRouter _buildTodayRouter() {
                 'highlight=$highlightStartSurah:$highlightStartAyah-'
                 '$highlightEndSurah:$highlightEndAyah',
               ),
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/companion/chain',
+        builder: (_, state) {
+          final unitId = state.uri.queryParameters['unitId'] ?? 'missing';
+          final mode = state.uri.queryParameters['mode'] ?? 'missing';
+          return Scaffold(
+            body: Center(
+              child: Text('Companion route unitId=$unitId mode=$mode'),
             ),
           );
         },

@@ -283,6 +283,8 @@ class AppStrings {
   String get noPlannedNewUnitsLeft =>
       _t('no_planned_new_units_left', 'No planned new units left.');
   String get openInReader => _t('open_in_reader', 'Open in Reader');
+  String get openCompanionChain =>
+      _t('open_companion_chain', 'Open Companion Chain');
   String get pageMetadataRequiredToOpenInReader => _t(
         'page_metadata_required_to_open_in_reader',
         'Page metadata required to open in Reader.',
@@ -296,6 +298,27 @@ class AppStrings {
         _t('planned_new_minutes', 'Planned new minutes: {value}'),
         <String, Object>{'value': value},
       );
+  String reviewPressureLabel(Object value) => _fmt(
+        _t('review_pressure_label', 'Review pressure: {value}'),
+        <String, Object>{'value': value},
+      );
+  String get recoveryModeActive => _t(
+      'recovery_mode_active', 'Recovery mode active: new memorization paused');
+  String get todaySessions => _t('today_sessions', 'Today Sessions');
+  String get noSessionsPlanned =>
+      _t('no_sessions_planned', 'No sessions planned.');
+  String get newAndReviewFocus => _t('new_and_review_focus', 'New + Review');
+  String get reviewOnlyFocus => _t('review_only_focus', 'Review-only');
+  String get sessionStatusPending => _t('session_status_pending', 'pending');
+  String get sessionStatusCompleted =>
+      _t('session_status_completed', 'completed');
+  String get sessionStatusMissed => _t('session_status_missed', 'missed');
+  String get sessionStatusDueSoon => _t('session_status_due_soon', 'due-soon');
+  String sessionMinutes(int minutes) => _fmt(
+        _t('session_minutes', '{minutes} min'),
+        <String, Object>{'minutes': minutes},
+      );
+  String get untimedSessionLabel => _t('untimed_session_label', 'Untimed');
   String get failedToLoadTodayPlan =>
       _t('failed_to_load_today_plan', 'Failed to load today plan.');
   String get gradeSaved => _t('grade_saved', 'Grade saved.');
@@ -316,6 +339,87 @@ class AppStrings {
   String get forecastDeterministicSimulation => _t(
       'forecast_deterministic_simulation',
       'Forecast (Deterministic Simulation)');
+  String get automaticSchedulingTitle =>
+      _t('automatic_scheduling_title', 'Automatic Scheduling');
+  String get twoSessionsPerDay =>
+      _t('two_sessions_per_day', '2 sessions per day');
+  String get setExactTimesQuestion =>
+      _t('set_exact_times_question', 'Set exact times?');
+  String sessionTimeLabel(String sessionLabel, String value) => _fmt(
+        _t('session_time_label', 'Session {session}: {value}'),
+        <String, Object>{'session': sessionLabel, 'value': value},
+      );
+  String get studyDaysLabel => _t('study_days_label', 'Study days');
+  String get advancedSchedulingMode =>
+      _t('advanced_scheduling_mode', 'Advanced scheduling mode');
+  String get availabilityModelLabel =>
+      _t('availability_model_label', 'Availability model');
+  String get availabilityMinutesPerDay =>
+      _t('availability_minutes_per_day', 'Minutes per day');
+  String get availabilityMinutesPerWeek =>
+      _t('availability_minutes_per_week', 'Minutes per week');
+  String get availabilitySpecificHours =>
+      _t('availability_specific_hours', 'Specific hours (windows)');
+  String get minutesPerDayLabel =>
+      _t('minutes_per_day_label', 'Minutes per day');
+  String get minutesPerWeekLabel =>
+      _t('minutes_per_week_label', 'Minutes per week');
+  String get timingStrategyLabel =>
+      _t('timing_strategy_label', 'Timing strategy');
+  String get timingStrategyUntimed => _t('timing_strategy_untimed', 'Untimed');
+  String get timingStrategyFixed => _t('timing_strategy_fixed', 'Fixed times');
+  String get timingStrategyAuto => _t('timing_strategy_auto', 'Auto-placement');
+  String get flexOutsideWindowsLabel => _t(
+        'flex_outside_windows_label',
+        'Allow placement outside windows',
+      );
+  String get revisionOnlyDaysLabel =>
+      _t('revision_only_days_label', 'Revision-only days');
+  String get specificHoursWindowsLabel =>
+      _t('specific_hours_windows_label', 'Specific hours windows');
+  String get addWindowLabel => _t('add_window_label', 'Add window');
+  String get noWindowsConfigured =>
+      _t('no_windows_configured', 'No windows configured.');
+  String get noWeeklyPlanYet =>
+      _t('no_weekly_plan_yet', 'No weekly plan available yet.');
+  String get weeklyCalendarTitle =>
+      _t('weekly_calendar_title', 'Weekly Calendar (Next 7 Days)');
+  String get dayMarkedHoliday =>
+      _t('day_marked_holiday', 'Day marked as holiday.');
+  String get dayNotEnabled =>
+      _t('day_not_enabled', 'Day is not enabled for study.');
+  String weeklySessionLine(
+    String sessionLabel,
+    String focus,
+    int minutes,
+    String timeLabel,
+    String status,
+  ) =>
+      _fmt(
+        _t(
+          'weekly_session_line',
+          '{session} • {focus} • {minutes} min • {time} • {status}',
+        ),
+        <String, Object>{
+          'session': sessionLabel,
+          'focus': focus,
+          'minutes': minutes,
+          'time': timeLabel,
+          'status': status,
+        },
+      );
+  String get skipDayLabel => _t('skip_day_label', 'Skip day / holiday');
+  String overrideSessionTime(String sessionLabel) => _fmt(
+        _t('override_session_time', 'Override Session {session} time'),
+        <String, Object>{'session': sessionLabel},
+      );
+  String get weekdayShortMon => _t('weekday_short_mon', 'Mon');
+  String get weekdayShortTue => _t('weekday_short_tue', 'Tue');
+  String get weekdayShortWed => _t('weekday_short_wed', 'Wed');
+  String get weekdayShortThu => _t('weekday_short_thu', 'Thu');
+  String get weekdayShortFri => _t('weekday_short_fri', 'Fri');
+  String get weekdayShortSat => _t('weekday_short_sat', 'Sat');
+  String get weekdayShortSun => _t('weekday_short_sun', 'Sun');
   String get runForecast => _t('run_forecast', 'Run Forecast');
   String get running => _t('running', 'Running...');
   String estimatedCompletion(String date) => _fmt(
@@ -438,6 +542,104 @@ class AppStrings {
         _t('forecast_failed', 'Forecast failed: {error}'),
         <String, Object>{'error': error},
       );
+
+  String get companionProgressiveRevealTitle => _t(
+        'companion_progressive_reveal_title',
+        'Progressive Reveal Chain',
+      );
+  String companionCurrentVersePosition(int current, int total) => _fmt(
+        _t('companion_current_verse_position',
+            'Current verse: {current}/{total}'),
+        <String, Object>{'current': current, 'total': total},
+      );
+  String get companionActiveHintLabel =>
+      _t('companion_active_hint_label', 'Active hint');
+  String get companionHintLevelH0 =>
+      _t('companion_hint_level_h0', 'No hint requested yet.');
+  String get companionHintUnavailable =>
+      _t('companion_hint_unavailable', 'Hint unavailable');
+  String get companionTafsirCuePlaceholder => _t(
+        'companion_tafsir_cue_placeholder',
+        'Meaning cue (Tafsir al-Muyassar placeholder)',
+      );
+  String get companionPlayCurrentAyah =>
+      _t('companion_play_current_ayah', 'Play current ayah');
+  String get companionAutoplayNextAyah =>
+      _t('companion_autoplay_next_ayah', 'Autoplay next ayah');
+  String get companionAutoplayOn => _t('companion_autoplay_on', 'Autoplay on');
+  String get companionAutoplayOff =>
+      _t('companion_autoplay_off', 'Autoplay off');
+  String get companionRecordStart =>
+      _t('companion_record_start', 'Record / Start');
+  String get companionHintButton => _t('companion_hint_button', 'Hint');
+  String get companionRepeatButton => _t('companion_repeat_button', 'Repeat');
+  String get companionNextButton => _t('companion_next_button', 'Next');
+  String companionStageProgress(int current, int total) => _fmt(
+        _t('companion_stage_progress', 'Stage {current}/{total}'),
+        <String, Object>{'current': current, 'total': total},
+      );
+  String get companionStageGuidedVisible =>
+      _t('companion_stage_guided_visible', 'Guided visible');
+  String get companionStageCuedRecall =>
+      _t('companion_stage_cued_recall', 'Cued recall');
+  String get companionStageHiddenReveal =>
+      _t('companion_stage_hidden_reveal', 'Hidden reveal');
+  String get companionSkipStageButton =>
+      _t('companion_skip_stage_button', 'Skip Stage');
+  String get companionSkipStageTitle =>
+      _t('companion_skip_stage_title', 'Skip current stage?');
+  String companionSkipStageBody(String stageLabel) => _fmt(
+        _t(
+          'companion_skip_stage_body',
+          'Skip {stage} for this run and continue to the next stage.',
+        ),
+        <String, Object>{'stage': stageLabel},
+      );
+  String get companionSkipStageConfirm =>
+      _t('companion_skip_stage_confirm', 'Skip');
+  String get companionStageSkipped =>
+      _t('companion_stage_skipped', 'Stage skipped.');
+  String get companionMarkCorrect =>
+      _t('companion_mark_correct', 'Mark correct');
+  String get companionMarkIncorrect =>
+      _t('companion_mark_incorrect', 'Mark incorrect');
+  String companionFailedToSaveAttempt(String error) => _fmt(
+        _t(
+          'companion_failed_to_save_attempt',
+          'Failed to save companion attempt: {error}',
+        ),
+        <String, Object>{'error': error},
+      );
+  String get companionRepeatPrompt => _t(
+        'companion_repeat_prompt',
+        'Repeat the current verse and press Record/Start when ready.',
+      );
+  String get companionVersePassed => _t('companion_verse_passed', 'Passed');
+  String get companionVerseRevealed =>
+      _t('companion_verse_revealed', 'Revealed');
+  String get companionVerseHidden => _t('companion_verse_hidden', 'Hidden');
+  String get companionHiddenPlaceholder =>
+      _t('companion_hidden_placeholder', '••••••••••');
+  String companionProficiency(String value) => _fmt(
+        _t('companion_proficiency', 'Proficiency: {value}'),
+        <String, Object>{'value': value},
+      );
+  String get companionSessionComplete =>
+      _t('companion_session_complete', 'Session complete');
+  String companionSummaryPassed(int passed, int total) => _fmt(
+        _t('companion_summary_passed', 'Passed: {passed}/{total}'),
+        <String, Object>{'passed': passed, 'total': total},
+      );
+  String companionSummaryHint(String value) => _fmt(
+        _t('companion_summary_hint', 'Average hint level: {value}'),
+        <String, Object>{'value': value},
+      );
+  String companionSummaryStrength(String value) => _fmt(
+        _t('companion_summary_strength', 'Average retrieval strength: {value}'),
+        <String, Object>{'value': value},
+      );
+  String get companionNoSessionState =>
+      _t('companion_no_session_state', 'No companion session state.');
   String get enterAllQPercentagesOrBlank => _t(
         'enter_all_q_percentages_or_blank',
         'Enter all q percentages (5,4,3,2,0) or leave all blank.',
@@ -756,6 +958,99 @@ class AppStrings {
       'ayah_count': "Nombre d'ayahs",
       'about_title': 'À propos',
       'open_hifz_plan': 'Ouvrir le plan de Hifz',
+      'open_companion_chain': 'Ouvrir la chaine compagnon',
+      'planned_review_minutes': 'Minutes de revision prevues : {value}',
+      'planned_new_minutes': 'Minutes de nouveau prevues : {value}',
+      'review_pressure_label': 'Pression de revision : {value}',
+      'recovery_mode_active':
+          'Mode recuperation actif : nouvelle memorisation en pause',
+      'today_sessions': "Sessions d'aujourd'hui",
+      'no_sessions_planned': 'Aucune session planifiee.',
+      'new_and_review_focus': 'Nouveau + revision',
+      'review_only_focus': 'Revision uniquement',
+      'session_status_pending': 'en attente',
+      'session_status_completed': 'terminee',
+      'session_status_missed': 'manquee',
+      'session_status_due_soon': 'bientot due',
+      'session_minutes': '{minutes} min',
+      'untimed_session_label': 'Sans heure',
+      'automatic_scheduling_title': 'Planification automatique',
+      'two_sessions_per_day': '2 sessions par jour',
+      'set_exact_times_question': 'Definir des heures exactes ?',
+      'session_time_label': 'Session {session} : {value}',
+      'study_days_label': "Jours d'etude",
+      'advanced_scheduling_mode': 'Mode de planification avance',
+      'availability_model_label': 'Modele de disponibilite',
+      'availability_minutes_per_day': 'Minutes par jour',
+      'availability_minutes_per_week': 'Minutes par semaine',
+      'availability_specific_hours': 'Heures specifiques (plages)',
+      'minutes_per_day_label': 'Minutes par jour',
+      'minutes_per_week_label': 'Minutes par semaine',
+      'timing_strategy_label': 'Strategie horaire',
+      'timing_strategy_untimed': 'Sans heure',
+      'timing_strategy_fixed': 'Heures fixes',
+      'timing_strategy_auto': 'Placement automatique',
+      'flex_outside_windows_label': 'Autoriser hors des plages',
+      'revision_only_days_label': 'Jours revision uniquement',
+      'specific_hours_windows_label': 'Plages horaires specifiques',
+      'add_window_label': 'Ajouter une plage',
+      'no_windows_configured': 'Aucune plage configuree.',
+      'no_weekly_plan_yet': 'Aucun plan hebdomadaire disponible.',
+      'weekly_calendar_title': 'Calendrier hebdomadaire (7 prochains jours)',
+      'day_marked_holiday': 'Jour marque comme ferie.',
+      'day_not_enabled': "Jour non active pour l'etude.",
+      'weekly_session_line':
+          '{session} • {focus} • {minutes} min • {time} • {status}',
+      'skip_day_label': 'Ignorer le jour / ferie',
+      'override_session_time': 'Remplacer heure Session {session}',
+      'weekday_short_mon': 'Lun',
+      'weekday_short_tue': 'Mar',
+      'weekday_short_wed': 'Mer',
+      'weekday_short_thu': 'Jeu',
+      'weekday_short_fri': 'Ven',
+      'weekday_short_sat': 'Sam',
+      'weekday_short_sun': 'Dim',
+      'companion_progressive_reveal_title': 'Chaine de revelation progressive',
+      'companion_current_verse_position': 'Ayah actuelle : {current}/{total}',
+      'companion_active_hint_label': 'Indice actif',
+      'companion_hint_level_h0': 'Aucun indice demande.',
+      'companion_hint_unavailable': 'Indice indisponible',
+      'companion_tafsir_cue_placeholder':
+          'Indice de sens (placeholder Tafsir al-Muyassar)',
+      'companion_play_current_ayah': "Ecouter l'ayah actuelle",
+      'companion_autoplay_next_ayah': "Lecture auto ayah suivante",
+      'companion_autoplay_on': 'Lecture auto activee',
+      'companion_autoplay_off': 'Lecture auto desactivee',
+      'companion_record_start': 'Enregistrer / Demarrer',
+      'companion_hint_button': 'Indice',
+      'companion_repeat_button': 'Repeter',
+      'companion_next_button': 'Suivant',
+      'companion_stage_progress': 'Etape {current}/{total}',
+      'companion_stage_guided_visible': 'Guide visible',
+      'companion_stage_cued_recall': 'Rappel avec indice',
+      'companion_stage_hidden_reveal': 'Revelation cachee',
+      'companion_skip_stage_button': "Passer l'etape",
+      'companion_skip_stage_title': "Passer l'etape en cours ?",
+      'companion_skip_stage_body':
+          'Passer {stage} pour cette session et continuer a l\'etape suivante.',
+      'companion_skip_stage_confirm': 'Passer',
+      'companion_stage_skipped': 'Etape passee.',
+      'companion_mark_correct': 'Marquer correct',
+      'companion_mark_incorrect': 'Marquer incorrect',
+      'companion_failed_to_save_attempt':
+          "Echec de l'enregistrement de la tentative compagnon : {error}",
+      'companion_repeat_prompt':
+          "Repetez l'ayah actuelle puis appuyez sur Enregistrer/Demarrer.",
+      'companion_verse_passed': 'Reussie',
+      'companion_verse_revealed': 'Revelee',
+      'companion_verse_hidden': 'Cachee',
+      'companion_hidden_placeholder': '••••••••••',
+      'companion_proficiency': 'Maitrise : {value}',
+      'companion_session_complete': 'Session terminee',
+      'companion_summary_passed': 'Reussies : {passed}/{total}',
+      'companion_summary_hint': "Niveau d'indice moyen : {value}",
+      'companion_summary_strength': 'Force moyenne de recuperation : {value}',
+      'companion_no_session_state': 'Aucun etat de session compagnon.',
     },
     AppLanguage.portuguese: <String, String>{
       'close': 'Fechar',
@@ -915,6 +1210,99 @@ class AppStrings {
       'ayah_count': 'Contagem de ayahs',
       'about_title': 'Sobre',
       'open_hifz_plan': 'Abrir Plano de Hifz',
+      'open_companion_chain': 'Abrir cadeia do companheiro',
+      'planned_review_minutes': 'Minutos de revisao planejados: {value}',
+      'planned_new_minutes': 'Minutos de novo planejados: {value}',
+      'review_pressure_label': 'Pressao de revisao: {value}',
+      'recovery_mode_active':
+          'Modo de recuperacao ativo: nova memorizacao pausada',
+      'today_sessions': 'Sessoes de hoje',
+      'no_sessions_planned': 'Nenhuma sessao planejada.',
+      'new_and_review_focus': 'Novo + revisao',
+      'review_only_focus': 'Apenas revisao',
+      'session_status_pending': 'pendente',
+      'session_status_completed': 'concluida',
+      'session_status_missed': 'perdida',
+      'session_status_due_soon': 'vence em breve',
+      'session_minutes': '{minutes} min',
+      'untimed_session_label': 'Sem horario',
+      'automatic_scheduling_title': 'Agendamento automatico',
+      'two_sessions_per_day': '2 sessoes por dia',
+      'set_exact_times_question': 'Definir horarios exatos?',
+      'session_time_label': 'Sessao {session}: {value}',
+      'study_days_label': 'Dias de estudo',
+      'advanced_scheduling_mode': 'Modo de agendamento avancado',
+      'availability_model_label': 'Modelo de disponibilidade',
+      'availability_minutes_per_day': 'Minutos por dia',
+      'availability_minutes_per_week': 'Minutos por semana',
+      'availability_specific_hours': 'Horas especificas (janelas)',
+      'minutes_per_day_label': 'Minutos por dia',
+      'minutes_per_week_label': 'Minutos por semana',
+      'timing_strategy_label': 'Estrategia de horario',
+      'timing_strategy_untimed': 'Sem horario',
+      'timing_strategy_fixed': 'Horarios fixos',
+      'timing_strategy_auto': 'Posicionamento automatico',
+      'flex_outside_windows_label': 'Permitir fora das janelas',
+      'revision_only_days_label': 'Dias somente revisao',
+      'specific_hours_windows_label': 'Janelas de horas especificas',
+      'add_window_label': 'Adicionar janela',
+      'no_windows_configured': 'Nenhuma janela configurada.',
+      'no_weekly_plan_yet': 'Nenhum plano semanal disponivel.',
+      'weekly_calendar_title': 'Calendario semanal (proximos 7 dias)',
+      'day_marked_holiday': 'Dia marcado como feriado.',
+      'day_not_enabled': 'Dia nao habilitado para estudo.',
+      'weekly_session_line':
+          '{session} • {focus} • {minutes} min • {time} • {status}',
+      'skip_day_label': 'Pular dia / feriado',
+      'override_session_time': 'Substituir horario da Sessao {session}',
+      'weekday_short_mon': 'Seg',
+      'weekday_short_tue': 'Ter',
+      'weekday_short_wed': 'Qua',
+      'weekday_short_thu': 'Qui',
+      'weekday_short_fri': 'Sex',
+      'weekday_short_sat': 'Sab',
+      'weekday_short_sun': 'Dom',
+      'companion_progressive_reveal_title': 'Cadeia de revelacao progressiva',
+      'companion_current_verse_position': 'Ayah atual: {current}/{total}',
+      'companion_active_hint_label': 'Dica ativa',
+      'companion_hint_level_h0': 'Nenhuma dica solicitada.',
+      'companion_hint_unavailable': 'Dica indisponivel',
+      'companion_tafsir_cue_placeholder':
+          'Dica de significado (placeholder Tafsir al-Muyassar)',
+      'companion_play_current_ayah': 'Ouvir ayah atual',
+      'companion_autoplay_next_ayah': 'Reproducao auto da proxima ayah',
+      'companion_autoplay_on': 'Reproducao auto ativada',
+      'companion_autoplay_off': 'Reproducao auto desativada',
+      'companion_record_start': 'Gravar / Iniciar',
+      'companion_hint_button': 'Dica',
+      'companion_repeat_button': 'Repetir',
+      'companion_next_button': 'Proximo',
+      'companion_stage_progress': 'Etapa {current}/{total}',
+      'companion_stage_guided_visible': 'Guiado visivel',
+      'companion_stage_cued_recall': 'Recordacao por pista',
+      'companion_stage_hidden_reveal': 'Revelacao oculta',
+      'companion_skip_stage_button': 'Pular etapa',
+      'companion_skip_stage_title': 'Pular etapa atual?',
+      'companion_skip_stage_body':
+          'Pular {stage} nesta sessao e continuar para a proxima etapa.',
+      'companion_skip_stage_confirm': 'Pular',
+      'companion_stage_skipped': 'Etapa pulada.',
+      'companion_mark_correct': 'Marcar correto',
+      'companion_mark_incorrect': 'Marcar incorreto',
+      'companion_failed_to_save_attempt':
+          'Falha ao salvar tentativa do companheiro: {error}',
+      'companion_repeat_prompt':
+          'Repita a ayah atual e pressione Gravar/Iniciar quando estiver pronto.',
+      'companion_verse_passed': 'Aprovada',
+      'companion_verse_revealed': 'Revelada',
+      'companion_verse_hidden': 'Oculta',
+      'companion_hidden_placeholder': '••••••••••',
+      'companion_proficiency': 'Proficiencia: {value}',
+      'companion_session_complete': 'Sessao concluida',
+      'companion_summary_passed': 'Aprovadas: {passed}/{total}',
+      'companion_summary_hint': 'Nivel medio de dica: {value}',
+      'companion_summary_strength': 'Forca media de recuperacao: {value}',
+      'companion_no_session_state': 'Nenhum estado de sessao do companheiro.',
     },
     AppLanguage.arabic: <String, String>{
       'menu': 'القائمة',
@@ -1091,6 +1479,97 @@ class AppStrings {
       'ayah_count': 'عدد الآيات',
       'about_title': 'حول',
       'open_hifz_plan': 'فتح خطة الحفظ',
+      'open_companion_chain': 'فتح سلسلة المرافق',
+      'planned_review_minutes': 'دقائق المراجعة المخططة: {value}',
+      'planned_new_minutes': 'دقائق الجديد المخططة: {value}',
+      'review_pressure_label': 'ضغط المراجعة: {value}',
+      'recovery_mode_active': 'وضع التعافي نشط: إيقاف الحفظ الجديد مؤقتًا',
+      'today_sessions': 'جلسات اليوم',
+      'no_sessions_planned': 'لا توجد جلسات مخططة.',
+      'new_and_review_focus': 'جديد + مراجعة',
+      'review_only_focus': 'مراجعة فقط',
+      'session_status_pending': 'قيد الانتظار',
+      'session_status_completed': 'مكتملة',
+      'session_status_missed': 'فاتت',
+      'session_status_due_soon': 'مستحقة قريبًا',
+      'session_minutes': '{minutes} دقيقة',
+      'untimed_session_label': 'غير محددة الوقت',
+      'automatic_scheduling_title': 'الجدولة التلقائية',
+      'two_sessions_per_day': 'جلستان يوميًا',
+      'set_exact_times_question': 'تحديد أوقات دقيقة؟',
+      'session_time_label': 'الجلسة {session}: {value}',
+      'study_days_label': 'أيام الدراسة',
+      'advanced_scheduling_mode': 'وضع الجدولة المتقدم',
+      'availability_model_label': 'نموذج التوفر',
+      'availability_minutes_per_day': 'دقائق لكل يوم',
+      'availability_minutes_per_week': 'دقائق لكل أسبوع',
+      'availability_specific_hours': 'ساعات محددة (نوافذ)',
+      'minutes_per_day_label': 'الدقائق لكل يوم',
+      'minutes_per_week_label': 'الدقائق لكل أسبوع',
+      'timing_strategy_label': 'استراتيجية التوقيت',
+      'timing_strategy_untimed': 'غير محدد الوقت',
+      'timing_strategy_fixed': 'أوقات ثابتة',
+      'timing_strategy_auto': 'توزيع تلقائي',
+      'flex_outside_windows_label': 'السماح خارج النوافذ',
+      'revision_only_days_label': 'أيام مراجعة فقط',
+      'specific_hours_windows_label': 'نوافذ الساعات المحددة',
+      'add_window_label': 'إضافة نافذة',
+      'no_windows_configured': 'لا توجد نوافذ مهيأة.',
+      'no_weekly_plan_yet': 'لا توجد خطة أسبوعية متاحة حتى الآن.',
+      'weekly_calendar_title': 'التقويم الأسبوعي (الأيام السبعة القادمة)',
+      'day_marked_holiday': 'اليوم محدد كإجازة.',
+      'day_not_enabled': 'اليوم غير مفعّل للدراسة.',
+      'weekly_session_line':
+          '{session} • {focus} • {minutes} دقيقة • {time} • {status}',
+      'skip_day_label': 'تخطي اليوم / إجازة',
+      'override_session_time': 'تجاوز وقت الجلسة {session}',
+      'weekday_short_mon': 'الإثنين',
+      'weekday_short_tue': 'الثلاثاء',
+      'weekday_short_wed': 'الأربعاء',
+      'weekday_short_thu': 'الخميس',
+      'weekday_short_fri': 'الجمعة',
+      'weekday_short_sat': 'السبت',
+      'weekday_short_sun': 'الأحد',
+      'companion_progressive_reveal_title': 'سلسلة الكشف التدريجي',
+      'companion_current_verse_position': 'الآية الحالية: {current}/{total}',
+      'companion_active_hint_label': 'التلميح النشط',
+      'companion_hint_level_h0': 'لم يتم طلب تلميح بعد.',
+      'companion_hint_unavailable': 'التلميح غير متاح',
+      'companion_tafsir_cue_placeholder':
+          'إشارة المعنى (عنصر نائب لتفسير الميسر)',
+      'companion_play_current_ayah': 'تشغيل الآية الحالية',
+      'companion_autoplay_next_ayah': 'تشغيل تلقائي للآية التالية',
+      'companion_autoplay_on': 'التشغيل التلقائي مفعل',
+      'companion_autoplay_off': 'التشغيل التلقائي متوقف',
+      'companion_record_start': 'تسجيل / بدء',
+      'companion_hint_button': 'تلميح',
+      'companion_repeat_button': 'إعادة',
+      'companion_next_button': 'التالي',
+      'companion_stage_progress': 'المرحلة {current}/{total}',
+      'companion_stage_guided_visible': 'موجّه ظاهر',
+      'companion_stage_cued_recall': 'استرجاع بالمفتاح',
+      'companion_stage_hidden_reveal': 'كشف مخفي',
+      'companion_skip_stage_button': 'تخطي المرحلة',
+      'companion_skip_stage_title': 'تخطي المرحلة الحالية؟',
+      'companion_skip_stage_body':
+          'تخطي {stage} في هذه الجلسة والمتابعة إلى المرحلة التالية.',
+      'companion_skip_stage_confirm': 'تخطي',
+      'companion_stage_skipped': 'تم تخطي المرحلة.',
+      'companion_mark_correct': 'تحديد كصحيح',
+      'companion_mark_incorrect': 'تحديد كغير صحيح',
+      'companion_failed_to_save_attempt': 'تعذر حفظ محاولة المرافق: {error}',
+      'companion_repeat_prompt':
+          'أعد الآية الحالية ثم اضغط تسجيل/بدء عندما تكون جاهزًا.',
+      'companion_verse_passed': 'تم الاجتياز',
+      'companion_verse_revealed': 'تم الكشف',
+      'companion_verse_hidden': 'مخفية',
+      'companion_hidden_placeholder': '••••••••••',
+      'companion_proficiency': 'مستوى الإتقان: {value}',
+      'companion_session_complete': 'اكتملت الجلسة',
+      'companion_summary_passed': 'المجتاز: {passed}/{total}',
+      'companion_summary_hint': 'متوسط مستوى التلميح: {value}',
+      'companion_summary_strength': 'متوسط قوة الاسترجاع: {value}',
+      'companion_no_session_state': 'لا توجد حالة جلسة للمرافق.',
       'basmala_translation': 'بسم الله الرحمن الرحيم',
     },
   };

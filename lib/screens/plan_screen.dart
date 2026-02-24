@@ -7,6 +7,9 @@ import '../data/providers/database_providers.dart';
 import '../data/services/calibration_service.dart';
 import '../data/services/forecast_simulation_service.dart';
 import '../data/services/onboarding_defaults.dart';
+import '../data/services/scheduling/scheduling_preferences_codec.dart';
+import '../data/services/scheduling/weekly_plan_generator.dart';
+import '../data/time/local_day_time.dart';
 import '../l10n/app_strings.dart';
 
 enum _TimeInputMode { weekly, weekday }
@@ -64,6 +67,16 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
   ForecastSimulationResult? _forecastResult;
   String? _forecastError;
 
+  SchedulingPreferencesV1 _schedulingPreferences =
+      SchedulingPreferencesV1.defaults;
+  SchedulingOverridesV1 _schedulingOverrides = SchedulingOverridesV1.empty;
+  WeeklyPlan? _weeklyPlan;
+  bool _isLoadingScheduling = true;
+  bool _isRefreshingWeeklyPlan = false;
+  String? _weeklyPlanError;
+  late final TextEditingController _minutesPerDayController;
+  late final TextEditingController _minutesPerWeekController;
+
   AppStrings get _strings =>
       AppStrings.of(ref.read(appPreferencesProvider).language);
 
@@ -77,7 +90,14 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     _avgReviewMinutesController = TextEditingController(
       text: defaults.avgReview.toStringAsFixed(1),
     );
+    _minutesPerDayController = TextEditingController(
+      text: _schedulingPreferences.minutesPerDayDefault.toString(),
+    );
+    _minutesPerWeekController = TextEditingController(
+      text: _schedulingPreferences.minutesPerWeekDefault.toString(),
+    );
     Future<void>.microtask(_refreshCalibrationPreview);
+    Future<void>.microtask(_loadSchedulingState);
   }
 
   @override
@@ -90,6 +110,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     _maxNewUnitsController.dispose();
     _avgNewMinutesController.dispose();
     _avgReviewMinutesController.dispose();
+    _minutesPerDayController.dispose();
+    _minutesPerWeekController.dispose();
 
     _newDurationController.dispose();
     _newAyahCountController.dispose();
@@ -163,6 +185,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     try {
       final settingsRepo = ref.read(settingsRepoProvider);
       final progressRepo = ref.read(progressRepoProvider);
+      final projectionEngine = ref.read(planningProjectionEngineProvider);
 
       final weekdayJson = encodeWeekdayMinutesJson(weekdayMinutes);
       final dailyDefault = deriveDailyDefault(weekdayMinutes);
@@ -177,8 +200,13 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         avgNewMinutesPerAyah: avgNew,
         avgReviewMinutesPerAyah: avgReview,
         requirePageMetadata: _requirePageMetadata ? 1 : 0,
+        schedulingPrefsJson:
+            projectionEngine.encodePreferences(_schedulingPreferences),
+        schedulingOverridesJson:
+            projectionEngine.encodeOverrides(_schedulingOverrides),
       );
       await progressRepo.getCursor();
+      await _refreshWeeklyPlan();
 
       if (!mounted) {
         return;
@@ -339,6 +367,280 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     }
   }
 
+  Future<void> _loadSchedulingState() async {
+    setState(() {
+      _isLoadingScheduling = true;
+      _weeklyPlanError = null;
+    });
+    try {
+      final settings = await ref.read(settingsRepoProvider).getSettings();
+      final projectionEngine = ref.read(planningProjectionEngineProvider);
+      final preferences = projectionEngine.preferencesFromSettings(settings);
+      final overrides = projectionEngine.overridesFromSettings(settings);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _schedulingPreferences = preferences;
+        _schedulingOverrides = overrides;
+        _minutesPerDayController.text =
+            preferences.minutesPerDayDefault.toString();
+        _minutesPerWeekController.text =
+            preferences.minutesPerWeekDefault.toString();
+        _isLoadingScheduling = false;
+      });
+      await _refreshWeeklyPlan();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isLoadingScheduling = false;
+        _weeklyPlanError = error.toString();
+      });
+    }
+  }
+
+  Future<void> _refreshWeeklyPlan() async {
+    if (_isRefreshingWeeklyPlan) {
+      return;
+    }
+    setState(() {
+      _isRefreshingWeeklyPlan = true;
+      _weeklyPlanError = null;
+    });
+
+    try {
+      final settings = await ref.read(settingsRepoProvider).getSettings();
+      final projectionEngine = ref.read(planningProjectionEngineProvider);
+      final startDay = localDayIndex(DateTime.now().toLocal());
+      final weeklyPlan = await projectionEngine.generateWeeklyPlan(
+        startDay: startDay,
+        horizonDays: 7,
+        settings: settings,
+        scheduleRepo: ref.read(scheduleRepoProvider),
+        quranRepo: ref.read(quranRepoProvider),
+        preferences: _schedulingPreferences,
+        overrides: _schedulingOverrides,
+      );
+
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _weeklyPlan = weeklyPlan;
+        _isRefreshingWeeklyPlan = false;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isRefreshingWeeklyPlan = false;
+        _weeklyPlanError = error.toString();
+      });
+    }
+  }
+
+  void _updateSchedulingPreferences(SchedulingPreferencesV1 next) {
+    setState(() {
+      _schedulingPreferences = next;
+    });
+    Future<void>.microtask(_refreshWeeklyPlan);
+  }
+
+  void _toggleStudyDay(int weekday) {
+    final next = <int>{..._schedulingPreferences.enabledWeekdays};
+    if (next.contains(weekday)) {
+      next.remove(weekday);
+    } else {
+      next.add(weekday);
+    }
+    if (next.isEmpty) {
+      next.add(weekday);
+    }
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(enabledWeekdays: next),
+    );
+  }
+
+  void _toggleRevisionOnlyDay(int weekday) {
+    final next = <int>{..._schedulingPreferences.revisionOnlyWeekdays};
+    if (next.contains(weekday)) {
+      next.remove(weekday);
+    } else {
+      next.add(weekday);
+    }
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(revisionOnlyWeekdays: next),
+    );
+  }
+
+  Future<void> _pickSessionTime({required bool sessionA}) async {
+    final initialMinute = sessionA
+        ? _schedulingPreferences.sessionATimeMinute ?? 7 * 60
+        : _schedulingPreferences.sessionBTimeMinute ?? 19 * 60;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: initialMinute ~/ 60,
+        minute: initialMinute % 60,
+      ),
+    );
+    if (picked == null) {
+      return;
+    }
+    final minute = (picked.hour * 60) + picked.minute;
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(
+        sessionATimeMinute:
+            sessionA ? minute : _schedulingPreferences.sessionATimeMinute,
+        sessionBTimeMinute:
+            sessionA ? _schedulingPreferences.sessionBTimeMinute : minute,
+      ),
+    );
+  }
+
+  List<TimeWindow> _windowsForWeekday(int weekday) {
+    return List<TimeWindow>.from(
+      _schedulingPreferences.windowsByWeekday[weekday] ?? const <TimeWindow>[],
+    );
+  }
+
+  void _addWindowForWeekday(int weekday) {
+    final windowsByWeekday = Map<int, List<TimeWindow>>.from(
+        _schedulingPreferences.windowsByWeekday);
+    final list = _windowsForWeekday(weekday);
+    list.add(
+      const TimeWindow(
+        startMinute: 6 * 60,
+        endMinute: 7 * 60,
+      ),
+    );
+    windowsByWeekday[weekday] = list;
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(windowsByWeekday: windowsByWeekday),
+    );
+  }
+
+  void _removeWindowForWeekday(int weekday, int index) {
+    final windowsByWeekday = Map<int, List<TimeWindow>>.from(
+        _schedulingPreferences.windowsByWeekday);
+    final list = _windowsForWeekday(weekday);
+    if (index < 0 || index >= list.length) {
+      return;
+    }
+    list.removeAt(index);
+    if (list.isEmpty) {
+      windowsByWeekday.remove(weekday);
+    } else {
+      windowsByWeekday[weekday] = list;
+    }
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(windowsByWeekday: windowsByWeekday),
+    );
+  }
+
+  Future<void> _editWindowForWeekday(int weekday, int index) async {
+    final windows = _windowsForWeekday(weekday);
+    if (index < 0 || index >= windows.length) {
+      return;
+    }
+    final target = windows[index];
+
+    final start = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: target.startMinute ~/ 60,
+        minute: target.startMinute % 60,
+      ),
+    );
+    if (start == null) {
+      return;
+    }
+    final end = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: target.endMinute ~/ 60,
+        minute: target.endMinute % 60,
+      ),
+    );
+    if (end == null) {
+      return;
+    }
+
+    final nextWindow = TimeWindow(
+      startMinute: (start.hour * 60) + start.minute,
+      endMinute: (end.hour * 60) + end.minute,
+    ).normalized();
+    final windowsByWeekday = Map<int, List<TimeWindow>>.from(
+        _schedulingPreferences.windowsByWeekday);
+    final nextList = _windowsForWeekday(weekday);
+    nextList[index] = nextWindow;
+    windowsByWeekday[weekday] = nextList;
+
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(windowsByWeekday: windowsByWeekday),
+    );
+  }
+
+  void _setDaySkipOverride(int dayIndex, bool skip) {
+    final current = _schedulingOverrides[dayIndex];
+    final next = SchedulingDayOverrideV1(
+      dayIndex: dayIndex,
+      skipDay: skip,
+      revisionOnly: current?.revisionOnly,
+      overrideMinutes: current?.overrideMinutes,
+      sessionATimeMinute: current?.sessionATimeMinute,
+      sessionBTimeMinute: current?.sessionBTimeMinute,
+    );
+
+    setState(() {
+      _schedulingOverrides = _schedulingOverrides.copyWithOverride(next);
+    });
+    Future<void>.microtask(_refreshWeeklyPlan);
+  }
+
+  Future<void> _setDaySessionOverrideTime({
+    required int dayIndex,
+    required bool sessionA,
+  }) async {
+    final current = _schedulingOverrides[dayIndex];
+    final initialMinute = sessionA
+        ? current?.sessionATimeMinute ??
+            _schedulingPreferences.sessionATimeMinute ??
+            7 * 60
+        : current?.sessionBTimeMinute ??
+            _schedulingPreferences.sessionBTimeMinute ??
+            19 * 60;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: initialMinute ~/ 60,
+        minute: initialMinute % 60,
+      ),
+    );
+    if (picked == null) {
+      return;
+    }
+
+    final minute = (picked.hour * 60) + picked.minute;
+    final next = SchedulingDayOverrideV1(
+      dayIndex: dayIndex,
+      skipDay: current?.skipDay,
+      revisionOnly: current?.revisionOnly,
+      overrideMinutes: current?.overrideMinutes,
+      sessionATimeMinute: sessionA ? minute : current?.sessionATimeMinute,
+      sessionBTimeMinute: sessionA ? current?.sessionBTimeMinute : minute,
+    );
+
+    setState(() {
+      _schedulingOverrides = _schedulingOverrides.copyWithOverride(next);
+    });
+    Future<void>.microtask(_refreshWeeklyPlan);
+  }
+
   Map<int, int>? _parseGradeDistributionOrNull() {
     final raw = <int, String>{
       5: _gradeQ5Controller.text.trim(),
@@ -380,6 +682,477 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
   }
 
+  Widget _buildSchedulingSection(AppStrings strings) {
+    final twoSessions = _schedulingPreferences.sessionsPerDay == 2;
+    final exactTimes = _schedulingPreferences.exactTimesEnabled;
+    final advancedMode = _schedulingPreferences.advancedModeEnabled;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          strings.automaticSchedulingTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          key: const ValueKey('plan_scheduling_two_sessions'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(strings.twoSessionsPerDay),
+          value: twoSessions,
+          onChanged: (value) {
+            _updateSchedulingPreferences(
+              _schedulingPreferences.copyWith(
+                sessionsPerDay: value ? 2 : 1,
+              ),
+            );
+          },
+        ),
+        SwitchListTile(
+          key: const ValueKey('plan_scheduling_exact_times'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(strings.setExactTimesQuestion),
+          value: exactTimes,
+          onChanged: (value) {
+            _updateSchedulingPreferences(
+              _schedulingPreferences.copyWith(
+                exactTimesEnabled: value,
+                timingStrategy:
+                    value ? TimingStrategy.fixedTimes : TimingStrategy.untimed,
+              ),
+            );
+          },
+        ),
+        if (exactTimes) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton(
+                key: const ValueKey('plan_scheduling_session_a_time'),
+                onPressed: () => _pickSessionTime(sessionA: true),
+                child: Text(
+                  strings.sessionTimeLabel(
+                    'A',
+                    _formatMinuteOfDay(
+                        _schedulingPreferences.sessionATimeMinute),
+                  ),
+                ),
+              ),
+              OutlinedButton(
+                key: const ValueKey('plan_scheduling_session_b_time'),
+                onPressed: () => _pickSessionTime(sessionA: false),
+                child: Text(
+                  strings.sessionTimeLabel(
+                    'B',
+                    _formatMinuteOfDay(
+                        _schedulingPreferences.sessionBTimeMinute),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 12),
+        Text(
+          strings.studyDaysLabel,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final weekday in const [
+              DateTime.monday,
+              DateTime.tuesday,
+              DateTime.wednesday,
+              DateTime.thursday,
+              DateTime.friday,
+              DateTime.saturday,
+              DateTime.sunday,
+            ])
+              FilterChip(
+                key: ValueKey('plan_scheduling_study_day_$weekday'),
+                label: Text(_weekdayLabel(weekday, strings)),
+                selected:
+                    _schedulingPreferences.enabledWeekdays.contains(weekday),
+                onSelected: (_) => _toggleStudyDay(weekday),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          key: const ValueKey('plan_scheduling_advanced_mode'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(strings.advancedSchedulingMode),
+          value: advancedMode,
+          onChanged: (value) {
+            _updateSchedulingPreferences(
+              _schedulingPreferences.copyWith(
+                advancedModeEnabled: value,
+              ),
+            );
+          },
+        ),
+        if (advancedMode) ...[
+          const SizedBox(height: 8),
+          DropdownButtonFormField<AvailabilityModel>(
+            key: const ValueKey('plan_scheduling_availability_model'),
+            initialValue: _schedulingPreferences.availabilityModel,
+            decoration: InputDecoration(
+              labelText: strings.availabilityModelLabel,
+            ),
+            items: [
+              DropdownMenuItem(
+                value: AvailabilityModel.minutesPerDay,
+                child: Text(strings.availabilityMinutesPerDay),
+              ),
+              DropdownMenuItem(
+                value: AvailabilityModel.minutesPerWeek,
+                child: Text(strings.availabilityMinutesPerWeek),
+              ),
+              DropdownMenuItem(
+                value: AvailabilityModel.specificHours,
+                child: Text(strings.availabilitySpecificHours),
+              ),
+            ],
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(availabilityModel: value),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            key: const ValueKey('plan_scheduling_minutes_per_day'),
+            controller: _minutesPerDayController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: strings.minutesPerDayLabel,
+            ),
+            onChanged: (value) {
+              final parsed = int.tryParse(value);
+              if (parsed == null) {
+                return;
+              }
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(
+                  minutesPerDayDefault: parsed,
+                  minutesByWeekday: {
+                    for (final weekday in const [
+                      DateTime.monday,
+                      DateTime.tuesday,
+                      DateTime.wednesday,
+                      DateTime.thursday,
+                      DateTime.friday,
+                      DateTime.saturday,
+                      DateTime.sunday,
+                    ])
+                      weekday: parsed,
+                  },
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            key: const ValueKey('plan_scheduling_minutes_per_week'),
+            controller: _minutesPerWeekController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: strings.minutesPerWeekLabel,
+            ),
+            onChanged: (value) {
+              final parsed = int.tryParse(value);
+              if (parsed == null) {
+                return;
+              }
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(minutesPerWeekDefault: parsed),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<TimingStrategy>(
+            key: const ValueKey('plan_scheduling_timing_strategy'),
+            initialValue: _schedulingPreferences.timingStrategy,
+            decoration: InputDecoration(
+              labelText: strings.timingStrategyLabel,
+            ),
+            items: [
+              DropdownMenuItem(
+                value: TimingStrategy.untimed,
+                child: Text(strings.timingStrategyUntimed),
+              ),
+              DropdownMenuItem(
+                value: TimingStrategy.fixedTimes,
+                child: Text(strings.timingStrategyFixed),
+              ),
+              DropdownMenuItem(
+                value: TimingStrategy.autoPlacement,
+                child: Text(strings.timingStrategyAuto),
+              ),
+            ],
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(timingStrategy: value),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            key: const ValueKey('plan_scheduling_flex_windows'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(strings.flexOutsideWindowsLabel),
+            value: _schedulingPreferences.flexOutsideWindows,
+            onChanged: (value) {
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(flexOutsideWindows: value),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            strings.revisionOnlyDaysLabel,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final weekday in const [
+                DateTime.monday,
+                DateTime.tuesday,
+                DateTime.wednesday,
+                DateTime.thursday,
+                DateTime.friday,
+                DateTime.saturday,
+                DateTime.sunday,
+              ])
+                FilterChip(
+                  key: ValueKey('plan_scheduling_revision_day_$weekday'),
+                  label: Text(_weekdayLabel(weekday, strings)),
+                  selected: _schedulingPreferences.revisionOnlyWeekdays
+                      .contains(weekday),
+                  onSelected: (_) => _toggleRevisionOnlyDay(weekday),
+                ),
+            ],
+          ),
+          if (_schedulingPreferences.availabilityModel ==
+              AvailabilityModel.specificHours) ...[
+            const SizedBox(height: 12),
+            Text(
+              strings.specificHoursWindowsLabel,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            for (final weekday in const [
+              DateTime.monday,
+              DateTime.tuesday,
+              DateTime.wednesday,
+              DateTime.thursday,
+              DateTime.friday,
+              DateTime.saturday,
+              DateTime.sunday,
+            ]) ...[
+              _buildDayWindowsEditor(strings, weekday),
+              const SizedBox(height: 8),
+            ],
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDayWindowsEditor(AppStrings strings, int weekday) {
+    final windows = _windowsForWeekday(weekday);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(_weekdayLabel(weekday, strings))),
+            TextButton(
+              key: ValueKey('plan_scheduling_add_window_$weekday'),
+              onPressed: () => _addWindowForWeekday(weekday),
+              child: Text(strings.addWindowLabel),
+            ),
+          ],
+        ),
+        if (windows.isEmpty)
+          Text(strings.noWindowsConfigured)
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < windows.length; i++)
+                InputChip(
+                  key: ValueKey('plan_scheduling_window_${weekday}_$i'),
+                  label: Text(
+                    '${_formatMinuteOfDay(windows[i].startMinute)}-${_formatMinuteOfDay(windows[i].endMinute)}',
+                  ),
+                  onPressed: () => _editWindowForWeekday(weekday, i),
+                  onDeleted: () => _removeWindowForWeekday(weekday, i),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyCalendarSection(AppStrings strings) {
+    final plan = _weeklyPlan;
+    if (_isRefreshingWeeklyPlan) {
+      return const LinearProgressIndicator();
+    }
+    if (_weeklyPlanError != null) {
+      return Text(
+        _weeklyPlanError!,
+        style: TextStyle(color: Theme.of(context).colorScheme.error),
+      );
+    }
+    if (plan == null || plan.days.isEmpty) {
+      return Text(strings.noWeeklyPlanYet);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          strings.weeklyCalendarTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 10),
+        for (var i = 0; i < plan.days.length; i++)
+          Padding(
+            padding: EdgeInsets.only(bottom: i == plan.days.length - 1 ? 0 : 8),
+            child: _buildWeeklyDayCard(strings, plan.days[i], i),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyDayCard(
+    AppStrings strings,
+    WeeklyPlanDay day,
+    int index,
+  ) {
+    final override = _schedulingOverrides[day.dayIndex];
+    return DecoratedBox(
+      key: ValueKey('plan_weekly_day_$index'),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _dayLabel(day, strings),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 6),
+            if (!day.enabledStudyDay)
+              Text(day.skipDay
+                  ? strings.dayMarkedHoliday
+                  : strings.dayNotEnabled)
+            else if (day.sessions.isEmpty)
+              Text(strings.noSessionsPlanned)
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final session in day.sessions)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        strings.weeklySessionLine(
+                          session.sessionLabel,
+                          session.focus == PlannedSessionFocus.reviewOnly
+                              ? strings.reviewOnlyFocus
+                              : strings.newAndReviewFocus,
+                          session.plannedMinutes,
+                          session.isTimed
+                              ? _formatMinuteOfDay(session.startMinuteOfDay)
+                              : strings.untimedSessionLabel,
+                          _sessionStatusLabel(strings, session.status),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            if (day.recoveryMode) ...[
+              const SizedBox(height: 4),
+              Text(
+                strings.recoveryModeActive,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+            if (_schedulingPreferences.advancedModeEnabled) ...[
+              const SizedBox(height: 8),
+              SwitchListTile(
+                key: ValueKey('plan_weekly_skip_day_${day.dayIndex}'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(strings.skipDayLabel),
+                value: override?.skipDay ?? false,
+                onChanged: (value) => _setDaySkipOverride(day.dayIndex, value),
+              ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton(
+                    key: ValueKey('plan_weekly_override_a_${day.dayIndex}'),
+                    onPressed: () => _setDaySessionOverrideTime(
+                      dayIndex: day.dayIndex,
+                      sessionA: true,
+                    ),
+                    child: Text(strings.overrideSessionTime('A')),
+                  ),
+                  OutlinedButton(
+                    key: ValueKey('plan_weekly_override_b_${day.dayIndex}'),
+                    onPressed: () => _setDaySessionOverrideTime(
+                      dayIndex: day.dayIndex,
+                      sessionA: false,
+                    ),
+                    child: Text(strings.overrideSessionTime('B')),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _sessionStatusLabel(AppStrings strings, PlannedSessionStatus status) {
+    return switch (status) {
+      PlannedSessionStatus.pending => strings.sessionStatusPending,
+      PlannedSessionStatus.completed => strings.sessionStatusCompleted,
+      PlannedSessionStatus.missed => strings.sessionStatusMissed,
+      PlannedSessionStatus.dueSoon => strings.sessionStatusDueSoon,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final prefs = ref.watch(appPreferencesProvider);
@@ -398,6 +1171,24 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             Text(
               strings.onboardingQuestionnaire(_maxQuestions),
               style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Card(
+              key: const ValueKey('plan_scheduling_section'),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _isLoadingScheduling
+                    ? const LinearProgressIndicator()
+                    : _buildSchedulingSection(strings),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              key: const ValueKey('plan_weekly_calendar_section'),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildWeeklyCalendarSection(strings),
+              ),
             ),
             const SizedBox(height: 16),
             Card(
@@ -978,6 +1769,34 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       OnboardingFluency.developing => strings.fluencyDeveloping,
       OnboardingFluency.support => strings.fluencySupport,
     };
+  }
+
+  String _formatMinuteOfDay(int? minuteOfDay) {
+    if (minuteOfDay == null) {
+      return '--:--';
+    }
+    final normalized = minuteOfDay.clamp(0, 1439);
+    final hour = (normalized ~/ 60).toString().padLeft(2, '0');
+    final minute = (normalized % 60).toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  String _weekdayLabel(int weekday, AppStrings strings) {
+    return switch (weekday) {
+      DateTime.monday => strings.weekdayShortMon,
+      DateTime.tuesday => strings.weekdayShortTue,
+      DateTime.wednesday => strings.weekdayShortWed,
+      DateTime.thursday => strings.weekdayShortThu,
+      DateTime.friday => strings.weekdayShortFri,
+      DateTime.saturday => strings.weekdayShortSat,
+      DateTime.sunday => strings.weekdayShortSun,
+      _ => strings.weekdayShortMon,
+    };
+  }
+
+  String _dayLabel(WeeklyPlanDay day, AppStrings strings) {
+    final date = DateTime(1970, 1, 1).add(Duration(days: day.dayIndex));
+    return '${_weekdayLabel(day.weekday, strings)} • ${_formatDate(date)}';
   }
 
   String _formatMedian(double? value) {

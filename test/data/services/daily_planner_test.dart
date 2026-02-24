@@ -9,6 +9,7 @@ import 'package:hifz_planner/data/repositories/schedule_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
 import 'package:hifz_planner/data/services/daily_planner.dart';
 import 'package:hifz_planner/data/services/new_unit_generator.dart';
+import 'package:hifz_planner/data/services/scheduling/planning_projection_engine.dart';
 
 void main() {
   late AppDatabase db;
@@ -34,8 +35,8 @@ void main() {
       progressRepo,
       scheduleRepo,
       quranRepo,
-      memUnitRepo,
       newUnitGenerator,
+      PlanningProjectionEngine(),
     );
 
     await _seedAyahs(db);
@@ -68,8 +69,8 @@ void main() {
 
     final plan = await dailyPlanner.planToday(todayDay: monday);
 
-    expect(plan.plannedReviews.length, 2);
-    expect(plan.minutesPlannedReviews, 2.0);
+    expect(plan.plannedReviews.length, 4);
+    expect(plan.minutesPlannedReviews, 4.0);
   });
 
   test('falls back to daily_minutes_default when weekday json is invalid',
@@ -121,7 +122,7 @@ void main() {
       requirePageMetadata: 0,
     );
     final supportPlan = await dailyPlanner.planToday(todayDay: todayDay);
-    expect(supportPlan.plannedReviews.length, 8);
+    expect(supportPlan.plannedReviews.length, 9);
 
     await _configureSettings(
       settingsRepo,
@@ -135,7 +136,7 @@ void main() {
       requirePageMetadata: 0,
     );
     final standardPlan = await dailyPlanner.planToday(todayDay: todayDay);
-    expect(standardPlan.plannedReviews.length, 7);
+    expect(standardPlan.plannedReviews.length, 8);
 
     await _configureSettings(
       settingsRepo,
@@ -149,7 +150,7 @@ void main() {
       requirePageMetadata: 0,
     );
     final acceleratedPlan = await dailyPlanner.planToday(todayDay: todayDay);
-    expect(acceleratedPlan.plannedReviews.length, 6);
+    expect(acceleratedPlan.plannedReviews.length, 10);
   });
 
   test('sorts due rows by overdue desc, reps asc, lapse_count desc', () async {
@@ -199,7 +200,7 @@ void main() {
     );
   });
 
-  test('plannedReviews uses budgeted subset when due load exceeds budget',
+  test('recovery mode expands review capacity and suspends new when overloaded',
       () async {
     const todayDay = 100;
     await _configureSettings(
@@ -222,8 +223,9 @@ void main() {
 
     final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
-    expect(plan.plannedReviews.length, 2);
-    expect(plan.revisionOnly, isFalse);
+    expect(plan.plannedReviews.length, 4);
+    expect(plan.revisionOnly, isTrue);
+    expect(plan.recoveryMode, isTrue);
   });
 
   test('sets revisionOnly=true and skips new units on forced overload',
@@ -260,7 +262,7 @@ void main() {
       settingsRepo,
       profile: 'standard',
       forceRevisionOnly: 0,
-      dailyMinutesDefault: 4,
+      dailyMinutesDefault: 6,
       maxNewPagesPerDay: 5,
       maxNewUnitsPerDay: 5,
       avgNewMinutesPerAyah: 1.0,
@@ -277,7 +279,7 @@ void main() {
     final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
     expect(plan.revisionOnly, isFalse);
-    expect(plan.plannedReviews.length, 2);
+    expect(plan.plannedReviews.length, 4);
     expect(plan.plannedNewUnits, isNotEmpty);
     expect(plan.minutesPlannedNew, greaterThan(0));
   });

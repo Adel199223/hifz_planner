@@ -7,6 +7,7 @@ import 'package:hifz_planner/data/repositories/quran_repo.dart';
 import 'package:hifz_planner/data/repositories/schedule_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
 import 'package:hifz_planner/data/services/forecast_simulation_service.dart';
+import 'package:hifz_planner/data/services/scheduling/planning_projection_engine.dart';
 
 void main() {
   late AppDatabase db;
@@ -28,6 +29,7 @@ void main() {
       progressRepo,
       scheduleRepo,
       quranRepo,
+      PlanningProjectionEngine(),
     );
   });
 
@@ -121,7 +123,7 @@ void main() {
     );
 
     expect(result.weeklyPoints, isNotEmpty);
-    expect(result.weeklyPoints.first.weeklyMinutes, closeTo(112.0, 1e-9));
+    expect(result.weeklyPoints.first.weeklyMinutes, closeTo(160.0, 1e-9));
   });
 
   test('simulate revision-only ratio reflects forced overload', () async {

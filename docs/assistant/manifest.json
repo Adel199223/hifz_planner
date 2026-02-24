@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
@@ -13,19 +13,23 @@
     {
       "id": "reader_ui",
       "doc": "docs/assistant/workflows/READER_WORKFLOW.md",
-      "scope": "Verse by Verse and Reading (Mushaf) UI/interaction work.",
+      "scope": "Verse by Verse and Reading (Mushaf) UI/interaction work, including shared Quran word rendering behavior.",
       "primary_files": [
         "lib/screens/reader_screen.dart",
+        "lib/ui/quran/quran_word_wrap.dart",
+        "lib/data/services/quran_wording.dart",
         "lib/ui/tajweed/tajweed_colors.dart",
         "lib/ui/tajweed/tajweed_markup.dart",
         "lib/data/services/surah_metadata_service.dart"
       ],
       "targeted_tests": [
         "test/screens/reader_screen_test.dart",
+        "test/ui/quran/quran_word_wrap_test.dart",
         "test/app/navigation_shell_menu_test.dart"
       ],
       "validation_commands": [
         "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
+        "flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart",
         "flutter analyze --no-fatal-infos --no-fatal-warnings"
       ]
     },
@@ -51,7 +55,7 @@
     {
       "id": "planner_scheduler",
       "doc": "docs/assistant/workflows/PLANNER_WORKFLOW.md",
-      "scope": "Onboarding plan, daily planning, scheduling, calibration, forecast.",
+      "scope": "Onboarding plan, baseline daily planner/scheduler, calibration, forecast.",
       "primary_files": [
         "lib/screens/plan_screen.dart",
         "lib/screens/today_screen.dart",
@@ -72,6 +76,65 @@
         "flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart",
         "flutter test -j 1 -r expanded test/data/services/spaced_repetition_scheduler_test.dart",
         "flutter analyze --no-fatal-infos --no-fatal-warnings"
+      ]
+    },
+    {
+      "id": "scheduling_companion",
+      "doc": "docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md",
+      "scope": "Automatic scheduling preferences, weekly calendar generation, rebalancing, and staged companion ramp with recitation controls and word-hover parity.",
+      "primary_files": [
+        "lib/screens/plan_screen.dart",
+        "lib/screens/today_screen.dart",
+        "lib/screens/companion_chain_screen.dart",
+        "lib/ui/quran/arabic_ayah_text.dart",
+        "lib/ui/quran/quran_word_wrap.dart",
+        "lib/data/services/quran_wording.dart",
+        "lib/data/services/scheduling/planning_projection_engine.dart",
+        "lib/data/services/scheduling/availability_interpreter.dart",
+        "lib/data/services/scheduling/weekly_plan_generator.dart",
+        "lib/data/services/scheduling/daily_content_allocator.dart",
+        "lib/data/services/scheduling/scheduling_preferences_codec.dart",
+        "lib/data/services/companion/progressive_reveal_chain_engine.dart",
+        "lib/data/services/companion/companion_calibration_bridge.dart",
+        "lib/data/repositories/companion_repo.dart",
+        "lib/data/repositories/settings_repo.dart",
+        "lib/data/database/app_database.dart"
+      ],
+      "targeted_tests": [
+        "test/screens/plan_screen_test.dart",
+        "test/screens/today_screen_test.dart",
+        "test/screens/companion_chain_screen_test.dart",
+        "test/ui/quran/quran_word_wrap_test.dart",
+        "test/app/app_preferences_test.dart",
+        "test/data/services/tajweed_tags_service_test.dart",
+        "test/data/services/daily_planner_test.dart",
+        "test/data/services/forecast_simulation_service_test.dart",
+        "test/data/services/scheduling/availability_interpreter_test.dart",
+        "test/data/services/scheduling/daily_content_allocator_test.dart",
+        "test/data/services/scheduling/scheduling_preferences_codec_test.dart",
+        "test/data/services/scheduling/weekly_plan_generator_test.dart",
+        "test/data/services/companion/progressive_reveal_chain_engine_test.dart",
+        "test/data/services/companion/companion_calibration_bridge_test.dart",
+        "test/data/repositories/companion_repo_test.dart",
+        "test/data/repositories/settings_repo_test.dart",
+        "test/data/database/app_database_test.dart"
+      ],
+      "validation_commands": [
+        "flutter analyze --no-fatal-infos --no-fatal-warnings",
+        "flutter test -j 1 -r expanded test/app/app_preferences_test.dart",
+        "flutter test -j 1 -r expanded test/screens/plan_screen_test.dart",
+        "flutter test -j 1 -r expanded test/screens/today_screen_test.dart",
+        "flutter test -j 1 -r expanded test/screens/companion_chain_screen_test.dart",
+        "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
+        "flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/tajweed_tags_service_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/forecast_simulation_service_test.dart",
+        "flutter test -j 1 -r expanded test/data/database/app_database_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/scheduling",
+        "flutter test -j 1 -r expanded test/data/services/companion",
+        "dart run tooling/validate_localization.dart",
+        "dart run tooling/validate_agent_docs.dart"
       ]
     },
     {
@@ -261,5 +324,5 @@
     "post_change_docs_sync_prompt_policy": "After significant implementation changes, ask whether to run Assistant Docs Sync and update only relevant assistant docs if approved.",
     "inspiration_reference_discovery_policy": "When user names a product/site to emulate, run REFERENCE_DISCOVERY_WORKFLOW.md and prioritize official sources, then high-quality GitHub repos, then Hugging Face only for ML/data/inference scope."
   },
-  "last_updated": "2026-02-23"
+  "last_updated": "2026-02-24"
 }

@@ -9,6 +9,7 @@ Use this workflow for Verse by Verse and Reading (Mushaf) UI/interaction work, i
 Use when changes touch:
 - `lib/screens/reader_screen.dart`
 - reader actions, highlights, hover/click behavior
+- shared Quran word rendering (`lib/ui/quran/quran_word_wrap.dart`)
 - mushaf/verse-by-verse shell controls
 - chapter header/basmala rendering in reader context
 - tajweed legend/control placement and visibility
@@ -35,9 +36,12 @@ Use when changes touch:
 - `lib/ui/audio/reciter_selection_list.dart`
 - `lib/screens/reciters_screen.dart`
 - `lib/ui/qcf/qcf_font_manager.dart`
+- `lib/ui/quran/quran_word_wrap.dart`
+- `lib/data/services/quran_wording.dart`
 - `lib/ui/tajweed/tajweed_markup.dart`
 - `lib/ui/tajweed/tajweed_colors.dart`
 - `test/screens/reader_screen_test.dart`
+- `test/ui/quran/quran_word_wrap_test.dart`
 - `test/data/services/qurancom_chapters_service_test.dart`
 - `test/data/services/ayah_audio_source_test.dart`
 - `test/data/services/ayah_reciter_catalog_service_test.dart`
@@ -60,6 +64,7 @@ rg -n "QuranComChapterEntry|getChapters|getChapter" lib/data/services/qurancom_c
 
 ```powershell
 flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
+flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart
 flutter test -j 1 -r expanded test/data/services/qurancom_chapters_service_test.dart
 flutter test -j 1 -r expanded test/data/services/ayah_audio_source_test.dart
 flutter test -j 1 -r expanded test/data/services/ayah_reciter_catalog_service_test.dart
@@ -90,12 +95,16 @@ flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
    - Confirm AlQuran Cloud editions endpoint response shape, then verify bundled fallback list is still present in `ayah_reciter_catalog_service.dart`.
 10. Symptoms: speed/repeat/reciter settings reset after restart.
    - Verify SharedPreferences keys and notifier write-through in `ayah_audio_preferences.dart` and `audio_providers.dart`.
+11. Symptoms: verse-by-verse still shows circular end markers.
+   - Verify end-marker suppression is enabled in shared word rendering for Verse-by-Verse paths.
 
 ## Handoff Checklist
 
 - modified files are scoped to reader concerns
 - fallback behavior still works for partial Quran.com failures
+- verse-by-verse uses shared word rendering with end-marker suppression enabled
 - `test/screens/reader_screen_test.dart` passes
+- `test/ui/quran/quran_word_wrap_test.dart` passes
 - `test/data/services/qurancom_chapters_service_test.dart` passes
 - `test/data/services/ayah_audio_source_test.dart` passes for ayah index/url mapping
 - `test/data/services/ayah_reciter_catalog_service_test.dart` passes for API parsing + fallback

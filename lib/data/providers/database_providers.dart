@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../database/app_database.dart';
 import '../repositories/bookmark_repo.dart';
 import '../repositories/calibration_repo.dart';
+import '../repositories/companion_repo.dart';
 import '../repositories/mem_unit_repo.dart';
 import '../repositories/note_repo.dart';
 import '../repositories/progress_repo.dart';
@@ -11,12 +12,16 @@ import '../repositories/review_log_repo.dart';
 import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
 import '../services/calibration_service.dart';
+import '../services/companion/companion_calibration_bridge.dart';
+import '../services/companion/progressive_reveal_chain_engine.dart';
+import '../services/companion/verse_evaluator.dart';
 import '../services/daily_planner.dart';
 import '../services/forecast_simulation_service.dart';
 import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
 import '../services/qurancom_api.dart';
 import '../services/qurancom_chapters_service.dart';
+import '../services/scheduling/planning_projection_engine.dart';
 import '../services/quran_text_importer_service.dart';
 import '../services/surah_metadata_service.dart';
 import '../services/tajweed_tags_service.dart';
@@ -54,6 +59,11 @@ final scheduleRepoProvider = Provider<ScheduleRepo>((ref) {
   return ScheduleRepo(db);
 });
 
+final companionRepoProvider = Provider<CompanionRepo>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return CompanionRepo(db);
+});
+
 final reviewLogRepoProvider = Provider<ReviewLogRepo>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return ReviewLogRepo(db);
@@ -85,22 +95,28 @@ final newUnitGeneratorProvider = Provider<NewUnitGenerator>((ref) {
   );
 });
 
+final planningProjectionEngineProvider = Provider<PlanningProjectionEngine>((
+  ref,
+) {
+  return PlanningProjectionEngine();
+});
+
 final dailyPlannerProvider = Provider<DailyPlanner>((ref) {
   final db = ref.watch(appDatabaseProvider);
   final settingsRepo = ref.watch(settingsRepoProvider);
   final progressRepo = ref.watch(progressRepoProvider);
   final scheduleRepo = ref.watch(scheduleRepoProvider);
   final quranRepo = ref.watch(quranRepoProvider);
-  final memUnitRepo = ref.watch(memUnitRepoProvider);
   final newUnitGenerator = ref.watch(newUnitGeneratorProvider);
+  final planningProjectionEngine = ref.watch(planningProjectionEngineProvider);
   return DailyPlanner(
     db,
     settingsRepo,
     progressRepo,
     scheduleRepo,
     quranRepo,
-    memUnitRepo,
     newUnitGenerator,
+    planningProjectionEngine,
   );
 });
 
@@ -117,13 +133,37 @@ final forecastSimulationServiceProvider = Provider<ForecastSimulationService>(
     final progressRepo = ref.watch(progressRepoProvider);
     final scheduleRepo = ref.watch(scheduleRepoProvider);
     final quranRepo = ref.watch(quranRepoProvider);
+    final planningProjectionEngine =
+        ref.watch(planningProjectionEngineProvider);
     return ForecastSimulationService(
       db,
       settingsRepo,
       progressRepo,
       scheduleRepo,
       quranRepo,
+      planningProjectionEngine,
     );
+  },
+);
+
+final companionCalibrationBridgeProvider =
+    Provider<CompanionCalibrationBridge>((
+  ref,
+) {
+  final calibrationRepo = ref.watch(calibrationRepoProvider);
+  return CompanionCalibrationBridge(calibrationRepo);
+});
+
+final manualFallbackVerseEvaluatorProvider = Provider<VerseEvaluator>((ref) {
+  return const ManualFallbackVerseEvaluator();
+});
+
+final progressiveRevealChainEngineProvider =
+    Provider<ProgressiveRevealChainEngine>(
+  (ref) {
+    final companionRepo = ref.watch(companionRepoProvider);
+    final calibrationBridge = ref.watch(companionCalibrationBridgeProvider);
+    return ProgressiveRevealChainEngine(companionRepo, calibrationBridge);
   },
 );
 

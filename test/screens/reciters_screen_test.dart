@@ -157,6 +157,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
 
   @override
   Future<void> saveThemeCode(String code) async {}
+
+  @override
+  Future<void> saveCompanionAutoReciteEnabled(bool value) async {}
 }
 
 class _FakeAudioPreferencesStore implements AyahAudioPreferencesStore {

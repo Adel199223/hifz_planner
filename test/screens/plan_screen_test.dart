@@ -28,6 +28,18 @@ void main() {
     await _pumpPlan(tester, container);
 
     expect(find.textContaining('Onboarding Questionnaire'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('plan_scheduling_section')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_weekly_calendar_section')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_scheduling_two_sessions')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('plan_time_mode')), findsOneWidget);
     expect(find.byKey(const ValueKey('plan_fluency_fluent')), findsOneWidget);
     expect(find.byKey(const ValueKey('plan_profile')), findsOneWidget);
@@ -171,6 +183,27 @@ void main() {
     expect(find.text('thu: 1'), findsOneWidget);
   });
 
+  testWidgets('weekly calendar renders day cards with default session rows',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await _pumpPlan(tester, container);
+
+    expect(
+      find.byKey(const ValueKey('plan_weekly_day_0')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('per-weekday mode uses direct entered values', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
@@ -184,24 +217,43 @@ void main() {
     addTearDown(container.dispose);
     await _pumpPlan(tester, container);
 
-    await tester.tap(find.text('Per weekday'));
-    await tester.pumpAndSettle();
+    await _tapVisible(tester, find.text('Per weekday'));
 
-    await tester.enterText(
-        find.byKey(const ValueKey('plan_weekday_mon')), '11');
-    await tester.enterText(
-        find.byKey(const ValueKey('plan_weekday_tue')), '12');
-    await tester.enterText(
-        find.byKey(const ValueKey('plan_weekday_wed')), '13');
-    await tester.enterText(
-        find.byKey(const ValueKey('plan_weekday_thu')), '14');
-    await tester.enterText(
-        find.byKey(const ValueKey('plan_weekday_fri')), '15');
-    await tester.enterText(
-        find.byKey(const ValueKey('plan_weekday_sat')), '16');
-    await tester.enterText(
-        find.byKey(const ValueKey('plan_weekday_sun')), '17');
-    await tester.pump();
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_weekday_mon')),
+      '11',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_weekday_tue')),
+      '12',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_weekday_wed')),
+      '13',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_weekday_thu')),
+      '14',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_weekday_fri')),
+      '15',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_weekday_sat')),
+      '16',
+    );
+    await _enterTextVisible(
+      tester,
+      find.byKey(const ValueKey('plan_weekday_sun')),
+      '17',
+    );
 
     expect(find.text('mon: 11'), findsOneWidget);
     expect(find.text('sun: 17'), findsOneWidget);
@@ -238,8 +290,10 @@ void main() {
       '0.8',
     );
 
-    await tester.tap(find.byKey(const ValueKey('plan_fluency_fluent')));
-    await tester.pump();
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_fluency_fluent')),
+    );
 
     expect(
       tester

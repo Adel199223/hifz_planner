@@ -7,6 +7,7 @@ import '../repositories/quran_repo.dart';
 import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
 import '../time/local_day_time.dart';
+import 'scheduling/planning_projection_engine.dart';
 import 'spaced_repetition_scheduler.dart';
 
 enum ForecastGradeStrategy {
@@ -59,6 +60,7 @@ class ForecastSimulationService {
     this._progressRepo,
     this._scheduleRepo,
     this._quranRepo,
+    this._projectionEngine,
   );
 
   final AppDatabase _db;
@@ -66,6 +68,7 @@ class ForecastSimulationService {
   final ProgressRepo _progressRepo;
   final ScheduleRepo _scheduleRepo;
   final QuranRepo _quranRepo;
+  final PlanningProjectionEngine _projectionEngine;
 
   static const int _captureAllDueDay = 2147483647;
   static final DateTime _localEpochStart = DateTime(1970, 1, 1);
@@ -96,6 +99,16 @@ class ForecastSimulationService {
 
     final settings =
         await _settingsRepo.getSettings(todayDayOverride: startDay);
+    final schedulingPreferences =
+        _projectionEngine.preferencesFromSettings(settings);
+    final schedulingOverrides =
+        _projectionEngine.overridesFromSettings(settings);
+    final minutesByDay = _projectionEngine.resolveMinutesForHorizon(
+      startDay: startDay,
+      horizonDays: maxSimulationDays,
+      preferences: schedulingPreferences,
+      overrides: schedulingOverrides,
+    );
     final cursor = await _progressRepo.getCursor();
     final lastAyah = await _quranRepo.getLastAyah();
     final gradeSource = _GradeSource.fromJson(
@@ -136,7 +149,6 @@ class ForecastSimulationService {
     var currentSurah = cursor.nextSurah;
     var currentAyah = cursor.nextAyah;
 
-    final weekdayMinutes = _decodeWeekdayMinutes(settings.minutesByWeekdayJson);
     final metadataBlockCache = <String, bool>{};
     final weeklyPoints = <ForecastWeekPoint>[];
 
@@ -162,20 +174,29 @@ class ForecastSimulationService {
         completionDay == null && dayOffset < maxSimulationDays;
         dayOffset++) {
       final day = startDay + dayOffset;
-      final dailyMinutes = _resolveDailyMinutes(
-        defaultMinutes: settings.dailyMinutesDefault.toDouble(),
-        weekdayMinutes: weekdayMinutes,
-        day: day,
-      );
-      final reviewBudgetMinutes = dailyMinutes *
-          _reviewBudgetRatio(
-            settings.profile,
-          );
+      final dailyMinutes =
+          (minutesByDay[day] ?? settings.dailyMinutesDefault).toDouble();
 
       final dueSchedules = scheduleStates.values
           .where((state) => state.dueDay <= day)
           .toList(growable: false)
         ..sort((a, b) => _compareDueRows(a, b, day));
+
+      var dueReviewMinutes = 0.0;
+      for (final state in dueSchedules) {
+        final unit = unitStates[state.unitId];
+        if (unit == null) {
+          continue;
+        }
+        dueReviewMinutes += unit.ayahCount * settings.avgReviewMinutesPerAyah;
+      }
+
+      final allocation = _projectionEngine.allocateDailyContent(
+        dailyMinutes: dailyMinutes,
+        dueReviewMinutes: dueReviewMinutes,
+        profile: settings.profile,
+        forceRevisionOnly: settings.forceRevisionOnly == 1,
+      );
 
       final plannedReviews = <_SimScheduleState>[];
       var minutesPlannedReviews = 0.0;
@@ -188,7 +209,7 @@ class ForecastSimulationService {
         final estimatedMinutes =
             unit.ayahCount * settings.avgReviewMinutesPerAyah;
         if (minutesPlannedReviews + estimatedMinutes >
-            reviewBudgetMinutes + 1e-9) {
+            allocation.reviewCapacityMinutes + 1e-9) {
           continue;
         }
 
@@ -196,8 +217,7 @@ class ForecastSimulationService {
         minutesPlannedReviews += estimatedMinutes;
       }
 
-      final dueOverflow = dueSchedules.length > plannedReviews.length;
-      final revisionOnly = dueOverflow && settings.forceRevisionOnly == 1;
+      final revisionOnly = allocation.recoveryMode;
 
       for (final state in plannedReviews) {
         final reviewQ = gradeSource.nextReviewQ();
@@ -229,8 +249,13 @@ class ForecastSimulationService {
             todayDay: day,
             cursorSurah: currentSurah,
             cursorAyah: currentAyah,
-            remainingMinutes:
-                math.max(0.0, dailyMinutes - minutesPlannedReviews),
+            remainingMinutes: math.max(
+              0.0,
+              math.min(
+                allocation.newBudgetMinutes,
+                dailyMinutes - minutesPlannedReviews,
+              ),
+            ),
             settings: settings,
             initialEf: _initialEfForProfile(settings.profile),
             nextUnitId: nextUnitId,
@@ -562,64 +587,6 @@ class ForecastSimulationService {
     return count > 0 ? count : 1;
   }
 
-  Map<String, double>? _decodeWeekdayMinutes(String? rawJson) {
-    if (rawJson == null || rawJson.trim().isEmpty) {
-      return null;
-    }
-
-    try {
-      final decoded = jsonDecode(rawJson);
-      if (decoded is! Map) {
-        return null;
-      }
-
-      final result = <String, double>{};
-      for (final key in const [
-        'mon',
-        'tue',
-        'wed',
-        'thu',
-        'fri',
-        'sat',
-        'sun'
-      ]) {
-        final value = decoded[key];
-        if (value is num) {
-          result[key] = value.toDouble();
-        }
-      }
-      return result;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  double _resolveDailyMinutes({
-    required double defaultMinutes,
-    required Map<String, double>? weekdayMinutes,
-    required int day,
-  }) {
-    if (weekdayMinutes == null) {
-      return defaultMinutes;
-    }
-
-    return weekdayMinutes[_weekdayKeyForDay(day)] ?? defaultMinutes;
-  }
-
-  String _weekdayKeyForDay(int day) {
-    final date = _localEpochStart.add(Duration(days: day));
-    return switch (date.weekday) {
-      DateTime.monday => 'mon',
-      DateTime.tuesday => 'tue',
-      DateTime.wednesday => 'wed',
-      DateTime.thursday => 'thu',
-      DateTime.friday => 'fri',
-      DateTime.saturday => 'sat',
-      DateTime.sunday => 'sun',
-      _ => 'mon',
-    };
-  }
-
   int _compareDueRows(_SimScheduleState a, _SimScheduleState b, int todayDay) {
     final overdueA = todayDay - a.dueDay;
     final overdueB = todayDay - b.dueDay;
@@ -639,15 +606,6 @@ class ForecastSimulationService {
     }
 
     return a.unitId.compareTo(b.unitId);
-  }
-
-  double _reviewBudgetRatio(String profile) {
-    return switch (profile) {
-      'support' => 0.80,
-      'standard' => 0.70,
-      'accelerated' => 0.60,
-      _ => 0.70,
-    };
   }
 
   double _initialEfForProfile(String profile) {

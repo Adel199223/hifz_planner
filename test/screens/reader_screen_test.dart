@@ -1080,7 +1080,7 @@ void main() {
     );
     expect(
       find.byKey(const ValueKey('reader_verse_word_1:1_0')),
-      findsOneWidget,
+      findsNothing,
     );
     expect(
       find.byKey(const ValueKey('reader_verse_word_1:1_1')),
@@ -1195,6 +1195,44 @@ void main() {
     expect(tooltip.message, 'Translation unavailable');
   });
 
+  testWidgets('verse by verse suppresses end-marker circle tokens',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
+    final fakeFonts = _FakeQcfFontManager(
+      familyName: 'qcf_test_family',
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+    );
+
+    expect(
+      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('verse by verse basmala words do not overlap', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi =
@@ -1219,18 +1257,18 @@ void main() {
     await _pumpReader(tester, container);
     await pumpUntilFound(
       tester,
-      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+      find.byKey(const ValueKey('reader_verse_word_1:2_0')),
     );
     await pumpUntilFound(
       tester,
-      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+      find.byKey(const ValueKey('reader_verse_word_1:2_1')),
     );
 
     final firstWordRect = tester.getRect(
-      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+      find.byKey(const ValueKey('reader_verse_word_1:2_0')),
     );
     final secondWordRect = tester.getRect(
-      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+      find.byKey(const ValueKey('reader_verse_word_1:2_1')),
     );
     expect(firstWordRect.overlaps(secondWordRect), isFalse);
   });
@@ -3820,6 +3858,7 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
     _stored = StoredAppPreferences(
       languageCode: code,
       themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
     );
   }
 
@@ -3828,6 +3867,16 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
     _stored = StoredAppPreferences(
       languageCode: _stored.languageCode,
       themeCode: code,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+    );
+  }
+
+  @override
+  Future<void> saveCompanionAutoReciteEnabled(bool value) async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: value,
     );
   }
 }

@@ -13,10 +13,12 @@ import '../data/providers/database_providers.dart';
 import '../data/services/ayah_audio_service.dart';
 import '../data/services/qurancom_api.dart';
 import '../data/services/qurancom_chapters_service.dart';
+import '../data/services/quran_wording.dart';
 import '../l10n/app_language.dart';
 import '../l10n/app_strings.dart';
 import '../ui/audio/reciter_selection_list.dart';
 import '../ui/qcf/qcf_font_manager.dart';
+import '../ui/quran/quran_word_wrap.dart';
 import '../ui/tajweed/tajweed_colors.dart';
 import '../ui/tajweed/tajweed_markup.dart';
 
@@ -377,8 +379,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   };
   final Map<AppLanguage, Map<int, String>> _surahMeaningsByLanguage =
       <AppLanguage, Map<int, String>>{
-    AppLanguage.english:
-        Map<int, String>.from(_fallbackSurahMeaningsEnglish),
+    AppLanguage.english: Map<int, String>.from(_fallbackSurahMeaningsEnglish),
     for (final language in AppLanguage.values.where(
       (value) => value != AppLanguage.english,
     ))
@@ -2015,16 +2016,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   String _cleanTranslationText(String? rawText) {
-    if (rawText == null) {
-      return '';
-    }
-    var text = rawText.replaceAll(RegExp(r'<[^>]*>'), ' ');
-    text = text
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', '\'');
-    return text.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return cleanTranslationText(rawText);
   }
 
   Widget _buildSimpleQuranComArabicContent({
@@ -2042,99 +2034,35 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           fontSize: 34,
           height: 1.65,
         );
-    final qcfStyle = baseArabicStyle.copyWith(fontFamily: data.qcfFamilyName);
-    final fallbackStyle = baseArabicStyle.copyWith(fontFamily: 'UthmanicHafs');
-    return Wrap(
+    return QuranWordWrap(
       key: ValueKey('ayah_qurancom_text_$ayahKey'),
-      textDirection: TextDirection.rtl,
-      spacing: _verseByVerseWordGap,
-      runSpacing: _verseByVerseWordRunSpacing,
-      alignment: WrapAlignment.end,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        for (var wordIndex = 0; wordIndex < data.words.length; wordIndex++)
-          if (_wordTextForSpan(data.words[wordIndex]).isNotEmpty)
-            _buildVerseByVerseWordWidget(
-              word: data.words[wordIndex],
-              ayahKey: ayahKey,
-              wordIndex: wordIndex,
-              qcfStyle: qcfStyle,
-              fallbackStyle: fallbackStyle,
-            ),
-      ],
-    );
-  }
-
-  Widget _buildVerseByVerseWordWidget({
-    required MushafWord word,
-    required String ayahKey,
-    required int wordIndex,
-    required TextStyle qcfStyle,
-    required TextStyle fallbackStyle,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final verseWordKey = 'verse:$ayahKey:${word.position ?? wordIndex}';
-    final hoveredWord = _hoveredMushafWordKey == verseWordKey;
-    final isQcfWord = (word.codeV2 ?? '').isNotEmpty;
-    final isEndMarker = (word.charTypeName ?? '').trim().toLowerCase() == 'end';
-    final isTajweedV4Qcf =
-        _arabicRenderMode == _ArabicRenderMode.tajweed && isQcfWord;
-    final baseStyle = isQcfWord ? qcfStyle : fallbackStyle;
-    final resolvedStyle = hoveredWord && !isTajweedV4Qcf
-        ? baseStyle.copyWith(color: colorScheme.secondary)
-        : baseStyle;
-    final highlightColor = hoveredWord
-        ? colorScheme.primary.withValues(
-            alpha: isTajweedV4Qcf ? 0.18 : 0.24,
-          )
-        : null;
-
-    Widget child = AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
-      padding: const EdgeInsets.symmetric(horizontal: 1.5, vertical: 1),
-      decoration: highlightColor != null
-          ? BoxDecoration(
-              color: highlightColor,
-              borderRadius: BorderRadius.circular(6),
-            )
-          : null,
-      child: Text(
-        _wordTextForSpan(word),
-        key: ValueKey('reader_verse_word_${ayahKey}_$wordIndex'),
-        textDirection: TextDirection.rtl,
-        maxLines: 1,
-        softWrap: false,
-        textScaler: const TextScaler.linear(1.0),
-        style: resolvedStyle,
-      ),
-    );
-
-    if (!isEndMarker) {
-      child = Tooltip(
-        key: ValueKey('reader_verse_word_tooltip_${ayahKey}_$wordIndex'),
-        message: _mushafWordTooltipMessage(word),
-        waitDuration: Duration.zero,
-        child: child,
-      );
-    }
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => _setHoveredMushafHoverState(
-        verseKey: ayahKey,
-        wordKey: verseWordKey,
-        previewWord: word,
-      ),
-      onExit: (_) {
-        if (_hoveredMushafWordKey == verseWordKey) {
-          _setHoveredMushafHoverState(
-            verseKey: null,
-            wordKey: null,
-            previewWord: null,
-          );
-        }
+      words: data.words,
+      qcfFamilyName: data.qcfFamilyName,
+      baseStyle: baseArabicStyle,
+      showWordHover: true,
+      showTooltips: true,
+      suppressEndMarkers: true,
+      preserveQcfTextColorOnHover:
+          _arabicRenderMode == _ArabicRenderMode.tajweed,
+      wordSpacing: _verseByVerseWordGap,
+      wordRunSpacing: _verseByVerseWordRunSpacing,
+      translationUnavailableText: _strings.translationUnavailable,
+      wordTextKeyBuilder: (wordIndex, _) {
+        return ValueKey('reader_verse_word_${ayahKey}_$wordIndex');
       },
-      child: child,
+      wordTooltipKeyBuilder: (wordIndex, _) {
+        return ValueKey('reader_verse_word_tooltip_${ayahKey}_$wordIndex');
+      },
+      wordIdentityBuilder: (wordIndex, word) {
+        return 'verse:$ayahKey:${word.position ?? wordIndex}';
+      },
+      onHoverWordChanged: (wordIdentity, word) {
+        _setHoveredMushafHoverState(
+          verseKey: wordIdentity == null ? null : ayahKey,
+          wordKey: wordIdentity,
+          previewWord: word,
+        );
+      },
     );
   }
 
@@ -2777,7 +2705,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    for (var index = 0; index < legendItems.length; index++) ...[
+                    for (var index = 0;
+                        index < legendItems.length;
+                        index++) ...[
                       if (index > 0) const SizedBox(width: 18),
                       _buildTajweedLegendChip(item: legendItems[index]),
                     ],
@@ -3588,11 +3518,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   String _mushafWordTooltipMessage(MushafWord word) {
-    final translation = (word.translationText ?? '').trim();
-    if (translation.isNotEmpty) {
-      return translation;
-    }
-    return _strings.translationUnavailable;
+    return wordTooltipMessage(
+      word,
+      fallback: _strings.translationUnavailable,
+    );
   }
 
   Future<void> _showMushafWordPopover({

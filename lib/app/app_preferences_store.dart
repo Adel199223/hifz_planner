@@ -4,10 +4,12 @@ class StoredAppPreferences {
   const StoredAppPreferences({
     this.languageCode,
     this.themeCode,
+    this.companionAutoReciteEnabled,
   });
 
   final String? languageCode;
   final String? themeCode;
+  final bool? companionAutoReciteEnabled;
 }
 
 abstract class AppPreferencesStore {
@@ -16,6 +18,8 @@ abstract class AppPreferencesStore {
   Future<void> saveLanguageCode(String code);
 
   Future<void> saveThemeCode(String code);
+
+  Future<void> saveCompanionAutoReciteEnabled(bool value);
 }
 
 class SharedPrefsAppPreferencesStore implements AppPreferencesStore {
@@ -23,6 +27,8 @@ class SharedPrefsAppPreferencesStore implements AppPreferencesStore {
 
   static const String _languageCodeKey = 'app_preferences.language_code';
   static const String _themeCodeKey = 'app_preferences.theme_code';
+  static const String _companionAutoReciteEnabledKey =
+      'app_preferences.companion_auto_recite_enabled';
 
   @override
   Future<StoredAppPreferences> load() async {
@@ -31,6 +37,8 @@ class SharedPrefsAppPreferencesStore implements AppPreferencesStore {
       return StoredAppPreferences(
         languageCode: prefs.getString(_languageCodeKey),
         themeCode: prefs.getString(_themeCodeKey),
+        companionAutoReciteEnabled:
+            prefs.getBool(_companionAutoReciteEnabledKey),
       );
     } catch (_) {
       return const StoredAppPreferences();
@@ -52,6 +60,16 @@ class SharedPrefsAppPreferencesStore implements AppPreferencesStore {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_themeCodeKey, code);
+    } catch (_) {
+      // Keep runtime behavior stable even when local persistence is unavailable.
+    }
+  }
+
+  @override
+  Future<void> saveCompanionAutoReciteEnabled(bool value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_companionAutoReciteEnabledKey, value);
     } catch (_) {
       // Keep runtime behavior stable even when local persistence is unavailable.
     }

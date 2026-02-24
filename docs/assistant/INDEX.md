@@ -23,9 +23,10 @@ One-page navigation guide for agent-facing documentation.
 | `docs/assistant/PERFORMANCE_BASELINES.md` | You need canonical watcher/search excludes and environment placement defaults. | CI release logic or runtime architecture decisions. | 1 min |
 | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | Task requires parity/inspiration from named apps/sites and external reference selection. | Direct implementation details without external-source analysis. | 2 min |
 | `docs/assistant/DB_DRIFT_KNOWLEDGE.md` | You are changing schema/migrations/repos/planner persistence. | Reader-only UI behavior changes. | 3 min |
-| `docs/assistant/workflows/READER_WORKFLOW.md` | Task targets Verse by Verse / Reading UI and interactions. | Planner internals or DB migrations. | 2 min |
+| `docs/assistant/workflows/READER_WORKFLOW.md` | Task targets Verse by Verse / Reading UI, shared Quran word rendering, and interaction parity. | Planner internals or DB migrations. | 2 min |
 | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | Task targets Quran.com fetch/cache/dedupe/fonts/translations. | Navigation shell changes. | 2 min |
 | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | Task targets onboarding/plan/today/scheduler/calibration. | Quran.com rendering fidelity tasks. | 2 min |
+| `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md` | Task targets automatic scheduling, weekly calendar generation, advanced availability, or companion staged/recitation/word-hover behavior. | Reader-only rendering or Quran.com data ingestion tasks. | 2 min |
 | `docs/assistant/workflows/CI_REPO_WORKFLOW.md` | Task targets CI workflow edits, branch sync/merge hygiene, and release gating commands. | Feature implementation details inside reader/planner logic. | 2 min |
 | `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` | Task starts with "commit": stage triage, ignore checks, commit message, push, and branch cleanup operations. | Feature implementation logic or schema design work. | 2 min |
 | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | Task changes docs structure/contracts/links. | Runtime feature implementation. | 2 min |

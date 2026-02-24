@@ -1,8 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../screens/about_screen.dart';
 import '../screens/bookmarks_screen.dart';
+import '../screens/companion_chain_screen.dart';
+import '../data/services/companion/companion_models.dart';
 import '../screens/learn_screen.dart';
 import '../screens/my_quran_screen.dart';
 import '../screens/notes_screen.dart';
@@ -100,6 +103,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/today',
             builder: (context, state) => const TodayScreen(),
+          ),
+          GoRoute(
+            path: '/companion/chain',
+            builder: (context, state) {
+              final unitId = int.tryParse(
+                state.uri.queryParameters['unitId'] ?? '',
+              );
+              final launchMode = CompanionLaunchMode.fromCode(
+                state.uri.queryParameters['mode'],
+              );
+              if (unitId == null || unitId <= 0) {
+                return const Scaffold(
+                  body: SafeArea(
+                    child: Center(
+                      child: Text('Missing or invalid unitId'),
+                    ),
+                  ),
+                );
+              }
+              return CompanionChainScreen(
+                unitId: unitId,
+                launchMode: launchMode,
+              );
+            },
           ),
           GoRoute(
             path: '/settings',

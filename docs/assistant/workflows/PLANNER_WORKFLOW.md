@@ -12,6 +12,8 @@ Use when changes touch:
 - spaced repetition scheduler calculations
 - calibration sample/apply behavior
 - planner settings and progress persistence
+- shared planner/forecast projection behavior (`PlanningProjectionEngine`)
+- For deep scheduling availability rules or companion chain work, route to `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`.
 
 ## What Not To Do
 
@@ -27,6 +29,7 @@ Use when changes touch:
 - `lib/data/services/spaced_repetition_scheduler.dart`
 - `lib/data/services/calibration_service.dart`
 - `lib/data/services/forecast_simulation_service.dart`
+- `lib/data/services/scheduling/planning_projection_engine.dart`
 - `lib/data/repositories/settings_repo.dart`
 - `lib/data/repositories/schedule_repo.dart`
 - `lib/data/repositories/review_log_repo.dart`
@@ -62,6 +65,7 @@ flutter test -j 1 -r expanded test/data/database/app_database_test.dart
    - Verify review-log insert + schedule apply transaction path.
 3. Symptoms: forecast/calibration output unexpected.
    - Re-check defaults and distribution parsing in `plan_screen.dart` and services.
+   - Verify both planner and forecast paths consume `PlanningProjectionEngine`.
 4. Symptoms: planner works on one screen but not another.
    - Trace provider wiring in `database_providers.dart`.
 
