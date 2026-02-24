@@ -50,6 +50,13 @@ void main() {
     return textWidget.data ?? '';
   }
 
+  String stage3ModeLabelText(WidgetTester tester) {
+    final textWidget = tester.widget<Text>(
+      find.byKey(const ValueKey('companion_stage3_mode_label')),
+    );
+    return textWidget.data ?? '';
+  }
+
   bool autoplayToggleValue(WidgetTester tester) {
     final toggle =
         tester.widget(find.byKey(const ValueKey('companion_autoplay_toggle')));
@@ -59,7 +66,8 @@ void main() {
     if (toggle is CupertinoSwitch) {
       return toggle.value;
     }
-    throw StateError('Unexpected autoplay toggle widget: ${toggle.runtimeType}');
+    throw StateError(
+        'Unexpected autoplay toggle widget: ${toggle.runtimeType}');
   }
 
   Finder firstAutoCheckOptionFinder({
@@ -76,7 +84,8 @@ void main() {
   }
 
   Future<void> submitManualDecision(WidgetTester tester, bool passed) async {
-    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
+    final recordButton =
+        find.byKey(const ValueKey('companion_record_start_button'));
     await tester.ensureVisible(recordButton);
     await tester.tap(recordButton);
     await tester.pumpAndSettle();
@@ -253,7 +262,8 @@ void main() {
     expect(find.byKey(const ValueKey('companion_stage1_auto_check_card')),
         findsOneWidget);
 
-    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
+    final recordButton =
+        find.byKey(const ValueKey('companion_record_start_button'));
     await tester.ensureVisible(recordButton);
     await tester.tap(recordButton);
     await tester.pumpAndSettle();
@@ -284,8 +294,10 @@ void main() {
     await tester.ensureVisible(optionFinder);
     await tester.tap(optionFinder);
     await tester.pumpAndSettle();
-    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
-    final incorrectFinder = find.byKey(const ValueKey('companion_mark_incorrect'));
+    final recordButton =
+        find.byKey(const ValueKey('companion_record_start_button'));
+    final incorrectFinder =
+        find.byKey(const ValueKey('companion_mark_incorrect'));
     for (var attempt = 0; attempt < 3; attempt++) {
       if (incorrectFinder.evaluate().isNotEmpty) {
         break;
@@ -308,7 +320,8 @@ void main() {
     expect(stage1ModeLabelText(tester), 'Correction');
     expect(find.text('Play Correction'), findsOneWidget);
 
-    final correctionButton = find.byKey(const ValueKey('companion_record_start_button'));
+    final correctionButton =
+        find.byKey(const ValueKey('companion_record_start_button'));
     await tester.ensureVisible(correctionButton);
     await tester.tap(correctionButton, warnIfMissed: false);
     await tester.pumpAndSettle();
@@ -339,8 +352,8 @@ void main() {
     expect(stageLabelText(tester), 'Cued recall');
     expect(find.byKey(const ValueKey('companion_stage2_mode_card')),
         findsOneWidget);
-    expect(find.byKey(const ValueKey('companion_stage1_mode_card')),
-        findsNothing);
+    expect(
+        find.byKey(const ValueKey('companion_stage1_mode_card')), findsNothing);
     expect(find.byKey(const ValueKey('companion_stage2_auto_check_card')),
         findsOneWidget);
   });
@@ -368,7 +381,8 @@ void main() {
       mode: CompanionLaunchMode.newMemorization,
     );
 
-    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
+    final recordButton =
+        find.byKey(const ValueKey('companion_record_start_button'));
     await tester.ensureVisible(recordButton);
     await tester.tap(recordButton);
     await tester.pumpAndSettle();
@@ -379,10 +393,12 @@ void main() {
     expect(find.byKey(const ValueKey('companion_mark_correct')), findsNothing);
   });
 
-  testWidgets('Stage-2 failure enters correction flow and requires correction action',
+  testWidgets(
+      'Stage-2 failure enters correction flow and requires correction action',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final unitId = await seedUnitAndAyah(db, unitKey: 'companion-stage2-correction');
+    final unitId =
+        await seedUnitAndAyah(db, unitKey: 'companion-stage2-correction');
     await seedUnlockedStage(
       db,
       unitId: unitId,
@@ -406,11 +422,13 @@ void main() {
     await tester.tap(optionFinder.first);
     await tester.pumpAndSettle();
 
-    final recordButton = find.byKey(const ValueKey('companion_record_start_button'));
+    final recordButton =
+        find.byKey(const ValueKey('companion_record_start_button'));
     await tester.ensureVisible(recordButton);
     await tester.tap(recordButton);
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('companion_mark_incorrect')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('companion_mark_incorrect')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('companion_mark_incorrect')));
     await tester.pumpAndSettle();
 
@@ -448,12 +466,95 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('companion_skip_stage_button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('companion_skip_stage_confirm')));
+    await tester
+        .tap(find.byKey(const ValueKey('companion_skip_stage_confirm')));
     await tester.pumpAndSettle();
 
     expect(stageLabelText(tester), 'Hidden reveal');
     expect(find.byKey(const ValueKey('companion_stage3_weak_prelude_banner')),
         findsOneWidget);
+  });
+
+  testWidgets('resumed Stage-3 session shows Stage-3 mode card and auto-check',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-stage3-start',
+    );
+    await seedUnlockedStage(
+      db,
+      unitId: unitId,
+      stage: CompanionStage.hiddenReveal,
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.newMemorization,
+    );
+
+    expect(stageLabelText(tester), 'Hidden reveal');
+    expect(find.byKey(const ValueKey('companion_stage3_mode_card')),
+        findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('companion_stage2_mode_card')), findsNothing);
+    expect(find.byKey(const ValueKey('companion_stage3_auto_check_card')),
+        findsOneWidget);
+  });
+
+  testWidgets(
+      'Stage-3 failure enters correction flow and requires correction action',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-stage3-correction',
+    );
+    await seedUnlockedStage(
+      db,
+      unitId: unitId,
+      stage: CompanionStage.hiddenReveal,
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.newMemorization,
+    );
+
+    final optionFinder = firstAutoCheckOptionFinder(
+      prefix: 'companion_stage3_auto_check_o',
+    );
+    await tester.ensureVisible(optionFinder.first);
+    await tester.tap(optionFinder.first);
+    await tester.pumpAndSettle();
+
+    final recordButton =
+        find.byKey(const ValueKey('companion_record_start_button'));
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    expect(
+        find.byKey(const ValueKey('companion_mark_incorrect')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('companion_mark_incorrect')));
+    await tester.pumpAndSettle();
+
+    expect(stage3ModeLabelText(tester), 'Correction');
+    expect(find.text('Play Stage-3 Correction'), findsOneWidget);
+
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    expect(stage3ModeLabelText(tester), isNot('Correction'));
   });
 
   testWidgets('review mode still starts hidden with no skip control',
@@ -476,7 +577,8 @@ void main() {
         findsNothing);
   });
 
-  testWidgets('companion supports play action and autoplay toggle write-through',
+  testWidgets(
+      'companion supports play action and autoplay toggle write-through',
       (tester) async {
     final store = _FakeAppPreferencesStore();
     final audio = _FakeAyahAudioService();

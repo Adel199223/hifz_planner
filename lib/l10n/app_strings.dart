@@ -642,6 +642,32 @@ class AppStrings {
         'companion_stage2_correction_action',
         'Play Stage-2 Correction',
       );
+  String get companionStage3ModeLabel =>
+      _t('companion_stage3_mode_label', 'Stage 3 mode');
+  String get companionStage3ModeWeakPrelude =>
+      _t('companion_stage3_mode_weak_prelude', 'Weak Prelude');
+  String get companionStage3ModeHiddenRecall =>
+      _t('companion_stage3_mode_hidden_recall', 'Hidden Recall');
+  String get companionStage3ModeLinking =>
+      _t('companion_stage3_mode_linking', 'Linking');
+  String get companionStage3ModeDiscrimination =>
+      _t('companion_stage3_mode_discrimination', 'Discrimination');
+  String get companionStage3ModeCorrection =>
+      _t('companion_stage3_mode_correction', 'Correction');
+  String get companionStage3ModeCheckpoint =>
+      _t('companion_stage3_mode_checkpoint', 'Checkpoint');
+  String get companionStage3ModeRemediation =>
+      _t('companion_stage3_mode_remediation', 'Remediation');
+  String get companionStage3ReciteNow =>
+      _t('companion_stage3_recite_now', 'Recite from hidden recall.');
+  String get companionStage3CorrectionRequiredMessage => _t(
+        'companion_stage3_correction_required_message',
+        'Correction playback is required before the next Stage-3 attempt.',
+      );
+  String get companionStage3CorrectionAction => _t(
+        'companion_stage3_correction_action',
+        'Play Stage-3 Correction',
+      );
   String companionStage3WeakPreludeBanner(int count) => _fmt(
         _t(
           'companion_stage3_weak_prelude_banner',

@@ -98,6 +98,34 @@ enum Stage2Phase {
   final String code;
 }
 
+enum Stage3Mode {
+  weakPrelude(code: 'weak_prelude'),
+  hiddenRecall(code: 'hidden_recall'),
+  linking(code: 'linking'),
+  discrimination(code: 'discrimination'),
+  correction(code: 'correction'),
+  checkpoint(code: 'checkpoint'),
+  remediation(code: 'remediation');
+
+  const Stage3Mode({required this.code});
+
+  final String code;
+}
+
+enum Stage3Phase {
+  prelude(code: 'prelude'),
+  acquisition(code: 'acquisition'),
+  checkpoint(code: 'checkpoint'),
+  remediation(code: 'remediation'),
+  completed(code: 'completed'),
+  budgetFallback(code: 'budget_fallback'),
+  skipped(code: 'skipped');
+
+  const Stage3Phase({required this.code});
+
+  final String code;
+}
+
 enum CompanionStage {
   guidedVisible(code: 'guided_visible', stageNumber: 1),
   cuedRecall(code: 'cued_recall', stageNumber: 2),
@@ -233,11 +261,9 @@ class Stage1Config {
   }) {
     final safeAyahCount = ayahCount < 1 ? 1 : ayahCount;
     final safeAvg = avgNewMinutesPerAyah <= 0 ? 2.0 : avgNewMinutesPerAyah;
-    final raw = (safeAyahCount *
-            safeAvg *
-            60000 *
-            stage1BudgetFractionOfNewTime)
-        .round();
+    final raw =
+        (safeAyahCount * safeAvg * 60000 * stage1BudgetFractionOfNewTime)
+            .round();
     return raw.clamp(stage1BudgetMinMs, stage1BudgetMaxMs);
   }
 
@@ -314,11 +340,9 @@ class Stage2Config {
   }) {
     final safeAyahCount = ayahCount < 1 ? 1 : ayahCount;
     final safeAvg = avgNewMinutesPerAyah <= 0 ? 2.0 : avgNewMinutesPerAyah;
-    final raw = (safeAyahCount *
-            safeAvg *
-            60000 *
-            stage2BudgetFractionOfNewTime)
-        .round();
+    final raw =
+        (safeAyahCount * safeAvg * 60000 * stage2BudgetFractionOfNewTime)
+            .round();
     return raw.clamp(stage2BudgetMinMs, stage2BudgetMaxMs);
   }
 
@@ -328,6 +352,69 @@ class Stage2Config {
   }) {
     final safeAyahCount = ayahCount < 1 ? 1 : ayahCount;
     final raw = (stage2ChunkBudgetMs / safeAyahCount).round();
+    return raw.clamp(perVerseCapMinMs, perVerseCapMaxMs);
+  }
+}
+
+class Stage3Config {
+  const Stage3Config({
+    this.readinessWindow = 4,
+    this.readinessPassesRequired = 3,
+    this.readinessMaxHint = HintLevel.letters,
+    this.readinessRequiredH0Passes = 2,
+    this.weakRequiredH0Passes = 1,
+    this.checkpointThreshold = 0.75,
+    this.stage3BudgetFractionOfNewTime = 0.35,
+    this.stage3BudgetMinMs = 90000,
+    this.stage3BudgetMaxMs = 600000,
+    this.perVerseCapMinMs = 45000,
+    this.perVerseCapMaxMs = 90000,
+    this.maxCheckpointRemediationRounds = 2,
+    this.autoCheckRequiredByDefault = true,
+    this.discriminationFailureTrigger = 2,
+    this.randomProbeEveryCountedAttempts = 4,
+    this.minSpacingMs = 90000,
+    this.targetSuccessBandMin = 0.70,
+    this.targetSuccessBandMax = 0.85,
+  });
+
+  final int readinessWindow;
+  final int readinessPassesRequired;
+  final HintLevel readinessMaxHint;
+  final int readinessRequiredH0Passes;
+  final int weakRequiredH0Passes;
+  final double checkpointThreshold;
+  final double stage3BudgetFractionOfNewTime;
+  final int stage3BudgetMinMs;
+  final int stage3BudgetMaxMs;
+  final int perVerseCapMinMs;
+  final int perVerseCapMaxMs;
+  final int maxCheckpointRemediationRounds;
+  final bool autoCheckRequiredByDefault;
+  final int discriminationFailureTrigger;
+  final int randomProbeEveryCountedAttempts;
+  final int minSpacingMs;
+  final double targetSuccessBandMin;
+  final double targetSuccessBandMax;
+
+  int stage3ChunkBudgetMs({
+    required int ayahCount,
+    required double avgNewMinutesPerAyah,
+  }) {
+    final safeAyahCount = ayahCount < 1 ? 1 : ayahCount;
+    final safeAvg = avgNewMinutesPerAyah <= 0 ? 2.0 : avgNewMinutesPerAyah;
+    final raw =
+        (safeAyahCount * safeAvg * 60000 * stage3BudgetFractionOfNewTime)
+            .round();
+    return raw.clamp(stage3BudgetMinMs, stage3BudgetMaxMs);
+  }
+
+  int perVerseCapMs({
+    required int ayahCount,
+    required int stage3ChunkBudgetMs,
+  }) {
+    final safeAyahCount = ayahCount < 1 ? 1 : ayahCount;
+    final raw = (stage3ChunkBudgetMs / safeAyahCount).round();
     return raw.clamp(perVerseCapMinMs, perVerseCapMaxMs);
   }
 }
@@ -406,9 +493,7 @@ class Stage1VerseStats {
       if (entry.passed && !entry.assisted) {
         unassistedPasses += 1;
       }
-      if (entry.passed &&
-          !entry.assisted &&
-          entry.hintLevel == HintLevel.h0) {
+      if (entry.passed && !entry.assisted && entry.hintLevel == HintLevel.h0) {
         hasH0Pass = true;
       }
     }
@@ -862,16 +947,307 @@ class Stage2Runtime {
       checkpointCursor: checkpointCursor ?? this.checkpointCursor,
       remediationTargets: remediationTargets ?? this.remediationTargets,
       remediationCursor: remediationCursor ?? this.remediationCursor,
-      lastCheckpointOutcome: identical(lastCheckpointOutcome, _stage2RuntimeUnset)
-          ? this.lastCheckpointOutcome
-          : lastCheckpointOutcome as Stage2CheckpointOutcome?,
-      activeAutoCheckPrompt: identical(activeAutoCheckPrompt, _stage2RuntimeUnset)
-          ? this.activeAutoCheckPrompt
-          : activeAutoCheckPrompt as Stage1AutoCheckPrompt?,
+      lastCheckpointOutcome:
+          identical(lastCheckpointOutcome, _stage2RuntimeUnset)
+              ? this.lastCheckpointOutcome
+              : lastCheckpointOutcome as Stage2CheckpointOutcome?,
+      activeAutoCheckPrompt:
+          identical(activeAutoCheckPrompt, _stage2RuntimeUnset)
+              ? this.activeAutoCheckPrompt
+              : activeAutoCheckPrompt as Stage1AutoCheckPrompt?,
     );
   }
 
   static const Object _stage2RuntimeUnset = Object();
+}
+
+class Stage3WindowEntry {
+  const Stage3WindowEntry({
+    required this.timestampMs,
+    required this.passed,
+    required this.countedPass,
+    required this.hintLevel,
+    required this.assisted,
+  });
+
+  final int timestampMs;
+  final bool passed;
+  final bool countedPass;
+  final HintLevel hintLevel;
+  final bool assisted;
+}
+
+class Stage3VerseStats {
+  const Stage3VerseStats({
+    this.attempts = 0,
+    this.countedAttempts = 0,
+    this.countedPasses = 0,
+    this.countedH0Passes = 0,
+    this.consecutiveFailures = 0,
+    this.correctionRequired = false,
+    this.reliefPending = false,
+    this.weakTarget = false,
+    this.remediationNeeded = false,
+    this.remediationRounds = 0,
+    this.discriminationAttempts = 0,
+    this.discriminationPasses = 0,
+    this.linkingAttempts = 0,
+    this.linkingPassCount = 0,
+    this.checkpointAttempted = false,
+    this.checkpointPassed = false,
+    this.checkpointAttempts = 0,
+    this.cueBaselineHint = HintLevel.h0,
+    this.lastCueRotatedFrom,
+    this.timeOnVerseMs = 0,
+    this.readinessWindow = const <Stage3WindowEntry>[],
+    this.lastH0SuccessAtMs,
+    this.spacedH0Confirmed = false,
+  });
+
+  final int attempts;
+  final int countedAttempts;
+  final int countedPasses;
+  final int countedH0Passes;
+  final int consecutiveFailures;
+  final bool correctionRequired;
+  final bool reliefPending;
+  final bool weakTarget;
+  final bool remediationNeeded;
+  final int remediationRounds;
+  final int discriminationAttempts;
+  final int discriminationPasses;
+  final int linkingAttempts;
+  final int linkingPassCount;
+  final bool checkpointAttempted;
+  final bool checkpointPassed;
+  final int checkpointAttempts;
+  final HintLevel cueBaselineHint;
+  final HintLevel? lastCueRotatedFrom;
+  final int timeOnVerseMs;
+  final List<Stage3WindowEntry> readinessWindow;
+  final int? lastH0SuccessAtMs;
+  final bool spacedH0Confirmed;
+
+  int _countedPassesInWindow({
+    required int windowSize,
+  }) {
+    final safeWindow = windowSize < 1 ? 1 : windowSize;
+    final window = readinessWindow.length <= safeWindow
+        ? readinessWindow
+        : readinessWindow.sublist(readinessWindow.length - safeWindow);
+    return window.where((entry) => entry.countedPass).length;
+  }
+
+  int _countedH0PassesInWindow({
+    required int windowSize,
+  }) {
+    final safeWindow = windowSize < 1 ? 1 : windowSize;
+    final window = readinessWindow.length <= safeWindow
+        ? readinessWindow
+        : readinessWindow.sublist(readinessWindow.length - safeWindow);
+    return window
+        .where(
+          (entry) => entry.countedPass && entry.hintLevel == HintLevel.h0,
+        )
+        .length;
+  }
+
+  bool isReady({
+    required Stage3Config config,
+    required bool isWeak,
+  }) {
+    if (_countedPassesInWindow(windowSize: config.readinessWindow) <
+        config.readinessPassesRequired) {
+      return false;
+    }
+    if (_countedH0PassesInWindow(windowSize: config.readinessWindow) <
+        config.readinessRequiredH0Passes) {
+      return false;
+    }
+    if (linkingPassCount < 1) {
+      return false;
+    }
+    if (isWeak && countedH0Passes < config.weakRequiredH0Passes) {
+      return false;
+    }
+    return true;
+  }
+
+  Stage3VerseStats copyWith({
+    int? attempts,
+    int? countedAttempts,
+    int? countedPasses,
+    int? countedH0Passes,
+    int? consecutiveFailures,
+    bool? correctionRequired,
+    bool? reliefPending,
+    bool? weakTarget,
+    bool? remediationNeeded,
+    int? remediationRounds,
+    int? discriminationAttempts,
+    int? discriminationPasses,
+    int? linkingAttempts,
+    int? linkingPassCount,
+    bool? checkpointAttempted,
+    bool? checkpointPassed,
+    int? checkpointAttempts,
+    HintLevel? cueBaselineHint,
+    Object? lastCueRotatedFrom = _stage3StatsUnset,
+    int? timeOnVerseMs,
+    List<Stage3WindowEntry>? readinessWindow,
+    Object? lastH0SuccessAtMs = _stage3StatsUnset,
+    bool? spacedH0Confirmed,
+  }) {
+    return Stage3VerseStats(
+      attempts: attempts ?? this.attempts,
+      countedAttempts: countedAttempts ?? this.countedAttempts,
+      countedPasses: countedPasses ?? this.countedPasses,
+      countedH0Passes: countedH0Passes ?? this.countedH0Passes,
+      consecutiveFailures: consecutiveFailures ?? this.consecutiveFailures,
+      correctionRequired: correctionRequired ?? this.correctionRequired,
+      reliefPending: reliefPending ?? this.reliefPending,
+      weakTarget: weakTarget ?? this.weakTarget,
+      remediationNeeded: remediationNeeded ?? this.remediationNeeded,
+      remediationRounds: remediationRounds ?? this.remediationRounds,
+      discriminationAttempts:
+          discriminationAttempts ?? this.discriminationAttempts,
+      discriminationPasses: discriminationPasses ?? this.discriminationPasses,
+      linkingAttempts: linkingAttempts ?? this.linkingAttempts,
+      linkingPassCount: linkingPassCount ?? this.linkingPassCount,
+      checkpointAttempted: checkpointAttempted ?? this.checkpointAttempted,
+      checkpointPassed: checkpointPassed ?? this.checkpointPassed,
+      checkpointAttempts: checkpointAttempts ?? this.checkpointAttempts,
+      cueBaselineHint: cueBaselineHint ?? this.cueBaselineHint,
+      lastCueRotatedFrom: identical(lastCueRotatedFrom, _stage3StatsUnset)
+          ? this.lastCueRotatedFrom
+          : lastCueRotatedFrom as HintLevel?,
+      timeOnVerseMs: timeOnVerseMs ?? this.timeOnVerseMs,
+      readinessWindow: readinessWindow ?? this.readinessWindow,
+      lastH0SuccessAtMs: identical(lastH0SuccessAtMs, _stage3StatsUnset)
+          ? this.lastH0SuccessAtMs
+          : lastH0SuccessAtMs as int?,
+      spacedH0Confirmed: spacedH0Confirmed ?? this.spacedH0Confirmed,
+    );
+  }
+
+  static const Object _stage3StatsUnset = Object();
+}
+
+class Stage3CheckpointOutcome {
+  const Stage3CheckpointOutcome({
+    required this.chunkPassRate,
+    required this.failedVerseIndexes,
+    required this.everyVerseReady,
+    required this.weakPreludeCleared,
+    required this.passed,
+  });
+
+  final double chunkPassRate;
+  final List<int> failedVerseIndexes;
+  final bool everyVerseReady;
+  final bool weakPreludeCleared;
+  final bool passed;
+}
+
+class Stage3Runtime {
+  const Stage3Runtime({
+    required this.config,
+    required this.phase,
+    required this.mode,
+    required this.startedAtEpochMs,
+    required this.lastActionAtEpochMs,
+    required this.chunkElapsedMs,
+    required this.stage3BudgetMs,
+    required this.perVerseCapMs,
+    required this.budgetExceeded,
+    required this.remediationRounds,
+    required this.checkpointTargets,
+    required this.checkpointCursor,
+    required this.remediationTargets,
+    required this.remediationCursor,
+    required this.lastCheckpointOutcome,
+    required this.activeAutoCheckPrompt,
+    required this.totalCountableAttempts,
+  });
+
+  final Stage3Config config;
+  final Stage3Phase phase;
+  final Stage3Mode mode;
+  final int startedAtEpochMs;
+  final int lastActionAtEpochMs;
+  final int chunkElapsedMs;
+  final int stage3BudgetMs;
+  final int perVerseCapMs;
+  final bool budgetExceeded;
+  final int remediationRounds;
+  final List<int> checkpointTargets;
+  final int checkpointCursor;
+  final List<int> remediationTargets;
+  final int remediationCursor;
+  final Stage3CheckpointOutcome? lastCheckpointOutcome;
+  final Stage1AutoCheckPrompt? activeAutoCheckPrompt;
+  final int totalCountableAttempts;
+
+  bool get autoCheckRequiredForCurrentMode {
+    if (!config.autoCheckRequiredByDefault) {
+      return false;
+    }
+    return mode == Stage3Mode.weakPrelude ||
+        mode == Stage3Mode.hiddenRecall ||
+        mode == Stage3Mode.linking ||
+        mode == Stage3Mode.discrimination ||
+        mode == Stage3Mode.checkpoint ||
+        mode == Stage3Mode.remediation;
+  }
+
+  Stage3Runtime copyWith({
+    Stage3Config? config,
+    Stage3Phase? phase,
+    Stage3Mode? mode,
+    int? startedAtEpochMs,
+    int? lastActionAtEpochMs,
+    int? chunkElapsedMs,
+    int? stage3BudgetMs,
+    int? perVerseCapMs,
+    bool? budgetExceeded,
+    int? remediationRounds,
+    List<int>? checkpointTargets,
+    int? checkpointCursor,
+    List<int>? remediationTargets,
+    int? remediationCursor,
+    Object? lastCheckpointOutcome = _stage3RuntimeUnset,
+    Object? activeAutoCheckPrompt = _stage3RuntimeUnset,
+    int? totalCountableAttempts,
+  }) {
+    return Stage3Runtime(
+      config: config ?? this.config,
+      phase: phase ?? this.phase,
+      mode: mode ?? this.mode,
+      startedAtEpochMs: startedAtEpochMs ?? this.startedAtEpochMs,
+      lastActionAtEpochMs: lastActionAtEpochMs ?? this.lastActionAtEpochMs,
+      chunkElapsedMs: chunkElapsedMs ?? this.chunkElapsedMs,
+      stage3BudgetMs: stage3BudgetMs ?? this.stage3BudgetMs,
+      perVerseCapMs: perVerseCapMs ?? this.perVerseCapMs,
+      budgetExceeded: budgetExceeded ?? this.budgetExceeded,
+      remediationRounds: remediationRounds ?? this.remediationRounds,
+      checkpointTargets: checkpointTargets ?? this.checkpointTargets,
+      checkpointCursor: checkpointCursor ?? this.checkpointCursor,
+      remediationTargets: remediationTargets ?? this.remediationTargets,
+      remediationCursor: remediationCursor ?? this.remediationCursor,
+      lastCheckpointOutcome:
+          identical(lastCheckpointOutcome, _stage3RuntimeUnset)
+              ? this.lastCheckpointOutcome
+              : lastCheckpointOutcome as Stage3CheckpointOutcome?,
+      activeAutoCheckPrompt:
+          identical(activeAutoCheckPrompt, _stage3RuntimeUnset)
+              ? this.activeAutoCheckPrompt
+              : activeAutoCheckPrompt as Stage1AutoCheckPrompt?,
+      totalCountableAttempts:
+          totalCountableAttempts ?? this.totalCountableAttempts,
+    );
+  }
+
+  static const Object _stage3RuntimeUnset = Object();
 }
 
 class ChainVerse {
@@ -894,6 +1270,7 @@ class ProgressiveRevealChainConfig {
     this.defaultAvgNewMinutesPerAyah = 2.0,
     this.stage1 = const Stage1Config(),
     this.stage2 = const Stage2Config(),
+    this.stage3 = const Stage3Config(),
   });
 
   final int maxAttemptsBeforeInterleave;
@@ -902,6 +1279,7 @@ class ProgressiveRevealChainConfig {
   final double defaultAvgNewMinutesPerAyah;
   final Stage1Config stage1;
   final Stage2Config stage2;
+  final Stage3Config stage3;
 }
 
 class VerseAttemptTelemetry {
@@ -925,6 +1303,8 @@ class VerseAttemptTelemetry {
     this.stage1Mode,
     this.stage2Mode,
     this.stage2Phase,
+    this.stage3Mode,
+    this.stage3Phase,
     this.correctionRequiredAfterAttempt = false,
   });
 
@@ -947,6 +1327,8 @@ class VerseAttemptTelemetry {
   final Stage1Mode? stage1Mode;
   final Stage2Mode? stage2Mode;
   final Stage2Phase? stage2Phase;
+  final Stage3Mode? stage3Mode;
+  final Stage3Phase? stage3Phase;
   final bool correctionRequiredAfterAttempt;
 }
 
@@ -964,6 +1346,7 @@ class ChainVerseState {
     required this.proficiency,
     required this.stage1,
     required this.stage2,
+    this.stage3 = const Stage3VerseStats(),
   });
 
   final ChainVerse verse;
@@ -978,6 +1361,7 @@ class ChainVerseState {
   final double proficiency;
   final Stage1VerseStats stage1;
   final Stage2VerseStats stage2;
+  final Stage3VerseStats stage3;
 
   bool passedForStage(CompanionStage stage) {
     return switch (stage) {
@@ -1010,6 +1394,7 @@ class ChainVerseState {
     double? proficiency,
     Stage1VerseStats? stage1,
     Stage2VerseStats? stage2,
+    Stage3VerseStats? stage3,
   }) {
     return ChainVerseState(
       verse: verse,
@@ -1024,6 +1409,7 @@ class ChainVerseState {
       proficiency: proficiency ?? this.proficiency,
       stage1: stage1 ?? this.stage1,
       stage2: stage2 ?? this.stage2,
+      stage3: stage3 ?? this.stage3,
     );
   }
 }
@@ -1043,6 +1429,7 @@ class ChainRunState {
     required this.resultKind,
     required this.stage1,
     required this.stage2,
+    this.stage3,
     required this.stage3WeakPreludeTargets,
     required this.stage3WeakPreludeCursor,
     required this.resolvedAvgNewMinutesPerAyah,
@@ -1061,6 +1448,7 @@ class ChainRunState {
   final ChainResultKind resultKind;
   final Stage1Runtime? stage1;
   final Stage2Runtime? stage2;
+  final Stage3Runtime? stage3;
   final List<int> stage3WeakPreludeTargets;
   final int stage3WeakPreludeCursor;
   final double resolvedAvgNewMinutesPerAyah;
@@ -1097,6 +1485,7 @@ class ChainRunState {
     ChainResultKind? resultKind,
     Object? stage1 = _stateUnset,
     Object? stage2 = _stateUnset,
+    Object? stage3 = _stateUnset,
     List<int>? stage3WeakPreludeTargets,
     int? stage3WeakPreludeCursor,
     double? resolvedAvgNewMinutesPerAyah,
@@ -1116,8 +1505,12 @@ class ChainRunState {
       stage1: identical(stage1, _stateUnset)
           ? this.stage1
           : stage1 as Stage1Runtime?,
-      stage2:
-          identical(stage2, _stateUnset) ? this.stage2 : stage2 as Stage2Runtime?,
+      stage2: identical(stage2, _stateUnset)
+          ? this.stage2
+          : stage2 as Stage2Runtime?,
+      stage3: identical(stage3, _stateUnset)
+          ? this.stage3
+          : stage3 as Stage3Runtime?,
       stage3WeakPreludeTargets:
           stage3WeakPreludeTargets ?? this.stage3WeakPreludeTargets,
       stage3WeakPreludeCursor:

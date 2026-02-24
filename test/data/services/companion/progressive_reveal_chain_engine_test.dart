@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -51,9 +53,14 @@ void main() {
     return ProgressiveRevealChainConfig(stage2: stage2);
   }
 
+  ProgressiveRevealChainConfig configForStage3(Stage3Config stage3) {
+    return ProgressiveRevealChainConfig(stage3: stage3);
+  }
+
   String correctOption(ChainRunState state) {
-    final prompt =
-        state.stage1?.activeAutoCheckPrompt ?? state.stage2?.activeAutoCheckPrompt;
+    final prompt = state.stage1?.activeAutoCheckPrompt ??
+        state.stage2?.activeAutoCheckPrompt ??
+        state.stage3?.activeAutoCheckPrompt;
     expect(prompt, isNotNull);
     return prompt!.correctOptionId;
   }
@@ -101,7 +108,8 @@ void main() {
     expect(state.stage1?.mode, Stage1Mode.coldProbe);
 
     final attempts = await companionRepo.getAttemptsForSession(state.sessionId);
-    expect(attempts.where((entry) => entry.attemptType == 'encode_echo').length, 2);
+    expect(attempts.where((entry) => entry.attemptType == 'encode_echo').length,
+        2);
   });
 
   test('locks hints for first H0 cold attempt, then unlocks', () async {
@@ -307,7 +315,8 @@ void main() {
   });
 
   test('checkpoint failure remediates only failed verse indexes', () async {
-    final unitId = await createUnit('stage1-checkpoint-remediation', endAyah: 2);
+    final unitId =
+        await createUnit('stage1-checkpoint-remediation', endAyah: 2);
     const stage1 = Stage1Config(
       echoMinLoops: 1,
       echoMaxLoops: 1,
@@ -475,7 +484,8 @@ void main() {
     expect(state.activeStage, CompanionStage.cuedRecall);
     expect(state.stage1?.phase, Stage1Phase.budgetFallback);
     expect(state.stage1?.budgetExceeded, isTrue);
-    expect(state.verses.every((verse) => verse.stage1.seenModelExposure), isTrue);
+    expect(
+        state.verses.every((verse) => verse.stage1.seenModelExposure), isTrue);
     expect(state.verses.every((verse) => verse.stage1.weak), isTrue);
   });
 
@@ -765,6 +775,7 @@ void main() {
       state: hinted,
       evaluator: evaluator,
       manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(hinted),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 40, 4),
     );
@@ -842,7 +853,645 @@ void main() {
     expect(update.state.currentVerseIndex, 1);
   });
 
-  test('review mode remains hidden-first and bypasses Stage 2 runtime', () async {
+  test('Stage 3 runtime activates for resumed NEW hidden stage', () async {
+    final unitId = await createUnit('stage3-activation', endAyah: 1);
+    final config = configForStage3(const Stage3Config());
+
+    final state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'قل أعوذ برب الناس'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      unlockedStage: CompanionStage.hiddenReveal,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 10, 0),
+    );
+
+    expect(state.activeStage, CompanionStage.hiddenReveal);
+    expect(state.stage3, isNotNull);
+    expect(state.stage3?.mode, Stage3Mode.linking);
+    expect(state.currentHintLevel, HintLevel.h0);
+  });
+
+  test('Stage 3 failure requires correction exposure before retry', () async {
+    final unitId = await createUnit('stage3-correction-gate', endAyah: 1);
+    final config = configForStage3(const Stage3Config());
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'مالك يوم الدين'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      unlockedStage: CompanionStage.hiddenReveal,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 20, 0),
+    );
+
+    var update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: false,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 20, 2),
+    );
+    state = update.state;
+    expect(state.stage3?.mode, Stage3Mode.correction);
+    expect(update.telemetry.correctionRequiredAfterAttempt, isTrue);
+
+    await expectLater(
+      engine.submitAttempt(
+        state: state,
+        evaluator: evaluator,
+        manualFallbackPass: true,
+        config: config,
+        nowLocal: DateTime(2026, 2, 24, 10, 20, 4),
+      ),
+      throwsA(isA<StateError>()),
+    );
+
+    final correction = await engine.submitCorrectionExposure(
+      state: state,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 20, 6),
+    );
+    state = correction.state;
+    expect(state.stage3?.mode, isNot(Stage3Mode.correction));
+  });
+
+  test('Stage 3 checkpoint pass completes session', () async {
+    final unitId = await createUnit('stage3-checkpoint-pass', endAyah: 1);
+    final config = configForStage3(
+      const Stage3Config(
+        readinessWindow: 1,
+        readinessPassesRequired: 1,
+        readinessRequiredH0Passes: 1,
+        weakRequiredH0Passes: 1,
+        checkpointThreshold: 1.0,
+        minSpacingMs: 1,
+      ),
+    );
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'اهدنا الصراط المستقيم'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      unlockedStage: CompanionStage.hiddenReveal,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 30, 0),
+    );
+
+    var update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 30, 2),
+    );
+    state = update.state;
+    expect(state.stage3?.phase, Stage3Phase.checkpoint);
+
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 30, 4),
+    );
+    state = update.state;
+
+    expect(state.completed, isTrue);
+    expect(state.resultKind, ChainResultKind.completed);
+    expect(update.summary, isNotNull);
+    expect(update.summary?.resultKind, ChainResultKind.completed);
+  });
+
+  test('Stage 3 checkpoint failure remediates failed-only targets', () async {
+    final unitId = await createUnit('stage3-remediation', endAyah: 2);
+    final config = configForStage3(
+      const Stage3Config(
+        readinessWindow: 1,
+        readinessPassesRequired: 1,
+        readinessRequiredH0Passes: 1,
+        weakRequiredH0Passes: 1,
+        checkpointThreshold: 1.0,
+      ),
+    );
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'الرحمن الرحيم'),
+        ChainVerse(surah: 1, ayah: 2, text: 'مالك يوم الدين'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      unlockedStage: CompanionStage.hiddenReveal,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 40, 0),
+    );
+
+    var update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 40, 2),
+    );
+    state = update.state;
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 40, 4),
+    );
+    state = update.state;
+    expect(state.stage3?.phase, Stage3Phase.checkpoint);
+    expect(state.currentVerseIndex, 0);
+
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 40, 6),
+    );
+    state = update.state;
+    expect(state.currentVerseIndex, 1);
+
+    final hinted = engine.requestHint(engine.requestHint(state));
+    update = await engine.submitAttempt(
+      state: hinted,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(hinted),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 40, 8),
+    );
+    state = update.state;
+
+    expect(state.stage3?.phase, Stage3Phase.remediation);
+    expect(state.stage3?.mode, Stage3Mode.remediation);
+    expect(state.stage3?.remediationTargets, const <int>[1]);
+    expect(state.currentVerseIndex, 1);
+  });
+
+  test('Stage 3 budget fallback is explicit and non-terminal', () async {
+    final unitId = await createUnit('stage3-budget-fallback', endAyah: 1);
+    final config = configForStage3(
+      const Stage3Config(
+        stage3BudgetFractionOfNewTime: 0.01,
+        stage3BudgetMinMs: 1,
+        stage3BudgetMaxMs: 1,
+        perVerseCapMinMs: 1,
+        perVerseCapMaxMs: 1,
+      ),
+    );
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'الصراط'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      unlockedStage: CompanionStage.hiddenReveal,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 50, 0),
+    );
+
+    var update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 50, 3),
+    );
+
+    state = update.state;
+    expect(state.completed, isFalse);
+    expect(state.stage3?.phase, Stage3Phase.budgetFallback);
+    expect(update.summary, isNull);
+
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 50, 5),
+    );
+    state = update.state;
+    final attempts = await companionRepo.getAttemptsForSession(state.sessionId);
+    final stage3Attempts = attempts
+        .where((entry) => entry.stageCode == CompanionStage.hiddenReveal.code)
+        .toList(growable: false);
+    expect(stage3Attempts, isNotEmpty);
+    final stage3Telemetry = jsonDecode(
+      stage3Attempts.last.telemetryJson ?? '{}',
+    ) as Map<String, dynamic>;
+    expect(stage3Telemetry['stage3_phase'], Stage3Phase.budgetFallback.code);
+    expect(stage3Telemetry['lifecycle_hook'], 'stage4_candidate');
+  });
+
+  test(
+      'Stage 3 weak-prelude routes only remaining targets until prelude clears',
+      () async {
+    final unitId = await createUnit('stage3-weak-prelude-routing', endAyah: 3);
+    final config = configForStage3(const Stage3Config());
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'قل هو الله أحد'),
+        ChainVerse(surah: 1, ayah: 2, text: 'الله الصمد'),
+        ChainVerse(surah: 1, ayah: 3, text: 'لم يلد ولم يولد'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      unlockedStage: CompanionStage.hiddenReveal,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 0, 0),
+    );
+
+    state = state.copyWith(
+      verses: <ChainVerseState>[
+        state.verses[0].copyWith(
+          stage3: state.verses[0].stage3.copyWith(
+            weakTarget: true,
+            cueBaselineHint: HintLevel.letters,
+          ),
+        ),
+        state.verses[1],
+        state.verses[2].copyWith(
+          stage3: state.verses[2].stage3.copyWith(
+            weakTarget: true,
+            cueBaselineHint: HintLevel.letters,
+          ),
+        ),
+      ],
+      stage3: state.stage3?.copyWith(
+        mode: Stage3Mode.weakPrelude,
+        phase: Stage3Phase.prelude,
+      ),
+      stage3WeakPreludeTargets: const <int>[0, 2],
+      stage3WeakPreludeCursor: 0,
+      currentVerseIndex: 0,
+      currentHintLevel: HintLevel.letters,
+    );
+
+    var update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 0, 2),
+    );
+    state = update.state;
+
+    expect(state.stage3WeakPreludeTargets, const <int>[2]);
+    expect(state.currentVerseIndex, 2);
+    expect(state.stage3?.mode, Stage3Mode.weakPrelude);
+    expect(state.currentHintLevel, HintLevel.letters);
+
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 0, 4),
+    );
+    state = update.state;
+    expect(state.stage3WeakPreludeTargets, isEmpty);
+  });
+
+  test('Stage 3 correction gate is enforced across runtime modes', () async {
+    final scenarios = <Map<String, Object>>[
+      <String, Object>{
+        'mode': Stage3Mode.hiddenRecall,
+        'phase': Stage3Phase.acquisition,
+        'weakTargets': const <int>[],
+      },
+      <String, Object>{
+        'mode': Stage3Mode.linking,
+        'phase': Stage3Phase.acquisition,
+        'weakTargets': const <int>[],
+      },
+      <String, Object>{
+        'mode': Stage3Mode.discrimination,
+        'phase': Stage3Phase.acquisition,
+        'weakTargets': const <int>[],
+      },
+      <String, Object>{
+        'mode': Stage3Mode.checkpoint,
+        'phase': Stage3Phase.checkpoint,
+        'weakTargets': const <int>[],
+      },
+      <String, Object>{
+        'mode': Stage3Mode.remediation,
+        'phase': Stage3Phase.remediation,
+        'weakTargets': const <int>[],
+      },
+      <String, Object>{
+        'mode': Stage3Mode.weakPrelude,
+        'phase': Stage3Phase.prelude,
+        'weakTargets': const <int>[0],
+      },
+    ];
+    final config = configForStage3(const Stage3Config());
+
+    for (var index = 0; index < scenarios.length; index++) {
+      final scenario = scenarios[index];
+      final mode = scenario['mode']! as Stage3Mode;
+      final phase = scenario['phase']! as Stage3Phase;
+      final weakTargets = scenario['weakTargets']! as List<int>;
+      final unitId = await createUnit('stage3-mode-correction-$index');
+
+      var state = await engine.startSession(
+        unitId: unitId,
+        verses: const <ChainVerse>[
+          ChainVerse(
+              surah: 1, ayah: 1, text: 'وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ'),
+        ],
+        launchMode: CompanionLaunchMode.newMemorization,
+        unlockedStage: CompanionStage.hiddenReveal,
+        config: config,
+        nowLocal: DateTime(2026, 2, 24, 11, 10, index * 10),
+      );
+
+      final verse = state.verses.first.copyWith(
+        stage3: state.verses.first.stage3.copyWith(
+          weakTarget: weakTargets.isNotEmpty,
+          cueBaselineHint:
+              weakTargets.isNotEmpty ? HintLevel.letters : HintLevel.h0,
+        ),
+      );
+      state = state.copyWith(
+        verses: <ChainVerseState>[verse],
+        stage3WeakPreludeTargets: weakTargets,
+        stage3WeakPreludeCursor: 0,
+        currentHintLevel:
+            weakTargets.isNotEmpty ? HintLevel.letters : HintLevel.h0,
+        stage3: state.stage3?.copyWith(
+          mode: mode,
+          phase: phase,
+          checkpointTargets:
+              mode == Stage3Mode.checkpoint ? const <int>[0] : const <int>[],
+          checkpointCursor: 0,
+          remediationTargets:
+              mode == Stage3Mode.remediation ? const <int>[0] : const <int>[],
+          remediationCursor: 0,
+        ),
+      );
+
+      var update = await engine.submitAttempt(
+        state: state,
+        evaluator: evaluator,
+        manualFallbackPass: false,
+        selectedAutoCheckOptionId: 'invalid',
+        config: config,
+        nowLocal: DateTime(2026, 2, 24, 11, 10, index * 10 + 2),
+      );
+      state = update.state;
+      expect(
+        state.stage3?.mode,
+        Stage3Mode.correction,
+        reason: 'mode=$mode should enter correction',
+      );
+
+      await expectLater(
+        engine.submitAttempt(
+          state: state,
+          evaluator: evaluator,
+          manualFallbackPass: true,
+          selectedAutoCheckOptionId: 'ignored',
+          config: config,
+          nowLocal: DateTime(2026, 2, 24, 11, 10, index * 10 + 3),
+        ),
+        throwsA(isA<StateError>()),
+      );
+
+      final correction = await engine.submitCorrectionExposure(
+        state: state,
+        config: config,
+        nowLocal: DateTime(2026, 2, 24, 11, 10, index * 10 + 4),
+      );
+      expect(
+        correction.state.stage3?.mode,
+        isNot(Stage3Mode.correction),
+        reason: 'mode=$mode should clear correction gate after exposure',
+      );
+    }
+  });
+
+  test(
+      'Stage 3 readiness uses counted unassisted attempts and ignores assisted passes',
+      () async {
+    final unitId = await createUnit('stage3-readiness-counted', endAyah: 1);
+    final config = configForStage3(
+      const Stage3Config(
+        readinessWindow: 4,
+        readinessPassesRequired: 3,
+        readinessRequiredH0Passes: 2,
+        weakRequiredH0Passes: 1,
+        checkpointThreshold: 0.75,
+        minSpacingMs: 1,
+      ),
+    );
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'اهدنا الصراط المستقيم'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      unlockedStage: CompanionStage.hiddenReveal,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 20, 0),
+    );
+
+    var update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 20, 2),
+    );
+    state = update.state;
+    expect(state.verses.first.stage3.linkingPassCount, 1);
+    expect(state.verses.first.stage3.countedPasses, 1);
+    expect(state.verses.first.stage3.countedAttempts, 1);
+
+    final hinted = engine.requestHint(state);
+    update = await engine.submitAttempt(
+      state: hinted,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(hinted),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 20, 4),
+    );
+    state = update.state;
+    expect(state.verses.first.stage3.countedPasses, 1);
+    expect(state.verses.first.stage3.countedAttempts, 1);
+
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 20, 6),
+    );
+    state = update.state;
+
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 20, 8),
+    );
+    state = update.state;
+
+    expect(state.verses.first.stage3.countedPasses, 3);
+    expect(state.verses.first.stage3.countedH0Passes, greaterThanOrEqualTo(2));
+    expect(state.verses.first.stage3.countedAttempts, 3);
+    expect(state.stage3?.phase, Stage3Phase.checkpoint);
+  });
+
+  test('Stage 3 selection is deterministic for identical state and input',
+      () async {
+    final unitId =
+        await createUnit('stage3-deterministic-selection', endAyah: 3);
+    final config = configForStage3(const Stage3Config());
+
+    final seedState = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'قل هو الله أحد'),
+        ChainVerse(surah: 1, ayah: 2, text: 'الله الصمد'),
+        ChainVerse(surah: 1, ayah: 3, text: 'لم يلد ولم يولد'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      unlockedStage: CompanionStage.hiddenReveal,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 30, 0),
+    );
+
+    var stateA = seedState;
+    var stateB = seedState;
+
+    var updateA = await engine.submitAttempt(
+      state: stateA,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(stateA),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 30, 2),
+    );
+    var updateB = await engine.submitAttempt(
+      state: stateB,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(stateB),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 30, 2),
+    );
+
+    expect(updateA.state.currentVerseIndex, updateB.state.currentVerseIndex);
+    expect(updateA.state.stage3?.mode, updateB.state.stage3?.mode);
+    expect(updateA.state.stage3?.phase, updateB.state.stage3?.phase);
+    expect(updateA.telemetry.stage3Mode, updateB.telemetry.stage3Mode);
+    expect(updateA.telemetry.stage3Phase, updateB.telemetry.stage3Phase);
+
+    stateA = updateA.state;
+    stateB = updateB.state;
+    updateA = await engine.submitAttempt(
+      state: stateA,
+      evaluator: evaluator,
+      manualFallbackPass: false,
+      selectedAutoCheckOptionId: correctOption(stateA),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 30, 4),
+    );
+    updateB = await engine.submitAttempt(
+      state: stateB,
+      evaluator: evaluator,
+      manualFallbackPass: false,
+      selectedAutoCheckOptionId: correctOption(stateB),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 30, 4),
+    );
+
+    expect(updateA.state.currentVerseIndex, updateB.state.currentVerseIndex);
+    expect(updateA.state.stage3?.mode, updateB.state.stage3?.mode);
+    expect(updateA.state.stage3?.phase, updateB.state.stage3?.phase);
+    expect(updateA.telemetry.stage3Mode, updateB.telemetry.stage3Mode);
+    expect(updateA.telemetry.stage3Phase, updateB.telemetry.stage3Phase);
+  });
+
+  test('Stage 3 telemetry_json persists schema-free Stage-3 keys', () async {
+    final unitId = await createUnit('stage3-telemetry-keys', endAyah: 1);
+    final config = configForStage3(const Stage3Config());
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'بسم الله الرحمن الرحيم'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      unlockedStage: CompanionStage.hiddenReveal,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 40, 0),
+    );
+
+    final update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 40, 3),
+    );
+    state = update.state;
+
+    final attempts = await companionRepo.getAttemptsForSession(state.sessionId);
+    final stage3Attempts = attempts
+        .where((entry) => entry.stageCode == CompanionStage.hiddenReveal.code)
+        .toList(growable: false);
+    expect(stage3Attempts, isNotEmpty);
+
+    final telemetry = jsonDecode(stage3Attempts.last.telemetryJson ?? '{}')
+        as Map<String, dynamic>;
+    expect(telemetry.containsKey('stage3_step'), isTrue);
+    expect(telemetry.containsKey('stage3_mode'), isTrue);
+    expect(telemetry.containsKey('stage3_phase'), isTrue);
+    expect(telemetry.containsKey('link_prev_verse_order'), isTrue);
+    expect(telemetry.containsKey('readiness_counted_pass'), isTrue);
+    expect(telemetry.containsKey('cue_baseline'), isTrue);
+    expect(telemetry.containsKey('cue_rotated_from'), isTrue);
+    expect(telemetry.containsKey('risk_trigger'), isTrue);
+    expect(telemetry.containsKey('stage3_error_type'), isTrue);
+    expect(telemetry.containsKey('lifecycle_hook'), isTrue);
+    expect(stage3Attempts.last.timeOnVerseMs, greaterThan(0));
+    expect(stage3Attempts.last.timeOnChunkMs, greaterThan(0));
+  });
+
+  test('review mode remains hidden-first and bypasses Stage 2 runtime',
+      () async {
     final unitId = await createUnit('stage2-review-unchanged', endAyah: 1);
     final config = configForStage2(const Stage2Config());
 
@@ -858,6 +1507,7 @@ void main() {
 
     expect(state.activeStage, CompanionStage.hiddenReveal);
     expect(state.stage2, isNull);
+    expect(state.stage3, isNull);
 
     final update = await engine.submitAttempt(
       state: state,
@@ -868,5 +1518,6 @@ void main() {
     );
     expect(update.state.activeStage, CompanionStage.hiddenReveal);
     expect(update.state.stage2, isNull);
+    expect(update.state.stage3, isNull);
   });
 }

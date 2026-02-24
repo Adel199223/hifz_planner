@@ -950,7 +950,8 @@ class $MemUnitTable extends MemUnit with TableInfo<$MemUnitTable, MemUnitData> {
   @override
   late final GeneratedColumn<String> kind = GeneratedColumn<String>(
       'kind', aliasedName, false,
-      check: () => kind.isIn(const ['ayah_range', 'page_segment', 'custom']),
+      check: () => const CustomExpression<bool>(
+          "kind IN ('ayah_range', 'page_segment', 'custom')"),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _pageMadinaMeta =
@@ -1666,7 +1667,8 @@ class $ScheduleStateTable extends ScheduleState
   @override
   late final GeneratedColumn<int> lastGradeQ = GeneratedColumn<int>(
       'last_grade_q', aliasedName, true,
-      check: () => lastGradeQ.isIn(const [5, 4, 3, 2, 0]),
+      check: () =>
+          const CustomExpression<bool>('last_grade_q IN (5, 4, 3, 2, 0)'),
       type: DriftSqlType.int,
       requiredDuringInsert: false);
   static const VerificationMeta _lapseCountMeta =
@@ -1680,7 +1682,7 @@ class $ScheduleStateTable extends ScheduleState
   @override
   late final GeneratedColumn<int> isSuspended = GeneratedColumn<int>(
       'is_suspended', aliasedName, false,
-      check: () => isSuspended.isIn(const [0, 1]),
+      check: () => const CustomExpression<bool>('is_suspended IN (0, 1)'),
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
@@ -2178,7 +2180,7 @@ class $ReviewLogTable extends ReviewLog
   @override
   late final GeneratedColumn<int> gradeQ = GeneratedColumn<int>(
       'grade_q', aliasedName, false,
-      check: () => gradeQ.isIn(const [5, 4, 3, 2, 0]),
+      check: () => const CustomExpression<bool>('grade_q IN (5, 4, 3, 2, 0)'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _durationSecondsMeta =
@@ -2540,7 +2542,7 @@ class $AppSettingsTable extends AppSettings
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
       'id', aliasedName, false,
-      check: () => id.equals(1),
+      check: () => const CustomExpression<bool>('id = 1'),
       type: DriftSqlType.int,
       requiredDuringInsert: false);
   static const VerificationMeta _profileMeta =
@@ -2548,7 +2550,8 @@ class $AppSettingsTable extends AppSettings
   @override
   late final GeneratedColumn<String> profile = GeneratedColumn<String>(
       'profile', aliasedName, false,
-      check: () => profile.isIn(const ['support', 'standard', 'accelerated']),
+      check: () => const CustomExpression<bool>(
+          "profile IN ('support', 'standard', 'accelerated')"),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _forceRevisionOnlyMeta =
@@ -2556,7 +2559,8 @@ class $AppSettingsTable extends AppSettings
   @override
   late final GeneratedColumn<int> forceRevisionOnly = GeneratedColumn<int>(
       'force_revision_only', aliasedName, false,
-      check: () => forceRevisionOnly.isIn(const [0, 1]),
+      check: () =>
+          const CustomExpression<bool>('force_revision_only IN (0, 1)'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _dailyMinutesDefaultMeta =
@@ -2600,7 +2604,8 @@ class $AppSettingsTable extends AppSettings
   @override
   late final GeneratedColumn<int> requirePageMetadata = GeneratedColumn<int>(
       'require_page_metadata', aliasedName, false,
-      check: () => requirePageMetadata.isIn(const [0, 1]),
+      check: () =>
+          const CustomExpression<bool>('require_page_metadata IN (0, 1)'),
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(1));
@@ -3307,7 +3312,7 @@ class $MemProgressTable extends MemProgress
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
       'id', aliasedName, false,
-      check: () => id.equals(1),
+      check: () => const CustomExpression<bool>('id = 1'),
       type: DriftSqlType.int,
       requiredDuringInsert: false);
   static const VerificationMeta _nextSurahMeta =
@@ -3577,7 +3582,8 @@ class $CalibrationSampleTable extends CalibrationSample
   @override
   late final GeneratedColumn<String> sampleKind = GeneratedColumn<String>(
       'sample_kind', aliasedName, false,
-      check: () => sampleKind.isIn(const ['new_memorization', 'review']),
+      check: () => const CustomExpression<bool>(
+          "sample_kind IN ('new_memorization', 'review')"),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _durationSecondsMeta =
@@ -3585,7 +3591,7 @@ class $CalibrationSampleTable extends CalibrationSample
   @override
   late final GeneratedColumn<int> durationSeconds = GeneratedColumn<int>(
       'duration_seconds', aliasedName, false,
-      check: () => ComparableExpr(durationSeconds).isBiggerThanValue(0),
+      check: () => const CustomExpression<bool>('duration_seconds > 0'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _ayahCountMeta =
@@ -3593,7 +3599,7 @@ class $CalibrationSampleTable extends CalibrationSample
   @override
   late final GeneratedColumn<int> ayahCount = GeneratedColumn<int>(
       'ayah_count', aliasedName, false,
-      check: () => ComparableExpr(ayahCount).isBiggerThanValue(0),
+      check: () => const CustomExpression<bool>('ayah_count > 0'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _createdAtDayMeta =
@@ -3939,7 +3945,7 @@ class $PendingCalibrationUpdateTable extends PendingCalibrationUpdate
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
       'id', aliasedName, false,
-      check: () => id.equals(1),
+      check: () => const CustomExpression<bool>('id = 1'),
       type: DriftSqlType.int,
       requiredDuringInsert: false);
   static const VerificationMeta _avgNewMinutesPerAyahMeta =
@@ -4362,7 +4368,7 @@ class $CompanionChainSessionTable extends CompanionChainSession
   @override
   late final GeneratedColumn<int> targetVerseCount = GeneratedColumn<int>(
       'target_verse_count', aliasedName, false,
-      check: () => ComparableExpr(targetVerseCount).isBiggerThanValue(0),
+      check: () => const CustomExpression<bool>('target_verse_count > 0'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _passedVerseCountMeta =
@@ -4378,8 +4384,8 @@ class $CompanionChainSessionTable extends CompanionChainSession
   @override
   late final GeneratedColumn<String> chainResult = GeneratedColumn<String>(
       'chain_result', aliasedName, false,
-      check: () =>
-          chainResult.isIn(const ['completed', 'partial', 'abandoned']),
+      check: () => const CustomExpression<bool>(
+          "chain_result IN ('completed', 'partial', 'abandoned')"),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _retrievalStrengthMeta =
@@ -4937,7 +4943,7 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<int> attemptIndex = GeneratedColumn<int>(
       'attempt_index', aliasedName, false,
-      check: () => ComparableExpr(attemptIndex).isBiggerThanValue(0),
+      check: () => const CustomExpression<bool>('attempt_index > 0'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _stageCodeMeta =
@@ -4945,8 +4951,8 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<String> stageCode = GeneratedColumn<String>(
       'stage_code', aliasedName, false,
-      check: () => stageCode
-          .isIn(const ['guided_visible', 'cued_recall', 'hidden_reveal']),
+      check: () => const CustomExpression<bool>(
+          "stage_code IN ('guided_visible', 'cued_recall', 'hidden_reveal')"),
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('hidden_reveal'));
@@ -4955,8 +4961,8 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<String> attemptType = GeneratedColumn<String>(
       'attempt_type', aliasedName, false,
-      check: () => attemptType
-          .isIn(const ['encode_echo', 'probe', 'spaced_reprobe', 'checkpoint']),
+      check: () => const CustomExpression<bool>(
+          "attempt_type IN ('encode_echo', 'probe', 'spaced_reprobe', 'checkpoint')"),
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('probe'));
@@ -4965,14 +4971,8 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<String> hintLevel = GeneratedColumn<String>(
       'hint_level', aliasedName, false,
-      check: () => hintLevel.isIn(const [
-            'h0',
-            'letters',
-            'first_word',
-            'meaning_cue',
-            'chunk_text',
-            'full_text'
-          ]),
+      check: () => const CustomExpression<bool>(
+          "hint_level IN ('h0', 'letters', 'first_word', 'meaning_cue', 'chunk_text', 'full_text')"),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _assistedFlagMeta =
@@ -4980,7 +4980,7 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<int> assistedFlag = GeneratedColumn<int>(
       'assisted_flag', aliasedName, false,
-      check: () => assistedFlag.isIn(const [0, 1]),
+      check: () => const CustomExpression<bool>('assisted_flag IN (0, 1)'),
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
@@ -5013,7 +5013,8 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<String> evaluatorMode = GeneratedColumn<String>(
       'evaluator_mode', aliasedName, false,
-      check: () => evaluatorMode.isIn(const ['manual_fallback', 'asr']),
+      check: () => const CustomExpression<bool>(
+          "evaluator_mode IN ('manual_fallback', 'asr')"),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _evaluatorPassedMeta =
@@ -5021,7 +5022,7 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<int> evaluatorPassed = GeneratedColumn<int>(
       'evaluator_passed', aliasedName, false,
-      check: () => evaluatorPassed.isIn(const [0, 1]),
+      check: () => const CustomExpression<bool>('evaluator_passed IN (0, 1)'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _evaluatorConfidenceMeta =
@@ -5035,8 +5036,8 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<String> autoCheckType = GeneratedColumn<String>(
       'auto_check_type', aliasedName, true,
-      check: () => autoCheckType
-          .isIn(const ['next_word_mcq', 'one_word_cloze', 'ordering']),
+      check: () => const CustomExpression<bool>(
+          "auto_check_type IN ('next_word_mcq', 'one_word_cloze', 'ordering')"),
       type: DriftSqlType.string,
       requiredDuringInsert: false);
   static const VerificationMeta _autoCheckResultMeta =
@@ -5044,7 +5045,8 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<String> autoCheckResult = GeneratedColumn<String>(
       'auto_check_result', aliasedName, true,
-      check: () => autoCheckResult.isIn(const ['pass', 'fail']),
+      check: () =>
+          const CustomExpression<bool>("auto_check_result IN ('pass', 'fail')"),
       type: DriftSqlType.string,
       requiredDuringInsert: false);
   static const VerificationMeta _revealedAfterAttemptMeta =
@@ -5052,7 +5054,8 @@ class $CompanionVerseAttemptTable extends CompanionVerseAttempt
   @override
   late final GeneratedColumn<int> revealedAfterAttempt = GeneratedColumn<int>(
       'revealed_after_attempt', aliasedName, false,
-      check: () => revealedAfterAttempt.isIn(const [0, 1]),
+      check: () =>
+          const CustomExpression<bool>('revealed_after_attempt IN (0, 1)'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _retrievalStrengthMeta =
@@ -6149,9 +6152,8 @@ class $CompanionUnitStateTable extends CompanionUnitState
   @override
   late final GeneratedColumn<int> unlockedStage = GeneratedColumn<int>(
       'unlocked_stage', aliasedName, false,
-      check: () =>
-          ComparableExpr(unlockedStage).isBiggerOrEqualValue(1) &
-          ComparableExpr(unlockedStage).isSmallerOrEqualValue(3),
+      check: () => const CustomExpression<bool>(
+          'unlocked_stage >= 1 AND unlocked_stage <= 3'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _updatedAtDayMeta =
@@ -6450,8 +6452,7 @@ class $CompanionStageEventTable extends CompanionStageEvent
   late final GeneratedColumn<int> fromStage = GeneratedColumn<int>(
       'from_stage', aliasedName, false,
       check: () =>
-          ComparableExpr(fromStage).isBiggerOrEqualValue(1) &
-          ComparableExpr(fromStage).isSmallerOrEqualValue(3),
+          const CustomExpression<bool>('from_stage >= 1 AND from_stage <= 3'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _toStageMeta =
@@ -6460,8 +6461,7 @@ class $CompanionStageEventTable extends CompanionStageEvent
   late final GeneratedColumn<int> toStage = GeneratedColumn<int>(
       'to_stage', aliasedName, false,
       check: () =>
-          ComparableExpr(toStage).isBiggerOrEqualValue(1) &
-          ComparableExpr(toStage).isSmallerOrEqualValue(3),
+          const CustomExpression<bool>('to_stage >= 1 AND to_stage <= 3'),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
   static const VerificationMeta _eventTypeMeta =
@@ -6469,8 +6469,8 @@ class $CompanionStageEventTable extends CompanionStageEvent
   @override
   late final GeneratedColumn<String> eventType = GeneratedColumn<String>(
       'event_type', aliasedName, false,
-      check: () =>
-          eventType.isIn(const ['auto_unlock', 'user_skip', 'resume_stage']),
+      check: () => const CustomExpression<bool>(
+          "event_type IN ('auto_unlock', 'user_skip', 'resume_stage')"),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _triggerVerseOrderMeta =
@@ -6951,14 +6951,8 @@ class $CompanionStepProficiencyTable extends CompanionStepProficiency
   @override
   late final GeneratedColumn<String> lastHintLevel = GeneratedColumn<String>(
       'last_hint_level', aliasedName, true,
-      check: () => lastHintLevel.isIn(const [
-            'h0',
-            'letters',
-            'first_word',
-            'meaning_cue',
-            'chunk_text',
-            'full_text'
-          ]),
+      check: () => const CustomExpression<bool>(
+          "last_hint_level IN ('h0', 'letters', 'first_word', 'meaning_cue', 'chunk_text', 'full_text')"),
       type: DriftSqlType.string,
       requiredDuringInsert: false);
   static const VerificationMeta _lastEvaluatorConfidenceMeta =

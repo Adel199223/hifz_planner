@@ -1291,7 +1291,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       }
     }
 
-    if (rowContext != null) {
+    if (!mounted) {
+      return;
+    }
+
+    if (rowContext != null && rowContext.mounted) {
       await Scrollable.ensureVisible(
         rowContext,
         duration: const Duration(milliseconds: 300),
@@ -1645,15 +1649,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ListTile(
                 title: Text(_strings.playbackSpeed),
               ),
-              for (final speed in _playbackSpeedOptions)
-                RadioListTile<double>(
-                  value: speed,
-                  groupValue: current,
-                  title: Text('${speed.toStringAsFixed(2)}x'),
-                  onChanged: (value) {
-                    Navigator.of(sheetContext).pop(value);
-                  },
+              RadioGroup<double>(
+                groupValue: current,
+                onChanged: (value) {
+                  Navigator.of(sheetContext).pop(value);
+                },
+                child: Column(
+                  children: [
+                    for (final speed in _playbackSpeedOptions)
+                      RadioListTile<double>(
+                        value: speed,
+                        title: Text('${speed.toStringAsFixed(2)}x'),
+                      ),
+                  ],
                 ),
+              ),
             ],
           ),
         );
@@ -1679,15 +1689,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ListTile(
                 title: Text(_strings.manageRepeatSettings),
               ),
-              for (final repeatCount in _repeatCountOptions)
-                RadioListTile<int>(
-                  value: repeatCount,
-                  groupValue: current,
-                  title: Text(_repeatLabelForCount(repeatCount)),
-                  onChanged: (value) {
-                    Navigator.of(sheetContext).pop(value);
-                  },
+              RadioGroup<int>(
+                groupValue: current,
+                onChanged: (value) {
+                  Navigator.of(sheetContext).pop(value);
+                },
+                child: Column(
+                  children: [
+                    for (final repeatCount in _repeatCountOptions)
+                      RadioListTile<int>(
+                        value: repeatCount,
+                        title: Text(_repeatLabelForCount(repeatCount)),
+                      ),
+                  ],
                 ),
+              ),
             ],
           ),
         );
@@ -4084,7 +4100,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant.withValues(alpha: 0.5),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -4179,7 +4195,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           child: DropdownButtonFormField<int>(
             key: const ValueKey('reader_mushaf_nav_verse_surah'),
             isExpanded: true,
-            value: _verseTabSelectedSurah,
+            initialValue: _verseTabSelectedSurah,
             decoration: InputDecoration(
               labelText: _strings.surah,
               isDense: true,

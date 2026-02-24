@@ -559,6 +559,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     if (start == null) {
       return;
     }
+    if (!mounted) return;
     final end = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(
@@ -1617,7 +1618,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           key: const ValueKey('plan_profile'),
-          value: _profile,
+          initialValue: _profile,
           items: [
             DropdownMenuItem(
                 value: 'support', child: Text(strings.profileSupport)),

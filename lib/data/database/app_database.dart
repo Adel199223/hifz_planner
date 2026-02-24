@@ -67,8 +67,8 @@ class MemUnit extends Table {
   IntColumn get id => integer().autoIncrement()();
 
   TextColumn get kind => text().check(
-        kind.isIn(
-          const ['ayah_range', 'page_segment', 'custom'],
+        const CustomExpression<bool>(
+          "kind IN ('ayah_range', 'page_segment', 'custom')",
         ),
       )();
 
@@ -124,14 +124,14 @@ class ScheduleState extends Table {
   IntColumn get lastGradeQ => integer()
       .named('last_grade_q')
       .nullable()
-      .check(lastGradeQ.isIn(const [5, 4, 3, 2, 0]))();
+      .check(const CustomExpression<bool>('last_grade_q IN (5, 4, 3, 2, 0)'))();
 
   IntColumn get lapseCount => integer().named('lapse_count')();
 
   IntColumn get isSuspended => integer()
       .named('is_suspended')
       .withDefault(const Constant(0))
-      .check(isSuspended.isIn(const [0, 1]))();
+      .check(const CustomExpression<bool>('is_suspended IN (0, 1)'))();
 
   IntColumn get suspendedAtDay =>
       integer().named('suspended_at_day').nullable()();
@@ -154,8 +154,9 @@ class ReviewLog extends Table {
 
   IntColumn get tsSeconds => integer().named('ts_seconds').nullable()();
 
-  IntColumn get gradeQ =>
-      integer().named('grade_q').check(gradeQ.isIn(const [5, 4, 3, 2, 0]))();
+  IntColumn get gradeQ => integer()
+      .named('grade_q')
+      .check(const CustomExpression<bool>('grade_q IN (5, 4, 3, 2, 0)'))();
 
   IntColumn get durationSeconds =>
       integer().named('duration_seconds').nullable()();
@@ -167,17 +168,17 @@ class AppSettings extends Table {
   @override
   String get tableName => 'app_settings';
 
-  IntColumn get id => integer().check(id.equals(1))();
+  IntColumn get id => integer().check(const CustomExpression<bool>('id = 1'))();
 
   TextColumn get profile => text().check(
-        profile.isIn(
-          const ['support', 'standard', 'accelerated'],
+        const CustomExpression<bool>(
+          "profile IN ('support', 'standard', 'accelerated')",
         ),
       )();
 
   IntColumn get forceRevisionOnly => integer()
       .named('force_revision_only')
-      .check(forceRevisionOnly.isIn(const [0, 1]))();
+      .check(const CustomExpression<bool>('force_revision_only IN (0, 1)'))();
 
   IntColumn get dailyMinutesDefault =>
       integer().named('daily_minutes_default')();
@@ -198,7 +199,7 @@ class AppSettings extends Table {
   IntColumn get requirePageMetadata => integer()
       .named('require_page_metadata')
       .withDefault(const Constant(1))
-      .check(requirePageMetadata.isIn(const [0, 1]))();
+      .check(const CustomExpression<bool>('require_page_metadata IN (0, 1)'))();
 
   TextColumn get typicalGradeDistributionJson =>
       text().named('typical_grade_distribution_json').nullable()();
@@ -222,17 +223,18 @@ class CalibrationSample extends Table {
   IntColumn get id => integer().autoIncrement()();
 
   TextColumn get sampleKind => text().named('sample_kind').check(
-        sampleKind.isIn(
-          const ['new_memorization', 'review'],
+        const CustomExpression<bool>(
+          "sample_kind IN ('new_memorization', 'review')",
         ),
       )();
 
   IntColumn get durationSeconds => integer()
       .named('duration_seconds')
-      .check(durationSeconds.isBiggerThanValue(0))();
+      .check(const CustomExpression<bool>('duration_seconds > 0'))();
 
-  IntColumn get ayahCount =>
-      integer().named('ayah_count').check(ayahCount.isBiggerThanValue(0))();
+  IntColumn get ayahCount => integer()
+      .named('ayah_count')
+      .check(const CustomExpression<bool>('ayah_count > 0'))();
 
   IntColumn get createdAtDay => integer().named('created_at_day')();
 
@@ -244,7 +246,7 @@ class PendingCalibrationUpdate extends Table {
   @override
   String get tableName => 'pending_calibration_update';
 
-  IntColumn get id => integer().check(id.equals(1))();
+  IntColumn get id => integer().check(const CustomExpression<bool>('id = 1'))();
 
   RealColumn get avgNewMinutesPerAyah =>
       real().named('avg_new_minutes_per_ayah').nullable()();
@@ -269,25 +271,30 @@ class CompanionChainSession extends Table {
 
   IntColumn get id => integer().autoIncrement()();
 
-  IntColumn get unitId =>
-      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+  IntColumn get unitId => integer()
+      .named('unit_id')
+      .references(MemUnit, #id, onDelete: KeyAction.cascade)();
 
-  IntColumn get targetVerseCount =>
-      integer().named('target_verse_count').check(targetVerseCount.isBiggerThanValue(0))();
+  IntColumn get targetVerseCount => integer()
+      .named('target_verse_count')
+      .check(const CustomExpression<bool>('target_verse_count > 0'))();
 
   IntColumn get passedVerseCount =>
       integer().named('passed_verse_count').withDefault(const Constant(0))();
 
   TextColumn get chainResult => text().named('chain_result').check(
-        chainResult.isIn(const ['completed', 'partial', 'abandoned']),
+        const CustomExpression<bool>(
+            "chain_result IN ('completed', 'partial', 'abandoned')"),
       )();
 
   RealColumn get retrievalStrength =>
       real().named('retrieval_strength').withDefault(const Constant(0.0))();
 
-  IntColumn get startedAtSeconds => integer().named('started_at_seconds').nullable()();
+  IntColumn get startedAtSeconds =>
+      integer().named('started_at_seconds').nullable()();
 
-  IntColumn get endedAtSeconds => integer().named('ended_at_seconds').nullable()();
+  IntColumn get endedAtSeconds =>
+      integer().named('ended_at_seconds').nullable()();
 
   IntColumn get createdAtDay => integer().named('created_at_day')();
 
@@ -304,8 +311,9 @@ class CompanionVerseAttempt extends Table {
       .named('session_id')
       .references(CompanionChainSession, #id, onDelete: KeyAction.cascade)();
 
-  IntColumn get unitId =>
-      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+  IntColumn get unitId => integer()
+      .named('unit_id')
+      .references(MemUnit, #id, onDelete: KeyAction.cascade)();
 
   IntColumn get verseOrder => integer().named('verse_order')();
 
@@ -313,70 +321,82 @@ class CompanionVerseAttempt extends Table {
 
   IntColumn get ayah => integer()();
 
-  IntColumn get attemptIndex =>
-      integer().named('attempt_index').check(attemptIndex.isBiggerThanValue(0))();
+  IntColumn get attemptIndex => integer()
+      .named('attempt_index')
+      .check(const CustomExpression<bool>('attempt_index > 0'))();
 
-  TextColumn get stageCode => text().named('stage_code').withDefault(
+  TextColumn get stageCode => text()
+      .named('stage_code')
+      .withDefault(
         const Constant('hidden_reveal'),
-      ).check(
-        stageCode.isIn(
-          const ['guided_visible', 'cued_recall', 'hidden_reveal'],
+      )
+      .check(
+        const CustomExpression<bool>(
+          "stage_code IN ('guided_visible', 'cued_recall', 'hidden_reveal')",
         ),
       )();
 
-  TextColumn get attemptType => text().named('attempt_type').withDefault(
+  TextColumn get attemptType => text()
+      .named('attempt_type')
+      .withDefault(
         const Constant('probe'),
-      ).check(
-        attemptType.isIn(
-          const ['encode_echo', 'probe', 'spaced_reprobe', 'checkpoint'],
+      )
+      .check(
+        const CustomExpression<bool>(
+          "attempt_type IN ('encode_echo', 'probe', 'spaced_reprobe', 'checkpoint')",
         ),
       )();
 
   TextColumn get hintLevel => text().named('hint_level').check(
-        hintLevel.isIn(
-          const ['h0', 'letters', 'first_word', 'meaning_cue', 'chunk_text', 'full_text'],
+        const CustomExpression<bool>(
+          "hint_level IN ('h0', 'letters', 'first_word', 'meaning_cue', 'chunk_text', 'full_text')",
         ),
       )();
 
   IntColumn get assistedFlag => integer()
       .named('assisted_flag')
       .withDefault(const Constant(0))
-      .check(assistedFlag.isIn(const [0, 1]))();
+      .check(const CustomExpression<bool>('assisted_flag IN (0, 1)'))();
 
   IntColumn get latencyToStartMs =>
       integer().named('latency_to_start_ms').withDefault(const Constant(0))();
 
-  IntColumn get stopsCount => integer().named('stops_count').withDefault(const Constant(0))();
+  IntColumn get stopsCount =>
+      integer().named('stops_count').withDefault(const Constant(0))();
 
-  IntColumn get selfCorrectionsCount =>
-      integer().named('self_corrections_count').withDefault(const Constant(0))();
+  IntColumn get selfCorrectionsCount => integer()
+      .named('self_corrections_count')
+      .withDefault(const Constant(0))();
 
   TextColumn get evaluatorMode => text().named('evaluator_mode').check(
-        evaluatorMode.isIn(const ['manual_fallback', 'asr']),
+        const CustomExpression<bool>(
+            "evaluator_mode IN ('manual_fallback', 'asr')"),
       )();
 
   IntColumn get evaluatorPassed => integer()
       .named('evaluator_passed')
-      .check(evaluatorPassed.isIn(const [0, 1]))();
+      .check(const CustomExpression<bool>('evaluator_passed IN (0, 1)'))();
 
   RealColumn get evaluatorConfidence =>
       real().named('evaluator_confidence').nullable()();
 
-  TextColumn get autoCheckType => text().named('auto_check_type').nullable().check(
-        autoCheckType.isIn(
-          const ['next_word_mcq', 'one_word_cloze', 'ordering'],
-        ),
-      )();
+  TextColumn get autoCheckType =>
+      text().named('auto_check_type').nullable().check(
+            const CustomExpression<bool>(
+              "auto_check_type IN ('next_word_mcq', 'one_word_cloze', 'ordering')",
+            ),
+          )();
 
-  TextColumn get autoCheckResult => text().named('auto_check_result').nullable().check(
-        autoCheckResult.isIn(
-          const ['pass', 'fail'],
-        ),
-      )();
+  TextColumn get autoCheckResult =>
+      text().named('auto_check_result').nullable().check(
+            const CustomExpression<bool>(
+              "auto_check_result IN ('pass', 'fail')",
+            ),
+          )();
 
-  IntColumn get revealedAfterAttempt => integer()
-      .named('revealed_after_attempt')
-      .check(revealedAfterAttempt.isIn(const [0, 1]))();
+  IntColumn get revealedAfterAttempt =>
+      integer().named('revealed_after_attempt').check(
+          const CustomExpression<bool>('revealed_after_attempt IN (0, 1)'))();
 
   RealColumn get retrievalStrength => real().named('retrieval_strength')();
 
@@ -390,23 +410,22 @@ class CompanionVerseAttempt extends Table {
 
   IntColumn get attemptDay => integer().named('attempt_day')();
 
-  IntColumn get attemptSeconds => integer().named('attempt_seconds').nullable()();
+  IntColumn get attemptSeconds =>
+      integer().named('attempt_seconds').nullable()();
 }
 
 class CompanionUnitState extends Table {
   @override
   String get tableName => 'companion_unit_state';
 
-  IntColumn get unitId =>
-      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+  IntColumn get unitId => integer()
+      .named('unit_id')
+      .references(MemUnit, #id, onDelete: KeyAction.cascade)();
 
-  IntColumn get unlockedStage =>
-      integer()
-          .named('unlocked_stage')
-          .check(
-            unlockedStage.isBiggerOrEqualValue(1) &
-                unlockedStage.isSmallerOrEqualValue(3),
-          )();
+  IntColumn get unlockedStage => integer().named('unlocked_stage').check(
+        const CustomExpression<bool>(
+            'unlocked_stage >= 1 AND unlocked_stage <= 3'),
+      )();
 
   IntColumn get updatedAtDay => integer().named('updated_at_day')();
 
@@ -426,26 +445,25 @@ class CompanionStageEvent extends Table {
       .named('session_id')
       .references(CompanionChainSession, #id, onDelete: KeyAction.cascade)();
 
-  IntColumn get unitId =>
-      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+  IntColumn get unitId => integer()
+      .named('unit_id')
+      .references(MemUnit, #id, onDelete: KeyAction.cascade)();
 
-  IntColumn get fromStage =>
-      integer()
-          .named('from_stage')
-          .check(
-            fromStage.isBiggerOrEqualValue(1) & fromStage.isSmallerOrEqualValue(3),
-          )();
-
-  IntColumn get toStage =>
-      integer()
-          .named('to_stage')
-          .check(toStage.isBiggerOrEqualValue(1) & toStage.isSmallerOrEqualValue(3))();
-
-  TextColumn get eventType => text().named('event_type').check(
-        eventType.isIn(const ['auto_unlock', 'user_skip', 'resume_stage']),
+  IntColumn get fromStage => integer().named('from_stage').check(
+        const CustomExpression<bool>('from_stage >= 1 AND from_stage <= 3'),
       )();
 
-  IntColumn get triggerVerseOrder => integer().named('trigger_verse_order').nullable()();
+  IntColumn get toStage => integer()
+      .named('to_stage')
+      .check(const CustomExpression<bool>('to_stage >= 1 AND to_stage <= 3'))();
+
+  TextColumn get eventType => text().named('event_type').check(
+        const CustomExpression<bool>(
+            "event_type IN ('auto_unlock', 'user_skip', 'resume_stage')"),
+      )();
+
+  IntColumn get triggerVerseOrder =>
+      integer().named('trigger_verse_order').nullable()();
 
   IntColumn get createdDay => integer().named('created_day')();
 
@@ -458,8 +476,9 @@ class CompanionStepProficiency extends Table {
 
   IntColumn get id => integer().autoIncrement()();
 
-  IntColumn get unitId =>
-      integer().named('unit_id').references(MemUnit, #id, onDelete: KeyAction.cascade)();
+  IntColumn get unitId => integer()
+      .named('unit_id')
+      .references(MemUnit, #id, onDelete: KeyAction.cascade)();
 
   IntColumn get surah => integer()();
 
@@ -470,8 +489,8 @@ class CompanionStepProficiency extends Table {
 
   TextColumn get lastHintLevel =>
       text().named('last_hint_level').nullable().check(
-            lastHintLevel.isIn(
-              const ['h0', 'letters', 'first_word', 'meaning_cue', 'chunk_text', 'full_text'],
+            const CustomExpression<bool>(
+              "last_hint_level IN ('h0', 'letters', 'first_word', 'meaning_cue', 'chunk_text', 'full_text')",
             ),
           )();
 
@@ -489,8 +508,10 @@ class CompanionStepProficiency extends Table {
 
   IntColumn get lastUpdatedDay => integer().named('last_updated_day')();
 
-  IntColumn get lastSessionId =>
-      integer().named('last_session_id').nullable().references(CompanionChainSession, #id)();
+  IntColumn get lastSessionId => integer()
+      .named('last_session_id')
+      .nullable()
+      .references(CompanionChainSession, #id)();
 
   @override
   List<Set<Column>> get uniqueKeys => [
@@ -502,7 +523,7 @@ class MemProgress extends Table {
   @override
   String get tableName => 'mem_progress';
 
-  IntColumn get id => integer().check(id.equals(1))();
+  IntColumn get id => integer().check(const CustomExpression<bool>('id = 1'))();
 
   IntColumn get nextSurah => integer().named('next_surah')();
 
@@ -595,18 +616,15 @@ class AppDatabase extends _$AppDatabase {
             if (from >= 4) {
               await m.addColumn(
                 companionVerseAttempt,
-                companionVerseAttempt.attemptType
-                    as GeneratedColumn<Object>,
+                companionVerseAttempt.attemptType as GeneratedColumn<Object>,
               );
               await m.addColumn(
                 companionVerseAttempt,
-                companionVerseAttempt.assistedFlag
-                    as GeneratedColumn<Object>,
+                companionVerseAttempt.assistedFlag as GeneratedColumn<Object>,
               );
               await m.addColumn(
                 companionVerseAttempt,
-                companionVerseAttempt.autoCheckType
-                    as GeneratedColumn<Object>,
+                companionVerseAttempt.autoCheckType as GeneratedColumn<Object>,
               );
               await m.addColumn(
                 companionVerseAttempt,
@@ -615,18 +633,15 @@ class AppDatabase extends _$AppDatabase {
               );
               await m.addColumn(
                 companionVerseAttempt,
-                companionVerseAttempt.timeOnVerseMs
-                    as GeneratedColumn<Object>,
+                companionVerseAttempt.timeOnVerseMs as GeneratedColumn<Object>,
               );
               await m.addColumn(
                 companionVerseAttempt,
-                companionVerseAttempt.timeOnChunkMs
-                    as GeneratedColumn<Object>,
+                companionVerseAttempt.timeOnChunkMs as GeneratedColumn<Object>,
               );
               await m.addColumn(
                 companionVerseAttempt,
-                companionVerseAttempt.telemetryJson
-                    as GeneratedColumn<Object>,
+                companionVerseAttempt.telemetryJson as GeneratedColumn<Object>,
               );
             }
           }
