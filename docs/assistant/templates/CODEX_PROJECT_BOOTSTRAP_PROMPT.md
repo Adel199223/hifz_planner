@@ -48,6 +48,18 @@ You are working in a new app repository. Build an AI-first documentation system 
 12. Add enforceable approval gates and worktree isolation guidance for safer execution.
 13. Add Golden Principles and ExecPlans so major work stays deterministic and self-contained.
 
+## Newbie-First Layer (Optional: remove for developer-first repos)
+- Assume user is a complete beginner/non-coder unless this section is removed or user explicitly requests technical depth.
+- Do not reduce testing, validation, approval gates, or canonical precedence.
+- If user explicitly requests developer depth, switch style while keeping all governance contracts unchanged.
+- For support/explainer tasks, use this response shape: plain-language-first, steps-second, canonical-check-last.
+- Support reply skeleton: `plain explanation -> numbered steps -> canonical check -> uncertainty note if needed`.
+- Agents must define unavoidable technical terms in one sentence.
+- If this section is retained, generated user guides must include near the top:
+  - `## Quick Start (No Technical Background)`
+  - `## Terms in Plain English`
+- Keep governance strict in beginner mode (no relaxation of validators, approval gates, or canonical precedence).
+
 ## Required Documentation Architecture
 Create or update these files (adapt names to repo domain where needed):
 If equivalent docs/files already exist in the repo (same or similar purpose), update/restructure/replace those existing artifacts as needed instead of duplicating them.
@@ -74,6 +86,13 @@ If equivalent docs/files already exist in the repo (same or similar purpose), up
 - `docs/assistant/features/APP_USER_GUIDE.md` (whole-app, non-coder perspective)
 - `docs/assistant/features/PRIMARY_FEATURE_USER_GUIDE.md` (domain-deep non-coder guide for the app’s most critical workflow)
 - These guides are explanatory/support docs, not canonical architecture truth.
+- Require these headings in each user guide:
+  - `## Use This Guide When`
+  - `## Do Not Use This Guide For`
+  - `## For Agents: Support Interaction Contract`
+  - `## Canonical Deference Rule`
+  - `## Quick Start (No Technical Background)`
+  - `## Terms in Plain English`
 
 ### Workflow docs
 - `docs/assistant/workflows/FEATURE_WORKFLOW.md` (core product workflow; rename to domain)
@@ -108,6 +127,7 @@ If equivalent docs/files already exist in the repo (same or similar purpose), up
 14. Technical canonical docs remain source-of-truth; user guides must defer to them when conflicts appear.
 15. `AGENTS.md` and `agent.md` must include `Approval Gates`, `ExecPlans`, and `Worktree Isolation` sections.
 16. ExecPlans are mandatory for major/multi-file work and optional for small isolated changes.
+17. For support/non-technical explanation tasks, route to `APP_USER_GUIDE.md` (and `PRIMARY_FEATURE_USER_GUIDE.md` for domain-specific support).
 
 ## Commit/Publish Workflow Requirements
 In `COMMIT_PUBLISH_WORKFLOW.md`, define a strict sequence:
@@ -193,6 +213,9 @@ Add contract keys for:
 - `approval_gates_policy`
 - `worktree_isolation_policy`
 - `doc_gardening_policy`
+- `user_guides_support_usage_policy`
+- `user_guides_canonical_deference_policy`
+- `user_guides_update_sync_policy`
 
 ## Inspiration Reference Discovery Requirements
 Create one dedicated workflow:
@@ -287,6 +310,17 @@ Validator must fail if:
 22. Any `user_guides` path in manifest does not exist.
 23. User guides are not discoverable from the docs index/routing docs.
 24. Template-path routing regression protections are missing.
+25. User guides are missing required section headings:
+   - `Use This Guide When`
+   - `Do Not Use This Guide For`
+   - `For Agents: Support Interaction Contract`
+   - `Canonical Deference Rule`
+26. AGENTS/runbook do not route support/non-technical tasks to user guides.
+27. Manifest is missing:
+   - `user_guides_support_usage_policy`
+   - `user_guides_canonical_deference_policy`
+   - `user_guides_update_sync_policy`
+28. Docs maintenance workflow lacks user-guide sync guidance.
 
 ## Tests
 1. Validator passes in current repo.
@@ -311,6 +345,13 @@ Validator must fail if:
     - `approval_gates_policy`
     - `worktree_isolation_policy`
     - `doc_gardening_policy`
+18. Fails when user guides are missing required support/canonical-deference section headings.
+19. Fails when AGENTS/runbook omit support routing to user guides.
+20. Fails when user-guide manifest contract keys are missing:
+    - `user_guides_support_usage_policy`
+    - `user_guides_canonical_deference_policy`
+    - `user_guides_update_sync_policy`
+21. Fails when docs maintenance workflow omits user-guide sync guidance.
 
 ## CI Guidance
 Ensure CI includes:

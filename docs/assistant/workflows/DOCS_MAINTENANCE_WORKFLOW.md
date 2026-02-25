@@ -26,6 +26,9 @@ Use when changes touch:
 - Don't use this workflow when the task is runtime feature implementation edits. Instead use the relevant feature/data workflow.
 - Don't use this workflow for commit-stage/publish requests. Instead use `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`.
 - Don't use this workflow to bypass targeted docs sync scope after feature work. Instead apply only touched-scope updates.
+- Do not rewrite entire user guides when only one user journey changed; update touched sections only.
+- Do not replace plain-language user-guide support guidance with implementation jargon; preserve exact support scope boundaries.
+- Do not remove beginner-focused sections (`Quick Start`, `Terms in Plain English`) when updating support-facing guides.
 - Do not let bridge docs become alternate canon.
 - Do not add stale paths or commands that fail in this repo.
 - Do not skip docs validation after changing documentation structure.
@@ -89,6 +92,10 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
    - If declined, record brief drift warning.
 6. Symptoms: parallel doc refactors conflict repeatedly.
    - perform each stream in isolated `git worktree` to reduce merge contention.
+7. Symptoms: support docs become too technical for non-coders.
+   - restore plain-language wording and keep canonical-deference boundaries explicit.
+8. Symptoms: user guides use unexplained technical terms.
+   - add or refresh `Terms in Plain English` and keep definitions short.
 
 ## Significant-Change Docs Sync Policy
 
@@ -106,6 +113,7 @@ Relevance matrix:
 - Localization change -> localization workflow/glossary only (+ routing references if needed)
 - CI/repo ops change -> CI workflow + manifest/validator only
 - Template-only change -> template only unless user requests broader propagation
+- User-facing behavior copy/flow change -> update affected sections in `docs/assistant/features/APP_USER_GUIDE.md` and/or `docs/assistant/features/PLANNER_USER_GUIDE.md`
 
 ## Sync Order
 
@@ -137,3 +145,6 @@ Relevance matrix:
 - localization terms and workspace performance defaults are maintained in their canonical docs only
 - significant-change docs-sync prompt was asked and response handled
 - worktree isolation was used when multiple doc streams ran in parallel
+- relevant user-guide sections were updated or explicitly deemed unchanged
+- touched user-guide sections remain understandable to non-technical readers and still defer to canonical docs
+- beginner-focused sections (`Quick Start`, `Terms in Plain English`) were updated or explicitly confirmed unchanged

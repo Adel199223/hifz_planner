@@ -40,9 +40,19 @@ Ask for explicit approval before commands that:
 | Quran.com API/cache/fonts | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | `flutter test -j 1 -r expanded test/data/services/qurancom_api_test.dart` |
 | Planning/scheduling/calibration | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart` |
 | "Like X"/"same as X"/parity inspired by named app/site | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
+| User support / non-technical app explanation | `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner questions); respond in plain language first and define unavoidable jargon once | `dart run tooling/validate_agent_docs.dart` when docs were edited |
 | Agent docs/structure | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | CI workflow / branch merge hygiene | `docs/assistant/workflows/CI_REPO_WORKFLOW.md` | `flutter analyze --no-fatal-infos --no-fatal-warnings` |
 | Commit, stage, ignore, push, remote cleanup | `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` | `git status --short --branch` |
+
+## Non-Coder Communication Mode
+
+For user support or explanation tasks:
+1. Start with `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner topics).
+2. Answer in plain language first, then give numbered steps with exact UI labels.
+3. If you must use a technical term, define it in one short line.
+4. Verify technical claims with `APP_KNOWLEDGE.md` before asserting them.
+5. Mention uncertainty explicitly when behavior may still be evolving.
 
 ## 5-Minute Bootstrap
 
@@ -80,6 +90,7 @@ Ask for explicit approval before commands that:
 14. For inspiration/parity requests against named apps/sites, open `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` and base implementation decisions on cited references.
 15. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
 16. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
+17. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
 
 ## ExecPlans
 

@@ -331,7 +331,13 @@
     "execplan_policy": "Major or multi-file work must start with an ExecPlan under docs/assistant/exec_plans/active/ and follow docs/assistant/exec_plans/PLANS.md.",
     "approval_gates_policy": "AGENTS.md and agent.md must include Approval Gates that require explicit user confirmation for destructive, force-push, publish, risky DB, or non-essential network actions.",
     "worktree_isolation_policy": "For parallel implementation streams, prefer git worktree isolation and avoid mixing unrelated feature threads in one working tree.",
-    "doc_gardening_policy": "Run docs validators regularly and apply targeted docs maintenance to prevent routing/contract drift."
+    "doc_gardening_policy": "Run docs validators regularly and apply targeted docs maintenance to prevent routing/contract drift.",
+    "user_guides_support_usage_policy": "For support/non-technical explanations, start with docs/assistant/features/APP_USER_GUIDE.md and use docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.",
+    "user_guides_canonical_deference_policy": "Feature guides are explanatory docs; if they conflict with technical docs, APP_KNOWLEDGE.md and source code win.",
+    "user_guides_update_sync_policy": "When user-facing behavior copy/flow changes, update only affected sections in APP_USER_GUIDE.md and/or PLANNER_USER_GUIDE.md.",
+    "non_coder_entrypoint_policy": "Non-coders should start with docs/assistant/features/APP_USER_GUIDE.md (or PLANNER_USER_GUIDE.md for planner topics) before technical docs.",
+    "plain_language_support_response_policy": "Support responses must be plain-language-first with numbered next steps and exact UI labels.",
+    "term_definition_policy": "If a technical term is unavoidable in support replies, define it in one short sentence."
   },
   "last_updated": "2026-02-25"
 }

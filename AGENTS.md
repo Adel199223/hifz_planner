@@ -37,11 +37,24 @@ Why both files exist:
   - `docs/assistant/PERFORMANCE_BASELINES.md`
 - Route inspiration/parity tasks to:
   - `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
+- For user support/non-technical explanation tasks:
+  - start with `docs/assistant/features/APP_USER_GUIDE.md`
+  - for planner behavior/support use `docs/assistant/features/PLANNER_USER_GUIDE.md`
+  - respond in plain language first; avoid jargon unless you define it in one short sentence
+  - run a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims
 - After significant implementation changes, always ask:
   - "Would you like me to run Assistant Docs Sync for this change now?"
   - If user agrees, update only relevant assistant docs for changed scope.
 - `docs/assistant/templates/*` is read-on-demand only.
 - Only open or update `docs/assistant/templates/*` when the user explicitly asks for template/prompt creation or updates.
+
+## Non-Coder Communication Mode
+
+For user support or explanation tasks:
+- start with `docs/assistant/features/APP_USER_GUIDE.md` (and use `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner-specific questions)
+- answer in plain language first
+- avoid jargon unless you define it in one short line
+- verify technical claims using `APP_KNOWLEDGE.md` before asserting them
 
 ## Approval Gates
 

@@ -97,16 +97,21 @@ class AgentDocsValidator {
     _validateManifest(issues);
     _validateWorkflowSections(issues);
     _validateWorkflowNegativeRouting(issues);
+    _validateFeatureGuideSections(issues);
     _validateCanonicalContracts(issues);
     _validateBranchSafetyPolicy(issues);
     _validateApprovalGatesPolicy(issues);
     _validateExecPlanPolicy(issues);
     _validateWorktreeIsolationPolicy(issues);
+    _validateUserGuideSupportRoutingPolicy(issues);
+    _validateDocsMaintenanceUserGuideSyncPolicy(issues);
     _validateLocalizationRoutingPolicy(issues);
     _validatePerformanceRoutingPolicy(issues);
     _validateReferenceDiscoveryPolicy(issues);
     _validatePostChangeDocsSyncPolicy(issues);
     _validateTemplatePolicies(issues);
+    _validateTemplateNewbieLayer(issues);
+    _validateNonCoderEntrypoints(issues);
     _validateGoldenAndExecPlanDiscoverability(issues);
     _validateBacktickPaths(issues);
     return issues;
@@ -354,6 +359,36 @@ class AgentDocsValidator {
         contracts['doc_gardening_policy'],
         'contracts.doc_gardening_policy',
       );
+      _validateNonEmptyString(
+        issues,
+        contracts['user_guides_support_usage_policy'],
+        'contracts.user_guides_support_usage_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['user_guides_canonical_deference_policy'],
+        'contracts.user_guides_canonical_deference_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['user_guides_update_sync_policy'],
+        'contracts.user_guides_update_sync_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['non_coder_entrypoint_policy'],
+        'contracts.non_coder_entrypoint_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['plain_language_support_response_policy'],
+        'contracts.plain_language_support_response_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['term_definition_policy'],
+        'contracts.term_definition_policy',
+      );
       final templatePolicy = contracts['templates_read_policy'];
       if (templatePolicy is String &&
           !templatePolicy.toLowerCase().contains('read-on-demand')) {
@@ -424,6 +459,53 @@ class AgentDocsValidator {
           !worktreePolicy.toLowerCase().contains('worktree')) {
         issues.add(
           'contracts.worktree_isolation_policy must include worktree guidance.',
+        );
+      }
+      final userGuideSupport = contracts['user_guides_support_usage_policy'];
+      if (userGuideSupport is String &&
+          (!userGuideSupport.contains('APP_USER_GUIDE.md') ||
+              !userGuideSupport.contains('PLANNER_USER_GUIDE.md'))) {
+        issues.add(
+          'contracts.user_guides_support_usage_policy must reference both APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+        );
+      }
+      final userGuideDeference =
+          contracts['user_guides_canonical_deference_policy'];
+      if (userGuideDeference is String &&
+          !userGuideDeference.contains('APP_KNOWLEDGE.md')) {
+        issues.add(
+          'contracts.user_guides_canonical_deference_policy must reference APP_KNOWLEDGE.md precedence.',
+        );
+      }
+      final userGuideSync = contracts['user_guides_update_sync_policy'];
+      if (userGuideSync is String &&
+          (!userGuideSync.contains('APP_USER_GUIDE.md') ||
+              !userGuideSync.contains('PLANNER_USER_GUIDE.md'))) {
+        issues.add(
+          'contracts.user_guides_update_sync_policy must reference APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md targeted updates.',
+        );
+      }
+      final nonCoderPolicy = contracts['non_coder_entrypoint_policy'];
+      if (nonCoderPolicy is String &&
+          (!nonCoderPolicy.contains('APP_USER_GUIDE.md') ||
+              !nonCoderPolicy.contains('PLANNER_USER_GUIDE.md'))) {
+        issues.add(
+          'contracts.non_coder_entrypoint_policy must reference APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+        );
+      }
+      final plainLanguagePolicy =
+          contracts['plain_language_support_response_policy'];
+      if (plainLanguagePolicy is String &&
+          !plainLanguagePolicy.toLowerCase().contains('plain-language-first')) {
+        issues.add(
+          'contracts.plain_language_support_response_policy must require plain-language-first support responses.',
+        );
+      }
+      final termDefinitionPolicy = contracts['term_definition_policy'];
+      if (termDefinitionPolicy is String &&
+          !termDefinitionPolicy.toLowerCase().contains('technical term')) {
+        issues.add(
+          'contracts.term_definition_policy must require concise technical-term definitions.',
         );
       }
     }
@@ -533,6 +615,155 @@ class AgentDocsValidator {
     }
   }
 
+  void _validateFeatureGuideSections(List<String> issues) {
+    const requiredHeadings = <String>[
+      '## Use This Guide When',
+      '## Do Not Use This Guide For',
+      '## For Agents: Support Interaction Contract',
+      '## Canonical Deference Rule',
+      '## Quick Start (No Technical Background)',
+      '## Terms in Plain English',
+    ];
+    const guides = <String>[
+      'docs/assistant/features/APP_USER_GUIDE.md',
+      'docs/assistant/features/PLANNER_USER_GUIDE.md',
+    ];
+    for (final relativePath in guides) {
+      final file = _resolveFile(relativePath);
+      if (!file.existsSync()) {
+        continue;
+      }
+      final content = file.readAsStringSync();
+      for (final heading in requiredHeadings) {
+        if (!content.contains(heading)) {
+          issues.add(
+            'Feature guide is missing required section "$heading": $relativePath',
+          );
+        }
+      }
+      final lowered = content.toLowerCase();
+      if (!lowered.contains('plain language')) {
+        issues.add(
+          'Feature guide support contract must require plain-language responses: $relativePath',
+        );
+      }
+      if (!lowered.contains('cross-check') ||
+          !content.contains('APP_KNOWLEDGE.md')) {
+        issues.add(
+          'Feature guide support contract must require canonical cross-check with APP_KNOWLEDGE.md: $relativePath',
+        );
+      }
+      if (!lowered.contains('uncertainty')) {
+        issues.add(
+          'Feature guide support contract must include uncertainty handling language: $relativePath',
+        );
+      }
+      if (!lowered.contains('define') || !lowered.contains('technical term')) {
+        issues.add(
+          'Feature guide support contract must require one-line technical-term definitions: $relativePath',
+        );
+      }
+    }
+  }
+
+  void _validateUserGuideSupportRoutingPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('APP_USER_GUIDE.md') ||
+          !text.contains('PLANNER_USER_GUIDE.md')) {
+        issues.add(
+          'AGENTS.md must route support/non-technical tasks to APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+        );
+      }
+      if (!lowered.contains('plain language') &&
+          !lowered.contains('plain-language')) {
+        issues.add(
+          'AGENTS.md support-routing policy must require plain-language responses for non-technical users.',
+        );
+      }
+      if (!lowered.contains('canonical cross-check')) {
+        issues.add(
+          'AGENTS.md support-routing policy must require canonical cross-check before technical behavior claims.',
+        );
+      }
+      if (!text.contains('## Non-Coder Communication Mode')) {
+        issues.add(
+          'AGENTS.md must include "## Non-Coder Communication Mode" section.',
+        );
+      }
+      if (!lowered.contains('avoid jargon') ||
+          !lowered.contains('define it in one short line')) {
+        issues.add(
+          'AGENTS.md non-coder communication policy must include jargon-avoidance and one-line term-definition guidance.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('APP_USER_GUIDE.md') ||
+          !text.contains('PLANNER_USER_GUIDE.md')) {
+        issues.add(
+          'agent.md quick routing must include APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md for support/non-technical tasks.',
+        );
+      }
+      if (!lowered.contains('plain language') &&
+          !lowered.contains('plain-language')) {
+        issues.add(
+          'agent.md support-routing policy must require plain-language responses for non-technical users.',
+        );
+      }
+      if (!lowered.contains('canonical cross-check')) {
+        issues.add(
+          'agent.md support-routing policy must require canonical cross-check before technical behavior claims.',
+        );
+      }
+      if (!text.contains('## Non-Coder Communication Mode')) {
+        issues.add(
+          'agent.md must include "## Non-Coder Communication Mode" section.',
+        );
+      }
+      if (!lowered.contains('plain language first') ||
+          !lowered.contains('define it in one short line')) {
+        issues.add(
+          'agent.md non-coder communication policy must include plain-language-first and one-line term-definition guidance.',
+        );
+      }
+    }
+  }
+
+  void _validateDocsMaintenanceUserGuideSyncPolicy(List<String> issues) {
+    final file =
+        _resolveFile('docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md');
+    if (!file.existsSync()) {
+      return;
+    }
+    final text = file.readAsStringSync();
+    if (!text.contains('APP_USER_GUIDE.md') ||
+        !text.contains('PLANNER_USER_GUIDE.md')) {
+      issues.add(
+        'DOCS_MAINTENANCE_WORKFLOW.md must include user-guide sync guidance for APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+      );
+    }
+    final lowered = text.toLowerCase();
+    if (!lowered.contains('user guide sections') &&
+        !lowered.contains('user-guide sections')) {
+      issues.add(
+        'DOCS_MAINTENANCE_WORKFLOW.md must include targeted user-guide section update guidance.',
+      );
+    }
+    if (!text.contains('Quick Start') ||
+        !text.contains('Terms in Plain English')) {
+      issues.add(
+        'DOCS_MAINTENANCE_WORKFLOW.md must require preserving/updating beginner-focused sections (Quick Start, Terms in Plain English).',
+      );
+    }
+  }
+
   void _validateCanonicalContracts(List<String> issues) {
     final agentsShim = _resolveFile('AGENTS.md');
     if (agentsShim.existsSync()) {
@@ -630,6 +861,130 @@ class AgentDocsValidator {
       if (text.contains('docs/assistant/templates/')) {
         issues.add(
           'INDEX.md must not route private template files as default docs.',
+        );
+      }
+    }
+  }
+
+  void _validateTemplateNewbieLayer(List<String> issues) {
+    final template = _resolveFile(
+        'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md');
+    if (!template.existsSync()) {
+      return;
+    }
+    final text = template.readAsStringSync();
+    final lowered = text.toLowerCase();
+    const heading =
+        '## Newbie-First Layer (Optional: remove for developer-first repos)';
+    if (!text.contains(heading)) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md must include "$heading".',
+      );
+    }
+    if (!lowered.contains('assume user is a complete beginner/non-coder')) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must declare beginner default assumption.',
+      );
+    }
+    if (!lowered.contains('unless this section is removed') ||
+        !lowered.contains('explicitly requests technical depth')) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must include removable/override rule.',
+      );
+    }
+    if (!lowered.contains(
+      'do not reduce testing, validation, approval gates, or canonical precedence',
+    )) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must preserve safety/governance guardrails.',
+      );
+    }
+    if (!lowered.contains(
+      'switch style while keeping all governance contracts unchanged',
+    )) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must define developer-depth override behavior.',
+      );
+    }
+    if (!lowered.contains(
+      'plain-language-first, steps-second, canonical-check-last',
+    )) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must require plain-language-first support structure.',
+      );
+    }
+    if (!lowered.contains(
+      'plain explanation -> numbered steps -> canonical check -> uncertainty note if needed',
+    )) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must include support reply skeleton guidance.',
+      );
+    }
+    if (!lowered
+        .contains('define unavoidable technical terms in one sentence')) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must require one-sentence technical-term definitions.',
+      );
+    }
+    if (!text.contains('## Quick Start (No Technical Background)')) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must require user guides to include "## Quick Start (No Technical Background)".',
+      );
+    }
+    if (!text.contains('## Terms in Plain English')) {
+      issues.add(
+        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must require user guides to include "## Terms in Plain English".',
+      );
+    }
+  }
+
+  void _validateNonCoderEntrypoints(List<String> issues) {
+    final readme = _resolveFile('README.md');
+    if (readme.existsSync()) {
+      final text = readme.readAsStringSync();
+      if (!text.contains('## If You Are Not a Developer, Start Here')) {
+        issues.add(
+          'README.md must include "## If You Are Not a Developer, Start Here" entrypoint section.',
+        );
+      }
+      if (!text.contains('docs/assistant/features/APP_USER_GUIDE.md') ||
+          !text.contains('docs/assistant/features/PLANNER_USER_GUIDE.md') ||
+          !text.contains('docs/assistant/INDEX.md')) {
+        issues.add(
+          'README.md non-coder entrypoint section must link APP_USER_GUIDE.md, PLANNER_USER_GUIDE.md, and docs/assistant/INDEX.md.',
+        );
+      }
+    }
+
+    final appKnowledge = _resolveFile('APP_KNOWLEDGE.md');
+    if (appKnowledge.existsSync()) {
+      final text = appKnowledge.readAsStringSync();
+      if (!text.contains('## If You Are Not a Developer (Read This First)')) {
+        issues.add(
+          'APP_KNOWLEDGE.md must include "## If You Are Not a Developer (Read This First)" section.',
+        );
+      }
+      if (!text.contains('docs/assistant/features/APP_USER_GUIDE.md') ||
+          !text.contains('docs/assistant/features/PLANNER_USER_GUIDE.md')) {
+        issues.add(
+          'APP_KNOWLEDGE.md non-coder section must route readers to APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+        );
+      }
+    }
+
+    final index = _resolveFile('docs/assistant/INDEX.md');
+    if (index.existsSync()) {
+      final text = index.readAsStringSync();
+      if (!text.contains('## Beginner Quick Path')) {
+        issues.add(
+          'INDEX.md must include "## Beginner Quick Path" section.',
+        );
+      }
+      if (!text.contains('APP_USER_GUIDE.md') ||
+          !text.contains('PLANNER_USER_GUIDE.md') ||
+          !text.contains('APP_KNOWLEDGE.md')) {
+        issues.add(
+          'INDEX.md Beginner Quick Path must include APP_USER_GUIDE.md, PLANNER_USER_GUIDE.md, and APP_KNOWLEDGE.md routing.',
         );
       }
     }

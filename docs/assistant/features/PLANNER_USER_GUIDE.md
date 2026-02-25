@@ -2,6 +2,50 @@
 
 This guide explains the Planner system in plain language so you can set up a realistic memorization routine, keep daily momentum, and avoid the common trap of adding new material faster than you can retain it.
 
+## Use This Guide When
+
+Use this guide for:
+- user support about planning/scheduling behavior
+- non-technical explanations of plan and today decisions
+- onboarding and troubleshooting around planner settings and outcomes
+
+## Do Not Use This Guide For
+
+Do not use this guide for:
+- schema/migration or repository internals
+- scheduler implementation details or algorithm-level code reasoning
+- authoritative architecture decisions when technical docs/code disagree
+
+## For Agents: Support Interaction Contract
+
+When using this guide in support replies:
+- explain planner behavior in plain language first
+- provide numbered next steps with exact UI labels from this guide
+- run a canonical cross-check against `APP_KNOWLEDGE.md` for behavior claims
+- avoid implementation-level speculation; escalate to planner/scheduling workflows for technical details
+- explicitly mention uncertainty when behavior may still be evolving
+- define unavoidable technical terms in one short sentence
+
+## Canonical Deference Rule
+
+If this guide conflicts with technical docs:
+- `APP_KNOWLEDGE.md` is canonical for app-level architecture/status
+- source code is final truth
+
+## Quick Start (No Technical Background)
+
+1. Open `Plan` and enter realistic weekly or weekday minutes.
+2. Set conservative caps for new work before enabling advanced options.
+3. Press `Activate Plan`, then open `Today` and execute due tasks consistently.
+4. Use calibration only after collecting real sessions so forecast quality improves.
+
+## Terms in Plain English
+
+- Calibration: teaching the planner your real speed so future assignments fit better.
+- Forecast: a forward estimate of workload based on your current settings and history.
+- Revision-only day: a day focused on review without adding new memorization.
+- Canonical: the final source to trust if two docs disagree (`APP_KNOWLEDGE.md`, then source code).
+
 ## Purpose and Audience
 
 Use this guide if you want to:
@@ -21,6 +65,11 @@ The app lifecycle is:
 - Delayed consolidation checks -> verify stability after time has passed (especially next day)
 
 Planner is the system that decides how much to assign and in what order, so your memorization load stays sustainable.
+
+## Scope Boundaries
+
+This guide covers planning execution behavior and user decisions.
+It does not define scheduler internals, DB/storage contracts, or implementation-level algorithms.
 
 ## Core Outcomes Planner Is Designed to Achieve
 
@@ -304,4 +353,3 @@ When not to overuse override:
 - Whole-app non-technical guide: `docs/assistant/features/APP_USER_GUIDE.md`
 - Planner workflow runbook: `docs/assistant/workflows/PLANNER_WORKFLOW.md`
 - Scheduling + companion runbook: `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`
-

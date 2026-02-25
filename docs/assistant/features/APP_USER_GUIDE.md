@@ -2,6 +2,49 @@
 
 This is a plain-language guide to how the app works as a complete system, so you can choose the right screen at the right time and keep memorization quality high over months, not just days.
 
+## Use This Guide When
+
+Use this guide for:
+- user support and non-technical app explanation
+- onboarding conversations about what each area of the app is for
+- high-level feature expectations and day-to-day usage flow
+
+## Do Not Use This Guide For
+
+Do not use this guide for:
+- DB schema/migration details
+- implementation internals or architecture decisions
+- authoritative behavior when this guide conflicts with canonical docs/code
+
+## For Agents: Support Interaction Contract
+
+When using this guide in support replies:
+- answer in plain language first
+- provide numbered next steps with exact UI labels from this guide
+- run a canonical cross-check with `APP_KNOWLEDGE.md` when details affect behavior claims
+- avoid unsupported promises and call out uncertainty if behavior is evolving
+- define unavoidable technical terms in one short sentence
+- route technical follow-ups to canonical docs/workflows instead of extending assumptions
+
+## Canonical Deference Rule
+
+If this guide conflicts with technical docs:
+- `APP_KNOWLEDGE.md` is canonical for app-level architecture/status
+- source code is final truth
+
+## Quick Start (No Technical Background)
+
+1. Open `Plan` and set a conservative daily/weekly load you can keep for at least 7 days.
+2. Open `Today` and complete tasks in the shown order (delayed checks, review, then new work).
+3. Use Companion stages only from `Today` actions to avoid skipping required sequence.
+4. Re-check your plan after several consistent days before increasing new material.
+
+## Terms in Plain English
+
+- Delayed check: a later memory check (usually next day) to confirm recall is still stable.
+- Calibration: adjusting planner estimates using your real session pace.
+- Canonical: the final source to trust if two docs disagree (`APP_KNOWLEDGE.md`, then source code).
+
 ## What This App Is For
 
 Hifz Planner combines:
@@ -36,6 +79,11 @@ Additional top-right menu areas:
 - My Quran
 - Quran Radio
 - Reciters
+
+## Known Limits and Placeholder Areas
+
+- `My Quran` and `Quran Radio` are currently placeholder/coming-soon surfaces.
+- `Reciters` is not a placeholder: it is a functional searchable reciter selector for playback preferences.
 
 ## What Each Area Is For
 
@@ -160,10 +208,9 @@ If some remote assets fail temporarily:
 - changing many planner variables at once
 - judging progress by volume only, not stability
 
-## Deeper Guides
+## Deeper Guides (only present with in the app folder/repo)
 
 - Planner deep guide: `docs/assistant/features/PLANNER_USER_GUIDE.md`
 - Canonical architecture/status: `APP_KNOWLEDGE.md`
 - Planner workflow runbook: `docs/assistant/workflows/PLANNER_WORKFLOW.md`
 - Scheduling + companion workflow: `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`
-

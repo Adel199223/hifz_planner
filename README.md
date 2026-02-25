@@ -26,6 +26,13 @@ Canonical source:
 - `docs/assistant/features/APP_USER_GUIDE.md`
 - `docs/assistant/features/PLANNER_USER_GUIDE.md`
 
+## If You Are Not a Developer, Start Here
+
+1. Start with `docs/assistant/features/APP_USER_GUIDE.md` for a plain-language app walkthrough.
+2. If your question is about planning or daily assignments, open `docs/assistant/features/PLANNER_USER_GUIDE.md`.
+3. If you are still unsure where to look, open `docs/assistant/INDEX.md`.
+4. Use `APP_KNOWLEDGE.md` only when you need technical or canonical detail.
+
 CI quality gates:
 - `.github/workflows/dart.yml`
 

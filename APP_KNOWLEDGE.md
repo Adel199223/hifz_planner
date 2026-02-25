@@ -3,6 +3,14 @@
 This document is the single-source project briefing for outsiders (new engineers, reviewers, and AI agents).
 It explains what the app is, what is already implemented, where key logic lives, and how to work safely.
 
+## If You Are Not a Developer (Read This First)
+
+- This file is technical and canonical.
+- If you want a beginner-friendly explanation, start with:
+  - `docs/assistant/features/APP_USER_GUIDE.md`
+  - `docs/assistant/features/PLANNER_USER_GUIDE.md` (for planning-specific questions)
+- If those guides and this file disagree, this file and source code are the final truth.
+
 ## 0) Agent Docs Map
 
 Documentation contract for contributors and AI agents:

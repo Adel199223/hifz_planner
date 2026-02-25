@@ -8,6 +8,12 @@ One-page navigation guide for agent-facing documentation.
 2. Read that document first.
 3. Run the listed validator/smoke command before handoff.
 
+## Beginner Quick Path
+
+1. Start with `docs/assistant/features/APP_USER_GUIDE.md`.
+2. For planning or daily-assignment questions, open `docs/assistant/features/PLANNER_USER_GUIDE.md`.
+3. Open `APP_KNOWLEDGE.md` only if you need technical/canonical detail.
+
 ## Agent Doc Map
 
 | Document | Use when... | Do not use for... | Time to value |
@@ -19,8 +25,8 @@ One-page navigation guide for agent-facing documentation.
 | `docs/assistant/exec_plans/PLANS.md` | Work is major/multi-file and needs a self-contained execution plan format. | Small isolated fixes. | 2 min |
 | `docs/assistant/APP_KNOWLEDGE.md` | Your workflow expects assistant-path docs and needs canonical pointer/bootstrapping. | Canonical truth when conflicts exist. | 1 min |
 | `docs/assistant/manifest.json` | You are an automated agent selecting docs/tests programmatically. | Human narrative context. | <1 min |
-| `docs/assistant/features/PLANNER_USER_GUIDE.md` | You need a thorough, non-coder explanation of planning/scheduling behavior and user decisions. | Canonical architecture or DB internals. | 3 min |
-| `docs/assistant/features/APP_USER_GUIDE.md` | You need a non-technical whole-app explainer for user guidance and support conversations. | Detailed implementation/runbook constraints. | 2 min |
+| `docs/assistant/features/PLANNER_USER_GUIDE.md` | You need a thorough, non-coder explanation of planning/scheduling behavior and user decisions. | Canonical architecture, DB internals, or implementation-level scheduler logic. | 3 min |
+| `docs/assistant/features/APP_USER_GUIDE.md` | You need a non-technical whole-app explainer for user guidance and support conversations. | Canonical architecture truth, schema/migration details, or implementation/runbook constraints. | 2 min |
 | `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` | Task changes labels/locales/RTL/translation-resource mapping. | DB schema or non-localization feature logic. | 2 min |
 | `docs/assistant/LOCALIZATION_GLOSSARY.md` | You need canonical terms across languages without duplication. | Runtime data/cache logic decisions. | 1 min |
 | `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` | Task targets VS Code lag, file watchers, indexing pressure, or workspace artifact placement. | Feature/domain logic implementation details. | 2 min |
