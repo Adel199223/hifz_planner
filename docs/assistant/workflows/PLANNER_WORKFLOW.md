@@ -75,3 +75,4 @@ flutter test -j 1 -r expanded test/data/database/app_database_test.dart
 - singleton settings/progress assumptions still hold
 - targeted planner/scheduler tests pass
 - schema-affecting changes include migration updates and DB tests
+- keep `docs/assistant/features/PLANNER_USER_GUIDE.md` aligned when planner UX/logic changes materially

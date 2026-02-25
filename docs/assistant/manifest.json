@@ -9,6 +9,10 @@
     "AGENTS.md",
     "docs/assistant/APP_KNOWLEDGE.md"
   ],
+  "user_guides": [
+    "docs/assistant/features/PLANNER_USER_GUIDE.md",
+    "docs/assistant/features/APP_USER_GUIDE.md"
+  ],
   "workflows": [
     {
       "id": "reader_ui",

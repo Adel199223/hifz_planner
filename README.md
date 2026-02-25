@@ -19,6 +19,11 @@ A new Flutter project.
 Canonical source:
 - `APP_KNOWLEDGE.md` is the canonical app-level architecture/status brief.
 
+## User-facing guidance docs
+
+- `docs/assistant/features/APP_USER_GUIDE.md`
+- `docs/assistant/features/PLANNER_USER_GUIDE.md`
+
 CI quality gates:
 - `.github/workflows/dart.yml`
 

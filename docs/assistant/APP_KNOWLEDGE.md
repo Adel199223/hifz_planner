@@ -49,6 +49,8 @@ Do not use this file as primary truth when there is a conflict.
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
+- `docs/assistant/features/APP_USER_GUIDE.md`
+- `docs/assistant/features/PLANNER_USER_GUIDE.md`
 
 ### App shell
 - `lib/main.dart`
@@ -84,6 +86,8 @@ Do not use this file as primary truth when there is a conflict.
 - `lib/screens/today_screen.dart`
 - `lib/data/services/daily_planner.dart`
 - `lib/data/services/spaced_repetition_scheduler.dart`
+- `docs/assistant/features/PLANNER_USER_GUIDE.md`
+- `docs/assistant/features/APP_USER_GUIDE.md`
 
 ### DB schema
 - `lib/data/database/app_database.dart`

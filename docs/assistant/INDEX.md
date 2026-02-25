@@ -17,6 +17,8 @@ One-page navigation guide for agent-facing documentation.
 | `APP_KNOWLEDGE.md` | You need canonical app architecture, feature status, and subsystem map. | Fine-grained per-workflow checklists. | 3 min |
 | `docs/assistant/APP_KNOWLEDGE.md` | Your workflow expects assistant-path docs and needs canonical pointer/bootstrapping. | Canonical truth when conflicts exist. | 1 min |
 | `docs/assistant/manifest.json` | You are an automated agent selecting docs/tests programmatically. | Human narrative context. | <1 min |
+| `docs/assistant/features/PLANNER_USER_GUIDE.md` | You need a thorough, non-coder explanation of planning/scheduling behavior and user decisions. | Canonical architecture or DB internals. | 3 min |
+| `docs/assistant/features/APP_USER_GUIDE.md` | You need a non-technical whole-app explainer for user guidance and support conversations. | Detailed implementation/runbook constraints. | 2 min |
 | `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` | Task changes labels/locales/RTL/translation-resource mapping. | DB schema or non-localization feature logic. | 2 min |
 | `docs/assistant/LOCALIZATION_GLOSSARY.md` | You need canonical terms across languages without duplication. | Runtime data/cache logic decisions. | 1 min |
 | `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` | Task targets VS Code lag, file watchers, indexing pressure, or workspace artifact placement. | Feature/domain logic implementation details. | 2 min |

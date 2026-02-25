@@ -16,6 +16,16 @@ Read policy:
 - This file is a private template asset.
 - `docs/assistant/templates/*` is read-on-demand only and should not be opened unless explicitly requested by the user.
 
+Dual-audience design note:
+- Agent docs answer implementation/routing contracts.
+- User guides answer how to use the app effectively in plain language.
+
+Drift prevention note:
+- Major feature changes should update only relevant user-guide sections plus relevant technical docs.
+
+Support/explanation use case note:
+- Generated user guides should help agents explain app behavior simply during user support.
+
 ## Master Prompt (Copy/Paste)
 
 ```md
@@ -34,6 +44,7 @@ You are working in a new app repository. Build an AI-first documentation system 
 8. Add one canonical workspace performance workflow and baseline doc so IDE/file-watcher performance is consistently managed.
 9. Require a mandatory post-significant-change docs-sync prompt policy so assistant docs stay fresh without broad rewrites.
 10. Require explicit external reference discovery policy when users request parity/inspiration from named apps/sites/products.
+11. Create a user-perspective documentation track so agents can explain the app to non-coders clearly.
 
 ## Required Documentation Architecture
 Create or update these files (adapt names to repo domain where needed):
@@ -51,6 +62,11 @@ Create or update these files (adapt names to repo domain where needed):
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (if DB-backed app; otherwise equivalent persistence deep doc)
 - `docs/assistant/LOCALIZATION_GLOSSARY.md` (single source for localized terminology)
 - `docs/assistant/PERFORMANCE_BASELINES.md` (single source for workspace performance defaults)
+
+### User guide namespace
+- `docs/assistant/features/APP_USER_GUIDE.md` (whole-app, non-coder perspective)
+- `docs/assistant/features/PRIMARY_FEATURE_USER_GUIDE.md` (domain-deep non-coder guide for the app’s most critical workflow)
+- These guides are explanatory/support docs, not canonical architecture truth.
 
 ### Workflow docs
 - `docs/assistant/workflows/FEATURE_WORKFLOW.md` (core product workflow; rename to domain)
@@ -82,6 +98,7 @@ Create or update these files (adapt names to repo domain where needed):
 11. After significant implementation changes, always ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
 12. If docs sync is approved, update only relevant assistant docs for touched scope (do not do blanket doc rewrites).
 13. If user names a product/site/app for parity or inspiration, run `REFERENCE_DISCOVERY_WORKFLOW.md` before implementation decisions.
+14. Technical canonical docs remain source-of-truth; user guides must defer to them when conflicts appear.
 
 ## Commit/Publish Workflow Requirements
 In `COMMIT_PUBLISH_WORKFLOW.md`, define a strict sequence:
@@ -118,11 +135,16 @@ Include:
 - `version`
 - `canonical`
 - `bridges`
+- `user_guides`
 - `workflows[]` with:
   - `id`, `doc`, `scope`, `primary_files`, `targeted_tests`, `validation_commands`
 - `global_commands`
 - `contracts`
 - `last_updated` (YYYY-MM-DD)
+
+For `user_guides`, require:
+- `docs/assistant/features/APP_USER_GUIDE.md`
+- `docs/assistant/features/PRIMARY_FEATURE_USER_GUIDE.md`
 
 Add workflow IDs for:
 - feature workflow
@@ -215,6 +237,10 @@ Validator must fail if:
 16. `AGENTS.md`/`agent.md` do not enforce:
    - post-significant-change docs-sync prompt policy
    - inspiration/parity routing to `REFERENCE_DISCOVERY_WORKFLOW.md`
+17. `user_guides` key is missing from manifest.
+18. Any `user_guides` path in manifest does not exist.
+19. User guides are not discoverable from the docs index/routing docs.
+20. Template-path routing regression protections are missing.
 
 ## Tests
 1. Validator passes in current repo.
@@ -261,6 +287,7 @@ Return:
 2. Contract summary
 3. Validation commands run + results
 4. Any assumptions made
+5. User-guide coverage summary (what user journeys are documented)
 ```
 
 ## Customization Checklist
@@ -269,6 +296,7 @@ Return:
 - Confirm canonical file name if the project uses a different standard than `APP_KNOWLEDGE.md`.
 - Align targeted tests to the new repo's test layout.
 - Keep PowerShell command style if you are targeting Windows-first workflows.
+- If the app is not planning-centric, rename `PRIMARY_FEATURE_USER_GUIDE.md` to the app’s most critical user workflow guide.
 
 ## Update Cadence
 

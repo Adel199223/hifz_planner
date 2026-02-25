@@ -14,6 +14,10 @@ Documentation contract for contributors and AI agents:
 - Assistant doc index: `docs/assistant/INDEX.md`
 - Machine manifest: `docs/assistant/manifest.json`
 
+User-perspective guides:
+- Planner deep guide (non-coder): `docs/assistant/features/PLANNER_USER_GUIDE.md`
+- Whole-app guide (non-coder): `docs/assistant/features/APP_USER_GUIDE.md`
+
 If documentation conflicts:
 - this file (`APP_KNOWLEDGE.md`) is canonical for overall app behavior and structure
 - source code remains the final truth
@@ -391,6 +395,9 @@ Important repos/services:
 ### Plan screen
 File: `lib/screens/plan_screen.dart`
 
+User-facing explainer:
+- `docs/assistant/features/PLANNER_USER_GUIDE.md` (plain-language walkthrough of every planner option and expected outcomes)
+
 Current capabilities:
 - Onboarding-like questionnaire inputs
 - Activate/update settings (`profile`, minutes, caps, etc.)
@@ -407,16 +414,22 @@ Current capabilities:
 ### Today screen
 File: `lib/screens/today_screen.dart`
 
+User-facing explainer:
+- `docs/assistant/features/PLANNER_USER_GUIDE.md` (execution flow, Stage-4 due handling, grading, and override guidance)
+
 Current capabilities:
 - Build today plan from scheduler/planner
 - Render planned reviews and planned new memorization
+- Render dedicated Stage-4 delayed-consolidation due items with urgency metadata
 - Render sessionized day blocks (timed or untimed) with recovery signal
 - Save grades (`q=5/4/3/2/0`)
 - "Open in Reader" deep-link with page mode + verse range highlight params
 - "Open Companion Chain" action for review/new rows
+- Soft-block NEW launch when mandatory Stage-4 due exists (explicit override allowed and logged)
 - Companion route launch:
   - review: `/companion/chain?unitId=...&mode=review`
   - new memorization: `/companion/chain?unitId=...&mode=new`
+  - delayed consolidation: `/companion/chain?unitId=...&mode=stage4`
 
 ## 8) Other Screens
 
@@ -457,6 +470,16 @@ Current capabilities:
       - failure in any retrieval mode enforces correction exposure before next cold attempt
       - counted-pass/readiness path remains strict (unassisted, hint-threshold limited, auto-check required by default)
       - budget overflow is explicit (`budgetFallback` phase, non-terminal), preserving unresolved weak requirements for follow-up
+    - Stage 4 delayed consolidation (`mode=stage4`, lifecycle runtime):
+      - activation uses `hidden_reveal` stage code with dedicated runtime (`state.stage4 != null`) and lifecycle telemetry tags
+      - deterministic verification order prioritizes correction-required and weak/risk targets, then random-start and linking obligations
+      - run structure is retrieval-first and short: cold-start, random-start probes, linking checks, targeted discrimination, failed-only remediation
+      - failures in all Stage-4 retrieval modes require correction exposure before retry
+      - outcomes are explicit and persisted:
+        - `pass` => lifecycle tier `stable`, Stage-5 candidate hook
+        - `partial` => unresolved targets carried forward for retry
+        - `fail` => strengthening route (`targeted_stage3`/`broad_stage3`) plus retry scheduling
+      - mandatory next-day delayed check is prioritized in Today and can soft-block NEW generation
   - review runs stay hidden-first (`mode=review`)
   - stage skip with confirmation logs telemetry and persists unlock stage
   - recitation controls:
