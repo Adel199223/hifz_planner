@@ -4,6 +4,12 @@
 
 Use this workflow for Verse by Verse and Reading (Mushaf) UI/interaction work, including Quran.com parity adjustments.
 
+## Expected Outputs
+
+- Reader behavior changes are scoped to reader UI/interaction files.
+- Fallback/no-crash behavior remains intact when Quran.com/font/audio paths degrade.
+- Reader-targeted tests pass for touched behavior.
+
 ## When To Use
 
 Use when changes touch:
@@ -18,6 +24,9 @@ Use when changes touch:
 
 ## What Not To Do
 
+- Don't use this workflow when the task is primarily localization terminology/routing work. Instead use `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`.
+- Don't use this workflow when the task is primarily Quran.com transport/cache contract changes. Instead use `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md`.
+- Don't use this workflow when the task is primarily planner/scheduling logic. Instead use `docs/assistant/workflows/PLANNER_WORKFLOW.md` or `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`.
 - Do not make schema changes here unless explicitly required.
 - Do not bypass fallback paths that protect against missing font/API/cache.
 - Do not skip reader widget tests after UI or interaction changes.

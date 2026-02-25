@@ -4,6 +4,12 @@
 
 Use this workflow for automatic scheduling preferences, weekly calendar generation, availability interpretation, review-pressure rebalancing, and staged Companion Progressive Reveal Chain behavior.
 
+## Expected Outputs
+
+- Scheduling and companion staged behavior remain deterministic and persisted safely.
+- Shared projection/calibration contracts remain consistent.
+- Scheduling/companion targeted tests pass.
+
 ## When To Use
 
 Use when changes touch:
@@ -17,6 +23,9 @@ Use when changes touch:
 
 ## What Not To Do
 
+- Don't use this workflow when scope is baseline planner onboarding/today behavior without advanced scheduling/companion changes. Instead use `docs/assistant/workflows/PLANNER_WORKFLOW.md`.
+- Don't use this workflow when changes are reader-only UI parity. Instead use `docs/assistant/workflows/READER_WORKFLOW.md`.
+- Don't use this workflow when scope is docs-only routing/contract maintenance. Instead use `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`.
 - Do not bypass `PlanningProjectionEngine` with duplicate scheduling logic in UI or service layers.
 - Do not store non-versioned scheduling payloads in `app_settings`.
 - Do not bypass transactional boundaries for review log + scheduler updates.

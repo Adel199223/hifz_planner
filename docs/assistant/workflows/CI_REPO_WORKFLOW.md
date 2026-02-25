@@ -5,6 +5,12 @@
 Use this workflow for CI command parity, branch/merge hygiene, and release-safe repository operations.
 For explicit commit/stage/push triage protocol, use `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`.
 
+## Expected Outputs
+
+- CI docs/commands stay aligned with `.github/workflows/dart.yml`.
+- Branch safety and required checks remain explicit and enforceable.
+- CI-facing validators/tests pass for touched scope.
+
 ## When To Use
 
 Use when changes touch:
@@ -16,6 +22,9 @@ Use when changes touch:
 
 ## What Not To Do
 
+- Don't use this workflow when the request is specific staging/commit composition. Instead use `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`.
+- Don't use this workflow when implementing runtime feature logic. Instead use the relevant feature/data workflow first.
+- Don't use this workflow for broad doc rewrites outside CI/repo scope. Instead use `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`.
 - Do not bypass fast-forward-only merge policy when it is required.
 - Do not change CI commands in docs without syncing to the workflow file.
 - Do not push branch cleanup/deletions before confirming critical tests pass.
@@ -39,6 +48,7 @@ Use when changes touch:
 ## Minimal Commands
 
 ```powershell
+git worktree list
 git fetch --prune origin
 git status --short --branch
 git branch -vv
@@ -72,6 +82,8 @@ flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
    - Update docs and `manifest.json` to match `.github/workflows/dart.yml`.
 4. Symptoms: cleanup script attempts to delete required branches.
    - Rebuild keep-list and rerun branch pruning with explicit allowlist.
+5. Symptoms: parallel agent runs contaminate one branch state.
+   - Move one stream to a dedicated `git worktree` and keep branch scopes isolated.
 
 ## Handoff Checklist
 
@@ -82,3 +94,4 @@ flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
 - `dart run tooling/validate_agent_docs.dart` passes
 - targeted CI-facing tests pass
 - branch state and upstream tracking are clean before handoff
+- parallel streams used isolated worktrees where applicable

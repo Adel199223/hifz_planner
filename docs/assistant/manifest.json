@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
@@ -326,7 +326,12 @@
     "workspace_performance_source_of_truth": "docs/assistant/PERFORMANCE_BASELINES.md is the canonical source for workspace/editor performance defaults.",
     "env_artifacts_outside_workspace_default": "Heavyweight environments and generated runtime artifacts should live outside repo root when feasible.",
     "post_change_docs_sync_prompt_policy": "After significant implementation changes, ask whether to run Assistant Docs Sync and update only relevant assistant docs if approved.",
-    "inspiration_reference_discovery_policy": "When user names a product/site to emulate, run REFERENCE_DISCOVERY_WORKFLOW.md and prioritize official sources, then high-quality GitHub repos, then Hugging Face only for ML/data/inference scope."
+    "inspiration_reference_discovery_policy": "When user names a product/site to emulate, run REFERENCE_DISCOVERY_WORKFLOW.md and prioritize official sources, then high-quality GitHub repos, then Hugging Face only for ML/data/inference scope.",
+    "golden_principles_source_of_truth": "docs/assistant/GOLDEN_PRINCIPLES.md is the canonical source for mechanical agent/human implementation rules.",
+    "execplan_policy": "Major or multi-file work must start with an ExecPlan under docs/assistant/exec_plans/active/ and follow docs/assistant/exec_plans/PLANS.md.",
+    "approval_gates_policy": "AGENTS.md and agent.md must include Approval Gates that require explicit user confirmation for destructive, force-push, publish, risky DB, or non-essential network actions.",
+    "worktree_isolation_policy": "For parallel implementation streams, prefer git worktree isolation and avoid mixing unrelated feature threads in one working tree.",
+    "doc_gardening_policy": "Run docs validators regularly and apply targeted docs maintenance to prevent routing/contract drift."
   },
-  "last_updated": "2026-02-24"
+  "last_updated": "2026-02-25"
 }

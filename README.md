@@ -9,6 +9,8 @@ A new Flutter project.
 - `APP_KNOWLEDGE.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
+- `docs/assistant/GOLDEN_PRINCIPLES.md`
+- `docs/assistant/exec_plans/PLANS.md`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
 - `docs/assistant/LOCALIZATION_GLOSSARY.md`

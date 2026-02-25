@@ -4,6 +4,12 @@
 
 Use this workflow when a feature should be inspired by or aligned with an existing app/product/site and the team needs reliable external references before implementation.
 
+## Expected Outputs
+
+- External references are cited with links and rationale.
+- Chosen patterns are separated from local adaptations.
+- Licensing/maintenance risks are documented when relevant.
+
 ## When To Use
 
 Use when requests include:
@@ -16,6 +22,9 @@ Use when architecture, UX patterns, data behavior, or terminology should be grou
 
 ## What Not To Do
 
+- Don't use this workflow when the user did not request or imply external parity/inspiration. Instead use the domain workflow directly.
+- Don't use this workflow as a replacement for implementation/testing workflow steps. Instead use the corresponding feature/data workflow after discovery.
+- Don't use this workflow to copy code wholesale from external projects. Instead adopt pattern-level behavior with local implementation.
 - Do not copy code blindly from external repositories.
 - Do not rely on outdated or inactive reference projects without noting risk.
 - Do not use UI-only references when backend/data behavior is in scope.

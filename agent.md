@@ -11,13 +11,24 @@ Use this runbook to quickly route a task to the right files, commands, and tests
 1. `APP_KNOWLEDGE.md` (canonical app status and architecture)
 2. `docs/assistant/manifest.json` (machine-readable routing map)
 3. `docs/assistant/INDEX.md` (human doc index)
-4. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB and Drift deep reference)
-5. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
-6. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
+4. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical style/invariant rules)
+5. `docs/assistant/exec_plans/PLANS.md` (major-work execution plans)
+6. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB and Drift deep reference)
+7. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
+8. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
 
 Compatibility:
 - `AGENTS.md` is a short shim for tools that auto-open that filename.
 - `agent.md` is the detailed runbook humans and AI agents should execute.
+
+## Approval Gates
+
+Ask for explicit approval before commands that:
+- delete data/files outside scoped implementation
+- apply destructive DB/schema actions in risky contexts
+- force-push or rewrite protected branch history
+- publish/release/deploy artifacts
+- run non-essential external network calls for implementation
 
 ## Quick Routing Matrix
 
@@ -69,6 +80,22 @@ Compatibility:
 14. For inspiration/parity requests against named apps/sites, open `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` and base implementation decisions on cited references.
 15. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
 16. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
+
+## ExecPlans
+
+For major or multi-file work:
+1. Create an ExecPlan under `docs/assistant/exec_plans/active/`.
+2. Follow required structure from `docs/assistant/exec_plans/PLANS.md`.
+3. Keep the plan self-contained and update decisions/progress during implementation.
+4. Move finished plans to `docs/assistant/exec_plans/completed/`.
+
+ExecPlans are optional for minor isolated edits.
+
+## Worktree Isolation
+
+- For parallel implementation streams, prefer isolated `git worktree` workspaces.
+- Keep each major thread scoped to one worktree/branch pair.
+- Avoid mixing unrelated feature work in the same worktree.
 
 ## Core Commands
 

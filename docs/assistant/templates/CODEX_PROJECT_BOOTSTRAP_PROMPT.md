@@ -45,9 +45,12 @@ You are working in a new app repository. Build an AI-first documentation system 
 9. Require a mandatory post-significant-change docs-sync prompt policy so assistant docs stay fresh without broad rewrites.
 10. Require explicit external reference discovery policy when users request parity/inspiration from named apps/sites/products.
 11. Create a user-perspective documentation track so agents can explain the app to non-coders clearly.
+12. Add enforceable approval gates and worktree isolation guidance for safer execution.
+13. Add Golden Principles and ExecPlans so major work stays deterministic and self-contained.
 
 ## Required Documentation Architecture
 Create or update these files (adapt names to repo domain where needed):
+If equivalent docs/files already exist in the repo (same or similar purpose), update/restructure/replace those existing artifacts as needed instead of duplicating them.
 
 ### Root level
 - `AGENTS.md` (compatibility shim; short)
@@ -60,6 +63,10 @@ Create or update these files (adapt names to repo domain where needed):
 - `docs/assistant/INDEX.md` (human index with “Use when…”)
 - `docs/assistant/manifest.json` (machine routing map)
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (if DB-backed app; otherwise equivalent persistence deep doc)
+- `docs/assistant/GOLDEN_PRINCIPLES.md` (single source for enforceable mechanical rules)
+- `docs/assistant/exec_plans/PLANS.md` (ExecPlan template + lifecycle rules)
+- `docs/assistant/exec_plans/active/.gitkeep` (active major-work plans)
+- `docs/assistant/exec_plans/completed/.gitkeep` (completed major-work plans)
 - `docs/assistant/LOCALIZATION_GLOSSARY.md` (single source for localized terminology)
 - `docs/assistant/PERFORMANCE_BASELINES.md` (single source for workspace performance defaults)
 
@@ -99,10 +106,13 @@ Create or update these files (adapt names to repo domain where needed):
 12. If docs sync is approved, update only relevant assistant docs for touched scope (do not do blanket doc rewrites).
 13. If user names a product/site/app for parity or inspiration, run `REFERENCE_DISCOVERY_WORKFLOW.md` before implementation decisions.
 14. Technical canonical docs remain source-of-truth; user guides must defer to them when conflicts appear.
+15. `AGENTS.md` and `agent.md` must include `Approval Gates`, `ExecPlans`, and `Worktree Isolation` sections.
+16. ExecPlans are mandatory for major/multi-file work and optional for small isolated changes.
 
 ## Commit/Publish Workflow Requirements
 In `COMMIT_PUBLISH_WORKFLOW.md`, define a strict sequence:
 1. Branch safety gate (before staging):
+   - for parallel threads, use `git worktree` isolation first
    - if change is major and branch is `main`, create/switch to `feat/<scope-name>`
    - keep `main` as stable integration branch
 2. Fetch/prune and inspect state:
@@ -126,9 +136,24 @@ In `COMMIT_PUBLISH_WORKFLOW.md`, define a strict sequence:
    - push correct branch only
    - never force-push `main`
 7. Repo cleanup:
-   - ff-only merge to `main`
-   - delete stale branches with explicit keep-list
-   - prune refs and verify final clean state
+    - ff-only merge to `main`
+    - delete stale branches with explicit keep-list
+    - prune refs and verify final clean state
+
+## Approval Gates Requirements
+In `AGENTS.md` and `agent.md`, require `## Approval Gates` with explicit ask-before-execute triggers for:
+1. destructive operations
+2. risky DB/schema operations
+3. force-push/history rewrite
+4. publish/release/deploy
+5. non-essential external network actions
+
+## ExecPlans and Worktree Requirements
+1. Require `## ExecPlans` section in `AGENTS.md` and `agent.md`.
+2. Require major/multi-file work to create plan files under `docs/assistant/exec_plans/active/`.
+3. Require `docs/assistant/exec_plans/PLANS.md` to define format and lifecycle.
+4. Require `## Worktree Isolation` section in `AGENTS.md` and `agent.md`.
+5. Require worktree guidance in CI/commit/docs-maintenance workflows.
 
 ## Manifest Requirements (`docs/assistant/manifest.json`)
 Include:
@@ -163,6 +188,11 @@ Add contract keys for:
 - environment-outside-workspace default policy
 - `post_change_docs_sync_prompt_policy`
 - `inspiration_reference_discovery_policy`
+- `golden_principles_source_of_truth`
+- `execplan_policy`
+- `approval_gates_policy`
+- `worktree_isolation_policy`
+- `doc_gardening_policy`
 
 ## Inspiration Reference Discovery Requirements
 Create one dedicated workflow:
@@ -209,8 +239,12 @@ In that workflow, require:
 
 ## Workflow Doc Template (required in each workflow)
 - What This Workflow Is For
+- Expected Outputs
 - When To Use
 - What Not To Do
+- Include explicit negative routing language:
+  - "Don't use this workflow when..."
+  - "Instead use ..."
 - Primary Files
 - Minimal Commands
 - Targeted Tests
@@ -224,23 +258,35 @@ Validator must fail if:
 3. Manifest paths do not exist.
 4. Required workflow IDs are missing (including `ci_repo_ops`, `commit_publish_ops`, and localization workflow id).
 5. Required section headings are missing in any workflow doc.
-6. Canonical/bridge contract phrases are missing.
-7. Command snippets in manifest are bash-only or non-PowerShell-safe.
-8. Commit workflow doc is missing.
-9. Bridge/canonical policy conflicts are detected.
-10. Localization glossary/workflow routing contracts are missing.
-11. Workspace performance workflow/baseline or routing contracts are missing.
-12. Workspace hygiene validator/tooling files are missing.
-13. `REFERENCE_DISCOVERY_WORKFLOW.md` is missing.
-14. `reference_discovery` workflow id is missing from manifest.
-15. `post_change_docs_sync_prompt_policy` or `inspiration_reference_discovery_policy` contracts are missing from manifest.
-16. `AGENTS.md`/`agent.md` do not enforce:
+6. Any workflow doc misses `Expected Outputs`.
+7. Any workflow doc misses explicit negative-routing + alternative language.
+8. Canonical/bridge contract phrases are missing.
+9. Command snippets in manifest are bash-only or non-PowerShell-safe.
+10. Commit workflow doc is missing.
+11. Bridge/canonical policy conflicts are detected.
+12. Localization glossary/workflow routing contracts are missing.
+13. Workspace performance workflow/baseline or routing contracts are missing.
+14. Workspace hygiene validator/tooling files are missing.
+15. `REFERENCE_DISCOVERY_WORKFLOW.md` is missing.
+16. `reference_discovery` workflow id is missing from manifest.
+17. `post_change_docs_sync_prompt_policy` or `inspiration_reference_discovery_policy` contracts are missing from manifest.
+18. New contracts are missing from manifest:
+   - `golden_principles_source_of_truth`
+   - `execplan_policy`
+   - `approval_gates_policy`
+   - `worktree_isolation_policy`
+   - `doc_gardening_policy`
+19. `GOLDEN_PRINCIPLES.md` or `exec_plans/PLANS.md` scaffolding is missing.
+20. `AGENTS.md`/`agent.md` do not enforce:
    - post-significant-change docs-sync prompt policy
    - inspiration/parity routing to `REFERENCE_DISCOVERY_WORKFLOW.md`
-17. `user_guides` key is missing from manifest.
-18. Any `user_guides` path in manifest does not exist.
-19. User guides are not discoverable from the docs index/routing docs.
-20. Template-path routing regression protections are missing.
+   - Approval Gates
+   - ExecPlans
+   - Worktree Isolation
+21. `user_guides` key is missing from manifest.
+22. Any `user_guides` path in manifest does not exist.
+23. User guides are not discoverable from the docs index/routing docs.
+24. Template-path routing regression protections are missing.
 
 ## Tests
 1. Validator passes in current repo.
@@ -253,6 +299,18 @@ Validator must fail if:
 8. Fails when workspace hygiene validator files are missing.
 9. Fails when `reference_discovery` workflow id or discovery/docs-sync contracts are missing.
 10. Fails when AGENTS/runbook policy routing phrases are removed.
+11. Fails when `docs/assistant/GOLDEN_PRINCIPLES.md` is missing.
+12. Fails when `docs/assistant/exec_plans/PLANS.md` is missing.
+13. Fails when `Approval Gates` section is missing from AGENTS/runbook.
+14. Fails when worktree isolation guidance is missing from required docs/workflows.
+15. Fails when a workflow misses `Expected Outputs`.
+16. Fails when a workflow misses explicit negative-routing + alternative text.
+17. Fails when any required new manifest contracts are missing:
+    - `golden_principles_source_of_truth`
+    - `execplan_policy`
+    - `approval_gates_policy`
+    - `worktree_isolation_policy`
+    - `doc_gardening_policy`
 
 ## CI Guidance
 Ensure CI includes:

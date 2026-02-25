@@ -4,6 +4,12 @@
 
 Use this workflow whenever the user asks to commit. It enforces safe staging, ignore hygiene, validation, push, and optional remote cleanup.
 
+## Expected Outputs
+
+- Staged scope matches intended change set with no accidental files.
+- Targeted validation for touched scope is complete before commit/push.
+- Branch/publish operations are safe and auditable.
+
 ## When To Use
 
 Use when requests include:
@@ -15,6 +21,9 @@ Use when requests include:
 
 ## What Not To Do
 
+- Don't use this workflow when the request is runtime feature implementation without commit intent. Instead use the relevant feature workflow first.
+- Don't use this workflow when CI policy/contracts are being redesigned. Instead use `docs/assistant/workflows/CI_REPO_WORKFLOW.md`.
+- Don't use this workflow to perform broad assistant-doc rewrites after implementation. Instead apply targeted docs sync via `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`.
 - Do not commit blindly with `git add .` unless the user explicitly wants every change.
 - Do not include unrelated files in the same commit.
 - Do not force-push to `main`.
@@ -33,6 +42,7 @@ Use when requests include:
 ## Minimal Commands
 
 ```powershell
+git worktree list
 git fetch --prune origin
 git status --short --branch
 git diff --name-only
@@ -85,6 +95,8 @@ flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
    - re-fetch and re-check divergence before any merge.
 5. Symptoms: remote branch deletion denied.
    - keep branch and report the denied deletion explicitly.
+6. Symptoms: parallel feature streams keep polluting staged scope.
+   - move each stream to its own `git worktree` and recommit from isolated working trees.
 
 ## Significant-Change Docs Sync Policy
 
@@ -117,3 +129,4 @@ If user says no:
 - push succeeded to correct remote branch
 - optional merge/prune operations completed only when requested
 - final state is clean (`git status --short --branch`)
+- worktree isolation was used when parallel streams existed

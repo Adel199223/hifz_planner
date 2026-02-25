@@ -4,6 +4,12 @@
 
 Use this workflow for Quran.com data transport, by-page caching, in-memory dedupe, translation-aware payloads, and QCF font loading behavior.
 
+## Expected Outputs
+
+- Page-level data/cache behavior remains deterministic and backward compatible.
+- Fallback paths still prevent reader crashes on API/cache/font failures.
+- Data workflow targeted tests pass.
+
 ## When To Use
 
 Use when changes touch:
@@ -15,6 +21,9 @@ Use when changes touch:
 
 ## What Not To Do
 
+- Don't use this workflow when changes are mostly reader presentation/interaction only. Instead use `docs/assistant/workflows/READER_WORKFLOW.md`.
+- Don't use this workflow when changes are mostly localization labels/terms. Instead use `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`.
+- Don't use this workflow when changes are scheduler/planner domain logic. Instead use `docs/assistant/workflows/PLANNER_WORKFLOW.md`.
 - Do not add per-verse network fan-out.
 - Do not break cache backward compatibility unless explicitly migrating.
 - Do not remove no-crash fallback behavior in consumer UI.

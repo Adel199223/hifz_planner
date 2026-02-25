@@ -13,6 +13,8 @@ Documentation contract for contributors and AI agents:
 - DB/Drift deep reference: `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - Assistant doc index: `docs/assistant/INDEX.md`
 - Machine manifest: `docs/assistant/manifest.json`
+- Mechanical rules: `docs/assistant/GOLDEN_PRINCIPLES.md`
+- ExecPlan playbook: `docs/assistant/exec_plans/PLANS.md`
 
 User-perspective guides:
 - Planner deep guide (non-coder): `docs/assistant/features/PLANNER_USER_GUIDE.md`
@@ -310,7 +312,7 @@ Note:
 ## 5) Local Data Model (Drift)
 
 Database file: `lib/data/database/app_database.dart`
-Schema version: `6`
+Schema version: `7`
 
 Tables:
 - `ayah` (Quran text + optional `page_madina`)
@@ -440,7 +442,7 @@ Current capabilities:
 - `lib/screens/quran_radio_screen.dart`
   - placeholder scaffold (`coming soon`)
 - `lib/screens/reciters_screen.dart`
-  - placeholder scaffold (`coming soon`)
+  - functional searchable reciter selector with persisted selection
 - `lib/screens/settings_screen.dart`
   - import Quran text + import page metadata + progress status
 - `lib/screens/bookmarks_screen.dart`
@@ -589,7 +591,7 @@ Representative files:
 
 - Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
 - `Translation` and `Word By Word` settings tabs are scaffolded but not fully implemented.
-- My Quran / Quran Radio / Reciters screens are placeholders.
+- My Quran and Quran Radio screens are placeholders.
 - Web parity will require abstraction of `dart:io` usage in Quran.com cache/font services.
 - Quran.com parity work is active; visuals and interactions are close in many areas but still evolving.
 - No Python CI/tooling is configured because this repository currently has no Python code path; add Python configuration only when Python tooling is introduced.

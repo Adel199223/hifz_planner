@@ -4,6 +4,12 @@
 
 Use this workflow for language additions, label changes, terminology consistency, RTL behavior, and Reader translation-resource mapping.
 
+## Expected Outputs
+
+- Updated terms remain consistent with `docs/assistant/LOCALIZATION_GLOSSARY.md`.
+- RTL/LTR behavior is preserved across affected screens.
+- Localization validator/tests pass for touched scope.
+
 ## When To Use
 
 Use when changes touch:
@@ -16,6 +22,9 @@ Use when changes touch:
 
 ## What Not To Do
 
+- Don't use this workflow when the task is primarily reader interaction/layout parity without terminology changes. Instead use `docs/assistant/workflows/READER_WORKFLOW.md`.
+- Don't use this workflow when the task is mostly API/cache/font transport behavior. Instead use `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md`.
+- Don't use this workflow when scope is docs-structure maintenance only. Instead use `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`.
 - Do not hardcode new user-facing labels directly in screen widgets.
 - Do not duplicate term tables across multiple docs; update glossary first.
 - Do not break Arabic global RTL behavior.

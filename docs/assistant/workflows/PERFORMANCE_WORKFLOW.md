@@ -5,6 +5,12 @@
 Use this workflow to keep editor responsiveness high while preserving build/test quality.
 It covers VS Code lag, file-watcher/indexing pressure, extension overhead, and workspace artifact placement.
 
+## Expected Outputs
+
+- Workspace excludes and ignore rules match detected stack needs.
+- Outside-workspace environment policy remains enforced.
+- Performance hygiene validator/tests pass.
+
 ## When To Use
 
 Use when:
@@ -15,6 +21,9 @@ Use when:
 
 ## What Not To Do
 
+- Don't use this workflow when the request is feature behavior implementation. Instead use the relevant domain workflow (`READER_WORKFLOW.md`, `PLANNER_WORKFLOW.md`, etc.).
+- Don't use this workflow when scope is commit/publish flow management. Instead use `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`.
+- Don't use this workflow when scope is docs routing/contracts only. Instead use `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`.
 - Do not assume CUDA improves VS Code indexing or file watcher performance.
 - Do not delete an existing environment until a replacement environment is verified.
 - Do not keep large runtime environments/caches in repo root when avoidable.

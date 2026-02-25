@@ -4,6 +4,12 @@
 
 Use this workflow for onboarding questionnaire, plan activation, daily planning, review grading, calibration, forecast, and scheduler behavior.
 
+## Expected Outputs
+
+- Planner/today behavior stays transaction-safe and test-covered.
+- Projection logic remains shared where required.
+- Planner-targeted tests pass before handoff.
+
 ## When To Use
 
 Use when changes touch:
@@ -17,6 +23,9 @@ Use when changes touch:
 
 ## What Not To Do
 
+- Don't use this workflow when scope is advanced scheduling availability or companion staged runtime behavior. Instead use `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`.
+- Don't use this workflow when the change is DB schema/migration-centric. Instead use `docs/assistant/DB_DRIFT_KNOWLEDGE.md` and corresponding DB-aware workflow path.
+- Don't use this workflow when scope is reader-only UI parity. Instead use `docs/assistant/workflows/READER_WORKFLOW.md`.
 - Do not change DB schema without migration updates.
 - Do not bypass transactional writes for review-log + schedule updates.
 - Do not change planner constants without updating related tests.

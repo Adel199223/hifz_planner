@@ -361,6 +361,285 @@ void main() {
     );
   });
 
+  test('validator fails when golden principles file is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final golden = File(
+      _joinPath(fixture.path, 'docs/assistant/GOLDEN_PRINCIPLES.md'),
+    );
+    golden.deleteSync();
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Missing required file:') &&
+            issue.contains('GOLDEN_PRINCIPLES.md'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when exec plan scaffold file is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final plans = File(
+      _joinPath(fixture.path, 'docs/assistant/exec_plans/PLANS.md'),
+    );
+    plans.deleteSync();
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Missing required file:') &&
+            issue.contains('docs/assistant/exec_plans/PLANS.md'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when AGENTS.md misses Approval Gates section', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
+    final updated =
+        agentsFile.readAsStringSync().replaceAll('## Approval Gates', '## X');
+    agentsFile.writeAsStringSync(updated);
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any((issue) => issue.contains('Approval Gates')),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when AGENTS.md misses Worktree Isolation section', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
+    final updated = agentsFile
+        .readAsStringSync()
+        .replaceAll('## Worktree Isolation', '## Isolation')
+        .replaceAll('worktree', 'isolation');
+    agentsFile.writeAsStringSync(updated);
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any((issue) => issue.contains('Worktree Isolation')),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when workflow misses negative-routing phrase', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final workflow = File(
+      _joinPath(fixture.path, 'docs/assistant/workflows/READER_WORKFLOW.md'),
+    );
+    final updated = workflow
+        .readAsStringSync()
+        .replaceAll("Don't use this workflow when", 'Do not use this when')
+        .replaceAll('Instead use', 'Use');
+    workflow.writeAsStringSync(updated);
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any((issue) => issue.contains('negative routing phrase')),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when workflow misses Expected Outputs heading', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final workflow = File(
+      _joinPath(fixture.path, 'docs/assistant/workflows/READER_WORKFLOW.md'),
+    );
+    final updated = workflow
+        .readAsStringSync()
+        .replaceAll('## Expected Outputs\n\n- Output.\n', '');
+    workflow.writeAsStringSync(updated);
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Workflow doc missing required section') &&
+            issue.contains('## Expected Outputs'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when golden principles contract key is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final contracts = Map<String, dynamic>.from(
+      manifest['contracts'] as Map<String, dynamic>,
+    );
+    contracts.remove('golden_principles_source_of_truth');
+    manifest['contracts'] = contracts;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('contracts.golden_principles_source_of_truth'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when execplan policy contract key is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final contracts = Map<String, dynamic>.from(
+      manifest['contracts'] as Map<String, dynamic>,
+    );
+    contracts.remove('execplan_policy');
+    manifest['contracts'] = contracts;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any((issue) => issue.contains('contracts.execplan_policy')),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when approval gates contract key is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final contracts = Map<String, dynamic>.from(
+      manifest['contracts'] as Map<String, dynamic>,
+    );
+    contracts.remove('approval_gates_policy');
+    manifest['contracts'] = contracts;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any((issue) => issue.contains('contracts.approval_gates_policy')),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when worktree isolation contract key is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final contracts = Map<String, dynamic>.from(
+      manifest['contracts'] as Map<String, dynamic>,
+    );
+    contracts.remove('worktree_isolation_policy');
+    manifest['contracts'] = contracts;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+          (issue) => issue.contains('contracts.worktree_isolation_policy')),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when doc gardening contract key is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final contracts = Map<String, dynamic>.from(
+      manifest['contracts'] as Map<String, dynamic>,
+    );
+    contracts.remove('doc_gardening_policy');
+    manifest['contracts'] = contracts;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any((issue) => issue.contains('contracts.doc_gardening_policy')),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when AGENTS.md misses template read-policy phrase', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
@@ -579,6 +858,12 @@ Directory _createValidFixture() {
       '# AGENTS Compatibility Entry',
       '',
       'This is a compatibility shim.',
+      '## Approval Gates',
+      'Ask for approval before destructive, force-push, publish, risky DB, or non-essential network actions.',
+      '## ExecPlans',
+      'Major and multi-file work uses docs/assistant/exec_plans/active/ with docs/assistant/exec_plans/PLANS.md.',
+      '## Worktree Isolation',
+      'Use git worktree isolation for parallel streams.',
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
@@ -594,6 +879,12 @@ Directory _createValidFixture() {
       '# Agent Runbook',
       '',
       'AGENTS.md is a short shim for discovery.',
+      '## Approval Gates',
+      'Ask for approval before destructive, force-push, publish, risky DB, or non-essential network actions.',
+      '## ExecPlans',
+      'Major and multi-file work uses docs/assistant/exec_plans/active/ with docs/assistant/exec_plans/PLANS.md.',
+      '## Worktree Isolation',
+      'Use git worktree isolation for parallel streams.',
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
@@ -614,7 +905,15 @@ Directory _createValidFixture() {
       'Why two `APP_KNOWLEDGE.md` files:',
     ].join('\n'),
   );
-  writeFile('README.md', '# README');
+  writeFile(
+    'README.md',
+    [
+      '# README',
+      '',
+      '- docs/assistant/GOLDEN_PRINCIPLES.md',
+      '- docs/assistant/exec_plans/PLANS.md',
+    ].join('\n'),
+  );
   writeFile(
     '.github/workflows/dart.yml',
     [
@@ -637,9 +936,21 @@ Directory _createValidFixture() {
     ].join('\n'),
   );
   writeFile('docs/assistant/DB_DRIFT_KNOWLEDGE.md', '# DB');
-  writeFile('docs/assistant/INDEX.md', '# INDEX');
+  writeFile('docs/assistant/GOLDEN_PRINCIPLES.md', '# GOLDEN');
+  writeFile(
+    'docs/assistant/INDEX.md',
+    [
+      '# INDEX',
+      '',
+      '- docs/assistant/GOLDEN_PRINCIPLES.md',
+      '- docs/assistant/exec_plans/PLANS.md',
+    ].join('\n'),
+  );
   writeFile('docs/assistant/LOCALIZATION_GLOSSARY.md', '# LOCALIZATION');
   writeFile('docs/assistant/PERFORMANCE_BASELINES.md', '# PERFORMANCE');
+  writeFile('docs/assistant/exec_plans/PLANS.md', '# PLANS');
+  writeFile('docs/assistant/exec_plans/active/.gitkeep', '');
+  writeFile('docs/assistant/exec_plans/completed/.gitkeep', '');
   writeFile(
     'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
     '# Template',
@@ -671,6 +982,10 @@ Directory _createValidFixture() {
     workflowTemplate,
   );
   writeFile(
+    'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
+    workflowTemplate,
+  );
+  writeFile(
       'docs/assistant/workflows/CI_REPO_WORKFLOW.md', _ciWorkflowTemplate());
   writeFile(
     'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
@@ -688,7 +1003,7 @@ Directory _createValidFixture() {
       'test/tooling/validate_workspace_hygiene_test.dart', '// placeholder');
 
   final manifest = <String, dynamic>{
-    'version': 7,
+    'version': 9,
     'canonical': <String, dynamic>{
       'agent_runbook': 'agent.md',
       'app_knowledge': 'APP_KNOWLEDGE.md',
@@ -697,6 +1012,10 @@ Directory _createValidFixture() {
     'bridges': <String>[
       'AGENTS.md',
       'docs/assistant/APP_KNOWLEDGE.md',
+    ],
+    'user_guides': <String>[
+      'docs/assistant/features/APP_USER_GUIDE.md',
+      'docs/assistant/features/PLANNER_USER_GUIDE.md',
     ],
     'workflows': <Map<String, dynamic>>[
       _manifestWorkflow(
@@ -722,6 +1041,10 @@ Directory _createValidFixture() {
       _manifestWorkflow(
         id: 'planner_scheduler',
         doc: 'docs/assistant/workflows/PLANNER_WORKFLOW.md',
+      ),
+      _manifestWorkflow(
+        id: 'scheduling_companion',
+        doc: 'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
       ),
       _manifestWorkflow(
         id: 'ci_repo_ops',
@@ -767,9 +1090,28 @@ Directory _createValidFixture() {
           'After significant implementation changes, ask whether to run Assistant Docs Sync and update only relevant assistant docs if approved.',
       'inspiration_reference_discovery_policy':
           'When user names a product/site to emulate, run docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md and prioritize official sources first.',
+      'golden_principles_source_of_truth':
+          'docs/assistant/GOLDEN_PRINCIPLES.md is the canonical source for mechanical agent/human implementation rules.',
+      'execplan_policy':
+          'Major or multi-file work must start with an ExecPlan under docs/assistant/exec_plans/active/ and follow docs/assistant/exec_plans/PLANS.md.',
+      'approval_gates_policy':
+          'AGENTS.md and agent.md must include Approval Gates that require explicit user confirmation.',
+      'worktree_isolation_policy':
+          'For parallel implementation streams, prefer git worktree isolation.',
+      'doc_gardening_policy':
+          'Run docs validators regularly and apply targeted docs maintenance to prevent drift.',
     },
     'last_updated': '2026-02-22',
   };
+
+  writeFile(
+    'docs/assistant/features/APP_USER_GUIDE.md',
+    '# APP USER GUIDE',
+  );
+  writeFile(
+    'docs/assistant/features/PLANNER_USER_GUIDE.md',
+    '# PLANNER USER GUIDE',
+  );
   writeFile(
     'docs/assistant/manifest.json',
     const JsonEncoder.withIndent('  ').convert(manifest),
@@ -807,12 +1149,17 @@ String _workflowTemplate() {
     '',
     'Purpose.',
     '',
+    '## Expected Outputs',
+    '',
+    '- Output.',
+    '',
     '## When To Use',
     '',
     'When.',
     '',
     '## What Not To Do',
     '',
+    'Don\'t use this workflow when not needed. Instead use docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md.',
     'Do not.',
     '',
     '## Primary Files',
@@ -843,12 +1190,17 @@ String _ciWorkflowTemplate() {
     '',
     'CI purpose.',
     '',
+    '## Expected Outputs',
+    '',
+    '- CI output.',
+    '',
     '## When To Use',
     '',
     'When.',
     '',
     '## What Not To Do',
     '',
+    'Don\'t use this workflow when commit triage is requested. Instead use docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md.',
     'Do not implement major changes directly on `main`; use `feat/*` first.',
     'Do not merge major work to `main` without PR flow and required checks.',
     '',
@@ -858,6 +1210,7 @@ String _ciWorkflowTemplate() {
     '',
     '## Minimal Commands',
     '',
+    'git worktree list',
     'git status --short --branch',
     '',
     '## Targeted Tests',
@@ -872,6 +1225,7 @@ String _ciWorkflowTemplate() {
     '',
     'major changes were developed on `feat/*` branch, not directly on `main`.',
     '`main` updates for major work followed PR flow and required checks.',
+    'worktree isolation used for parallel streams.',
   ].join('\n');
 }
 

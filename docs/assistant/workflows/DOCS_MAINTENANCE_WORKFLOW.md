@@ -4,6 +4,12 @@
 
 Use this workflow for maintaining agent-facing docs structure, routing clarity, and long-term consistency.
 
+## Expected Outputs
+
+- Canonical/bridge/routing docs remain coherent and validated.
+- Docs contracts and validators stay aligned.
+- No stale paths or routing regressions remain.
+
 ## When To Use
 
 Use when changes touch:
@@ -17,6 +23,9 @@ Use when changes touch:
 
 ## What Not To Do
 
+- Don't use this workflow when the task is runtime feature implementation edits. Instead use the relevant feature/data workflow.
+- Don't use this workflow for commit-stage/publish requests. Instead use `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`.
+- Don't use this workflow to bypass targeted docs sync scope after feature work. Instead apply only touched-scope updates.
 - Do not let bridge docs become alternate canon.
 - Do not add stale paths or commands that fail in this repo.
 - Do not skip docs validation after changing documentation structure.
@@ -53,6 +62,7 @@ Use when changes touch:
 ## Minimal Commands
 
 ```powershell
+git worktree list
 git status --short
 rg -n "Canonical|Doc Sync Rule|workflow|manifest|validator" AGENTS.md agent.md APP_KNOWLEDGE.md docs/assistant README.md
 dart run tooling/validate_agent_docs.dart
@@ -77,6 +87,8 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
 5. Symptoms: no docs updates were requested after significant change.
    - Ask: "Would you like me to run Assistant Docs Sync for this change now?"
    - If declined, record brief drift warning.
+6. Symptoms: parallel doc refactors conflict repeatedly.
+   - perform each stream in isolated `git worktree` to reduce merge contention.
 
 ## Significant-Change Docs Sync Policy
 
@@ -124,3 +136,4 @@ Relevance matrix:
 - CI command examples in docs match `.github/workflows/dart.yml`
 - localization terms and workspace performance defaults are maintained in their canonical docs only
 - significant-change docs-sync prompt was asked and response handled
+- worktree isolation was used when multiple doc streams ran in parallel

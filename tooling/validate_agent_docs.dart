@@ -9,9 +9,13 @@ const List<String> _requiredFiles = <String>[
   '.github/workflows/dart.yml',
   'docs/assistant/APP_KNOWLEDGE.md',
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
+  'docs/assistant/GOLDEN_PRINCIPLES.md',
   'docs/assistant/INDEX.md',
   'docs/assistant/LOCALIZATION_GLOSSARY.md',
   'docs/assistant/PERFORMANCE_BASELINES.md',
+  'docs/assistant/exec_plans/PLANS.md',
+  'docs/assistant/exec_plans/active',
+  'docs/assistant/exec_plans/completed',
   'docs/assistant/manifest.json',
   'docs/assistant/workflows/READER_WORKFLOW.md',
   'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
@@ -19,6 +23,7 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
+  'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
   'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
@@ -29,6 +34,7 @@ const List<String> _requiredFiles = <String>[
 
 const List<String> _workflowRequiredSections = <String>[
   '## What This Workflow Is For',
+  '## Expected Outputs',
   '## When To Use',
   '## What Not To Do',
   '## Primary Files',
@@ -45,9 +51,11 @@ const List<String> _docsToScanForBackticks = <String>[
   'README.md',
   'docs/assistant/APP_KNOWLEDGE.md',
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
+  'docs/assistant/GOLDEN_PRINCIPLES.md',
   'docs/assistant/INDEX.md',
   'docs/assistant/LOCALIZATION_GLOSSARY.md',
   'docs/assistant/PERFORMANCE_BASELINES.md',
+  'docs/assistant/exec_plans/PLANS.md',
   'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
@@ -56,6 +64,7 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/workflows/READER_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
+  'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
 ];
 
@@ -87,13 +96,18 @@ class AgentDocsValidator {
     _validateRequiredFiles(issues);
     _validateManifest(issues);
     _validateWorkflowSections(issues);
+    _validateWorkflowNegativeRouting(issues);
     _validateCanonicalContracts(issues);
     _validateBranchSafetyPolicy(issues);
+    _validateApprovalGatesPolicy(issues);
+    _validateExecPlanPolicy(issues);
+    _validateWorktreeIsolationPolicy(issues);
     _validateLocalizationRoutingPolicy(issues);
     _validatePerformanceRoutingPolicy(issues);
     _validateReferenceDiscoveryPolicy(issues);
     _validatePostChangeDocsSyncPolicy(issues);
     _validateTemplatePolicies(issues);
+    _validateGoldenAndExecPlanDiscoverability(issues);
     _validateBacktickPaths(issues);
     return issues;
   }
@@ -172,6 +186,23 @@ class AgentDocsValidator {
       }
     }
 
+    final userGuides = manifest['user_guides'];
+    if (userGuides is! List) {
+      issues.add('Manifest key "user_guides" must be an array.');
+    } else {
+      for (var i = 0; i < userGuides.length; i++) {
+        final value = userGuides[i];
+        if (value is! String || value.trim().isEmpty) {
+          issues
+              .add('Manifest user_guides[$i] must be a non-empty string path.');
+          continue;
+        }
+        if (!_exists(value)) {
+          issues.add('Manifest user guide path does not exist: $value');
+        }
+      }
+    }
+
     final workflows = manifest['workflows'];
     final workflowsById = <String, Map<String, dynamic>>{};
     if (workflows is! List) {
@@ -218,6 +249,13 @@ class AgentDocsValidator {
         workflowsById: workflowsById,
         requiredId: 'reference_discovery',
         expectedDoc: 'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+      );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
+        requiredId: 'scheduling_companion',
+        expectedDoc:
+            'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
       );
     }
 
@@ -291,6 +329,31 @@ class AgentDocsValidator {
         contracts['inspiration_reference_discovery_policy'],
         'contracts.inspiration_reference_discovery_policy',
       );
+      _validateNonEmptyString(
+        issues,
+        contracts['golden_principles_source_of_truth'],
+        'contracts.golden_principles_source_of_truth',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['execplan_policy'],
+        'contracts.execplan_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['approval_gates_policy'],
+        'contracts.approval_gates_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['worktree_isolation_policy'],
+        'contracts.worktree_isolation_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['doc_gardening_policy'],
+        'contracts.doc_gardening_policy',
+      );
       final templatePolicy = contracts['templates_read_policy'];
       if (templatePolicy is String &&
           !templatePolicy.toLowerCase().contains('read-on-demand')) {
@@ -333,6 +396,34 @@ class AgentDocsValidator {
           )) {
         issues.add(
           'contracts.inspiration_reference_discovery_policy must reference docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
+        );
+      }
+      final goldenPrinciples = contracts['golden_principles_source_of_truth'];
+      if (goldenPrinciples is String &&
+          !goldenPrinciples.contains('docs/assistant/GOLDEN_PRINCIPLES.md')) {
+        issues.add(
+          'contracts.golden_principles_source_of_truth must reference docs/assistant/GOLDEN_PRINCIPLES.md.',
+        );
+      }
+      final execPlanPolicy = contracts['execplan_policy'];
+      if (execPlanPolicy is String &&
+          !execPlanPolicy.contains('docs/assistant/exec_plans/PLANS.md')) {
+        issues.add(
+          'contracts.execplan_policy must reference docs/assistant/exec_plans/PLANS.md.',
+        );
+      }
+      final approvalGates = contracts['approval_gates_policy'];
+      if (approvalGates is String &&
+          !approvalGates.toLowerCase().contains('approval')) {
+        issues.add(
+          'contracts.approval_gates_policy must include approval guidance.',
+        );
+      }
+      final worktreePolicy = contracts['worktree_isolation_policy'];
+      if (worktreePolicy is String &&
+          !worktreePolicy.toLowerCase().contains('worktree')) {
+        issues.add(
+          'contracts.worktree_isolation_policy must include worktree guidance.',
         );
       }
     }
@@ -389,6 +480,7 @@ class AgentDocsValidator {
       'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
       'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
       'docs/assistant/workflows/PLANNER_WORKFLOW.md',
+      'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
       'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
       'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
       'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
@@ -405,6 +497,38 @@ class AgentDocsValidator {
             'Workflow doc missing required section "$section": $relativePath',
           );
         }
+      }
+    }
+  }
+
+  void _validateWorkflowNegativeRouting(List<String> issues) {
+    const workflowDocs = <String>[
+      'docs/assistant/workflows/READER_WORKFLOW.md',
+      'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
+      'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
+      'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+      'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
+      'docs/assistant/workflows/PLANNER_WORKFLOW.md',
+      'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
+      'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
+      'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
+      'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+    ];
+    for (final relativePath in workflowDocs) {
+      final file = _resolveFile(relativePath);
+      if (!file.existsSync()) {
+        continue;
+      }
+      final content = file.readAsStringSync().toLowerCase();
+      if (!content.contains("don't use this workflow when")) {
+        issues.add(
+          'Workflow doc is missing explicit negative routing phrase "Don\'t use this workflow when...": $relativePath',
+        );
+      }
+      if (!content.contains('instead use')) {
+        issues.add(
+          'Workflow doc is missing alternative route guidance ("Instead use ..."): $relativePath',
+        );
       }
     }
   }
@@ -642,6 +766,144 @@ class AgentDocsValidator {
           !text.contains('required checks')) {
         issues.add(
           'CI_REPO_WORKFLOW.md must include explicit main/feat/* branch safety and required checks policy.',
+        );
+      }
+    }
+  }
+
+  void _validateGoldenAndExecPlanDiscoverability(List<String> issues) {
+    final index = _resolveFile('docs/assistant/INDEX.md');
+    if (index.existsSync()) {
+      final text = index.readAsStringSync();
+      if (!text.contains('docs/assistant/GOLDEN_PRINCIPLES.md')) {
+        issues.add(
+          'INDEX.md must include docs/assistant/GOLDEN_PRINCIPLES.md for discoverability.',
+        );
+      }
+      if (!text.contains('docs/assistant/exec_plans/PLANS.md')) {
+        issues.add(
+          'INDEX.md must include docs/assistant/exec_plans/PLANS.md for discoverability.',
+        );
+      }
+    }
+
+    final readme = _resolveFile('README.md');
+    if (readme.existsSync()) {
+      final text = readme.readAsStringSync();
+      if (!text.contains('docs/assistant/GOLDEN_PRINCIPLES.md')) {
+        issues.add(
+          'README.md onboarding docs must include docs/assistant/GOLDEN_PRINCIPLES.md.',
+        );
+      }
+      if (!text.contains('docs/assistant/exec_plans/PLANS.md')) {
+        issues.add(
+          'README.md onboarding docs must include docs/assistant/exec_plans/PLANS.md.',
+        );
+      }
+    }
+  }
+
+  void _validateApprovalGatesPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('## Approval Gates')) {
+        issues.add('AGENTS.md must include "## Approval Gates" section.');
+      }
+      if (!lowered.contains('ask') || !lowered.contains('approval')) {
+        issues.add(
+          'AGENTS.md Approval Gates must explicitly require asking for approval.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('## Approval Gates')) {
+        issues.add('agent.md must include "## Approval Gates" section.');
+      }
+      if (!lowered.contains('ask') || !lowered.contains('approval')) {
+        issues.add(
+          'agent.md Approval Gates must explicitly require asking for approval.',
+        );
+      }
+    }
+  }
+
+  void _validateExecPlanPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('## ExecPlans')) {
+        issues.add('AGENTS.md must include "## ExecPlans" section.');
+      }
+      if (!lowered.contains('major') ||
+          !lowered.contains('multi-file') ||
+          !lowered.contains('docs/assistant/exec_plans/')) {
+        issues.add(
+          'AGENTS.md ExecPlans section must require major/multi-file work to use docs/assistant/exec_plans/.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('## ExecPlans')) {
+        issues.add('agent.md must include "## ExecPlans" section.');
+      }
+      if (!lowered.contains('major') ||
+          !lowered.contains('multi-file') ||
+          !lowered.contains('docs/assistant/exec_plans/')) {
+        issues.add(
+          'agent.md ExecPlans section must require major/multi-file work to use docs/assistant/exec_plans/.',
+        );
+      }
+    }
+  }
+
+  void _validateWorktreeIsolationPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      if (!text.contains('## Worktree Isolation') ||
+          !text.toLowerCase().contains('worktree')) {
+        issues.add(
+          'AGENTS.md must include "## Worktree Isolation" guidance with worktree usage.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      if (!text.contains('## Worktree Isolation') ||
+          !text.toLowerCase().contains('worktree')) {
+        issues.add(
+          'agent.md must include "## Worktree Isolation" guidance with worktree usage.',
+        );
+      }
+    }
+
+    const workflowDocs = <String>[
+      'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
+      'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
+      'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+    ];
+    for (final relativePath in workflowDocs) {
+      final file = _resolveFile(relativePath);
+      if (!file.existsSync()) {
+        continue;
+      }
+      final text = file.readAsStringSync().toLowerCase();
+      if (!text.contains('worktree')) {
+        issues.add(
+          '$relativePath must include worktree isolation guidance for parallel streams.',
         );
       }
     }
