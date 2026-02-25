@@ -38,6 +38,8 @@ void main() {
     expect(tableNames.contains('companion_unit_state'), isTrue);
     expect(tableNames.contains('companion_stage_event'), isTrue);
     expect(tableNames.contains('companion_step_proficiency'), isTrue);
+    expect(tableNames.contains('companion_lifecycle_state'), isTrue);
+    expect(tableNames.contains('companion_stage4_session'), isTrue);
   });
 
   test('enforces unique(surah, ayah) on ayah table', () async {
@@ -145,7 +147,18 @@ void main() {
     );
     expect(indexNames.contains('idx_companion_step_proficiency_unit'), isTrue);
     expect(indexNames.contains('idx_companion_unit_state_unit_id'), isTrue);
-    expect(indexNames.contains('idx_companion_stage_event_session_created'), isTrue);
+    expect(
+        indexNames.contains('idx_companion_stage_event_session_created'), isTrue);
+    expect(indexNames.contains('idx_companion_lifecycle_state_stage4_next_due'),
+        isTrue);
+    expect(indexNames.contains('idx_companion_lifecycle_state_stage4_retry_due'),
+        isTrue);
+    expect(
+        indexNames.contains('idx_companion_stage4_session_unit_started_day'),
+        isTrue);
+    expect(
+        indexNames.contains('idx_companion_stage4_session_chain_session'),
+        isTrue);
   });
 
   test('app_settings includes typical_grade_distribution_json column',
@@ -188,6 +201,30 @@ void main() {
     expect(names.contains('time_on_verse_ms'), isTrue);
     expect(names.contains('time_on_chunk_ms'), isTrue);
     expect(names.contains('telemetry_json'), isTrue);
+  });
+
+  test('stage-4 lifecycle tables include expected columns', () async {
+    final lifecycleRows = await db
+        .customSelect("PRAGMA table_info('companion_lifecycle_state')")
+        .get();
+    final lifecycleNames =
+        lifecycleRows.map((row) => row.read<String>('name')).toSet();
+    expect(lifecycleNames.contains('stage4_status'), isTrue);
+    expect(lifecycleNames.contains('stage4_next_day_due_day'), isTrue);
+    expect(lifecycleNames.contains('stage4_retry_due_day'), isTrue);
+    expect(lifecycleNames.contains('stage4_unresolved_targets_json'), isTrue);
+    expect(lifecycleNames.contains('new_override_count'), isTrue);
+
+    final sessionRows = await db
+        .customSelect("PRAGMA table_info('companion_stage4_session')")
+        .get();
+    final sessionNames =
+        sessionRows.map((row) => row.read<String>('name')).toSet();
+    expect(sessionNames.contains('due_kind'), isTrue);
+    expect(sessionNames.contains('outcome'), isTrue);
+    expect(sessionNames.contains('counted_pass_rate'), isTrue);
+    expect(sessionNames.contains('unresolved_targets_json'), isTrue);
+    expect(sessionNames.contains('telemetry_json'), isTrue);
   });
 
   test('deleting mem_unit cascades schedule_state and review_log rows',

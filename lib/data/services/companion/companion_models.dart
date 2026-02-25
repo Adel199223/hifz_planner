@@ -126,6 +126,34 @@ enum Stage3Phase {
   final String code;
 }
 
+enum Stage4Mode {
+  coldStart(code: 'cold_start'),
+  randomStart(code: 'random_start'),
+  linking(code: 'linking'),
+  discrimination(code: 'discrimination'),
+  correction(code: 'correction'),
+  checkpoint(code: 'checkpoint'),
+  remediation(code: 'remediation');
+
+  const Stage4Mode({required this.code});
+
+  final String code;
+}
+
+enum Stage4Phase {
+  verification(code: 'verification'),
+  checkpoint(code: 'checkpoint'),
+  remediation(code: 'remediation'),
+  completed(code: 'completed'),
+  budgetFallback(code: 'budget_fallback'),
+  failed(code: 'failed'),
+  skipped(code: 'skipped');
+
+  const Stage4Phase({required this.code});
+
+  final String code;
+}
+
 enum CompanionStage {
   guidedVisible(code: 'guided_visible', stageNumber: 1),
   cuedRecall(code: 'cued_recall', stageNumber: 2),
@@ -170,7 +198,8 @@ enum CompanionStage {
 
 enum CompanionLaunchMode {
   newMemorization(code: 'new'),
-  review(code: 'review');
+  review(code: 'review'),
+  stage4Consolidation(code: 'stage4');
 
   const CompanionLaunchMode({required this.code});
 
@@ -415,6 +444,69 @@ class Stage3Config {
   }) {
     final safeAyahCount = ayahCount < 1 ? 1 : ayahCount;
     final raw = (stage3ChunkBudgetMs / safeAyahCount).round();
+    return raw.clamp(perVerseCapMinMs, perVerseCapMaxMs);
+  }
+}
+
+class Stage4Config {
+  const Stage4Config({
+    this.readinessWindow = 4,
+    this.readinessPassesRequired = 3,
+    this.readinessMaxHint = HintLevel.letters,
+    this.readinessRequiredH0Passes = 2,
+    this.weakRequiredH0Passes = 1,
+    this.checkpointThreshold = 0.75,
+    this.stage4BudgetFractionOfNewTime = 0.25,
+    this.stage4BudgetMinMs = 60000,
+    this.stage4BudgetMaxMs = 420000,
+    this.perVerseCapMinMs = 30000,
+    this.perVerseCapMaxMs = 90000,
+    this.maxCheckpointRemediationRounds = 2,
+    this.autoCheckRequiredByDefault = true,
+    this.discriminationFailureTrigger = 2,
+    this.randomStartProbeCount = 1,
+    this.targetSuccessBandMin = 0.70,
+    this.targetSuccessBandMax = 0.85,
+    this.failUnresolvedRatioThreshold = 0.30,
+  });
+
+  final int readinessWindow;
+  final int readinessPassesRequired;
+  final HintLevel readinessMaxHint;
+  final int readinessRequiredH0Passes;
+  final int weakRequiredH0Passes;
+  final double checkpointThreshold;
+  final double stage4BudgetFractionOfNewTime;
+  final int stage4BudgetMinMs;
+  final int stage4BudgetMaxMs;
+  final int perVerseCapMinMs;
+  final int perVerseCapMaxMs;
+  final int maxCheckpointRemediationRounds;
+  final bool autoCheckRequiredByDefault;
+  final int discriminationFailureTrigger;
+  final int randomStartProbeCount;
+  final double targetSuccessBandMin;
+  final double targetSuccessBandMax;
+  final double failUnresolvedRatioThreshold;
+
+  int stage4ChunkBudgetMs({
+    required int ayahCount,
+    required double avgNewMinutesPerAyah,
+  }) {
+    final safeAyahCount = ayahCount < 1 ? 1 : ayahCount;
+    final safeAvg = avgNewMinutesPerAyah <= 0 ? 2.0 : avgNewMinutesPerAyah;
+    final raw =
+        (safeAyahCount * safeAvg * 60000 * stage4BudgetFractionOfNewTime)
+            .round();
+    return raw.clamp(stage4BudgetMinMs, stage4BudgetMaxMs);
+  }
+
+  int perVerseCapMs({
+    required int ayahCount,
+    required int stage4ChunkBudgetMs,
+  }) {
+    final safeAyahCount = ayahCount < 1 ? 1 : ayahCount;
+    final raw = (stage4ChunkBudgetMs / safeAyahCount).round();
     return raw.clamp(perVerseCapMinMs, perVerseCapMaxMs);
   }
 }
@@ -1250,6 +1342,322 @@ class Stage3Runtime {
   static const Object _stage3RuntimeUnset = Object();
 }
 
+class Stage4WindowEntry {
+  const Stage4WindowEntry({
+    required this.timestampMs,
+    required this.passed,
+    required this.countedPass,
+    required this.hintLevel,
+    required this.assisted,
+  });
+
+  final int timestampMs;
+  final bool passed;
+  final bool countedPass;
+  final HintLevel hintLevel;
+  final bool assisted;
+}
+
+class Stage4VerseStats {
+  const Stage4VerseStats({
+    this.attempts = 0,
+    this.countedAttempts = 0,
+    this.countedPasses = 0,
+    this.countedH0Passes = 0,
+    this.consecutiveFailures = 0,
+    this.correctionRequired = false,
+    this.weakTarget = false,
+    this.riskTarget = false,
+    this.remediationNeeded = false,
+    this.remediationRounds = 0,
+    this.discriminationAttempts = 0,
+    this.discriminationPasses = 0,
+    this.linkingAttempts = 0,
+    this.linkingPassCount = 0,
+    this.randomStartAttempts = 0,
+    this.randomStartPasses = 0,
+    this.checkpointAttempted = false,
+    this.checkpointPassed = false,
+    this.checkpointAttempts = 0,
+    this.cueBaselineHint = HintLevel.h0,
+    this.lastCueRotatedFrom,
+    this.timeOnVerseMs = 0,
+    this.readinessWindow = const <Stage4WindowEntry>[],
+  });
+
+  final int attempts;
+  final int countedAttempts;
+  final int countedPasses;
+  final int countedH0Passes;
+  final int consecutiveFailures;
+  final bool correctionRequired;
+  final bool weakTarget;
+  final bool riskTarget;
+  final bool remediationNeeded;
+  final int remediationRounds;
+  final int discriminationAttempts;
+  final int discriminationPasses;
+  final int linkingAttempts;
+  final int linkingPassCount;
+  final int randomStartAttempts;
+  final int randomStartPasses;
+  final bool checkpointAttempted;
+  final bool checkpointPassed;
+  final int checkpointAttempts;
+  final HintLevel cueBaselineHint;
+  final HintLevel? lastCueRotatedFrom;
+  final int timeOnVerseMs;
+  final List<Stage4WindowEntry> readinessWindow;
+
+  int _countedPassesInWindow({
+    required int windowSize,
+  }) {
+    final safeWindow = windowSize < 1 ? 1 : windowSize;
+    final window = readinessWindow.length <= safeWindow
+        ? readinessWindow
+        : readinessWindow.sublist(readinessWindow.length - safeWindow);
+    return window.where((entry) => entry.countedPass).length;
+  }
+
+  int _countedH0PassesInWindow({
+    required int windowSize,
+  }) {
+    final safeWindow = windowSize < 1 ? 1 : windowSize;
+    final window = readinessWindow.length <= safeWindow
+        ? readinessWindow
+        : readinessWindow.sublist(readinessWindow.length - safeWindow);
+    return window
+        .where(
+          (entry) => entry.countedPass && entry.hintLevel == HintLevel.h0,
+        )
+        .length;
+  }
+
+  bool isReady({
+    required Stage4Config config,
+    required bool isWeak,
+  }) {
+    if (_countedPassesInWindow(windowSize: config.readinessWindow) <
+        config.readinessPassesRequired) {
+      return false;
+    }
+    if (_countedH0PassesInWindow(windowSize: config.readinessWindow) <
+        config.readinessRequiredH0Passes) {
+      return false;
+    }
+    if (linkingPassCount < 1) {
+      return false;
+    }
+    if (randomStartPasses < config.randomStartProbeCount) {
+      return false;
+    }
+    if (isWeak && countedH0Passes < config.weakRequiredH0Passes) {
+      return false;
+    }
+    return true;
+  }
+
+  Stage4VerseStats copyWith({
+    int? attempts,
+    int? countedAttempts,
+    int? countedPasses,
+    int? countedH0Passes,
+    int? consecutiveFailures,
+    bool? correctionRequired,
+    bool? weakTarget,
+    bool? riskTarget,
+    bool? remediationNeeded,
+    int? remediationRounds,
+    int? discriminationAttempts,
+    int? discriminationPasses,
+    int? linkingAttempts,
+    int? linkingPassCount,
+    int? randomStartAttempts,
+    int? randomStartPasses,
+    bool? checkpointAttempted,
+    bool? checkpointPassed,
+    int? checkpointAttempts,
+    HintLevel? cueBaselineHint,
+    Object? lastCueRotatedFrom = _stage4StatsUnset,
+    int? timeOnVerseMs,
+    List<Stage4WindowEntry>? readinessWindow,
+  }) {
+    return Stage4VerseStats(
+      attempts: attempts ?? this.attempts,
+      countedAttempts: countedAttempts ?? this.countedAttempts,
+      countedPasses: countedPasses ?? this.countedPasses,
+      countedH0Passes: countedH0Passes ?? this.countedH0Passes,
+      consecutiveFailures: consecutiveFailures ?? this.consecutiveFailures,
+      correctionRequired: correctionRequired ?? this.correctionRequired,
+      weakTarget: weakTarget ?? this.weakTarget,
+      riskTarget: riskTarget ?? this.riskTarget,
+      remediationNeeded: remediationNeeded ?? this.remediationNeeded,
+      remediationRounds: remediationRounds ?? this.remediationRounds,
+      discriminationAttempts:
+          discriminationAttempts ?? this.discriminationAttempts,
+      discriminationPasses: discriminationPasses ?? this.discriminationPasses,
+      linkingAttempts: linkingAttempts ?? this.linkingAttempts,
+      linkingPassCount: linkingPassCount ?? this.linkingPassCount,
+      randomStartAttempts: randomStartAttempts ?? this.randomStartAttempts,
+      randomStartPasses: randomStartPasses ?? this.randomStartPasses,
+      checkpointAttempted: checkpointAttempted ?? this.checkpointAttempted,
+      checkpointPassed: checkpointPassed ?? this.checkpointPassed,
+      checkpointAttempts: checkpointAttempts ?? this.checkpointAttempts,
+      cueBaselineHint: cueBaselineHint ?? this.cueBaselineHint,
+      lastCueRotatedFrom: identical(lastCueRotatedFrom, _stage4StatsUnset)
+          ? this.lastCueRotatedFrom
+          : lastCueRotatedFrom as HintLevel?,
+      timeOnVerseMs: timeOnVerseMs ?? this.timeOnVerseMs,
+      readinessWindow: readinessWindow ?? this.readinessWindow,
+    );
+  }
+
+  static const Object _stage4StatsUnset = Object();
+}
+
+class Stage4CheckpointOutcome {
+  const Stage4CheckpointOutcome({
+    required this.chunkPassRate,
+    required this.failedVerseIndexes,
+    required this.everyVerseReady,
+    required this.randomStartSatisfied,
+    required this.linkingSatisfied,
+    required this.passed,
+  });
+
+  final double chunkPassRate;
+  final List<int> failedVerseIndexes;
+  final bool everyVerseReady;
+  final bool randomStartSatisfied;
+  final bool linkingSatisfied;
+  final bool passed;
+}
+
+class Stage4Runtime {
+  const Stage4Runtime({
+    required this.config,
+    required this.phase,
+    required this.mode,
+    required this.startedAtEpochMs,
+    required this.lastActionAtEpochMs,
+    required this.chunkElapsedMs,
+    required this.stage4BudgetMs,
+    required this.perVerseCapMs,
+    required this.dueKind,
+    required this.stage4SessionRecordId,
+    required this.unresolvedTargets,
+    required this.pendingRandomStartTargets,
+    required this.randomStartCursor,
+    required this.budgetExceeded,
+    required this.remediationRounds,
+    required this.checkpointTargets,
+    required this.checkpointCursor,
+    required this.remediationTargets,
+    required this.remediationCursor,
+    required this.lastCheckpointOutcome,
+    required this.activeAutoCheckPrompt,
+    required this.totalCountableAttempts,
+  });
+
+  final Stage4Config config;
+  final Stage4Phase phase;
+  final Stage4Mode mode;
+  final int startedAtEpochMs;
+  final int lastActionAtEpochMs;
+  final int chunkElapsedMs;
+  final int stage4BudgetMs;
+  final int perVerseCapMs;
+  final String dueKind;
+  final int? stage4SessionRecordId;
+  final List<int> unresolvedTargets;
+  final List<int> pendingRandomStartTargets;
+  final int randomStartCursor;
+  final bool budgetExceeded;
+  final int remediationRounds;
+  final List<int> checkpointTargets;
+  final int checkpointCursor;
+  final List<int> remediationTargets;
+  final int remediationCursor;
+  final Stage4CheckpointOutcome? lastCheckpointOutcome;
+  final Stage1AutoCheckPrompt? activeAutoCheckPrompt;
+  final int totalCountableAttempts;
+
+  bool get autoCheckRequiredForCurrentMode {
+    if (!config.autoCheckRequiredByDefault) {
+      return false;
+    }
+    return mode == Stage4Mode.coldStart ||
+        mode == Stage4Mode.randomStart ||
+        mode == Stage4Mode.linking ||
+        mode == Stage4Mode.discrimination ||
+        mode == Stage4Mode.checkpoint ||
+        mode == Stage4Mode.remediation;
+  }
+
+  Stage4Runtime copyWith({
+    Stage4Config? config,
+    Stage4Phase? phase,
+    Stage4Mode? mode,
+    int? startedAtEpochMs,
+    int? lastActionAtEpochMs,
+    int? chunkElapsedMs,
+    int? stage4BudgetMs,
+    int? perVerseCapMs,
+    String? dueKind,
+    Object? stage4SessionRecordId = _stage4RuntimeUnset,
+    List<int>? unresolvedTargets,
+    List<int>? pendingRandomStartTargets,
+    int? randomStartCursor,
+    bool? budgetExceeded,
+    int? remediationRounds,
+    List<int>? checkpointTargets,
+    int? checkpointCursor,
+    List<int>? remediationTargets,
+    int? remediationCursor,
+    Object? lastCheckpointOutcome = _stage4RuntimeUnset,
+    Object? activeAutoCheckPrompt = _stage4RuntimeUnset,
+    int? totalCountableAttempts,
+  }) {
+    return Stage4Runtime(
+      config: config ?? this.config,
+      phase: phase ?? this.phase,
+      mode: mode ?? this.mode,
+      startedAtEpochMs: startedAtEpochMs ?? this.startedAtEpochMs,
+      lastActionAtEpochMs: lastActionAtEpochMs ?? this.lastActionAtEpochMs,
+      chunkElapsedMs: chunkElapsedMs ?? this.chunkElapsedMs,
+      stage4BudgetMs: stage4BudgetMs ?? this.stage4BudgetMs,
+      perVerseCapMs: perVerseCapMs ?? this.perVerseCapMs,
+      dueKind: dueKind ?? this.dueKind,
+      stage4SessionRecordId:
+          identical(stage4SessionRecordId, _stage4RuntimeUnset)
+              ? this.stage4SessionRecordId
+              : stage4SessionRecordId as int?,
+      unresolvedTargets: unresolvedTargets ?? this.unresolvedTargets,
+      pendingRandomStartTargets:
+          pendingRandomStartTargets ?? this.pendingRandomStartTargets,
+      randomStartCursor: randomStartCursor ?? this.randomStartCursor,
+      budgetExceeded: budgetExceeded ?? this.budgetExceeded,
+      remediationRounds: remediationRounds ?? this.remediationRounds,
+      checkpointTargets: checkpointTargets ?? this.checkpointTargets,
+      checkpointCursor: checkpointCursor ?? this.checkpointCursor,
+      remediationTargets: remediationTargets ?? this.remediationTargets,
+      remediationCursor: remediationCursor ?? this.remediationCursor,
+      lastCheckpointOutcome:
+          identical(lastCheckpointOutcome, _stage4RuntimeUnset)
+              ? this.lastCheckpointOutcome
+              : lastCheckpointOutcome as Stage4CheckpointOutcome?,
+      activeAutoCheckPrompt:
+          identical(activeAutoCheckPrompt, _stage4RuntimeUnset)
+              ? this.activeAutoCheckPrompt
+              : activeAutoCheckPrompt as Stage1AutoCheckPrompt?,
+      totalCountableAttempts:
+          totalCountableAttempts ?? this.totalCountableAttempts,
+    );
+  }
+
+  static const Object _stage4RuntimeUnset = Object();
+}
+
 class ChainVerse {
   const ChainVerse({
     required this.surah,
@@ -1271,6 +1679,7 @@ class ProgressiveRevealChainConfig {
     this.stage1 = const Stage1Config(),
     this.stage2 = const Stage2Config(),
     this.stage3 = const Stage3Config(),
+    this.stage4 = const Stage4Config(),
   });
 
   final int maxAttemptsBeforeInterleave;
@@ -1280,6 +1689,7 @@ class ProgressiveRevealChainConfig {
   final Stage1Config stage1;
   final Stage2Config stage2;
   final Stage3Config stage3;
+  final Stage4Config stage4;
 }
 
 class VerseAttemptTelemetry {
@@ -1305,6 +1715,8 @@ class VerseAttemptTelemetry {
     this.stage2Phase,
     this.stage3Mode,
     this.stage3Phase,
+    this.stage4Mode,
+    this.stage4Phase,
     this.correctionRequiredAfterAttempt = false,
   });
 
@@ -1329,6 +1741,8 @@ class VerseAttemptTelemetry {
   final Stage2Phase? stage2Phase;
   final Stage3Mode? stage3Mode;
   final Stage3Phase? stage3Phase;
+  final Stage4Mode? stage4Mode;
+  final Stage4Phase? stage4Phase;
   final bool correctionRequiredAfterAttempt;
 }
 
@@ -1347,6 +1761,7 @@ class ChainVerseState {
     required this.stage1,
     required this.stage2,
     this.stage3 = const Stage3VerseStats(),
+    this.stage4 = const Stage4VerseStats(),
   });
 
   final ChainVerse verse;
@@ -1362,6 +1777,7 @@ class ChainVerseState {
   final Stage1VerseStats stage1;
   final Stage2VerseStats stage2;
   final Stage3VerseStats stage3;
+  final Stage4VerseStats stage4;
 
   bool passedForStage(CompanionStage stage) {
     return switch (stage) {
@@ -1395,6 +1811,7 @@ class ChainVerseState {
     Stage1VerseStats? stage1,
     Stage2VerseStats? stage2,
     Stage3VerseStats? stage3,
+    Stage4VerseStats? stage4,
   }) {
     return ChainVerseState(
       verse: verse,
@@ -1410,6 +1827,7 @@ class ChainVerseState {
       stage1: stage1 ?? this.stage1,
       stage2: stage2 ?? this.stage2,
       stage3: stage3 ?? this.stage3,
+      stage4: stage4 ?? this.stage4,
     );
   }
 }
@@ -1430,6 +1848,7 @@ class ChainRunState {
     required this.stage1,
     required this.stage2,
     this.stage3,
+    this.stage4,
     required this.stage3WeakPreludeTargets,
     required this.stage3WeakPreludeCursor,
     required this.resolvedAvgNewMinutesPerAyah,
@@ -1449,6 +1868,7 @@ class ChainRunState {
   final Stage1Runtime? stage1;
   final Stage2Runtime? stage2;
   final Stage3Runtime? stage3;
+  final Stage4Runtime? stage4;
   final List<int> stage3WeakPreludeTargets;
   final int stage3WeakPreludeCursor;
   final double resolvedAvgNewMinutesPerAyah;
@@ -1486,6 +1906,7 @@ class ChainRunState {
     Object? stage1 = _stateUnset,
     Object? stage2 = _stateUnset,
     Object? stage3 = _stateUnset,
+    Object? stage4 = _stateUnset,
     List<int>? stage3WeakPreludeTargets,
     int? stage3WeakPreludeCursor,
     double? resolvedAvgNewMinutesPerAyah,
@@ -1511,6 +1932,9 @@ class ChainRunState {
       stage3: identical(stage3, _stateUnset)
           ? this.stage3
           : stage3 as Stage3Runtime?,
+      stage4: identical(stage4, _stateUnset)
+          ? this.stage4
+          : stage4 as Stage4Runtime?,
       stage3WeakPreludeTargets:
           stage3WeakPreludeTargets ?? this.stage3WeakPreludeTargets,
       stage3WeakPreludeCursor:

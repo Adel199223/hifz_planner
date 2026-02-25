@@ -7551,6 +7551,1691 @@ class CompanionStepProficiencyCompanion
   }
 }
 
+class $CompanionLifecycleStateTable extends CompanionLifecycleState
+    with TableInfo<$CompanionLifecycleStateTable, CompanionLifecycleStateData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionLifecycleStateTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _unitIdMeta = const VerificationMeta('unitId');
+  @override
+  late final GeneratedColumn<int> unitId = GeneratedColumn<int>(
+      'unit_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES mem_unit (id) ON DELETE CASCADE'));
+  static const VerificationMeta _lifecycleTierMeta =
+      const VerificationMeta('lifecycleTier');
+  @override
+  late final GeneratedColumn<String> lifecycleTier = GeneratedColumn<String>(
+      'lifecycle_tier', aliasedName, false,
+      check: () => const CustomExpression<bool>(
+          "lifecycle_tier IN ('emerging', 'ready', 'stable', 'maintained')"),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('emerging'));
+  static const VerificationMeta _stage4StatusMeta =
+      const VerificationMeta('stage4Status');
+  @override
+  late final GeneratedColumn<String> stage4Status = GeneratedColumn<String>(
+      'stage4_status', aliasedName, false,
+      check: () => const CustomExpression<bool>(
+          "stage4_status IN ('none', 'pending', 'due', 'in_progress', 'passed', 'partial', 'failed', 'needs_reinforcement')"),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('none'));
+  static const VerificationMeta _stage4PreSleepDueDayMeta =
+      const VerificationMeta('stage4PreSleepDueDay');
+  @override
+  late final GeneratedColumn<int> stage4PreSleepDueDay = GeneratedColumn<int>(
+      'stage4_pre_sleep_due_day', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _stage4NextDayDueDayMeta =
+      const VerificationMeta('stage4NextDayDueDay');
+  @override
+  late final GeneratedColumn<int> stage4NextDayDueDay = GeneratedColumn<int>(
+      'stage4_next_day_due_day', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _stage4RetryDueDayMeta =
+      const VerificationMeta('stage4RetryDueDay');
+  @override
+  late final GeneratedColumn<int> stage4RetryDueDay = GeneratedColumn<int>(
+      'stage4_retry_due_day', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _stage4UnresolvedTargetsJsonMeta =
+      const VerificationMeta('stage4UnresolvedTargetsJson');
+  @override
+  late final GeneratedColumn<String> stage4UnresolvedTargetsJson =
+      GeneratedColumn<String>(
+          'stage4_unresolved_targets_json', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _stage4RiskJsonMeta =
+      const VerificationMeta('stage4RiskJson');
+  @override
+  late final GeneratedColumn<String> stage4RiskJson = GeneratedColumn<String>(
+      'stage4_risk_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _stage4StrengtheningRouteMeta =
+      const VerificationMeta('stage4StrengtheningRoute');
+  @override
+  late final GeneratedColumn<String> stage4StrengtheningRoute = GeneratedColumn<
+          String>('stage4_strengthening_route', aliasedName, true,
+      check: () => const CustomExpression<bool>(
+          "stage4_strengthening_route IS NULL OR stage4_strengthening_route IN ('targeted_stage3', 'broad_stage3')"),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _stage4LastOutcomeMeta =
+      const VerificationMeta('stage4LastOutcome');
+  @override
+  late final GeneratedColumn<String> stage4LastOutcome = GeneratedColumn<
+          String>('stage4_last_outcome', aliasedName, true,
+      check: () => const CustomExpression<bool>(
+          "stage4_last_outcome IS NULL OR stage4_last_outcome IN ('pass', 'partial', 'fail', 'abandoned')"),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _stage4LastSessionIdMeta =
+      const VerificationMeta('stage4LastSessionId');
+  @override
+  late final GeneratedColumn<int> stage4LastSessionId = GeneratedColumn<int>(
+      'stage4_last_session_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _stage4LastCompletedDayMeta =
+      const VerificationMeta('stage4LastCompletedDay');
+  @override
+  late final GeneratedColumn<int> stage4LastCompletedDay = GeneratedColumn<int>(
+      'stage4_last_completed_day', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _stage4MissedCountMeta =
+      const VerificationMeta('stage4MissedCount');
+  @override
+  late final GeneratedColumn<int> stage4MissedCount = GeneratedColumn<int>(
+      'stage4_missed_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lastNewOverrideDayMeta =
+      const VerificationMeta('lastNewOverrideDay');
+  @override
+  late final GeneratedColumn<int> lastNewOverrideDay = GeneratedColumn<int>(
+      'last_new_override_day', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _newOverrideCountMeta =
+      const VerificationMeta('newOverrideCount');
+  @override
+  late final GeneratedColumn<int> newOverrideCount = GeneratedColumn<int>(
+      'new_override_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _updatedAtDayMeta =
+      const VerificationMeta('updatedAtDay');
+  @override
+  late final GeneratedColumn<int> updatedAtDay = GeneratedColumn<int>(
+      'updated_at_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtSecondsMeta =
+      const VerificationMeta('updatedAtSeconds');
+  @override
+  late final GeneratedColumn<int> updatedAtSeconds = GeneratedColumn<int>(
+      'updated_at_seconds', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        unitId,
+        lifecycleTier,
+        stage4Status,
+        stage4PreSleepDueDay,
+        stage4NextDayDueDay,
+        stage4RetryDueDay,
+        stage4UnresolvedTargetsJson,
+        stage4RiskJson,
+        stage4StrengtheningRoute,
+        stage4LastOutcome,
+        stage4LastSessionId,
+        stage4LastCompletedDay,
+        stage4MissedCount,
+        lastNewOverrideDay,
+        newOverrideCount,
+        updatedAtDay,
+        updatedAtSeconds
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companion_lifecycle_state';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CompanionLifecycleStateData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('unit_id')) {
+      context.handle(_unitIdMeta,
+          unitId.isAcceptableOrUnknown(data['unit_id']!, _unitIdMeta));
+    }
+    if (data.containsKey('lifecycle_tier')) {
+      context.handle(
+          _lifecycleTierMeta,
+          lifecycleTier.isAcceptableOrUnknown(
+              data['lifecycle_tier']!, _lifecycleTierMeta));
+    }
+    if (data.containsKey('stage4_status')) {
+      context.handle(
+          _stage4StatusMeta,
+          stage4Status.isAcceptableOrUnknown(
+              data['stage4_status']!, _stage4StatusMeta));
+    }
+    if (data.containsKey('stage4_pre_sleep_due_day')) {
+      context.handle(
+          _stage4PreSleepDueDayMeta,
+          stage4PreSleepDueDay.isAcceptableOrUnknown(
+              data['stage4_pre_sleep_due_day']!, _stage4PreSleepDueDayMeta));
+    }
+    if (data.containsKey('stage4_next_day_due_day')) {
+      context.handle(
+          _stage4NextDayDueDayMeta,
+          stage4NextDayDueDay.isAcceptableOrUnknown(
+              data['stage4_next_day_due_day']!, _stage4NextDayDueDayMeta));
+    }
+    if (data.containsKey('stage4_retry_due_day')) {
+      context.handle(
+          _stage4RetryDueDayMeta,
+          stage4RetryDueDay.isAcceptableOrUnknown(
+              data['stage4_retry_due_day']!, _stage4RetryDueDayMeta));
+    }
+    if (data.containsKey('stage4_unresolved_targets_json')) {
+      context.handle(
+          _stage4UnresolvedTargetsJsonMeta,
+          stage4UnresolvedTargetsJson.isAcceptableOrUnknown(
+              data['stage4_unresolved_targets_json']!,
+              _stage4UnresolvedTargetsJsonMeta));
+    }
+    if (data.containsKey('stage4_risk_json')) {
+      context.handle(
+          _stage4RiskJsonMeta,
+          stage4RiskJson.isAcceptableOrUnknown(
+              data['stage4_risk_json']!, _stage4RiskJsonMeta));
+    }
+    if (data.containsKey('stage4_strengthening_route')) {
+      context.handle(
+          _stage4StrengtheningRouteMeta,
+          stage4StrengtheningRoute.isAcceptableOrUnknown(
+              data['stage4_strengthening_route']!,
+              _stage4StrengtheningRouteMeta));
+    }
+    if (data.containsKey('stage4_last_outcome')) {
+      context.handle(
+          _stage4LastOutcomeMeta,
+          stage4LastOutcome.isAcceptableOrUnknown(
+              data['stage4_last_outcome']!, _stage4LastOutcomeMeta));
+    }
+    if (data.containsKey('stage4_last_session_id')) {
+      context.handle(
+          _stage4LastSessionIdMeta,
+          stage4LastSessionId.isAcceptableOrUnknown(
+              data['stage4_last_session_id']!, _stage4LastSessionIdMeta));
+    }
+    if (data.containsKey('stage4_last_completed_day')) {
+      context.handle(
+          _stage4LastCompletedDayMeta,
+          stage4LastCompletedDay.isAcceptableOrUnknown(
+              data['stage4_last_completed_day']!, _stage4LastCompletedDayMeta));
+    }
+    if (data.containsKey('stage4_missed_count')) {
+      context.handle(
+          _stage4MissedCountMeta,
+          stage4MissedCount.isAcceptableOrUnknown(
+              data['stage4_missed_count']!, _stage4MissedCountMeta));
+    }
+    if (data.containsKey('last_new_override_day')) {
+      context.handle(
+          _lastNewOverrideDayMeta,
+          lastNewOverrideDay.isAcceptableOrUnknown(
+              data['last_new_override_day']!, _lastNewOverrideDayMeta));
+    }
+    if (data.containsKey('new_override_count')) {
+      context.handle(
+          _newOverrideCountMeta,
+          newOverrideCount.isAcceptableOrUnknown(
+              data['new_override_count']!, _newOverrideCountMeta));
+    }
+    if (data.containsKey('updated_at_day')) {
+      context.handle(
+          _updatedAtDayMeta,
+          updatedAtDay.isAcceptableOrUnknown(
+              data['updated_at_day']!, _updatedAtDayMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtDayMeta);
+    }
+    if (data.containsKey('updated_at_seconds')) {
+      context.handle(
+          _updatedAtSecondsMeta,
+          updatedAtSeconds.isAcceptableOrUnknown(
+              data['updated_at_seconds']!, _updatedAtSecondsMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtSecondsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {unitId};
+  @override
+  CompanionLifecycleStateData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CompanionLifecycleStateData(
+      unitId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unit_id'])!,
+      lifecycleTier: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}lifecycle_tier'])!,
+      stage4Status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}stage4_status'])!,
+      stage4PreSleepDueDay: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}stage4_pre_sleep_due_day']),
+      stage4NextDayDueDay: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}stage4_next_day_due_day']),
+      stage4RetryDueDay: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}stage4_retry_due_day']),
+      stage4UnresolvedTargetsJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}stage4_unresolved_targets_json']),
+      stage4RiskJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}stage4_risk_json']),
+      stage4StrengtheningRoute: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}stage4_strengthening_route']),
+      stage4LastOutcome: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}stage4_last_outcome']),
+      stage4LastSessionId: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}stage4_last_session_id']),
+      stage4LastCompletedDay: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}stage4_last_completed_day']),
+      stage4MissedCount: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}stage4_missed_count'])!,
+      lastNewOverrideDay: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}last_new_override_day']),
+      newOverrideCount: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}new_override_count'])!,
+      updatedAtDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at_day'])!,
+      updatedAtSeconds: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}updated_at_seconds'])!,
+    );
+  }
+
+  @override
+  $CompanionLifecycleStateTable createAlias(String alias) {
+    return $CompanionLifecycleStateTable(attachedDatabase, alias);
+  }
+}
+
+class CompanionLifecycleStateData extends DataClass
+    implements Insertable<CompanionLifecycleStateData> {
+  final int unitId;
+  final String lifecycleTier;
+  final String stage4Status;
+  final int? stage4PreSleepDueDay;
+  final int? stage4NextDayDueDay;
+  final int? stage4RetryDueDay;
+  final String? stage4UnresolvedTargetsJson;
+  final String? stage4RiskJson;
+  final String? stage4StrengtheningRoute;
+  final String? stage4LastOutcome;
+  final int? stage4LastSessionId;
+  final int? stage4LastCompletedDay;
+  final int stage4MissedCount;
+  final int? lastNewOverrideDay;
+  final int newOverrideCount;
+  final int updatedAtDay;
+  final int updatedAtSeconds;
+  const CompanionLifecycleStateData(
+      {required this.unitId,
+      required this.lifecycleTier,
+      required this.stage4Status,
+      this.stage4PreSleepDueDay,
+      this.stage4NextDayDueDay,
+      this.stage4RetryDueDay,
+      this.stage4UnresolvedTargetsJson,
+      this.stage4RiskJson,
+      this.stage4StrengtheningRoute,
+      this.stage4LastOutcome,
+      this.stage4LastSessionId,
+      this.stage4LastCompletedDay,
+      required this.stage4MissedCount,
+      this.lastNewOverrideDay,
+      required this.newOverrideCount,
+      required this.updatedAtDay,
+      required this.updatedAtSeconds});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['unit_id'] = Variable<int>(unitId);
+    map['lifecycle_tier'] = Variable<String>(lifecycleTier);
+    map['stage4_status'] = Variable<String>(stage4Status);
+    if (!nullToAbsent || stage4PreSleepDueDay != null) {
+      map['stage4_pre_sleep_due_day'] = Variable<int>(stage4PreSleepDueDay);
+    }
+    if (!nullToAbsent || stage4NextDayDueDay != null) {
+      map['stage4_next_day_due_day'] = Variable<int>(stage4NextDayDueDay);
+    }
+    if (!nullToAbsent || stage4RetryDueDay != null) {
+      map['stage4_retry_due_day'] = Variable<int>(stage4RetryDueDay);
+    }
+    if (!nullToAbsent || stage4UnresolvedTargetsJson != null) {
+      map['stage4_unresolved_targets_json'] =
+          Variable<String>(stage4UnresolvedTargetsJson);
+    }
+    if (!nullToAbsent || stage4RiskJson != null) {
+      map['stage4_risk_json'] = Variable<String>(stage4RiskJson);
+    }
+    if (!nullToAbsent || stage4StrengtheningRoute != null) {
+      map['stage4_strengthening_route'] =
+          Variable<String>(stage4StrengtheningRoute);
+    }
+    if (!nullToAbsent || stage4LastOutcome != null) {
+      map['stage4_last_outcome'] = Variable<String>(stage4LastOutcome);
+    }
+    if (!nullToAbsent || stage4LastSessionId != null) {
+      map['stage4_last_session_id'] = Variable<int>(stage4LastSessionId);
+    }
+    if (!nullToAbsent || stage4LastCompletedDay != null) {
+      map['stage4_last_completed_day'] = Variable<int>(stage4LastCompletedDay);
+    }
+    map['stage4_missed_count'] = Variable<int>(stage4MissedCount);
+    if (!nullToAbsent || lastNewOverrideDay != null) {
+      map['last_new_override_day'] = Variable<int>(lastNewOverrideDay);
+    }
+    map['new_override_count'] = Variable<int>(newOverrideCount);
+    map['updated_at_day'] = Variable<int>(updatedAtDay);
+    map['updated_at_seconds'] = Variable<int>(updatedAtSeconds);
+    return map;
+  }
+
+  CompanionLifecycleStateCompanion toCompanion(bool nullToAbsent) {
+    return CompanionLifecycleStateCompanion(
+      unitId: Value(unitId),
+      lifecycleTier: Value(lifecycleTier),
+      stage4Status: Value(stage4Status),
+      stage4PreSleepDueDay: stage4PreSleepDueDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stage4PreSleepDueDay),
+      stage4NextDayDueDay: stage4NextDayDueDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stage4NextDayDueDay),
+      stage4RetryDueDay: stage4RetryDueDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stage4RetryDueDay),
+      stage4UnresolvedTargetsJson:
+          stage4UnresolvedTargetsJson == null && nullToAbsent
+              ? const Value.absent()
+              : Value(stage4UnresolvedTargetsJson),
+      stage4RiskJson: stage4RiskJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stage4RiskJson),
+      stage4StrengtheningRoute: stage4StrengtheningRoute == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stage4StrengtheningRoute),
+      stage4LastOutcome: stage4LastOutcome == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stage4LastOutcome),
+      stage4LastSessionId: stage4LastSessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stage4LastSessionId),
+      stage4LastCompletedDay: stage4LastCompletedDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stage4LastCompletedDay),
+      stage4MissedCount: Value(stage4MissedCount),
+      lastNewOverrideDay: lastNewOverrideDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastNewOverrideDay),
+      newOverrideCount: Value(newOverrideCount),
+      updatedAtDay: Value(updatedAtDay),
+      updatedAtSeconds: Value(updatedAtSeconds),
+    );
+  }
+
+  factory CompanionLifecycleStateData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CompanionLifecycleStateData(
+      unitId: serializer.fromJson<int>(json['unitId']),
+      lifecycleTier: serializer.fromJson<String>(json['lifecycleTier']),
+      stage4Status: serializer.fromJson<String>(json['stage4Status']),
+      stage4PreSleepDueDay:
+          serializer.fromJson<int?>(json['stage4PreSleepDueDay']),
+      stage4NextDayDueDay:
+          serializer.fromJson<int?>(json['stage4NextDayDueDay']),
+      stage4RetryDueDay: serializer.fromJson<int?>(json['stage4RetryDueDay']),
+      stage4UnresolvedTargetsJson:
+          serializer.fromJson<String?>(json['stage4UnresolvedTargetsJson']),
+      stage4RiskJson: serializer.fromJson<String?>(json['stage4RiskJson']),
+      stage4StrengtheningRoute:
+          serializer.fromJson<String?>(json['stage4StrengtheningRoute']),
+      stage4LastOutcome:
+          serializer.fromJson<String?>(json['stage4LastOutcome']),
+      stage4LastSessionId:
+          serializer.fromJson<int?>(json['stage4LastSessionId']),
+      stage4LastCompletedDay:
+          serializer.fromJson<int?>(json['stage4LastCompletedDay']),
+      stage4MissedCount: serializer.fromJson<int>(json['stage4MissedCount']),
+      lastNewOverrideDay: serializer.fromJson<int?>(json['lastNewOverrideDay']),
+      newOverrideCount: serializer.fromJson<int>(json['newOverrideCount']),
+      updatedAtDay: serializer.fromJson<int>(json['updatedAtDay']),
+      updatedAtSeconds: serializer.fromJson<int>(json['updatedAtSeconds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'unitId': serializer.toJson<int>(unitId),
+      'lifecycleTier': serializer.toJson<String>(lifecycleTier),
+      'stage4Status': serializer.toJson<String>(stage4Status),
+      'stage4PreSleepDueDay': serializer.toJson<int?>(stage4PreSleepDueDay),
+      'stage4NextDayDueDay': serializer.toJson<int?>(stage4NextDayDueDay),
+      'stage4RetryDueDay': serializer.toJson<int?>(stage4RetryDueDay),
+      'stage4UnresolvedTargetsJson':
+          serializer.toJson<String?>(stage4UnresolvedTargetsJson),
+      'stage4RiskJson': serializer.toJson<String?>(stage4RiskJson),
+      'stage4StrengtheningRoute':
+          serializer.toJson<String?>(stage4StrengtheningRoute),
+      'stage4LastOutcome': serializer.toJson<String?>(stage4LastOutcome),
+      'stage4LastSessionId': serializer.toJson<int?>(stage4LastSessionId),
+      'stage4LastCompletedDay': serializer.toJson<int?>(stage4LastCompletedDay),
+      'stage4MissedCount': serializer.toJson<int>(stage4MissedCount),
+      'lastNewOverrideDay': serializer.toJson<int?>(lastNewOverrideDay),
+      'newOverrideCount': serializer.toJson<int>(newOverrideCount),
+      'updatedAtDay': serializer.toJson<int>(updatedAtDay),
+      'updatedAtSeconds': serializer.toJson<int>(updatedAtSeconds),
+    };
+  }
+
+  CompanionLifecycleStateData copyWith(
+          {int? unitId,
+          String? lifecycleTier,
+          String? stage4Status,
+          Value<int?> stage4PreSleepDueDay = const Value.absent(),
+          Value<int?> stage4NextDayDueDay = const Value.absent(),
+          Value<int?> stage4RetryDueDay = const Value.absent(),
+          Value<String?> stage4UnresolvedTargetsJson = const Value.absent(),
+          Value<String?> stage4RiskJson = const Value.absent(),
+          Value<String?> stage4StrengtheningRoute = const Value.absent(),
+          Value<String?> stage4LastOutcome = const Value.absent(),
+          Value<int?> stage4LastSessionId = const Value.absent(),
+          Value<int?> stage4LastCompletedDay = const Value.absent(),
+          int? stage4MissedCount,
+          Value<int?> lastNewOverrideDay = const Value.absent(),
+          int? newOverrideCount,
+          int? updatedAtDay,
+          int? updatedAtSeconds}) =>
+      CompanionLifecycleStateData(
+        unitId: unitId ?? this.unitId,
+        lifecycleTier: lifecycleTier ?? this.lifecycleTier,
+        stage4Status: stage4Status ?? this.stage4Status,
+        stage4PreSleepDueDay: stage4PreSleepDueDay.present
+            ? stage4PreSleepDueDay.value
+            : this.stage4PreSleepDueDay,
+        stage4NextDayDueDay: stage4NextDayDueDay.present
+            ? stage4NextDayDueDay.value
+            : this.stage4NextDayDueDay,
+        stage4RetryDueDay: stage4RetryDueDay.present
+            ? stage4RetryDueDay.value
+            : this.stage4RetryDueDay,
+        stage4UnresolvedTargetsJson: stage4UnresolvedTargetsJson.present
+            ? stage4UnresolvedTargetsJson.value
+            : this.stage4UnresolvedTargetsJson,
+        stage4RiskJson:
+            stage4RiskJson.present ? stage4RiskJson.value : this.stage4RiskJson,
+        stage4StrengtheningRoute: stage4StrengtheningRoute.present
+            ? stage4StrengtheningRoute.value
+            : this.stage4StrengtheningRoute,
+        stage4LastOutcome: stage4LastOutcome.present
+            ? stage4LastOutcome.value
+            : this.stage4LastOutcome,
+        stage4LastSessionId: stage4LastSessionId.present
+            ? stage4LastSessionId.value
+            : this.stage4LastSessionId,
+        stage4LastCompletedDay: stage4LastCompletedDay.present
+            ? stage4LastCompletedDay.value
+            : this.stage4LastCompletedDay,
+        stage4MissedCount: stage4MissedCount ?? this.stage4MissedCount,
+        lastNewOverrideDay: lastNewOverrideDay.present
+            ? lastNewOverrideDay.value
+            : this.lastNewOverrideDay,
+        newOverrideCount: newOverrideCount ?? this.newOverrideCount,
+        updatedAtDay: updatedAtDay ?? this.updatedAtDay,
+        updatedAtSeconds: updatedAtSeconds ?? this.updatedAtSeconds,
+      );
+  CompanionLifecycleStateData copyWithCompanion(
+      CompanionLifecycleStateCompanion data) {
+    return CompanionLifecycleStateData(
+      unitId: data.unitId.present ? data.unitId.value : this.unitId,
+      lifecycleTier: data.lifecycleTier.present
+          ? data.lifecycleTier.value
+          : this.lifecycleTier,
+      stage4Status: data.stage4Status.present
+          ? data.stage4Status.value
+          : this.stage4Status,
+      stage4PreSleepDueDay: data.stage4PreSleepDueDay.present
+          ? data.stage4PreSleepDueDay.value
+          : this.stage4PreSleepDueDay,
+      stage4NextDayDueDay: data.stage4NextDayDueDay.present
+          ? data.stage4NextDayDueDay.value
+          : this.stage4NextDayDueDay,
+      stage4RetryDueDay: data.stage4RetryDueDay.present
+          ? data.stage4RetryDueDay.value
+          : this.stage4RetryDueDay,
+      stage4UnresolvedTargetsJson: data.stage4UnresolvedTargetsJson.present
+          ? data.stage4UnresolvedTargetsJson.value
+          : this.stage4UnresolvedTargetsJson,
+      stage4RiskJson: data.stage4RiskJson.present
+          ? data.stage4RiskJson.value
+          : this.stage4RiskJson,
+      stage4StrengtheningRoute: data.stage4StrengtheningRoute.present
+          ? data.stage4StrengtheningRoute.value
+          : this.stage4StrengtheningRoute,
+      stage4LastOutcome: data.stage4LastOutcome.present
+          ? data.stage4LastOutcome.value
+          : this.stage4LastOutcome,
+      stage4LastSessionId: data.stage4LastSessionId.present
+          ? data.stage4LastSessionId.value
+          : this.stage4LastSessionId,
+      stage4LastCompletedDay: data.stage4LastCompletedDay.present
+          ? data.stage4LastCompletedDay.value
+          : this.stage4LastCompletedDay,
+      stage4MissedCount: data.stage4MissedCount.present
+          ? data.stage4MissedCount.value
+          : this.stage4MissedCount,
+      lastNewOverrideDay: data.lastNewOverrideDay.present
+          ? data.lastNewOverrideDay.value
+          : this.lastNewOverrideDay,
+      newOverrideCount: data.newOverrideCount.present
+          ? data.newOverrideCount.value
+          : this.newOverrideCount,
+      updatedAtDay: data.updatedAtDay.present
+          ? data.updatedAtDay.value
+          : this.updatedAtDay,
+      updatedAtSeconds: data.updatedAtSeconds.present
+          ? data.updatedAtSeconds.value
+          : this.updatedAtSeconds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionLifecycleStateData(')
+          ..write('unitId: $unitId, ')
+          ..write('lifecycleTier: $lifecycleTier, ')
+          ..write('stage4Status: $stage4Status, ')
+          ..write('stage4PreSleepDueDay: $stage4PreSleepDueDay, ')
+          ..write('stage4NextDayDueDay: $stage4NextDayDueDay, ')
+          ..write('stage4RetryDueDay: $stage4RetryDueDay, ')
+          ..write('stage4UnresolvedTargetsJson: $stage4UnresolvedTargetsJson, ')
+          ..write('stage4RiskJson: $stage4RiskJson, ')
+          ..write('stage4StrengtheningRoute: $stage4StrengtheningRoute, ')
+          ..write('stage4LastOutcome: $stage4LastOutcome, ')
+          ..write('stage4LastSessionId: $stage4LastSessionId, ')
+          ..write('stage4LastCompletedDay: $stage4LastCompletedDay, ')
+          ..write('stage4MissedCount: $stage4MissedCount, ')
+          ..write('lastNewOverrideDay: $lastNewOverrideDay, ')
+          ..write('newOverrideCount: $newOverrideCount, ')
+          ..write('updatedAtDay: $updatedAtDay, ')
+          ..write('updatedAtSeconds: $updatedAtSeconds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      unitId,
+      lifecycleTier,
+      stage4Status,
+      stage4PreSleepDueDay,
+      stage4NextDayDueDay,
+      stage4RetryDueDay,
+      stage4UnresolvedTargetsJson,
+      stage4RiskJson,
+      stage4StrengtheningRoute,
+      stage4LastOutcome,
+      stage4LastSessionId,
+      stage4LastCompletedDay,
+      stage4MissedCount,
+      lastNewOverrideDay,
+      newOverrideCount,
+      updatedAtDay,
+      updatedAtSeconds);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CompanionLifecycleStateData &&
+          other.unitId == this.unitId &&
+          other.lifecycleTier == this.lifecycleTier &&
+          other.stage4Status == this.stage4Status &&
+          other.stage4PreSleepDueDay == this.stage4PreSleepDueDay &&
+          other.stage4NextDayDueDay == this.stage4NextDayDueDay &&
+          other.stage4RetryDueDay == this.stage4RetryDueDay &&
+          other.stage4UnresolvedTargetsJson ==
+              this.stage4UnresolvedTargetsJson &&
+          other.stage4RiskJson == this.stage4RiskJson &&
+          other.stage4StrengtheningRoute == this.stage4StrengtheningRoute &&
+          other.stage4LastOutcome == this.stage4LastOutcome &&
+          other.stage4LastSessionId == this.stage4LastSessionId &&
+          other.stage4LastCompletedDay == this.stage4LastCompletedDay &&
+          other.stage4MissedCount == this.stage4MissedCount &&
+          other.lastNewOverrideDay == this.lastNewOverrideDay &&
+          other.newOverrideCount == this.newOverrideCount &&
+          other.updatedAtDay == this.updatedAtDay &&
+          other.updatedAtSeconds == this.updatedAtSeconds);
+}
+
+class CompanionLifecycleStateCompanion
+    extends UpdateCompanion<CompanionLifecycleStateData> {
+  final Value<int> unitId;
+  final Value<String> lifecycleTier;
+  final Value<String> stage4Status;
+  final Value<int?> stage4PreSleepDueDay;
+  final Value<int?> stage4NextDayDueDay;
+  final Value<int?> stage4RetryDueDay;
+  final Value<String?> stage4UnresolvedTargetsJson;
+  final Value<String?> stage4RiskJson;
+  final Value<String?> stage4StrengtheningRoute;
+  final Value<String?> stage4LastOutcome;
+  final Value<int?> stage4LastSessionId;
+  final Value<int?> stage4LastCompletedDay;
+  final Value<int> stage4MissedCount;
+  final Value<int?> lastNewOverrideDay;
+  final Value<int> newOverrideCount;
+  final Value<int> updatedAtDay;
+  final Value<int> updatedAtSeconds;
+  const CompanionLifecycleStateCompanion({
+    this.unitId = const Value.absent(),
+    this.lifecycleTier = const Value.absent(),
+    this.stage4Status = const Value.absent(),
+    this.stage4PreSleepDueDay = const Value.absent(),
+    this.stage4NextDayDueDay = const Value.absent(),
+    this.stage4RetryDueDay = const Value.absent(),
+    this.stage4UnresolvedTargetsJson = const Value.absent(),
+    this.stage4RiskJson = const Value.absent(),
+    this.stage4StrengtheningRoute = const Value.absent(),
+    this.stage4LastOutcome = const Value.absent(),
+    this.stage4LastSessionId = const Value.absent(),
+    this.stage4LastCompletedDay = const Value.absent(),
+    this.stage4MissedCount = const Value.absent(),
+    this.lastNewOverrideDay = const Value.absent(),
+    this.newOverrideCount = const Value.absent(),
+    this.updatedAtDay = const Value.absent(),
+    this.updatedAtSeconds = const Value.absent(),
+  });
+  CompanionLifecycleStateCompanion.insert({
+    this.unitId = const Value.absent(),
+    this.lifecycleTier = const Value.absent(),
+    this.stage4Status = const Value.absent(),
+    this.stage4PreSleepDueDay = const Value.absent(),
+    this.stage4NextDayDueDay = const Value.absent(),
+    this.stage4RetryDueDay = const Value.absent(),
+    this.stage4UnresolvedTargetsJson = const Value.absent(),
+    this.stage4RiskJson = const Value.absent(),
+    this.stage4StrengtheningRoute = const Value.absent(),
+    this.stage4LastOutcome = const Value.absent(),
+    this.stage4LastSessionId = const Value.absent(),
+    this.stage4LastCompletedDay = const Value.absent(),
+    this.stage4MissedCount = const Value.absent(),
+    this.lastNewOverrideDay = const Value.absent(),
+    this.newOverrideCount = const Value.absent(),
+    required int updatedAtDay,
+    required int updatedAtSeconds,
+  })  : updatedAtDay = Value(updatedAtDay),
+        updatedAtSeconds = Value(updatedAtSeconds);
+  static Insertable<CompanionLifecycleStateData> custom({
+    Expression<int>? unitId,
+    Expression<String>? lifecycleTier,
+    Expression<String>? stage4Status,
+    Expression<int>? stage4PreSleepDueDay,
+    Expression<int>? stage4NextDayDueDay,
+    Expression<int>? stage4RetryDueDay,
+    Expression<String>? stage4UnresolvedTargetsJson,
+    Expression<String>? stage4RiskJson,
+    Expression<String>? stage4StrengtheningRoute,
+    Expression<String>? stage4LastOutcome,
+    Expression<int>? stage4LastSessionId,
+    Expression<int>? stage4LastCompletedDay,
+    Expression<int>? stage4MissedCount,
+    Expression<int>? lastNewOverrideDay,
+    Expression<int>? newOverrideCount,
+    Expression<int>? updatedAtDay,
+    Expression<int>? updatedAtSeconds,
+  }) {
+    return RawValuesInsertable({
+      if (unitId != null) 'unit_id': unitId,
+      if (lifecycleTier != null) 'lifecycle_tier': lifecycleTier,
+      if (stage4Status != null) 'stage4_status': stage4Status,
+      if (stage4PreSleepDueDay != null)
+        'stage4_pre_sleep_due_day': stage4PreSleepDueDay,
+      if (stage4NextDayDueDay != null)
+        'stage4_next_day_due_day': stage4NextDayDueDay,
+      if (stage4RetryDueDay != null) 'stage4_retry_due_day': stage4RetryDueDay,
+      if (stage4UnresolvedTargetsJson != null)
+        'stage4_unresolved_targets_json': stage4UnresolvedTargetsJson,
+      if (stage4RiskJson != null) 'stage4_risk_json': stage4RiskJson,
+      if (stage4StrengtheningRoute != null)
+        'stage4_strengthening_route': stage4StrengtheningRoute,
+      if (stage4LastOutcome != null) 'stage4_last_outcome': stage4LastOutcome,
+      if (stage4LastSessionId != null)
+        'stage4_last_session_id': stage4LastSessionId,
+      if (stage4LastCompletedDay != null)
+        'stage4_last_completed_day': stage4LastCompletedDay,
+      if (stage4MissedCount != null) 'stage4_missed_count': stage4MissedCount,
+      if (lastNewOverrideDay != null)
+        'last_new_override_day': lastNewOverrideDay,
+      if (newOverrideCount != null) 'new_override_count': newOverrideCount,
+      if (updatedAtDay != null) 'updated_at_day': updatedAtDay,
+      if (updatedAtSeconds != null) 'updated_at_seconds': updatedAtSeconds,
+    });
+  }
+
+  CompanionLifecycleStateCompanion copyWith(
+      {Value<int>? unitId,
+      Value<String>? lifecycleTier,
+      Value<String>? stage4Status,
+      Value<int?>? stage4PreSleepDueDay,
+      Value<int?>? stage4NextDayDueDay,
+      Value<int?>? stage4RetryDueDay,
+      Value<String?>? stage4UnresolvedTargetsJson,
+      Value<String?>? stage4RiskJson,
+      Value<String?>? stage4StrengtheningRoute,
+      Value<String?>? stage4LastOutcome,
+      Value<int?>? stage4LastSessionId,
+      Value<int?>? stage4LastCompletedDay,
+      Value<int>? stage4MissedCount,
+      Value<int?>? lastNewOverrideDay,
+      Value<int>? newOverrideCount,
+      Value<int>? updatedAtDay,
+      Value<int>? updatedAtSeconds}) {
+    return CompanionLifecycleStateCompanion(
+      unitId: unitId ?? this.unitId,
+      lifecycleTier: lifecycleTier ?? this.lifecycleTier,
+      stage4Status: stage4Status ?? this.stage4Status,
+      stage4PreSleepDueDay: stage4PreSleepDueDay ?? this.stage4PreSleepDueDay,
+      stage4NextDayDueDay: stage4NextDayDueDay ?? this.stage4NextDayDueDay,
+      stage4RetryDueDay: stage4RetryDueDay ?? this.stage4RetryDueDay,
+      stage4UnresolvedTargetsJson:
+          stage4UnresolvedTargetsJson ?? this.stage4UnresolvedTargetsJson,
+      stage4RiskJson: stage4RiskJson ?? this.stage4RiskJson,
+      stage4StrengtheningRoute:
+          stage4StrengtheningRoute ?? this.stage4StrengtheningRoute,
+      stage4LastOutcome: stage4LastOutcome ?? this.stage4LastOutcome,
+      stage4LastSessionId: stage4LastSessionId ?? this.stage4LastSessionId,
+      stage4LastCompletedDay:
+          stage4LastCompletedDay ?? this.stage4LastCompletedDay,
+      stage4MissedCount: stage4MissedCount ?? this.stage4MissedCount,
+      lastNewOverrideDay: lastNewOverrideDay ?? this.lastNewOverrideDay,
+      newOverrideCount: newOverrideCount ?? this.newOverrideCount,
+      updatedAtDay: updatedAtDay ?? this.updatedAtDay,
+      updatedAtSeconds: updatedAtSeconds ?? this.updatedAtSeconds,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (unitId.present) {
+      map['unit_id'] = Variable<int>(unitId.value);
+    }
+    if (lifecycleTier.present) {
+      map['lifecycle_tier'] = Variable<String>(lifecycleTier.value);
+    }
+    if (stage4Status.present) {
+      map['stage4_status'] = Variable<String>(stage4Status.value);
+    }
+    if (stage4PreSleepDueDay.present) {
+      map['stage4_pre_sleep_due_day'] =
+          Variable<int>(stage4PreSleepDueDay.value);
+    }
+    if (stage4NextDayDueDay.present) {
+      map['stage4_next_day_due_day'] = Variable<int>(stage4NextDayDueDay.value);
+    }
+    if (stage4RetryDueDay.present) {
+      map['stage4_retry_due_day'] = Variable<int>(stage4RetryDueDay.value);
+    }
+    if (stage4UnresolvedTargetsJson.present) {
+      map['stage4_unresolved_targets_json'] =
+          Variable<String>(stage4UnresolvedTargetsJson.value);
+    }
+    if (stage4RiskJson.present) {
+      map['stage4_risk_json'] = Variable<String>(stage4RiskJson.value);
+    }
+    if (stage4StrengtheningRoute.present) {
+      map['stage4_strengthening_route'] =
+          Variable<String>(stage4StrengtheningRoute.value);
+    }
+    if (stage4LastOutcome.present) {
+      map['stage4_last_outcome'] = Variable<String>(stage4LastOutcome.value);
+    }
+    if (stage4LastSessionId.present) {
+      map['stage4_last_session_id'] = Variable<int>(stage4LastSessionId.value);
+    }
+    if (stage4LastCompletedDay.present) {
+      map['stage4_last_completed_day'] =
+          Variable<int>(stage4LastCompletedDay.value);
+    }
+    if (stage4MissedCount.present) {
+      map['stage4_missed_count'] = Variable<int>(stage4MissedCount.value);
+    }
+    if (lastNewOverrideDay.present) {
+      map['last_new_override_day'] = Variable<int>(lastNewOverrideDay.value);
+    }
+    if (newOverrideCount.present) {
+      map['new_override_count'] = Variable<int>(newOverrideCount.value);
+    }
+    if (updatedAtDay.present) {
+      map['updated_at_day'] = Variable<int>(updatedAtDay.value);
+    }
+    if (updatedAtSeconds.present) {
+      map['updated_at_seconds'] = Variable<int>(updatedAtSeconds.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionLifecycleStateCompanion(')
+          ..write('unitId: $unitId, ')
+          ..write('lifecycleTier: $lifecycleTier, ')
+          ..write('stage4Status: $stage4Status, ')
+          ..write('stage4PreSleepDueDay: $stage4PreSleepDueDay, ')
+          ..write('stage4NextDayDueDay: $stage4NextDayDueDay, ')
+          ..write('stage4RetryDueDay: $stage4RetryDueDay, ')
+          ..write('stage4UnresolvedTargetsJson: $stage4UnresolvedTargetsJson, ')
+          ..write('stage4RiskJson: $stage4RiskJson, ')
+          ..write('stage4StrengtheningRoute: $stage4StrengtheningRoute, ')
+          ..write('stage4LastOutcome: $stage4LastOutcome, ')
+          ..write('stage4LastSessionId: $stage4LastSessionId, ')
+          ..write('stage4LastCompletedDay: $stage4LastCompletedDay, ')
+          ..write('stage4MissedCount: $stage4MissedCount, ')
+          ..write('lastNewOverrideDay: $lastNewOverrideDay, ')
+          ..write('newOverrideCount: $newOverrideCount, ')
+          ..write('updatedAtDay: $updatedAtDay, ')
+          ..write('updatedAtSeconds: $updatedAtSeconds')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CompanionStage4SessionTable extends CompanionStage4Session
+    with TableInfo<$CompanionStage4SessionTable, CompanionStage4SessionData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CompanionStage4SessionTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _unitIdMeta = const VerificationMeta('unitId');
+  @override
+  late final GeneratedColumn<int> unitId = GeneratedColumn<int>(
+      'unit_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES mem_unit (id) ON DELETE CASCADE'));
+  static const VerificationMeta _chainSessionIdMeta =
+      const VerificationMeta('chainSessionId');
+  @override
+  late final GeneratedColumn<int> chainSessionId = GeneratedColumn<int>(
+      'chain_session_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES companion_chain_session (id) ON DELETE SET NULL'));
+  static const VerificationMeta _dueKindMeta =
+      const VerificationMeta('dueKind');
+  @override
+  late final GeneratedColumn<String> dueKind = GeneratedColumn<String>(
+      'due_kind', aliasedName, false,
+      check: () => const CustomExpression<bool>(
+          "due_kind IN ('pre_sleep_optional', 'next_day_required', 'retry_required')"),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _outcomeMeta =
+      const VerificationMeta('outcome');
+  @override
+  late final GeneratedColumn<String> outcome = GeneratedColumn<String>(
+      'outcome', aliasedName, true,
+      check: () => const CustomExpression<bool>(
+          "outcome IS NULL OR outcome IN ('pass', 'partial', 'fail', 'abandoned')"),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _startedDayMeta =
+      const VerificationMeta('startedDay');
+  @override
+  late final GeneratedColumn<int> startedDay = GeneratedColumn<int>(
+      'started_day', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _startedSecondsMeta =
+      const VerificationMeta('startedSeconds');
+  @override
+  late final GeneratedColumn<int> startedSeconds = GeneratedColumn<int>(
+      'started_seconds', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _endedDayMeta =
+      const VerificationMeta('endedDay');
+  @override
+  late final GeneratedColumn<int> endedDay = GeneratedColumn<int>(
+      'ended_day', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _endedSecondsMeta =
+      const VerificationMeta('endedSeconds');
+  @override
+  late final GeneratedColumn<int> endedSeconds = GeneratedColumn<int>(
+      'ended_seconds', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _countedPassRateMeta =
+      const VerificationMeta('countedPassRate');
+  @override
+  late final GeneratedColumn<double> countedPassRate = GeneratedColumn<double>(
+      'counted_pass_rate', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _randomStartPassesMeta =
+      const VerificationMeta('randomStartPasses');
+  @override
+  late final GeneratedColumn<int> randomStartPasses = GeneratedColumn<int>(
+      'random_start_passes', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _linkingPassesMeta =
+      const VerificationMeta('linkingPasses');
+  @override
+  late final GeneratedColumn<int> linkingPasses = GeneratedColumn<int>(
+      'linking_passes', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _discriminationPassesMeta =
+      const VerificationMeta('discriminationPasses');
+  @override
+  late final GeneratedColumn<int> discriminationPasses = GeneratedColumn<int>(
+      'discrimination_passes', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _unresolvedTargetsJsonMeta =
+      const VerificationMeta('unresolvedTargetsJson');
+  @override
+  late final GeneratedColumn<String> unresolvedTargetsJson =
+      GeneratedColumn<String>('unresolved_targets_json', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _telemetryJsonMeta =
+      const VerificationMeta('telemetryJson');
+  @override
+  late final GeneratedColumn<String> telemetryJson = GeneratedColumn<String>(
+      'telemetry_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        unitId,
+        chainSessionId,
+        dueKind,
+        outcome,
+        startedDay,
+        startedSeconds,
+        endedDay,
+        endedSeconds,
+        countedPassRate,
+        randomStartPasses,
+        linkingPasses,
+        discriminationPasses,
+        unresolvedTargetsJson,
+        telemetryJson
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'companion_stage4_session';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CompanionStage4SessionData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('unit_id')) {
+      context.handle(_unitIdMeta,
+          unitId.isAcceptableOrUnknown(data['unit_id']!, _unitIdMeta));
+    } else if (isInserting) {
+      context.missing(_unitIdMeta);
+    }
+    if (data.containsKey('chain_session_id')) {
+      context.handle(
+          _chainSessionIdMeta,
+          chainSessionId.isAcceptableOrUnknown(
+              data['chain_session_id']!, _chainSessionIdMeta));
+    }
+    if (data.containsKey('due_kind')) {
+      context.handle(_dueKindMeta,
+          dueKind.isAcceptableOrUnknown(data['due_kind']!, _dueKindMeta));
+    } else if (isInserting) {
+      context.missing(_dueKindMeta);
+    }
+    if (data.containsKey('outcome')) {
+      context.handle(_outcomeMeta,
+          outcome.isAcceptableOrUnknown(data['outcome']!, _outcomeMeta));
+    }
+    if (data.containsKey('started_day')) {
+      context.handle(
+          _startedDayMeta,
+          startedDay.isAcceptableOrUnknown(
+              data['started_day']!, _startedDayMeta));
+    } else if (isInserting) {
+      context.missing(_startedDayMeta);
+    }
+    if (data.containsKey('started_seconds')) {
+      context.handle(
+          _startedSecondsMeta,
+          startedSeconds.isAcceptableOrUnknown(
+              data['started_seconds']!, _startedSecondsMeta));
+    }
+    if (data.containsKey('ended_day')) {
+      context.handle(_endedDayMeta,
+          endedDay.isAcceptableOrUnknown(data['ended_day']!, _endedDayMeta));
+    }
+    if (data.containsKey('ended_seconds')) {
+      context.handle(
+          _endedSecondsMeta,
+          endedSeconds.isAcceptableOrUnknown(
+              data['ended_seconds']!, _endedSecondsMeta));
+    }
+    if (data.containsKey('counted_pass_rate')) {
+      context.handle(
+          _countedPassRateMeta,
+          countedPassRate.isAcceptableOrUnknown(
+              data['counted_pass_rate']!, _countedPassRateMeta));
+    }
+    if (data.containsKey('random_start_passes')) {
+      context.handle(
+          _randomStartPassesMeta,
+          randomStartPasses.isAcceptableOrUnknown(
+              data['random_start_passes']!, _randomStartPassesMeta));
+    }
+    if (data.containsKey('linking_passes')) {
+      context.handle(
+          _linkingPassesMeta,
+          linkingPasses.isAcceptableOrUnknown(
+              data['linking_passes']!, _linkingPassesMeta));
+    }
+    if (data.containsKey('discrimination_passes')) {
+      context.handle(
+          _discriminationPassesMeta,
+          discriminationPasses.isAcceptableOrUnknown(
+              data['discrimination_passes']!, _discriminationPassesMeta));
+    }
+    if (data.containsKey('unresolved_targets_json')) {
+      context.handle(
+          _unresolvedTargetsJsonMeta,
+          unresolvedTargetsJson.isAcceptableOrUnknown(
+              data['unresolved_targets_json']!, _unresolvedTargetsJsonMeta));
+    }
+    if (data.containsKey('telemetry_json')) {
+      context.handle(
+          _telemetryJsonMeta,
+          telemetryJson.isAcceptableOrUnknown(
+              data['telemetry_json']!, _telemetryJsonMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CompanionStage4SessionData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CompanionStage4SessionData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      unitId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unit_id'])!,
+      chainSessionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}chain_session_id']),
+      dueKind: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}due_kind'])!,
+      outcome: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}outcome']),
+      startedDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}started_day'])!,
+      startedSeconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}started_seconds']),
+      endedDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ended_day']),
+      endedSeconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ended_seconds']),
+      countedPassRate: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}counted_pass_rate'])!,
+      randomStartPasses: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}random_start_passes'])!,
+      linkingPasses: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}linking_passes'])!,
+      discriminationPasses: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}discrimination_passes'])!,
+      unresolvedTargetsJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}unresolved_targets_json']),
+      telemetryJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}telemetry_json']),
+    );
+  }
+
+  @override
+  $CompanionStage4SessionTable createAlias(String alias) {
+    return $CompanionStage4SessionTable(attachedDatabase, alias);
+  }
+}
+
+class CompanionStage4SessionData extends DataClass
+    implements Insertable<CompanionStage4SessionData> {
+  final int id;
+  final int unitId;
+  final int? chainSessionId;
+  final String dueKind;
+  final String? outcome;
+  final int startedDay;
+  final int? startedSeconds;
+  final int? endedDay;
+  final int? endedSeconds;
+  final double countedPassRate;
+  final int randomStartPasses;
+  final int linkingPasses;
+  final int discriminationPasses;
+  final String? unresolvedTargetsJson;
+  final String? telemetryJson;
+  const CompanionStage4SessionData(
+      {required this.id,
+      required this.unitId,
+      this.chainSessionId,
+      required this.dueKind,
+      this.outcome,
+      required this.startedDay,
+      this.startedSeconds,
+      this.endedDay,
+      this.endedSeconds,
+      required this.countedPassRate,
+      required this.randomStartPasses,
+      required this.linkingPasses,
+      required this.discriminationPasses,
+      this.unresolvedTargetsJson,
+      this.telemetryJson});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['unit_id'] = Variable<int>(unitId);
+    if (!nullToAbsent || chainSessionId != null) {
+      map['chain_session_id'] = Variable<int>(chainSessionId);
+    }
+    map['due_kind'] = Variable<String>(dueKind);
+    if (!nullToAbsent || outcome != null) {
+      map['outcome'] = Variable<String>(outcome);
+    }
+    map['started_day'] = Variable<int>(startedDay);
+    if (!nullToAbsent || startedSeconds != null) {
+      map['started_seconds'] = Variable<int>(startedSeconds);
+    }
+    if (!nullToAbsent || endedDay != null) {
+      map['ended_day'] = Variable<int>(endedDay);
+    }
+    if (!nullToAbsent || endedSeconds != null) {
+      map['ended_seconds'] = Variable<int>(endedSeconds);
+    }
+    map['counted_pass_rate'] = Variable<double>(countedPassRate);
+    map['random_start_passes'] = Variable<int>(randomStartPasses);
+    map['linking_passes'] = Variable<int>(linkingPasses);
+    map['discrimination_passes'] = Variable<int>(discriminationPasses);
+    if (!nullToAbsent || unresolvedTargetsJson != null) {
+      map['unresolved_targets_json'] = Variable<String>(unresolvedTargetsJson);
+    }
+    if (!nullToAbsent || telemetryJson != null) {
+      map['telemetry_json'] = Variable<String>(telemetryJson);
+    }
+    return map;
+  }
+
+  CompanionStage4SessionCompanion toCompanion(bool nullToAbsent) {
+    return CompanionStage4SessionCompanion(
+      id: Value(id),
+      unitId: Value(unitId),
+      chainSessionId: chainSessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(chainSessionId),
+      dueKind: Value(dueKind),
+      outcome: outcome == null && nullToAbsent
+          ? const Value.absent()
+          : Value(outcome),
+      startedDay: Value(startedDay),
+      startedSeconds: startedSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startedSeconds),
+      endedDay: endedDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endedDay),
+      endedSeconds: endedSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endedSeconds),
+      countedPassRate: Value(countedPassRate),
+      randomStartPasses: Value(randomStartPasses),
+      linkingPasses: Value(linkingPasses),
+      discriminationPasses: Value(discriminationPasses),
+      unresolvedTargetsJson: unresolvedTargetsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unresolvedTargetsJson),
+      telemetryJson: telemetryJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(telemetryJson),
+    );
+  }
+
+  factory CompanionStage4SessionData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CompanionStage4SessionData(
+      id: serializer.fromJson<int>(json['id']),
+      unitId: serializer.fromJson<int>(json['unitId']),
+      chainSessionId: serializer.fromJson<int?>(json['chainSessionId']),
+      dueKind: serializer.fromJson<String>(json['dueKind']),
+      outcome: serializer.fromJson<String?>(json['outcome']),
+      startedDay: serializer.fromJson<int>(json['startedDay']),
+      startedSeconds: serializer.fromJson<int?>(json['startedSeconds']),
+      endedDay: serializer.fromJson<int?>(json['endedDay']),
+      endedSeconds: serializer.fromJson<int?>(json['endedSeconds']),
+      countedPassRate: serializer.fromJson<double>(json['countedPassRate']),
+      randomStartPasses: serializer.fromJson<int>(json['randomStartPasses']),
+      linkingPasses: serializer.fromJson<int>(json['linkingPasses']),
+      discriminationPasses:
+          serializer.fromJson<int>(json['discriminationPasses']),
+      unresolvedTargetsJson:
+          serializer.fromJson<String?>(json['unresolvedTargetsJson']),
+      telemetryJson: serializer.fromJson<String?>(json['telemetryJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'unitId': serializer.toJson<int>(unitId),
+      'chainSessionId': serializer.toJson<int?>(chainSessionId),
+      'dueKind': serializer.toJson<String>(dueKind),
+      'outcome': serializer.toJson<String?>(outcome),
+      'startedDay': serializer.toJson<int>(startedDay),
+      'startedSeconds': serializer.toJson<int?>(startedSeconds),
+      'endedDay': serializer.toJson<int?>(endedDay),
+      'endedSeconds': serializer.toJson<int?>(endedSeconds),
+      'countedPassRate': serializer.toJson<double>(countedPassRate),
+      'randomStartPasses': serializer.toJson<int>(randomStartPasses),
+      'linkingPasses': serializer.toJson<int>(linkingPasses),
+      'discriminationPasses': serializer.toJson<int>(discriminationPasses),
+      'unresolvedTargetsJson':
+          serializer.toJson<String?>(unresolvedTargetsJson),
+      'telemetryJson': serializer.toJson<String?>(telemetryJson),
+    };
+  }
+
+  CompanionStage4SessionData copyWith(
+          {int? id,
+          int? unitId,
+          Value<int?> chainSessionId = const Value.absent(),
+          String? dueKind,
+          Value<String?> outcome = const Value.absent(),
+          int? startedDay,
+          Value<int?> startedSeconds = const Value.absent(),
+          Value<int?> endedDay = const Value.absent(),
+          Value<int?> endedSeconds = const Value.absent(),
+          double? countedPassRate,
+          int? randomStartPasses,
+          int? linkingPasses,
+          int? discriminationPasses,
+          Value<String?> unresolvedTargetsJson = const Value.absent(),
+          Value<String?> telemetryJson = const Value.absent()}) =>
+      CompanionStage4SessionData(
+        id: id ?? this.id,
+        unitId: unitId ?? this.unitId,
+        chainSessionId:
+            chainSessionId.present ? chainSessionId.value : this.chainSessionId,
+        dueKind: dueKind ?? this.dueKind,
+        outcome: outcome.present ? outcome.value : this.outcome,
+        startedDay: startedDay ?? this.startedDay,
+        startedSeconds:
+            startedSeconds.present ? startedSeconds.value : this.startedSeconds,
+        endedDay: endedDay.present ? endedDay.value : this.endedDay,
+        endedSeconds:
+            endedSeconds.present ? endedSeconds.value : this.endedSeconds,
+        countedPassRate: countedPassRate ?? this.countedPassRate,
+        randomStartPasses: randomStartPasses ?? this.randomStartPasses,
+        linkingPasses: linkingPasses ?? this.linkingPasses,
+        discriminationPasses: discriminationPasses ?? this.discriminationPasses,
+        unresolvedTargetsJson: unresolvedTargetsJson.present
+            ? unresolvedTargetsJson.value
+            : this.unresolvedTargetsJson,
+        telemetryJson:
+            telemetryJson.present ? telemetryJson.value : this.telemetryJson,
+      );
+  CompanionStage4SessionData copyWithCompanion(
+      CompanionStage4SessionCompanion data) {
+    return CompanionStage4SessionData(
+      id: data.id.present ? data.id.value : this.id,
+      unitId: data.unitId.present ? data.unitId.value : this.unitId,
+      chainSessionId: data.chainSessionId.present
+          ? data.chainSessionId.value
+          : this.chainSessionId,
+      dueKind: data.dueKind.present ? data.dueKind.value : this.dueKind,
+      outcome: data.outcome.present ? data.outcome.value : this.outcome,
+      startedDay:
+          data.startedDay.present ? data.startedDay.value : this.startedDay,
+      startedSeconds: data.startedSeconds.present
+          ? data.startedSeconds.value
+          : this.startedSeconds,
+      endedDay: data.endedDay.present ? data.endedDay.value : this.endedDay,
+      endedSeconds: data.endedSeconds.present
+          ? data.endedSeconds.value
+          : this.endedSeconds,
+      countedPassRate: data.countedPassRate.present
+          ? data.countedPassRate.value
+          : this.countedPassRate,
+      randomStartPasses: data.randomStartPasses.present
+          ? data.randomStartPasses.value
+          : this.randomStartPasses,
+      linkingPasses: data.linkingPasses.present
+          ? data.linkingPasses.value
+          : this.linkingPasses,
+      discriminationPasses: data.discriminationPasses.present
+          ? data.discriminationPasses.value
+          : this.discriminationPasses,
+      unresolvedTargetsJson: data.unresolvedTargetsJson.present
+          ? data.unresolvedTargetsJson.value
+          : this.unresolvedTargetsJson,
+      telemetryJson: data.telemetryJson.present
+          ? data.telemetryJson.value
+          : this.telemetryJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionStage4SessionData(')
+          ..write('id: $id, ')
+          ..write('unitId: $unitId, ')
+          ..write('chainSessionId: $chainSessionId, ')
+          ..write('dueKind: $dueKind, ')
+          ..write('outcome: $outcome, ')
+          ..write('startedDay: $startedDay, ')
+          ..write('startedSeconds: $startedSeconds, ')
+          ..write('endedDay: $endedDay, ')
+          ..write('endedSeconds: $endedSeconds, ')
+          ..write('countedPassRate: $countedPassRate, ')
+          ..write('randomStartPasses: $randomStartPasses, ')
+          ..write('linkingPasses: $linkingPasses, ')
+          ..write('discriminationPasses: $discriminationPasses, ')
+          ..write('unresolvedTargetsJson: $unresolvedTargetsJson, ')
+          ..write('telemetryJson: $telemetryJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      unitId,
+      chainSessionId,
+      dueKind,
+      outcome,
+      startedDay,
+      startedSeconds,
+      endedDay,
+      endedSeconds,
+      countedPassRate,
+      randomStartPasses,
+      linkingPasses,
+      discriminationPasses,
+      unresolvedTargetsJson,
+      telemetryJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CompanionStage4SessionData &&
+          other.id == this.id &&
+          other.unitId == this.unitId &&
+          other.chainSessionId == this.chainSessionId &&
+          other.dueKind == this.dueKind &&
+          other.outcome == this.outcome &&
+          other.startedDay == this.startedDay &&
+          other.startedSeconds == this.startedSeconds &&
+          other.endedDay == this.endedDay &&
+          other.endedSeconds == this.endedSeconds &&
+          other.countedPassRate == this.countedPassRate &&
+          other.randomStartPasses == this.randomStartPasses &&
+          other.linkingPasses == this.linkingPasses &&
+          other.discriminationPasses == this.discriminationPasses &&
+          other.unresolvedTargetsJson == this.unresolvedTargetsJson &&
+          other.telemetryJson == this.telemetryJson);
+}
+
+class CompanionStage4SessionCompanion
+    extends UpdateCompanion<CompanionStage4SessionData> {
+  final Value<int> id;
+  final Value<int> unitId;
+  final Value<int?> chainSessionId;
+  final Value<String> dueKind;
+  final Value<String?> outcome;
+  final Value<int> startedDay;
+  final Value<int?> startedSeconds;
+  final Value<int?> endedDay;
+  final Value<int?> endedSeconds;
+  final Value<double> countedPassRate;
+  final Value<int> randomStartPasses;
+  final Value<int> linkingPasses;
+  final Value<int> discriminationPasses;
+  final Value<String?> unresolvedTargetsJson;
+  final Value<String?> telemetryJson;
+  const CompanionStage4SessionCompanion({
+    this.id = const Value.absent(),
+    this.unitId = const Value.absent(),
+    this.chainSessionId = const Value.absent(),
+    this.dueKind = const Value.absent(),
+    this.outcome = const Value.absent(),
+    this.startedDay = const Value.absent(),
+    this.startedSeconds = const Value.absent(),
+    this.endedDay = const Value.absent(),
+    this.endedSeconds = const Value.absent(),
+    this.countedPassRate = const Value.absent(),
+    this.randomStartPasses = const Value.absent(),
+    this.linkingPasses = const Value.absent(),
+    this.discriminationPasses = const Value.absent(),
+    this.unresolvedTargetsJson = const Value.absent(),
+    this.telemetryJson = const Value.absent(),
+  });
+  CompanionStage4SessionCompanion.insert({
+    this.id = const Value.absent(),
+    required int unitId,
+    this.chainSessionId = const Value.absent(),
+    required String dueKind,
+    this.outcome = const Value.absent(),
+    required int startedDay,
+    this.startedSeconds = const Value.absent(),
+    this.endedDay = const Value.absent(),
+    this.endedSeconds = const Value.absent(),
+    this.countedPassRate = const Value.absent(),
+    this.randomStartPasses = const Value.absent(),
+    this.linkingPasses = const Value.absent(),
+    this.discriminationPasses = const Value.absent(),
+    this.unresolvedTargetsJson = const Value.absent(),
+    this.telemetryJson = const Value.absent(),
+  })  : unitId = Value(unitId),
+        dueKind = Value(dueKind),
+        startedDay = Value(startedDay);
+  static Insertable<CompanionStage4SessionData> custom({
+    Expression<int>? id,
+    Expression<int>? unitId,
+    Expression<int>? chainSessionId,
+    Expression<String>? dueKind,
+    Expression<String>? outcome,
+    Expression<int>? startedDay,
+    Expression<int>? startedSeconds,
+    Expression<int>? endedDay,
+    Expression<int>? endedSeconds,
+    Expression<double>? countedPassRate,
+    Expression<int>? randomStartPasses,
+    Expression<int>? linkingPasses,
+    Expression<int>? discriminationPasses,
+    Expression<String>? unresolvedTargetsJson,
+    Expression<String>? telemetryJson,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (unitId != null) 'unit_id': unitId,
+      if (chainSessionId != null) 'chain_session_id': chainSessionId,
+      if (dueKind != null) 'due_kind': dueKind,
+      if (outcome != null) 'outcome': outcome,
+      if (startedDay != null) 'started_day': startedDay,
+      if (startedSeconds != null) 'started_seconds': startedSeconds,
+      if (endedDay != null) 'ended_day': endedDay,
+      if (endedSeconds != null) 'ended_seconds': endedSeconds,
+      if (countedPassRate != null) 'counted_pass_rate': countedPassRate,
+      if (randomStartPasses != null) 'random_start_passes': randomStartPasses,
+      if (linkingPasses != null) 'linking_passes': linkingPasses,
+      if (discriminationPasses != null)
+        'discrimination_passes': discriminationPasses,
+      if (unresolvedTargetsJson != null)
+        'unresolved_targets_json': unresolvedTargetsJson,
+      if (telemetryJson != null) 'telemetry_json': telemetryJson,
+    });
+  }
+
+  CompanionStage4SessionCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? unitId,
+      Value<int?>? chainSessionId,
+      Value<String>? dueKind,
+      Value<String?>? outcome,
+      Value<int>? startedDay,
+      Value<int?>? startedSeconds,
+      Value<int?>? endedDay,
+      Value<int?>? endedSeconds,
+      Value<double>? countedPassRate,
+      Value<int>? randomStartPasses,
+      Value<int>? linkingPasses,
+      Value<int>? discriminationPasses,
+      Value<String?>? unresolvedTargetsJson,
+      Value<String?>? telemetryJson}) {
+    return CompanionStage4SessionCompanion(
+      id: id ?? this.id,
+      unitId: unitId ?? this.unitId,
+      chainSessionId: chainSessionId ?? this.chainSessionId,
+      dueKind: dueKind ?? this.dueKind,
+      outcome: outcome ?? this.outcome,
+      startedDay: startedDay ?? this.startedDay,
+      startedSeconds: startedSeconds ?? this.startedSeconds,
+      endedDay: endedDay ?? this.endedDay,
+      endedSeconds: endedSeconds ?? this.endedSeconds,
+      countedPassRate: countedPassRate ?? this.countedPassRate,
+      randomStartPasses: randomStartPasses ?? this.randomStartPasses,
+      linkingPasses: linkingPasses ?? this.linkingPasses,
+      discriminationPasses: discriminationPasses ?? this.discriminationPasses,
+      unresolvedTargetsJson:
+          unresolvedTargetsJson ?? this.unresolvedTargetsJson,
+      telemetryJson: telemetryJson ?? this.telemetryJson,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (unitId.present) {
+      map['unit_id'] = Variable<int>(unitId.value);
+    }
+    if (chainSessionId.present) {
+      map['chain_session_id'] = Variable<int>(chainSessionId.value);
+    }
+    if (dueKind.present) {
+      map['due_kind'] = Variable<String>(dueKind.value);
+    }
+    if (outcome.present) {
+      map['outcome'] = Variable<String>(outcome.value);
+    }
+    if (startedDay.present) {
+      map['started_day'] = Variable<int>(startedDay.value);
+    }
+    if (startedSeconds.present) {
+      map['started_seconds'] = Variable<int>(startedSeconds.value);
+    }
+    if (endedDay.present) {
+      map['ended_day'] = Variable<int>(endedDay.value);
+    }
+    if (endedSeconds.present) {
+      map['ended_seconds'] = Variable<int>(endedSeconds.value);
+    }
+    if (countedPassRate.present) {
+      map['counted_pass_rate'] = Variable<double>(countedPassRate.value);
+    }
+    if (randomStartPasses.present) {
+      map['random_start_passes'] = Variable<int>(randomStartPasses.value);
+    }
+    if (linkingPasses.present) {
+      map['linking_passes'] = Variable<int>(linkingPasses.value);
+    }
+    if (discriminationPasses.present) {
+      map['discrimination_passes'] = Variable<int>(discriminationPasses.value);
+    }
+    if (unresolvedTargetsJson.present) {
+      map['unresolved_targets_json'] =
+          Variable<String>(unresolvedTargetsJson.value);
+    }
+    if (telemetryJson.present) {
+      map['telemetry_json'] = Variable<String>(telemetryJson.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CompanionStage4SessionCompanion(')
+          ..write('id: $id, ')
+          ..write('unitId: $unitId, ')
+          ..write('chainSessionId: $chainSessionId, ')
+          ..write('dueKind: $dueKind, ')
+          ..write('outcome: $outcome, ')
+          ..write('startedDay: $startedDay, ')
+          ..write('startedSeconds: $startedSeconds, ')
+          ..write('endedDay: $endedDay, ')
+          ..write('endedSeconds: $endedSeconds, ')
+          ..write('countedPassRate: $countedPassRate, ')
+          ..write('randomStartPasses: $randomStartPasses, ')
+          ..write('linkingPasses: $linkingPasses, ')
+          ..write('discriminationPasses: $discriminationPasses, ')
+          ..write('unresolvedTargetsJson: $unresolvedTargetsJson, ')
+          ..write('telemetryJson: $telemetryJson')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7576,6 +9261,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $CompanionStageEventTable(this);
   late final $CompanionStepProficiencyTable companionStepProficiency =
       $CompanionStepProficiencyTable(this);
+  late final $CompanionLifecycleStateTable companionLifecycleState =
+      $CompanionLifecycleStateTable(this);
+  late final $CompanionStage4SessionTable companionStage4Session =
+      $CompanionStage4SessionTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7595,7 +9284,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         companionVerseAttempt,
         companionUnitState,
         companionStageEvent,
-        companionStepProficiency
+        companionStepProficiency,
+        companionLifecycleState,
+        companionStage4Session
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -7662,6 +9353,27 @@ abstract class _$AppDatabase extends GeneratedDatabase {
             result: [
               TableUpdate('companion_step_proficiency',
                   kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('mem_unit',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_lifecycle_state', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('mem_unit',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_stage4_session', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('companion_chain_session',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('companion_stage4_session', kind: UpdateKind.update),
             ],
           ),
         ],
@@ -8314,6 +10026,44 @@ final class $$MemUnitTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$CompanionLifecycleStateTable,
+      List<CompanionLifecycleStateData>> _companionLifecycleStateRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionLifecycleState,
+          aliasName: $_aliasNameGenerator(
+              db.memUnit.id, db.companionLifecycleState.unitId));
+
+  $$CompanionLifecycleStateTableProcessedTableManager
+      get companionLifecycleStateRefs {
+    final manager = $$CompanionLifecycleStateTableTableManager(
+            $_db, $_db.companionLifecycleState)
+        .filter((f) => f.unitId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionLifecycleStateRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CompanionStage4SessionTable,
+      List<CompanionStage4SessionData>> _companionStage4SessionRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionStage4Session,
+          aliasName: $_aliasNameGenerator(
+              db.memUnit.id, db.companionStage4Session.unitId));
+
+  $$CompanionStage4SessionTableProcessedTableManager
+      get companionStage4SessionRefs {
+    final manager = $$CompanionStage4SessionTableTableManager(
+            $_db, $_db.companionStage4Session)
+        .filter((f) => f.unitId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionStage4SessionRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$MemUnitTableFilterComposer
@@ -8512,6 +10262,52 @@ class $$MemUnitTableFilterComposer
                 $$CompanionStepProficiencyTableFilterComposer(
                   $db: $db,
                   $table: $db.companionStepProficiency,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> companionLifecycleStateRefs(
+      Expression<bool> Function($$CompanionLifecycleStateTableFilterComposer f)
+          f) {
+    final $$CompanionLifecycleStateTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionLifecycleState,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionLifecycleStateTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionLifecycleState,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> companionStage4SessionRefs(
+      Expression<bool> Function($$CompanionStage4SessionTableFilterComposer f)
+          f) {
+    final $$CompanionStage4SessionTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStage4Session,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStage4SessionTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionStage4Session,
                   $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                   joinBuilder: joinBuilder,
                   $removeJoinBuilderFromRootComposer:
@@ -8782,6 +10578,52 @@ class $$MemUnitTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> companionLifecycleStateRefs<T extends Object>(
+      Expression<T> Function($$CompanionLifecycleStateTableAnnotationComposer a)
+          f) {
+    final $$CompanionLifecycleStateTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionLifecycleState,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionLifecycleStateTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionLifecycleState,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> companionStage4SessionRefs<T extends Object>(
+      Expression<T> Function($$CompanionStage4SessionTableAnnotationComposer a)
+          f) {
+    final $$CompanionStage4SessionTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStage4Session,
+            getReferencedColumn: (t) => t.unitId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStage4SessionTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionStage4Session,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$MemUnitTableTableManager extends RootTableManager<
@@ -8802,7 +10644,9 @@ class $$MemUnitTableTableManager extends RootTableManager<
         bool companionVerseAttemptRefs,
         bool companionUnitStateRefs,
         bool companionStageEventRefs,
-        bool companionStepProficiencyRefs})> {
+        bool companionStepProficiencyRefs,
+        bool companionLifecycleStateRefs,
+        bool companionStage4SessionRefs})> {
   $$MemUnitTableTableManager(_$AppDatabase db, $MemUnitTable table)
       : super(TableManagerState(
           db: db,
@@ -8888,7 +10732,9 @@ class $$MemUnitTableTableManager extends RootTableManager<
               companionVerseAttemptRefs = false,
               companionUnitStateRefs = false,
               companionStageEventRefs = false,
-              companionStepProficiencyRefs = false}) {
+              companionStepProficiencyRefs = false,
+              companionLifecycleStateRefs = false,
+              companionStage4SessionRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -8898,7 +10744,9 @@ class $$MemUnitTableTableManager extends RootTableManager<
                 if (companionVerseAttemptRefs) db.companionVerseAttempt,
                 if (companionUnitStateRefs) db.companionUnitState,
                 if (companionStageEventRefs) db.companionStageEvent,
-                if (companionStepProficiencyRefs) db.companionStepProficiency
+                if (companionStepProficiencyRefs) db.companionStepProficiency,
+                if (companionLifecycleStateRefs) db.companionLifecycleState,
+                if (companionStage4SessionRefs) db.companionStage4Session
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -8993,6 +10841,32 @@ class $$MemUnitTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem: (item,
                                 referencedItems) =>
                             referencedItems.where((e) => e.unitId == item.id),
+                        typedResults: items),
+                  if (companionLifecycleStateRefs)
+                    await $_getPrefetchedData<MemUnitData, $MemUnitTable,
+                            CompanionLifecycleStateData>(
+                        currentTable: table,
+                        referencedTable: $$MemUnitTableReferences
+                            ._companionLifecycleStateRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$MemUnitTableReferences(db, table, p0)
+                                .companionLifecycleStateRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.unitId == item.id),
+                        typedResults: items),
+                  if (companionStage4SessionRefs)
+                    await $_getPrefetchedData<MemUnitData, $MemUnitTable,
+                            CompanionStage4SessionData>(
+                        currentTable: table,
+                        referencedTable: $$MemUnitTableReferences
+                            ._companionStage4SessionRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$MemUnitTableReferences(db, table, p0)
+                                .companionStage4SessionRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.unitId == item.id),
                         typedResults: items)
                 ];
               },
@@ -9019,7 +10893,9 @@ typedef $$MemUnitTableProcessedTableManager = ProcessedTableManager<
         bool companionVerseAttemptRefs,
         bool companionUnitStateRefs,
         bool companionStageEventRefs,
-        bool companionStepProficiencyRefs})>;
+        bool companionStepProficiencyRefs,
+        bool companionLifecycleStateRefs,
+        bool companionStage4SessionRefs})>;
 typedef $$ScheduleStateTableCreateCompanionBuilder = ScheduleStateCompanion
     Function({
   Value<int> unitId,
@@ -10634,6 +12510,25 @@ final class $$CompanionChainSessionTableReferences extends BaseReferences<
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$CompanionStage4SessionTable,
+      List<CompanionStage4SessionData>> _companionStage4SessionRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.companionStage4Session,
+          aliasName: $_aliasNameGenerator(db.companionChainSession.id,
+              db.companionStage4Session.chainSessionId));
+
+  $$CompanionStage4SessionTableProcessedTableManager
+      get companionStage4SessionRefs {
+    final manager = $$CompanionStage4SessionTableTableManager(
+            $_db, $_db.companionStage4Session)
+        .filter((f) => f.chainSessionId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_companionStage4SessionRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$CompanionChainSessionTableFilterComposer
@@ -10756,6 +12651,29 @@ class $$CompanionChainSessionTableFilterComposer
                 $$CompanionStepProficiencyTableFilterComposer(
                   $db: $db,
                   $table: $db.companionStepProficiency,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> companionStage4SessionRefs(
+      Expression<bool> Function($$CompanionStage4SessionTableFilterComposer f)
+          f) {
+    final $$CompanionStage4SessionTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStage4Session,
+            getReferencedColumn: (t) => t.chainSessionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStage4SessionTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionStage4Session,
                   $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                   joinBuilder: joinBuilder,
                   $removeJoinBuilderFromRootComposer:
@@ -10954,6 +12872,29 @@ class $$CompanionChainSessionTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> companionStage4SessionRefs<T extends Object>(
+      Expression<T> Function($$CompanionStage4SessionTableAnnotationComposer a)
+          f) {
+    final $$CompanionStage4SessionTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.companionStage4Session,
+            getReferencedColumn: (t) => t.chainSessionId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionStage4SessionTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionStage4Session,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$CompanionChainSessionTableTableManager extends RootTableManager<
@@ -10971,7 +12912,8 @@ class $$CompanionChainSessionTableTableManager extends RootTableManager<
         {bool unitId,
         bool companionVerseAttemptRefs,
         bool companionStageEventRefs,
-        bool companionStepProficiencyRefs})> {
+        bool companionStepProficiencyRefs,
+        bool companionStage4SessionRefs})> {
   $$CompanionChainSessionTableTableManager(
       _$AppDatabase db, $CompanionChainSessionTable table)
       : super(TableManagerState(
@@ -11044,13 +12986,15 @@ class $$CompanionChainSessionTableTableManager extends RootTableManager<
               {unitId = false,
               companionVerseAttemptRefs = false,
               companionStageEventRefs = false,
-              companionStepProficiencyRefs = false}) {
+              companionStepProficiencyRefs = false,
+              companionStage4SessionRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (companionVerseAttemptRefs) db.companionVerseAttempt,
                 if (companionStageEventRefs) db.companionStageEvent,
-                if (companionStepProficiencyRefs) db.companionStepProficiency
+                if (companionStepProficiencyRefs) db.companionStepProficiency,
+                if (companionStage4SessionRefs) db.companionStage4Session
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -11128,6 +13072,22 @@ class $$CompanionChainSessionTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.lastSessionId == item.id),
+                        typedResults: items),
+                  if (companionStage4SessionRefs)
+                    await $_getPrefetchedData<
+                            CompanionChainSessionData,
+                            $CompanionChainSessionTable,
+                            CompanionStage4SessionData>(
+                        currentTable: table,
+                        referencedTable: $$CompanionChainSessionTableReferences
+                            ._companionStage4SessionRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CompanionChainSessionTableReferences(
+                                    db, table, p0)
+                                .companionStage4SessionRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.chainSessionId == item.id),
                         typedResults: items)
                 ];
               },
@@ -11152,7 +13112,8 @@ typedef $$CompanionChainSessionTableProcessedTableManager
             {bool unitId,
             bool companionVerseAttemptRefs,
             bool companionStageEventRefs,
-            bool companionStepProficiencyRefs})>;
+            bool companionStepProficiencyRefs,
+            bool companionStage4SessionRefs})>;
 typedef $$CompanionVerseAttemptTableCreateCompanionBuilder
     = CompanionVerseAttemptCompanion Function({
   Value<int> id,
@@ -13002,6 +14963,1010 @@ typedef $$CompanionStepProficiencyTableProcessedTableManager
         ),
         CompanionStepProficiencyData,
         PrefetchHooks Function({bool unitId, bool lastSessionId})>;
+typedef $$CompanionLifecycleStateTableCreateCompanionBuilder
+    = CompanionLifecycleStateCompanion Function({
+  Value<int> unitId,
+  Value<String> lifecycleTier,
+  Value<String> stage4Status,
+  Value<int?> stage4PreSleepDueDay,
+  Value<int?> stage4NextDayDueDay,
+  Value<int?> stage4RetryDueDay,
+  Value<String?> stage4UnresolvedTargetsJson,
+  Value<String?> stage4RiskJson,
+  Value<String?> stage4StrengtheningRoute,
+  Value<String?> stage4LastOutcome,
+  Value<int?> stage4LastSessionId,
+  Value<int?> stage4LastCompletedDay,
+  Value<int> stage4MissedCount,
+  Value<int?> lastNewOverrideDay,
+  Value<int> newOverrideCount,
+  required int updatedAtDay,
+  required int updatedAtSeconds,
+});
+typedef $$CompanionLifecycleStateTableUpdateCompanionBuilder
+    = CompanionLifecycleStateCompanion Function({
+  Value<int> unitId,
+  Value<String> lifecycleTier,
+  Value<String> stage4Status,
+  Value<int?> stage4PreSleepDueDay,
+  Value<int?> stage4NextDayDueDay,
+  Value<int?> stage4RetryDueDay,
+  Value<String?> stage4UnresolvedTargetsJson,
+  Value<String?> stage4RiskJson,
+  Value<String?> stage4StrengtheningRoute,
+  Value<String?> stage4LastOutcome,
+  Value<int?> stage4LastSessionId,
+  Value<int?> stage4LastCompletedDay,
+  Value<int> stage4MissedCount,
+  Value<int?> lastNewOverrideDay,
+  Value<int> newOverrideCount,
+  Value<int> updatedAtDay,
+  Value<int> updatedAtSeconds,
+});
+
+final class $$CompanionLifecycleStateTableReferences extends BaseReferences<
+    _$AppDatabase, $CompanionLifecycleStateTable, CompanionLifecycleStateData> {
+  $$CompanionLifecycleStateTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $MemUnitTable _unitIdTable(_$AppDatabase db) => db.memUnit.createAlias(
+      $_aliasNameGenerator(db.companionLifecycleState.unitId, db.memUnit.id));
+
+  $$MemUnitTableProcessedTableManager get unitId {
+    final $_column = $_itemColumn<int>('unit_id')!;
+
+    final manager = $$MemUnitTableTableManager($_db, $_db.memUnit)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_unitIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CompanionLifecycleStateTableFilterComposer
+    extends Composer<_$AppDatabase, $CompanionLifecycleStateTable> {
+  $$CompanionLifecycleStateTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get lifecycleTier => $composableBuilder(
+      column: $table.lifecycleTier, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get stage4Status => $composableBuilder(
+      column: $table.stage4Status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stage4PreSleepDueDay => $composableBuilder(
+      column: $table.stage4PreSleepDueDay,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stage4NextDayDueDay => $composableBuilder(
+      column: $table.stage4NextDayDueDay,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stage4RetryDueDay => $composableBuilder(
+      column: $table.stage4RetryDueDay,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get stage4UnresolvedTargetsJson => $composableBuilder(
+      column: $table.stage4UnresolvedTargetsJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get stage4RiskJson => $composableBuilder(
+      column: $table.stage4RiskJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get stage4StrengtheningRoute => $composableBuilder(
+      column: $table.stage4StrengtheningRoute,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get stage4LastOutcome => $composableBuilder(
+      column: $table.stage4LastOutcome,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stage4LastSessionId => $composableBuilder(
+      column: $table.stage4LastSessionId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stage4LastCompletedDay => $composableBuilder(
+      column: $table.stage4LastCompletedDay,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stage4MissedCount => $composableBuilder(
+      column: $table.stage4MissedCount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastNewOverrideDay => $composableBuilder(
+      column: $table.lastNewOverrideDay,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get newOverrideCount => $composableBuilder(
+      column: $table.newOverrideCount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAtDay => $composableBuilder(
+      column: $table.updatedAtDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAtSeconds => $composableBuilder(
+      column: $table.updatedAtSeconds,
+      builder: (column) => ColumnFilters(column));
+
+  $$MemUnitTableFilterComposer get unitId {
+    final $$MemUnitTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableFilterComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionLifecycleStateTableOrderingComposer
+    extends Composer<_$AppDatabase, $CompanionLifecycleStateTable> {
+  $$CompanionLifecycleStateTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get lifecycleTier => $composableBuilder(
+      column: $table.lifecycleTier,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get stage4Status => $composableBuilder(
+      column: $table.stage4Status,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stage4PreSleepDueDay => $composableBuilder(
+      column: $table.stage4PreSleepDueDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stage4NextDayDueDay => $composableBuilder(
+      column: $table.stage4NextDayDueDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stage4RetryDueDay => $composableBuilder(
+      column: $table.stage4RetryDueDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get stage4UnresolvedTargetsJson => $composableBuilder(
+      column: $table.stage4UnresolvedTargetsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get stage4RiskJson => $composableBuilder(
+      column: $table.stage4RiskJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get stage4StrengtheningRoute => $composableBuilder(
+      column: $table.stage4StrengtheningRoute,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get stage4LastOutcome => $composableBuilder(
+      column: $table.stage4LastOutcome,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stage4LastSessionId => $composableBuilder(
+      column: $table.stage4LastSessionId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stage4LastCompletedDay => $composableBuilder(
+      column: $table.stage4LastCompletedDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stage4MissedCount => $composableBuilder(
+      column: $table.stage4MissedCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastNewOverrideDay => $composableBuilder(
+      column: $table.lastNewOverrideDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get newOverrideCount => $composableBuilder(
+      column: $table.newOverrideCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAtDay => $composableBuilder(
+      column: $table.updatedAtDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAtSeconds => $composableBuilder(
+      column: $table.updatedAtSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  $$MemUnitTableOrderingComposer get unitId {
+    final $$MemUnitTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableOrderingComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionLifecycleStateTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CompanionLifecycleStateTable> {
+  $$CompanionLifecycleStateTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get lifecycleTier => $composableBuilder(
+      column: $table.lifecycleTier, builder: (column) => column);
+
+  GeneratedColumn<String> get stage4Status => $composableBuilder(
+      column: $table.stage4Status, builder: (column) => column);
+
+  GeneratedColumn<int> get stage4PreSleepDueDay => $composableBuilder(
+      column: $table.stage4PreSleepDueDay, builder: (column) => column);
+
+  GeneratedColumn<int> get stage4NextDayDueDay => $composableBuilder(
+      column: $table.stage4NextDayDueDay, builder: (column) => column);
+
+  GeneratedColumn<int> get stage4RetryDueDay => $composableBuilder(
+      column: $table.stage4RetryDueDay, builder: (column) => column);
+
+  GeneratedColumn<String> get stage4UnresolvedTargetsJson => $composableBuilder(
+      column: $table.stage4UnresolvedTargetsJson, builder: (column) => column);
+
+  GeneratedColumn<String> get stage4RiskJson => $composableBuilder(
+      column: $table.stage4RiskJson, builder: (column) => column);
+
+  GeneratedColumn<String> get stage4StrengtheningRoute => $composableBuilder(
+      column: $table.stage4StrengtheningRoute, builder: (column) => column);
+
+  GeneratedColumn<String> get stage4LastOutcome => $composableBuilder(
+      column: $table.stage4LastOutcome, builder: (column) => column);
+
+  GeneratedColumn<int> get stage4LastSessionId => $composableBuilder(
+      column: $table.stage4LastSessionId, builder: (column) => column);
+
+  GeneratedColumn<int> get stage4LastCompletedDay => $composableBuilder(
+      column: $table.stage4LastCompletedDay, builder: (column) => column);
+
+  GeneratedColumn<int> get stage4MissedCount => $composableBuilder(
+      column: $table.stage4MissedCount, builder: (column) => column);
+
+  GeneratedColumn<int> get lastNewOverrideDay => $composableBuilder(
+      column: $table.lastNewOverrideDay, builder: (column) => column);
+
+  GeneratedColumn<int> get newOverrideCount => $composableBuilder(
+      column: $table.newOverrideCount, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtDay => $composableBuilder(
+      column: $table.updatedAtDay, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtSeconds => $composableBuilder(
+      column: $table.updatedAtSeconds, builder: (column) => column);
+
+  $$MemUnitTableAnnotationComposer get unitId {
+    final $$MemUnitTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableAnnotationComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CompanionLifecycleStateTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CompanionLifecycleStateTable,
+    CompanionLifecycleStateData,
+    $$CompanionLifecycleStateTableFilterComposer,
+    $$CompanionLifecycleStateTableOrderingComposer,
+    $$CompanionLifecycleStateTableAnnotationComposer,
+    $$CompanionLifecycleStateTableCreateCompanionBuilder,
+    $$CompanionLifecycleStateTableUpdateCompanionBuilder,
+    (CompanionLifecycleStateData, $$CompanionLifecycleStateTableReferences),
+    CompanionLifecycleStateData,
+    PrefetchHooks Function({bool unitId})> {
+  $$CompanionLifecycleStateTableTableManager(
+      _$AppDatabase db, $CompanionLifecycleStateTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CompanionLifecycleStateTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CompanionLifecycleStateTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CompanionLifecycleStateTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> unitId = const Value.absent(),
+            Value<String> lifecycleTier = const Value.absent(),
+            Value<String> stage4Status = const Value.absent(),
+            Value<int?> stage4PreSleepDueDay = const Value.absent(),
+            Value<int?> stage4NextDayDueDay = const Value.absent(),
+            Value<int?> stage4RetryDueDay = const Value.absent(),
+            Value<String?> stage4UnresolvedTargetsJson = const Value.absent(),
+            Value<String?> stage4RiskJson = const Value.absent(),
+            Value<String?> stage4StrengtheningRoute = const Value.absent(),
+            Value<String?> stage4LastOutcome = const Value.absent(),
+            Value<int?> stage4LastSessionId = const Value.absent(),
+            Value<int?> stage4LastCompletedDay = const Value.absent(),
+            Value<int> stage4MissedCount = const Value.absent(),
+            Value<int?> lastNewOverrideDay = const Value.absent(),
+            Value<int> newOverrideCount = const Value.absent(),
+            Value<int> updatedAtDay = const Value.absent(),
+            Value<int> updatedAtSeconds = const Value.absent(),
+          }) =>
+              CompanionLifecycleStateCompanion(
+            unitId: unitId,
+            lifecycleTier: lifecycleTier,
+            stage4Status: stage4Status,
+            stage4PreSleepDueDay: stage4PreSleepDueDay,
+            stage4NextDayDueDay: stage4NextDayDueDay,
+            stage4RetryDueDay: stage4RetryDueDay,
+            stage4UnresolvedTargetsJson: stage4UnresolvedTargetsJson,
+            stage4RiskJson: stage4RiskJson,
+            stage4StrengtheningRoute: stage4StrengtheningRoute,
+            stage4LastOutcome: stage4LastOutcome,
+            stage4LastSessionId: stage4LastSessionId,
+            stage4LastCompletedDay: stage4LastCompletedDay,
+            stage4MissedCount: stage4MissedCount,
+            lastNewOverrideDay: lastNewOverrideDay,
+            newOverrideCount: newOverrideCount,
+            updatedAtDay: updatedAtDay,
+            updatedAtSeconds: updatedAtSeconds,
+          ),
+          createCompanionCallback: ({
+            Value<int> unitId = const Value.absent(),
+            Value<String> lifecycleTier = const Value.absent(),
+            Value<String> stage4Status = const Value.absent(),
+            Value<int?> stage4PreSleepDueDay = const Value.absent(),
+            Value<int?> stage4NextDayDueDay = const Value.absent(),
+            Value<int?> stage4RetryDueDay = const Value.absent(),
+            Value<String?> stage4UnresolvedTargetsJson = const Value.absent(),
+            Value<String?> stage4RiskJson = const Value.absent(),
+            Value<String?> stage4StrengtheningRoute = const Value.absent(),
+            Value<String?> stage4LastOutcome = const Value.absent(),
+            Value<int?> stage4LastSessionId = const Value.absent(),
+            Value<int?> stage4LastCompletedDay = const Value.absent(),
+            Value<int> stage4MissedCount = const Value.absent(),
+            Value<int?> lastNewOverrideDay = const Value.absent(),
+            Value<int> newOverrideCount = const Value.absent(),
+            required int updatedAtDay,
+            required int updatedAtSeconds,
+          }) =>
+              CompanionLifecycleStateCompanion.insert(
+            unitId: unitId,
+            lifecycleTier: lifecycleTier,
+            stage4Status: stage4Status,
+            stage4PreSleepDueDay: stage4PreSleepDueDay,
+            stage4NextDayDueDay: stage4NextDayDueDay,
+            stage4RetryDueDay: stage4RetryDueDay,
+            stage4UnresolvedTargetsJson: stage4UnresolvedTargetsJson,
+            stage4RiskJson: stage4RiskJson,
+            stage4StrengtheningRoute: stage4StrengtheningRoute,
+            stage4LastOutcome: stage4LastOutcome,
+            stage4LastSessionId: stage4LastSessionId,
+            stage4LastCompletedDay: stage4LastCompletedDay,
+            stage4MissedCount: stage4MissedCount,
+            lastNewOverrideDay: lastNewOverrideDay,
+            newOverrideCount: newOverrideCount,
+            updatedAtDay: updatedAtDay,
+            updatedAtSeconds: updatedAtSeconds,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$CompanionLifecycleStateTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({unitId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (unitId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.unitId,
+                    referencedTable: $$CompanionLifecycleStateTableReferences
+                        ._unitIdTable(db),
+                    referencedColumn: $$CompanionLifecycleStateTableReferences
+                        ._unitIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CompanionLifecycleStateTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $CompanionLifecycleStateTable,
+        CompanionLifecycleStateData,
+        $$CompanionLifecycleStateTableFilterComposer,
+        $$CompanionLifecycleStateTableOrderingComposer,
+        $$CompanionLifecycleStateTableAnnotationComposer,
+        $$CompanionLifecycleStateTableCreateCompanionBuilder,
+        $$CompanionLifecycleStateTableUpdateCompanionBuilder,
+        (CompanionLifecycleStateData, $$CompanionLifecycleStateTableReferences),
+        CompanionLifecycleStateData,
+        PrefetchHooks Function({bool unitId})>;
+typedef $$CompanionStage4SessionTableCreateCompanionBuilder
+    = CompanionStage4SessionCompanion Function({
+  Value<int> id,
+  required int unitId,
+  Value<int?> chainSessionId,
+  required String dueKind,
+  Value<String?> outcome,
+  required int startedDay,
+  Value<int?> startedSeconds,
+  Value<int?> endedDay,
+  Value<int?> endedSeconds,
+  Value<double> countedPassRate,
+  Value<int> randomStartPasses,
+  Value<int> linkingPasses,
+  Value<int> discriminationPasses,
+  Value<String?> unresolvedTargetsJson,
+  Value<String?> telemetryJson,
+});
+typedef $$CompanionStage4SessionTableUpdateCompanionBuilder
+    = CompanionStage4SessionCompanion Function({
+  Value<int> id,
+  Value<int> unitId,
+  Value<int?> chainSessionId,
+  Value<String> dueKind,
+  Value<String?> outcome,
+  Value<int> startedDay,
+  Value<int?> startedSeconds,
+  Value<int?> endedDay,
+  Value<int?> endedSeconds,
+  Value<double> countedPassRate,
+  Value<int> randomStartPasses,
+  Value<int> linkingPasses,
+  Value<int> discriminationPasses,
+  Value<String?> unresolvedTargetsJson,
+  Value<String?> telemetryJson,
+});
+
+final class $$CompanionStage4SessionTableReferences extends BaseReferences<
+    _$AppDatabase, $CompanionStage4SessionTable, CompanionStage4SessionData> {
+  $$CompanionStage4SessionTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $MemUnitTable _unitIdTable(_$AppDatabase db) => db.memUnit.createAlias(
+      $_aliasNameGenerator(db.companionStage4Session.unitId, db.memUnit.id));
+
+  $$MemUnitTableProcessedTableManager get unitId {
+    final $_column = $_itemColumn<int>('unit_id')!;
+
+    final manager = $$MemUnitTableTableManager($_db, $_db.memUnit)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_unitIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CompanionChainSessionTable _chainSessionIdTable(_$AppDatabase db) =>
+      db.companionChainSession.createAlias($_aliasNameGenerator(
+          db.companionStage4Session.chainSessionId,
+          db.companionChainSession.id));
+
+  $$CompanionChainSessionTableProcessedTableManager? get chainSessionId {
+    final $_column = $_itemColumn<int>('chain_session_id');
+    if ($_column == null) return null;
+    final manager = $$CompanionChainSessionTableTableManager(
+            $_db, $_db.companionChainSession)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_chainSessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CompanionStage4SessionTableFilterComposer
+    extends Composer<_$AppDatabase, $CompanionStage4SessionTable> {
+  $$CompanionStage4SessionTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get dueKind => $composableBuilder(
+      column: $table.dueKind, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get outcome => $composableBuilder(
+      column: $table.outcome, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get startedDay => $composableBuilder(
+      column: $table.startedDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get startedSeconds => $composableBuilder(
+      column: $table.startedSeconds,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get endedDay => $composableBuilder(
+      column: $table.endedDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get endedSeconds => $composableBuilder(
+      column: $table.endedSeconds, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get countedPassRate => $composableBuilder(
+      column: $table.countedPassRate,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get randomStartPasses => $composableBuilder(
+      column: $table.randomStartPasses,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get linkingPasses => $composableBuilder(
+      column: $table.linkingPasses, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get discriminationPasses => $composableBuilder(
+      column: $table.discriminationPasses,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unresolvedTargetsJson => $composableBuilder(
+      column: $table.unresolvedTargetsJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get telemetryJson => $composableBuilder(
+      column: $table.telemetryJson, builder: (column) => ColumnFilters(column));
+
+  $$MemUnitTableFilterComposer get unitId {
+    final $$MemUnitTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableFilterComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CompanionChainSessionTableFilterComposer get chainSessionId {
+    final $$CompanionChainSessionTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.chainSessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableFilterComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+}
+
+class $$CompanionStage4SessionTableOrderingComposer
+    extends Composer<_$AppDatabase, $CompanionStage4SessionTable> {
+  $$CompanionStage4SessionTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get dueKind => $composableBuilder(
+      column: $table.dueKind, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get outcome => $composableBuilder(
+      column: $table.outcome, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get startedDay => $composableBuilder(
+      column: $table.startedDay, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get startedSeconds => $composableBuilder(
+      column: $table.startedSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get endedDay => $composableBuilder(
+      column: $table.endedDay, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get endedSeconds => $composableBuilder(
+      column: $table.endedSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get countedPassRate => $composableBuilder(
+      column: $table.countedPassRate,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get randomStartPasses => $composableBuilder(
+      column: $table.randomStartPasses,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get linkingPasses => $composableBuilder(
+      column: $table.linkingPasses,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get discriminationPasses => $composableBuilder(
+      column: $table.discriminationPasses,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unresolvedTargetsJson => $composableBuilder(
+      column: $table.unresolvedTargetsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get telemetryJson => $composableBuilder(
+      column: $table.telemetryJson,
+      builder: (column) => ColumnOrderings(column));
+
+  $$MemUnitTableOrderingComposer get unitId {
+    final $$MemUnitTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableOrderingComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CompanionChainSessionTableOrderingComposer get chainSessionId {
+    final $$CompanionChainSessionTableOrderingComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.chainSessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableOrderingComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+}
+
+class $$CompanionStage4SessionTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CompanionStage4SessionTable> {
+  $$CompanionStage4SessionTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dueKind =>
+      $composableBuilder(column: $table.dueKind, builder: (column) => column);
+
+  GeneratedColumn<String> get outcome =>
+      $composableBuilder(column: $table.outcome, builder: (column) => column);
+
+  GeneratedColumn<int> get startedDay => $composableBuilder(
+      column: $table.startedDay, builder: (column) => column);
+
+  GeneratedColumn<int> get startedSeconds => $composableBuilder(
+      column: $table.startedSeconds, builder: (column) => column);
+
+  GeneratedColumn<int> get endedDay =>
+      $composableBuilder(column: $table.endedDay, builder: (column) => column);
+
+  GeneratedColumn<int> get endedSeconds => $composableBuilder(
+      column: $table.endedSeconds, builder: (column) => column);
+
+  GeneratedColumn<double> get countedPassRate => $composableBuilder(
+      column: $table.countedPassRate, builder: (column) => column);
+
+  GeneratedColumn<int> get randomStartPasses => $composableBuilder(
+      column: $table.randomStartPasses, builder: (column) => column);
+
+  GeneratedColumn<int> get linkingPasses => $composableBuilder(
+      column: $table.linkingPasses, builder: (column) => column);
+
+  GeneratedColumn<int> get discriminationPasses => $composableBuilder(
+      column: $table.discriminationPasses, builder: (column) => column);
+
+  GeneratedColumn<String> get unresolvedTargetsJson => $composableBuilder(
+      column: $table.unresolvedTargetsJson, builder: (column) => column);
+
+  GeneratedColumn<String> get telemetryJson => $composableBuilder(
+      column: $table.telemetryJson, builder: (column) => column);
+
+  $$MemUnitTableAnnotationComposer get unitId {
+    final $$MemUnitTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.unitId,
+        referencedTable: $db.memUnit,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MemUnitTableAnnotationComposer(
+              $db: $db,
+              $table: $db.memUnit,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CompanionChainSessionTableAnnotationComposer get chainSessionId {
+    final $$CompanionChainSessionTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.chainSessionId,
+            referencedTable: $db.companionChainSession,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CompanionChainSessionTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.companionChainSession,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+}
+
+class $$CompanionStage4SessionTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CompanionStage4SessionTable,
+    CompanionStage4SessionData,
+    $$CompanionStage4SessionTableFilterComposer,
+    $$CompanionStage4SessionTableOrderingComposer,
+    $$CompanionStage4SessionTableAnnotationComposer,
+    $$CompanionStage4SessionTableCreateCompanionBuilder,
+    $$CompanionStage4SessionTableUpdateCompanionBuilder,
+    (CompanionStage4SessionData, $$CompanionStage4SessionTableReferences),
+    CompanionStage4SessionData,
+    PrefetchHooks Function({bool unitId, bool chainSessionId})> {
+  $$CompanionStage4SessionTableTableManager(
+      _$AppDatabase db, $CompanionStage4SessionTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CompanionStage4SessionTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CompanionStage4SessionTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CompanionStage4SessionTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> unitId = const Value.absent(),
+            Value<int?> chainSessionId = const Value.absent(),
+            Value<String> dueKind = const Value.absent(),
+            Value<String?> outcome = const Value.absent(),
+            Value<int> startedDay = const Value.absent(),
+            Value<int?> startedSeconds = const Value.absent(),
+            Value<int?> endedDay = const Value.absent(),
+            Value<int?> endedSeconds = const Value.absent(),
+            Value<double> countedPassRate = const Value.absent(),
+            Value<int> randomStartPasses = const Value.absent(),
+            Value<int> linkingPasses = const Value.absent(),
+            Value<int> discriminationPasses = const Value.absent(),
+            Value<String?> unresolvedTargetsJson = const Value.absent(),
+            Value<String?> telemetryJson = const Value.absent(),
+          }) =>
+              CompanionStage4SessionCompanion(
+            id: id,
+            unitId: unitId,
+            chainSessionId: chainSessionId,
+            dueKind: dueKind,
+            outcome: outcome,
+            startedDay: startedDay,
+            startedSeconds: startedSeconds,
+            endedDay: endedDay,
+            endedSeconds: endedSeconds,
+            countedPassRate: countedPassRate,
+            randomStartPasses: randomStartPasses,
+            linkingPasses: linkingPasses,
+            discriminationPasses: discriminationPasses,
+            unresolvedTargetsJson: unresolvedTargetsJson,
+            telemetryJson: telemetryJson,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int unitId,
+            Value<int?> chainSessionId = const Value.absent(),
+            required String dueKind,
+            Value<String?> outcome = const Value.absent(),
+            required int startedDay,
+            Value<int?> startedSeconds = const Value.absent(),
+            Value<int?> endedDay = const Value.absent(),
+            Value<int?> endedSeconds = const Value.absent(),
+            Value<double> countedPassRate = const Value.absent(),
+            Value<int> randomStartPasses = const Value.absent(),
+            Value<int> linkingPasses = const Value.absent(),
+            Value<int> discriminationPasses = const Value.absent(),
+            Value<String?> unresolvedTargetsJson = const Value.absent(),
+            Value<String?> telemetryJson = const Value.absent(),
+          }) =>
+              CompanionStage4SessionCompanion.insert(
+            id: id,
+            unitId: unitId,
+            chainSessionId: chainSessionId,
+            dueKind: dueKind,
+            outcome: outcome,
+            startedDay: startedDay,
+            startedSeconds: startedSeconds,
+            endedDay: endedDay,
+            endedSeconds: endedSeconds,
+            countedPassRate: countedPassRate,
+            randomStartPasses: randomStartPasses,
+            linkingPasses: linkingPasses,
+            discriminationPasses: discriminationPasses,
+            unresolvedTargetsJson: unresolvedTargetsJson,
+            telemetryJson: telemetryJson,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$CompanionStage4SessionTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({unitId = false, chainSessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (unitId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.unitId,
+                    referencedTable: $$CompanionStage4SessionTableReferences
+                        ._unitIdTable(db),
+                    referencedColumn: $$CompanionStage4SessionTableReferences
+                        ._unitIdTable(db)
+                        .id,
+                  ) as T;
+                }
+                if (chainSessionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.chainSessionId,
+                    referencedTable: $$CompanionStage4SessionTableReferences
+                        ._chainSessionIdTable(db),
+                    referencedColumn: $$CompanionStage4SessionTableReferences
+                        ._chainSessionIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CompanionStage4SessionTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $CompanionStage4SessionTable,
+        CompanionStage4SessionData,
+        $$CompanionStage4SessionTableFilterComposer,
+        $$CompanionStage4SessionTableOrderingComposer,
+        $$CompanionStage4SessionTableAnnotationComposer,
+        $$CompanionStage4SessionTableCreateCompanionBuilder,
+        $$CompanionStage4SessionTableUpdateCompanionBuilder,
+        (CompanionStage4SessionData, $$CompanionStage4SessionTableReferences),
+        CompanionStage4SessionData,
+        PrefetchHooks Function({bool unitId, bool chainSessionId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -13036,4 +16001,10 @@ class $AppDatabaseManager {
   $$CompanionStepProficiencyTableTableManager get companionStepProficiency =>
       $$CompanionStepProficiencyTableTableManager(
           _db, _db.companionStepProficiency);
+  $$CompanionLifecycleStateTableTableManager get companionLifecycleState =>
+      $$CompanionLifecycleStateTableTableManager(
+          _db, _db.companionLifecycleState);
+  $$CompanionStage4SessionTableTableManager get companionStage4Session =>
+      $$CompanionStage4SessionTableTableManager(
+          _db, _db.companionStage4Session);
 }

@@ -257,4 +257,87 @@ void main() {
     expect(events.last.fromStage, 2);
     expect(events.last.toStage, 3);
   });
+
+  test('upserts lifecycle state and returns due stage-4 rows', () async {
+    final unitIdA = await createUnit();
+    final unitIdB = await db.into(db.memUnit).insert(
+          MemUnitCompanion.insert(
+            kind: 'ayah_range',
+            unitKey: 'companion-unit-2',
+            startSurah: const Value(1),
+            startAyah: const Value(2),
+            endSurah: const Value(1),
+            endAyah: const Value(2),
+            createdAtDay: 100,
+            updatedAtDay: 100,
+          ),
+        );
+
+    await repo.upsertLifecycleState(
+      unitId: unitIdA,
+      lifecycleTier: const Value('ready'),
+      stage4Status: const Value('pending'),
+      stage4NextDayDueDay: const Value(105),
+      stage4UnresolvedTargetsJson: const Value('[0]'),
+      updatedAtDay: 104,
+      updatedAtSeconds: 400,
+    );
+    await repo.upsertLifecycleState(
+      unitId: unitIdB,
+      lifecycleTier: const Value('stable'),
+      stage4Status: const Value('passed'),
+      stage4NextDayDueDay: const Value(106),
+      updatedAtDay: 104,
+      updatedAtSeconds: 401,
+    );
+
+    final stateA = await repo.getLifecycleState(unitIdA);
+    expect(stateA, isNotNull);
+    expect(stateA!.lifecycleTier, 'ready');
+    expect(stateA.stage4Status, 'pending');
+    expect(stateA.stage4UnresolvedTargetsJson, '[0]');
+
+    final due = await repo.getDueLifecycleStates(todayDay: 105);
+    expect(due.map((row) => row.unitId).toSet(), contains(unitIdA));
+    expect(due.map((row) => row.unitId).toSet(), isNot(contains(unitIdB)));
+  });
+
+  test('persists stage-4 session outcome and telemetry', () async {
+    final unitId = await createUnit();
+
+    final stage4SessionId = await repo.startStage4Session(
+      unitId: unitId,
+      chainSessionId: null,
+      dueKind: 'next_day_required',
+      startedDay: 110,
+      startedSeconds: 120,
+      unresolvedTargetsJson: '[1]',
+      telemetryJson: '{"stage4_phase":"verification"}',
+    );
+
+    await repo.completeStage4Session(
+      sessionId: stage4SessionId,
+      outcome: 'partial',
+      endedDay: 110,
+      endedSeconds: 180,
+      countedPassRate: 0.66,
+      randomStartPasses: 1,
+      linkingPasses: 1,
+      discriminationPasses: 0,
+      unresolvedTargetsJson: '[1]',
+      telemetryJson:
+          '{"stage4_phase":"budget_fallback","lifecycle_hook":"stage4_retry"}',
+    );
+
+    final latest = await repo.getLatestStage4SessionForUnit(unitId);
+    expect(latest, isNotNull);
+    expect(latest!.id, stage4SessionId);
+    expect(latest.dueKind, 'next_day_required');
+    expect(latest.outcome, 'partial');
+    expect(latest.countedPassRate, 0.66);
+    expect(latest.randomStartPasses, 1);
+    expect(latest.linkingPasses, 1);
+    expect(latest.unresolvedTargetsJson, '[1]');
+    expect(latest.telemetryJson, contains('"stage4_retry"'));
+  });
 }

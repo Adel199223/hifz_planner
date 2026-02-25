@@ -285,6 +285,84 @@ class AppStrings {
   String get openInReader => _t('open_in_reader', 'Open in Reader');
   String get openCompanionChain =>
       _t('open_companion_chain', 'Open Companion Chain');
+  String get stage4DueSectionTitle => _t(
+        'stage4_due_section_title',
+        'Stage 4 - Delayed Consolidation',
+      );
+  String get stage4NoDueItems => _t(
+        'stage4_no_due_items',
+        'No Stage-4 delayed checks are due.',
+      );
+  String stage4TierSummary(
+    int emerging,
+    int ready,
+    int stable,
+    int maintained,
+  ) =>
+      _fmt(
+        _t(
+          'stage4_tier_summary',
+          'Tiers - Emerging: {emerging}, Ready: {ready}, Stable: {stable}, Maintained: {maintained}',
+        ),
+        <String, Object>{
+          'emerging': emerging,
+          'ready': ready,
+          'stable': stable,
+          'maintained': maintained,
+        },
+      );
+  String get stage4DueKindPreSleepOptional => _t(
+        'stage4_due_kind_pre_sleep_optional',
+        'Pre-sleep optional check',
+      );
+  String get stage4DueKindNextDayRequired => _t(
+        'stage4_due_kind_next_day_required',
+        'Next-day required check',
+      );
+  String get stage4DueKindRetryRequired => _t(
+        'stage4_due_kind_retry_required',
+        'Retry required',
+      );
+  String stage4DueItemSummary(
+    String dueKind,
+    int overdueDays,
+    int unresolvedTargets,
+  ) =>
+      _fmt(
+        _t(
+          'stage4_due_item_summary',
+          '{dueKind} - overdue {overdueDays}d - unresolved targets {unresolvedTargets}',
+        ),
+        <String, Object>{
+          'dueKind': dueKind,
+          'overdueDays': overdueDays,
+          'unresolvedTargets': unresolvedTargets,
+        },
+      );
+  String get stage4OpenAction =>
+      _t('stage4_open_action', 'Open Stage-4 Check');
+  String get stage4OverrideNewAction => _t(
+        'stage4_override_new_action',
+        'Override once and allow new memorization',
+      );
+  String get stage4OverrideDialogTitle => _t(
+        'stage4_override_dialog_title',
+        'New Memorization Override',
+      );
+  String get stage4OverrideDialogMessage => _t(
+        'stage4_override_dialog_message',
+        'Mandatory Stage-4 delayed checks are due. Continue anyway and log override?',
+      );
+  String get stage4OverrideDialogConfirm =>
+      _t('stage4_override_dialog_confirm', 'Override');
+  String get stage4OverrideApplied => _t(
+        'stage4_override_applied',
+        'Override logged. New memorization unlocked for today.',
+      );
+  String get stage4OverrideFailed => _t(
+        'stage4_override_failed',
+        'Failed to log override. Please try again.',
+      );
   String get pageMetadataRequiredToOpenInReader => _t(
         'page_metadata_required_to_open_in_reader',
         'Page metadata required to open in Reader.',
@@ -667,6 +745,46 @@ class AppStrings {
   String get companionStage3CorrectionAction => _t(
         'companion_stage3_correction_action',
         'Play Stage-3 Correction',
+      );
+  String get companionStage4ModeLabel =>
+      _t('companion_stage4_mode_label', 'Stage 4 mode');
+  String get companionStage4ModeColdStart =>
+      _t('companion_stage4_mode_cold_start', 'Cold Start');
+  String get companionStage4ModeRandomStart =>
+      _t('companion_stage4_mode_random_start', 'Random Start');
+  String get companionStage4ModeLinking =>
+      _t('companion_stage4_mode_linking', 'Linking');
+  String get companionStage4ModeDiscrimination =>
+      _t('companion_stage4_mode_discrimination', 'Discrimination');
+  String get companionStage4ModeCorrection =>
+      _t('companion_stage4_mode_correction', 'Correction');
+  String get companionStage4ModeCheckpoint =>
+      _t('companion_stage4_mode_checkpoint', 'Checkpoint');
+  String get companionStage4ModeRemediation =>
+      _t('companion_stage4_mode_remediation', 'Remediation');
+  String get companionStage4ReciteNow =>
+      _t('companion_stage4_recite_now', 'Recite from delayed hidden recall.');
+  String get companionStage4CorrectionRequiredMessage => _t(
+        'companion_stage4_correction_required_message',
+        'Stage-4 correction exposure is required before retry.',
+      );
+  String get companionStage4CorrectionAction => _t(
+        'companion_stage4_correction_action',
+        'Play Stage-4 Correction',
+      );
+  String companionStage4DueBanner(String dueKind) => _fmt(
+        _t(
+          'companion_stage4_due_banner',
+          'Stage-4 due type: {dueKind}',
+        ),
+        <String, Object>{'dueKind': dueKind},
+      );
+  String companionStage4UnresolvedTargets(int count) => _fmt(
+        _t(
+          'companion_stage4_unresolved_targets',
+          'Unresolved Stage-4 targets: {count}',
+        ),
+        <String, Object>{'count': count},
       );
   String companionStage3WeakPreludeBanner(int count) => _fmt(
         _t(

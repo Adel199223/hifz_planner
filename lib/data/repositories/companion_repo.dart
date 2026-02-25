@@ -298,4 +298,190 @@ class CompanionRepo {
           ..limit(1))
         .getSingleOrNull();
   }
+
+  Future<CompanionLifecycleStateData?> getLifecycleState(int unitId) {
+    return (_db.select(_db.companionLifecycleState)
+          ..where((tbl) => tbl.unitId.equals(unitId))
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<void> upsertLifecycleState({
+    required int unitId,
+    Value<String> lifecycleTier = const Value.absent(),
+    Value<String> stage4Status = const Value.absent(),
+    Value<int?> stage4PreSleepDueDay = const Value.absent(),
+    Value<int?> stage4NextDayDueDay = const Value.absent(),
+    Value<int?> stage4RetryDueDay = const Value.absent(),
+    Value<String?> stage4UnresolvedTargetsJson = const Value.absent(),
+    Value<String?> stage4RiskJson = const Value.absent(),
+    Value<String?> stage4StrengtheningRoute = const Value.absent(),
+    Value<String?> stage4LastOutcome = const Value.absent(),
+    Value<int?> stage4LastSessionId = const Value.absent(),
+    Value<int?> stage4LastCompletedDay = const Value.absent(),
+    Value<int> stage4MissedCount = const Value.absent(),
+    Value<int?> lastNewOverrideDay = const Value.absent(),
+    Value<int> newOverrideCount = const Value.absent(),
+    required int updatedAtDay,
+    required int updatedAtSeconds,
+  }) async {
+    await _db.into(_db.companionLifecycleState).insert(
+          CompanionLifecycleStateCompanion.insert(
+            unitId: Value(unitId),
+            lifecycleTier: lifecycleTier,
+            stage4Status: stage4Status,
+            stage4PreSleepDueDay: stage4PreSleepDueDay,
+            stage4NextDayDueDay: stage4NextDayDueDay,
+            stage4RetryDueDay: stage4RetryDueDay,
+            stage4UnresolvedTargetsJson: stage4UnresolvedTargetsJson,
+            stage4RiskJson: stage4RiskJson,
+            stage4StrengtheningRoute: stage4StrengtheningRoute,
+            stage4LastOutcome: stage4LastOutcome,
+            stage4LastSessionId: stage4LastSessionId,
+            stage4LastCompletedDay: stage4LastCompletedDay,
+            stage4MissedCount: stage4MissedCount,
+            lastNewOverrideDay: lastNewOverrideDay,
+            newOverrideCount: newOverrideCount,
+            updatedAtDay: updatedAtDay,
+            updatedAtSeconds: updatedAtSeconds,
+          ),
+          onConflict: DoUpdate(
+            (_) => CompanionLifecycleStateCompanion(
+              lifecycleTier: lifecycleTier,
+              stage4Status: stage4Status,
+              stage4PreSleepDueDay: stage4PreSleepDueDay,
+              stage4NextDayDueDay: stage4NextDayDueDay,
+              stage4RetryDueDay: stage4RetryDueDay,
+              stage4UnresolvedTargetsJson: stage4UnresolvedTargetsJson,
+              stage4RiskJson: stage4RiskJson,
+              stage4StrengtheningRoute: stage4StrengtheningRoute,
+              stage4LastOutcome: stage4LastOutcome,
+              stage4LastSessionId: stage4LastSessionId,
+              stage4LastCompletedDay: stage4LastCompletedDay,
+              stage4MissedCount: stage4MissedCount,
+              lastNewOverrideDay: lastNewOverrideDay,
+              newOverrideCount: newOverrideCount,
+              updatedAtDay: Value(updatedAtDay),
+              updatedAtSeconds: Value(updatedAtSeconds),
+            ),
+            target: <Column<Object>>[_db.companionLifecycleState.unitId],
+          ),
+        );
+  }
+
+  Future<List<CompanionLifecycleStateData>> getDueLifecycleStates({
+    required int todayDay,
+  }) {
+    final pendingOrDue = _db.companionLifecycleState.stage4Status.equals('due') |
+        _db.companionLifecycleState.stage4Status.equals('pending') |
+        _db.companionLifecycleState.stage4Status.equals('partial') |
+        _db.companionLifecycleState.stage4Status.equals('failed');
+    final nextDayDue = _db.companionLifecycleState.stage4NextDayDueDay
+            .isNotNull() &
+        _db.companionLifecycleState.stage4NextDayDueDay
+            .isSmallerOrEqualValue(todayDay);
+    final retryDue = _db.companionLifecycleState.stage4RetryDueDay.isNotNull() &
+        _db.companionLifecycleState.stage4RetryDueDay
+            .isSmallerOrEqualValue(todayDay);
+    final preSleepDue =
+        _db.companionLifecycleState.stage4PreSleepDueDay.isNotNull() &
+            _db.companionLifecycleState.stage4PreSleepDueDay
+                .isSmallerOrEqualValue(todayDay);
+
+    return (_db.select(_db.companionLifecycleState)
+          ..where((tbl) => pendingOrDue & (nextDayDue | retryDue | preSleepDue)))
+        .get();
+  }
+
+  Future<void> recordNewOverride({
+    required int unitId,
+    required int todayDay,
+    required int updatedAtSeconds,
+  }) async {
+    final existing = await getLifecycleState(unitId);
+    final nextCount = (existing?.newOverrideCount ?? 0) + 1;
+    await upsertLifecycleState(
+      unitId: unitId,
+      lastNewOverrideDay: Value(todayDay),
+      newOverrideCount: Value(nextCount),
+      updatedAtDay: todayDay,
+      updatedAtSeconds: updatedAtSeconds,
+    );
+  }
+
+  Future<int> startStage4Session({
+    required int unitId,
+    int? chainSessionId,
+    required String dueKind,
+    required int startedDay,
+    required int startedSeconds,
+    String? unresolvedTargetsJson,
+    String? telemetryJson,
+  }) {
+    return _db.into(_db.companionStage4Session).insert(
+          CompanionStage4SessionCompanion.insert(
+            unitId: unitId,
+            chainSessionId: Value(chainSessionId),
+            dueKind: dueKind,
+            startedDay: startedDay,
+            startedSeconds: Value(startedSeconds),
+            unresolvedTargetsJson: Value(unresolvedTargetsJson),
+            telemetryJson: Value(telemetryJson),
+          ),
+        );
+  }
+
+  Future<void> completeStage4Session({
+    required int sessionId,
+    required String outcome,
+    required int endedDay,
+    required int endedSeconds,
+    required double countedPassRate,
+    required int randomStartPasses,
+    required int linkingPasses,
+    required int discriminationPasses,
+    String? unresolvedTargetsJson,
+    String? telemetryJson,
+  }) async {
+    await (_db.update(_db.companionStage4Session)
+          ..where((tbl) => tbl.id.equals(sessionId)))
+        .write(
+      CompanionStage4SessionCompanion(
+        outcome: Value(outcome),
+        endedDay: Value(endedDay),
+        endedSeconds: Value(endedSeconds),
+        countedPassRate: Value(countedPassRate),
+        randomStartPasses: Value(randomStartPasses),
+        linkingPasses: Value(linkingPasses),
+        discriminationPasses: Value(discriminationPasses),
+        unresolvedTargetsJson: Value(unresolvedTargetsJson),
+        telemetryJson: Value(telemetryJson),
+      ),
+    );
+  }
+
+  Future<List<CompanionStage4SessionData>> getStage4SessionsForUnit(
+    int unitId,
+  ) {
+    return (_db.select(_db.companionStage4Session)
+          ..where((tbl) => tbl.unitId.equals(unitId))
+          ..orderBy([
+            (tbl) => OrderingTerm.asc(tbl.startedDay),
+            (tbl) => OrderingTerm.asc(tbl.id),
+          ]))
+        .get();
+  }
+
+  Future<CompanionStage4SessionData?> getLatestStage4SessionForUnit(
+    int unitId,
+  ) {
+    return (_db.select(_db.companionStage4Session)
+          ..where((tbl) => tbl.unitId.equals(unitId))
+          ..orderBy([
+            (tbl) => OrderingTerm.desc(tbl.startedDay),
+            (tbl) => OrderingTerm.desc(tbl.id),
+          ])
+          ..limit(1))
+        .getSingleOrNull();
+  }
 }

@@ -85,7 +85,7 @@ flutter test -j 1 -r expanded test/data/services/companion
 4. Symptoms: companion chain gets stuck on one verse.
    - Check interleave threshold/cycle limits and active index transitions in `progressive_reveal_chain_engine.dart`.
 5. Symptoms: telemetry/proficiency rows fail to persist.
-   - Verify companion FK references and indexes in schema v6 migrations.
+   - Verify companion FK references and indexes in schema v7 migrations.
 6. Symptoms: black circles still appear in Companion or Verse-by-Verse mode.
    - Verify hidden-stage placeholder text is not rendered and end-marker words are suppressed in shared word widget usage.
 7. Symptoms: autoplay toggle resets after restart.
@@ -107,6 +107,7 @@ flutter test -j 1 -r expanded test/data/services/companion
 - Launch mode contract:
   - `/companion/chain?unitId=<id>&mode=new` -> staged ramp for new units.
   - `/companion/chain?unitId=<id>&mode=review` -> hidden-first fast retrieval.
+  - `/companion/chain?unitId=<id>&mode=stage4` -> delayed consolidation runtime (Stage-4 lifecycle gate).
 - Stage sequence for `mode=new`:
   - Stage 1 `guided_visible` (Talqin + Retrieval-first):
     - capped `model_echo` exposures, then forced hidden H0 probe
@@ -135,6 +136,22 @@ flutter test -j 1 -r expanded test/data/services/companion
     - any failed Stage-3 retrieval mode requires correction exposure before the next cold attempt
     - checkpoint/remediation remains failed-only with bounded remediation rounds
     - budget overflow is explicit `budgetFallback` (non-terminal), not silent completion
+  - Stage 4 delayed consolidation (`hidden_reveal` + lifecycle runtime):
+    - launched via `mode=stage4` and routed by runtime marker (`state.stage4 != null`)
+    - review mode remains unchanged and never initializes Stage-4 runtime
+    - deterministic target priority:
+      - correction-required verses
+      - unresolved weak/risk targets
+      - pending random-start obligations
+      - linking deficits
+      - readiness deficits
+      - checkpoint/remediation targets
+    - counted passes stay strict (`unassisted`, hint cap `H1`, required auto-check where mode requires)
+    - any failed Stage-4 retrieval mode requires correction exposure before retry
+    - outcomes are explicit and persisted:
+      - `pass` => lifecycle `stable` + Stage-5 candidate
+      - `partial` => unresolved targets persisted + retry due
+      - `fail` => strengthening route persisted + retry due
 - Stage memory:
   - persist per-unit unlocked stage in `companion_unit_state`.
   - `mode=new` resumes at stored stage; `mode=review` ignores it.
@@ -154,8 +171,10 @@ flutter test -j 1 -r expanded test/data/services/companion
 - Keep retrieval strength derived from hint usage, response latency, and evaluator confidence.
 - Exclude Stage-1 `encode_echo` attempts from retrieval-strength aggregates.
 - Exclude Stage-3 `encode_echo` correction exposures from retrieval-strength aggregates.
+- Exclude Stage-4 lifecycle attempts from Stage-1 `new_memorization` calibration samples.
+- Allow Stage-4 lifecycle attempts to contribute to review-quality calibration path.
 - Include Stage-1 elapsed chunk time in `new_memorization` calibration samples.
-- Keep Stage-3 semantics schema-free in `telemetry_json` (`stage3_mode`, `stage3_phase`, `stage3_step`, risk/readiness/lifecycle keys).
+- Keep Stage-3/Stage-4 semantics schema-free in `telemetry_json` (`stage*_mode`, `stage*_phase`, `stage*_step`, risk/readiness/lifecycle keys).
 - Avoid binary pass/fail-only calibration inputs; preserve graded signal to improve adaptation.
 - If constants are tuned, update both:
   - this workflow doc (policy notes)

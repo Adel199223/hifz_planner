@@ -257,6 +257,116 @@ void main() {
     );
   });
 
+  testWidgets('stage-4 due item opens companion with mode=stage4',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+    await _insertStage4DueLifecycle(
+      db,
+      unitId: dueUnitId,
+      todayDay: todayDay,
+    );
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_stage4_section')),
+    );
+
+    final stage4Button =
+        find.byKey(ValueKey('today_open_companion_stage4_$dueUnitId'));
+    await pumpUntilFound(tester, stage4Button);
+    await _tapVisible(tester, stage4Button);
+
+    expect(
+      find.text('Companion route unitId=$dueUnitId mode=stage4'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('mandatory stage-4 due blocks new until override is confirmed',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+      maxNewPagesPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+    await _insertStage4DueLifecycle(
+      db,
+      unitId: dueUnitId,
+      todayDay: todayDay,
+    );
+
+    await _pumpToday(tester, container);
+    expect(find.byKey(const ValueKey('today_stage4_section')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_stage4_override_new_button')),
+        findsOneWidget);
+
+    final beforeNewUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
+    expect(beforeNewUnits, isEmpty);
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('today_stage4_override_new_button')),
+    );
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('today_stage4_override_confirm')),
+    );
+
+    final lifecycle = await (db.select(db.companionLifecycleState)
+          ..where((tbl) => tbl.unitId.equals(dueUnitId)))
+        .getSingle();
+    expect(lifecycle.lastNewOverrideDay, todayDay);
+    expect(lifecycle.newOverrideCount, 1);
+
+    final afterNewUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
+    expect(afterNewUnits, isNotEmpty);
+  });
+
   testWidgets('open companion new action navigates with mode=new',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -443,6 +553,24 @@ Future<void> _configurePlannerSettings(
     avgReviewMinutesPerAyah: 1.0,
     requirePageMetadata: requirePageMetadata ? 1 : 0,
   );
+}
+
+Future<void> _insertStage4DueLifecycle(
+  AppDatabase db, {
+  required int unitId,
+  required int todayDay,
+}) async {
+  await db.into(db.companionLifecycleState).insert(
+        CompanionLifecycleStateCompanion.insert(
+          unitId: Value(unitId),
+          lifecycleTier: const Value('ready'),
+          stage4Status: const Value('pending'),
+          stage4NextDayDueDay: Value(todayDay),
+          stage4UnresolvedTargetsJson: const Value('[0]'),
+          updatedAtDay: todayDay,
+          updatedAtSeconds: 100,
+        ),
+      );
 }
 
 Future<int> _insertDueReviewUnit(

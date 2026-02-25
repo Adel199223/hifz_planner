@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' show Value;
+
+import '../../database/app_database.dart' show CompanionLifecycleStateData;
 import '../../repositories/companion_repo.dart';
 import '../../time/local_day_time.dart';
 import 'companion_calibration_bridge.dart';
@@ -51,20 +54,24 @@ class ProgressiveRevealChainEngine {
     final createdAtDay = localDayIndex(effectiveNow);
     final createdAtSeconds = nowLocalSecondsSinceMidnight(effectiveNow);
 
-    final persistedUnitState = launchMode == CompanionLaunchMode.newMemorization
+    final isNewMode = launchMode == CompanionLaunchMode.newMemorization;
+    final isReviewMode = launchMode == CompanionLaunchMode.review;
+    final isStage4Mode = launchMode == CompanionLaunchMode.stage4Consolidation;
+
+    final persistedUnitState = isNewMode
         ? await _companionRepo.getOrCreateUnitState(
             unitId,
             nowLocal: effectiveNow,
           )
         : null;
 
-    final resolvedUnlockedStage = launchMode == CompanionLaunchMode.review
+    final resolvedUnlockedStage = isReviewMode || isStage4Mode
         ? CompanionStage.hiddenReveal
         : _maxStage(
             persistedUnitState!.unlockedStage,
             unlockedStage ?? persistedUnitState.unlockedStage,
           );
-    final activeStage = launchMode == CompanionLaunchMode.review
+    final activeStage = isReviewMode || isStage4Mode
         ? CompanionStage.hiddenReveal
         : resolvedUnlockedStage;
 
@@ -75,8 +82,7 @@ class ProgressiveRevealChainEngine {
       startedAtSeconds: createdAtSeconds,
     );
 
-    if (launchMode == CompanionLaunchMode.newMemorization &&
-        activeStage != CompanionStage.guidedVisible) {
+    if (isNewMode && activeStage != CompanionStage.guidedVisible) {
       await _companionRepo.insertStageEvent(
         sessionId: sessionId,
         unitId: unitId,
@@ -123,8 +129,7 @@ class ProgressiveRevealChainEngine {
       ayahCount: verseStates.length,
       stage1ChunkBudgetMs: stage1BudgetMs,
     );
-    final stage1Runtime = launchMode == CompanionLaunchMode.newMemorization &&
-            activeStage == CompanionStage.guidedVisible
+    final stage1Runtime = isNewMode && activeStage == CompanionStage.guidedVisible
         ? Stage1Runtime(
             config: config.stage1,
             phase: Stage1Phase.acquisition,
@@ -173,13 +178,13 @@ class ProgressiveRevealChainEngine {
       stage1: stage1Runtime,
       stage2: null,
       stage3: null,
+      stage4: null,
       stage3WeakPreludeTargets: const <int>[],
       stage3WeakPreludeCursor: 0,
       resolvedAvgNewMinutesPerAyah: resolvedAvg,
     );
 
-    if (launchMode == CompanionLaunchMode.newMemorization &&
-        activeStage == CompanionStage.cuedRecall) {
+    if (isNewMode && activeStage == CompanionStage.cuedRecall) {
       initialState = _initializeStage2Runtime(
         state: initialState,
         config: config,
@@ -187,13 +192,21 @@ class ProgressiveRevealChainEngine {
       );
     }
 
-    if (launchMode == CompanionLaunchMode.newMemorization &&
-        activeStage == CompanionStage.hiddenReveal) {
+    if (isNewMode && activeStage == CompanionStage.hiddenReveal) {
       initialState = _initializeStage3Runtime(
         state: initialState,
         config: config,
         nowEpochMs: nowEpochMs,
         weakPreludeTargets: initialState.stage3WeakPreludeTargets,
+      );
+    }
+
+    if (isStage4Mode && activeStage == CompanionStage.hiddenReveal) {
+      initialState = await _initializeStage4Runtime(
+        state: initialState,
+        config: config,
+        nowEpochMs: nowEpochMs,
+        nowLocal: effectiveNow,
       );
     }
 
@@ -353,9 +366,16 @@ class ProgressiveRevealChainEngine {
         state.activeStage == CompanionStage.hiddenReveal &&
         state.stage3!.mode == Stage3Mode.correction &&
         !state.isReviewMode;
+    final stage4Correction = state.stage4 != null &&
+        state.activeStage == CompanionStage.hiddenReveal &&
+        state.stage4!.mode == Stage4Mode.correction &&
+        !state.isReviewMode;
 
     if (state.completed ||
-        (!stage1Correction && !stage2Correction && !stage3Correction)) {
+        (!stage1Correction &&
+            !stage2Correction &&
+            !stage3Correction &&
+            !stage4Correction)) {
       throw StateError('Correction exposure is not available in this state.');
     }
 
@@ -462,6 +482,115 @@ class ProgressiveRevealChainEngine {
           timeOnChunkMs: runtime.chunkElapsedMs,
           stage2Mode: Stage2Mode.correction,
           stage2Phase: runtime.phase,
+        ),
+      );
+    }
+
+    if (stage4Correction) {
+      final effectiveNow = (nowLocal ?? DateTime.now()).toLocal();
+      final touched = _touchStage4Clock(
+        state: state,
+        nowLocal: effectiveNow,
+      );
+      var runtime = touched.runtime!;
+      final verses = [...touched.verses];
+      final currentIndex = state.currentVerseIndex;
+      final current = verses[currentIndex];
+      final updatedVerse = current.copyWith(
+        attemptCount: current.attemptCount + 1,
+        stage4: current.stage4.copyWith(
+          correctionRequired: false,
+        ),
+      );
+      verses[currentIndex] = updatedVerse;
+
+      await _persistAttempt(
+        state: state.copyWith(
+          verses: verses,
+          stage4: runtime,
+        ),
+        verseIndex: currentIndex,
+        verse: updatedVerse,
+        stageCode: state.activeStage.code,
+        attemptType: 'encode_echo',
+        hintLevel: _stage4EffectiveBaselineHint(updatedVerse.stage4),
+        assistedFlag: 0,
+        evaluatorMode: EvaluatorMode.manualFallback,
+        evaluatorPassed: 1,
+        evaluatorConfidence: null,
+        autoCheckType: null,
+        autoCheckResult: null,
+        retrievalStrength: 0.0,
+        latencyToStartMs: latencyToStartMs,
+        stopsCount: stopsCount,
+        selfCorrectionsCount: selfCorrectionsCount,
+        nowLocal: effectiveNow,
+        telemetryExtras: <String, Object?>{
+          'lifecycle_stage': 'stage4',
+          'stage4_mode': Stage4Mode.correction.code,
+          'stage4_phase': runtime.phase.code,
+          'stage4_step': 'correction_exposure',
+          'correction_exposure': true,
+          'stage3_step': 'correction_exposure',
+        },
+      );
+
+      final nextMode = switch (runtime.phase) {
+        Stage4Phase.checkpoint => Stage4Mode.checkpoint,
+        Stage4Phase.remediation => Stage4Mode.remediation,
+        _ => _stage4ModeForVerse(
+            verse: updatedVerse,
+            runtime: runtime.copyWith(mode: Stage4Mode.coldStart),
+          ),
+      };
+
+      runtime = runtime.copyWith(
+        mode: nextMode,
+        activeAutoCheckPrompt: nextMode == Stage4Mode.correction
+            ? null
+            : _buildStage4AutoCheckPrompt(
+                state: state.copyWith(verses: verses),
+                verses: verses,
+                verseIndex: currentIndex,
+                mode: nextMode,
+              ),
+      );
+
+      final nextState = state.copyWith(
+        verses: verses,
+        stage4: runtime,
+        currentHintLevel: _stage4EffectiveBaselineHint(updatedVerse.stage4),
+      );
+      final budgetAdvance = await _maybeAdvanceStage4AfterBudget(
+        state: nextState,
+        config: config,
+        nowLocal: effectiveNow,
+      );
+      if (budgetAdvance != null) {
+        return budgetAdvance;
+      }
+
+      return ChainAttemptUpdate(
+        state: nextState,
+        telemetry: VerseAttemptTelemetry(
+          stage: state.activeStage,
+          hintLevel: _stage4EffectiveBaselineHint(updatedVerse.stage4),
+          latencyToStartMs: latencyToStartMs,
+          stopsCount: stopsCount,
+          selfCorrectionsCount: selfCorrectionsCount,
+          evaluatorPassed: true,
+          evaluatorConfidence: null,
+          evaluatorMode: EvaluatorMode.manualFallback,
+          revealedAfterAttempt: false,
+          retrievalStrength: 0.0,
+          attemptType: 'encode_echo',
+          assisted: false,
+          autoCheckType: null,
+          autoCheckResult: null,
+          timeOnVerseMs: updatedVerse.stage4.timeOnVerseMs,
+          timeOnChunkMs: runtime.chunkElapsedMs,
+          stage4Mode: Stage4Mode.correction,
+          stage4Phase: runtime.phase,
         ),
       );
     }
@@ -723,6 +852,26 @@ class ProgressiveRevealChainEngine {
         state.stage2 != null &&
         !state.isReviewMode) {
       return _submitStage2Attempt(
+        state: state,
+        evaluator: evaluator,
+        manualFallbackPass: manualFallbackPass,
+        selectedAutoCheckOptionId: selectedAutoCheckOptionId,
+        asrConfidence: asrConfidence,
+        latencyToStartMs: latencyToStartMs,
+        stopsCount: stopsCount,
+        selfCorrectionsCount: selfCorrectionsCount,
+        audioPlays: audioPlays,
+        loopCount: loopCount,
+        playbackSpeed: playbackSpeed,
+        config: config,
+        nowLocal: nowLocal,
+      );
+    }
+
+    if (state.activeStage == CompanionStage.hiddenReveal &&
+        state.stage4 != null &&
+        !state.isReviewMode) {
+      return _submitStage4Attempt(
         state: state,
         evaluator: evaluator,
         manualFallbackPass: manualFallbackPass,
@@ -1837,6 +1986,850 @@ class ProgressiveRevealChainEngine {
     );
   }
 
+  Future<ChainAttemptUpdate> _submitStage4Attempt({
+    required ChainRunState state,
+    required VerseEvaluator evaluator,
+    required bool manualFallbackPass,
+    required String? selectedAutoCheckOptionId,
+    required double? asrConfidence,
+    required int latencyToStartMs,
+    required int stopsCount,
+    required int selfCorrectionsCount,
+    required int audioPlays,
+    required int loopCount,
+    required double playbackSpeed,
+    required ProgressiveRevealChainConfig config,
+    required DateTime? nowLocal,
+  }) async {
+    final effectiveNow = (nowLocal ?? DateTime.now()).toLocal();
+    final touched = _touchStage4Clock(
+      state: state,
+      nowLocal: effectiveNow,
+    );
+    var runtime = touched.runtime!;
+    var verses = [...touched.verses];
+    final currentIndex = state.currentVerseIndex;
+    final currentVerse = verses[currentIndex];
+
+    if (runtime.mode == Stage4Mode.correction ||
+        currentVerse.stage4.correctionRequired) {
+      throw StateError(
+          'Correction playback is required before next Stage-4 attempt.');
+    }
+
+    final evaluation = await evaluator.evaluate(
+      VerseEvaluationRequest(
+        verse: currentVerse.verse,
+        manualFallbackPass: manualFallbackPass,
+        asrConfidence: asrConfidence,
+      ),
+    );
+
+    final attemptMode = runtime.mode;
+    final attemptType = _attemptTypeForStage4Mode(attemptMode);
+    final baselineHint = _stage4EffectiveBaselineHint(currentVerse.stage4);
+    final effectiveHintLevel = state.currentHintLevel.order < baselineHint.order
+        ? baselineHint
+        : state.currentHintLevel;
+    final assisted = effectiveHintLevel.order > baselineHint.order;
+    final autoCheckRequired = runtime.autoCheckRequiredForCurrentMode;
+    final autoPrompt = runtime.activeAutoCheckPrompt ??
+        _buildStage4AutoCheckPrompt(
+          state: state.copyWith(verses: verses),
+          verses: verses,
+          verseIndex: currentIndex,
+          mode: attemptMode,
+        );
+
+    if (autoCheckRequired &&
+        (selectedAutoCheckOptionId == null ||
+            selectedAutoCheckOptionId.trim().isEmpty)) {
+      throw StateError('Auto-check option is required for Stage-4 attempts.');
+    }
+
+    final autoEval = autoCheckRequired
+        ? _autoCheckEngine.evaluate(
+            prompt: autoPrompt,
+            selectedOptionId: selectedAutoCheckOptionId,
+          )
+        : const Stage1AutoCheckEvaluation(
+            passed: true,
+            selectedOptionId: null,
+            normalizedSelected: '',
+          );
+
+    final passed = evaluation.passed && autoEval.passed;
+    final countableAttempt = !assisted &&
+        effectiveHintLevel.order <= runtime.config.readinessMaxHint.order;
+    final countedPass = passed && countableAttempt;
+    final countedH0Pass = countedPass && effectiveHintLevel == HintLevel.h0;
+    final riskTrigger = _stage4RiskTrigger(
+      verse: currentVerse,
+      config: runtime.config,
+    );
+
+    var stage4 = currentVerse.stage4;
+    var readinessWindow = stage4.readinessWindow;
+    if (countableAttempt) {
+      readinessWindow = <Stage4WindowEntry>[
+        ...readinessWindow,
+        Stage4WindowEntry(
+          timestampMs: runtime.lastActionAtEpochMs,
+          passed: passed,
+          countedPass: countedPass,
+          hintLevel: effectiveHintLevel,
+          assisted: assisted,
+        ),
+      ];
+      if (readinessWindow.length > runtime.config.readinessWindow) {
+        readinessWindow = readinessWindow.sublist(
+          readinessWindow.length - runtime.config.readinessWindow,
+        );
+      }
+    }
+
+    final nextConsecutiveFailures = passed ? 0 : stage4.consecutiveFailures + 1;
+    stage4 = stage4.copyWith(
+      attempts: stage4.attempts + 1,
+      countedAttempts: stage4.countedAttempts + (countableAttempt ? 1 : 0),
+      countedPasses: stage4.countedPasses + (countedPass ? 1 : 0),
+      countedH0Passes: stage4.countedH0Passes + (countedH0Pass ? 1 : 0),
+      consecutiveFailures: nextConsecutiveFailures,
+      correctionRequired: !passed,
+      weakTarget: stage4.weakTarget ||
+          currentVerse.stage1.weak ||
+          currentVerse.stage2.weakTarget ||
+          currentVerse.stage3.weakTarget ||
+          !countedPass,
+      riskTarget: stage4.riskTarget || riskTrigger != null,
+      remediationNeeded: stage4.remediationNeeded ||
+          (runtime.phase == Stage4Phase.checkpoint && !countedPass),
+      discriminationAttempts: stage4.discriminationAttempts +
+          (attemptMode == Stage4Mode.discrimination ? 1 : 0),
+      discriminationPasses: stage4.discriminationPasses +
+          (attemptMode == Stage4Mode.discrimination && countedPass ? 1 : 0),
+      linkingAttempts:
+          stage4.linkingAttempts + (attemptMode == Stage4Mode.linking ? 1 : 0),
+      linkingPassCount: stage4.linkingPassCount +
+          (attemptMode == Stage4Mode.linking && countedPass ? 1 : 0),
+      randomStartAttempts: stage4.randomStartAttempts +
+          (attemptMode == Stage4Mode.randomStart ? 1 : 0),
+      randomStartPasses: stage4.randomStartPasses +
+          (attemptMode == Stage4Mode.randomStart && countedPass ? 1 : 0),
+      checkpointAttempted: attemptMode == Stage4Mode.checkpoint
+          ? true
+          : stage4.checkpointAttempted,
+      checkpointPassed: attemptMode == Stage4Mode.checkpoint
+          ? countedPass
+          : stage4.checkpointPassed,
+      checkpointAttempts: attemptMode == Stage4Mode.checkpoint
+          ? stage4.checkpointAttempts + 1
+          : stage4.checkpointAttempts,
+      readinessWindow: readinessWindow,
+    );
+
+    final retrievalStrength = computeRetrievalStrength(
+      passed: passed,
+      hintLevel: effectiveHintLevel,
+      latencyToStartMs: latencyToStartMs,
+      stopsCount: stopsCount,
+      selfCorrectionsCount: selfCorrectionsCount,
+      confidence: evaluation.confidence,
+    );
+    final updatedVerse = currentVerse.copyWith(
+      attemptCount: currentVerse.attemptCount + 1,
+      hiddenAttemptCount: currentVerse.hiddenAttemptCount + 1,
+      stage4: stage4,
+      passed: countedPass ? true : currentVerse.passed,
+      highestHintLevel:
+          effectiveHintLevel.order > currentVerse.highestHintLevel.order
+              ? effectiveHintLevel
+              : currentVerse.highestHintLevel,
+      proficiency: _nextProficiency(
+        oldValue: currentVerse.proficiency,
+        observedValue: retrievalStrength,
+        alpha: config.proficiencyEmaAlpha,
+      ),
+    );
+    verses[currentIndex] = updatedVerse;
+
+    final readinessCountedPass = _stage4IsReady(
+      state: state.copyWith(verses: verses),
+      verse: updatedVerse,
+      config: runtime.config,
+    );
+
+    await _persistAttempt(
+      state: state.copyWith(verses: verses, stage4: runtime),
+      verseIndex: currentIndex,
+      verse: updatedVerse,
+      stageCode: state.activeStage.code,
+      attemptType: attemptType,
+      hintLevel: effectiveHintLevel,
+      assistedFlag: assisted ? 1 : 0,
+      evaluatorMode: evaluation.mode,
+      evaluatorPassed: passed ? 1 : 0,
+      evaluatorConfidence: evaluation.confidence,
+      autoCheckType: autoCheckRequired ? autoPrompt.type.code : null,
+      autoCheckResult:
+          autoCheckRequired ? (autoEval.passed ? 'pass' : 'fail') : null,
+      retrievalStrength: retrievalStrength,
+      latencyToStartMs: latencyToStartMs,
+      stopsCount: stopsCount,
+      selfCorrectionsCount: selfCorrectionsCount,
+      nowLocal: effectiveNow,
+      telemetryExtras: <String, Object?>{
+        'lifecycle_stage': 'stage4',
+        'stage4_mode': attemptMode.code,
+        'stage4_phase': runtime.phase.code,
+        'stage4_step': _stage4TelemetryStep(attemptMode),
+        'stage4_due_kind': runtime.dueKind,
+        'random_start_anchor_verse_order':
+            attemptMode == Stage4Mode.randomStart ? currentIndex : null,
+        'continuation_span': 1,
+        'link_prev_verse_order': currentIndex > 0 ? currentIndex - 1 : null,
+        'readiness_counted_pass': readinessCountedPass,
+        'cue_baseline': baselineHint.code,
+        'cue_rotated_from': null,
+        'risk_trigger': riskTrigger,
+        'stage4_error_type': passed
+            ? null
+            : (evaluation.passed ? 'auto_check_fail' : 'recall_fail'),
+        'unresolved_targets_count': runtime.unresolvedTargets.length,
+        'lifecycle_hook': passed ? null : 'stage4_retry',
+        'audio_plays': audioPlays,
+        'loop_count': loopCount,
+        'speed': playbackSpeed,
+      },
+    );
+    await _upsertProficiency(
+      state: state,
+      verse: updatedVerse,
+      hintLevel: effectiveHintLevel,
+      retrievalStrength: retrievalStrength,
+      evaluatorConfidence: evaluation.confidence,
+      latencyToStartMs: latencyToStartMs,
+      evaluatorPassed: passed,
+      nowLocal: effectiveNow,
+    );
+
+    runtime = runtime.copyWith(
+      totalCountableAttempts:
+          runtime.totalCountableAttempts + (countableAttempt ? 1 : 0),
+    );
+
+    if (!passed) {
+      runtime = runtime.copyWith(
+        mode: Stage4Mode.correction,
+        activeAutoCheckPrompt: null,
+      );
+      final failedState = state.copyWith(
+        verses: verses,
+        stage4: runtime,
+        currentHintLevel: _stage4EffectiveBaselineHint(updatedVerse.stage4),
+      );
+      final budgetAdvance = await _maybeAdvanceStage4AfterBudget(
+        state: failedState,
+        config: config,
+        nowLocal: effectiveNow,
+      );
+      if (budgetAdvance != null) {
+        return budgetAdvance;
+      }
+      return ChainAttemptUpdate(
+        state: failedState,
+        telemetry: VerseAttemptTelemetry(
+          stage: state.activeStage,
+          hintLevel: effectiveHintLevel,
+          latencyToStartMs: latencyToStartMs,
+          stopsCount: stopsCount,
+          selfCorrectionsCount: selfCorrectionsCount,
+          evaluatorPassed: false,
+          evaluatorConfidence: evaluation.confidence,
+          evaluatorMode: evaluation.mode,
+          revealedAfterAttempt: false,
+          retrievalStrength: retrievalStrength,
+          attemptType: attemptType,
+          assisted: assisted,
+          autoCheckType: autoCheckRequired ? autoPrompt.type.code : null,
+          autoCheckResult:
+              autoCheckRequired ? (autoEval.passed ? 'pass' : 'fail') : null,
+          timeOnVerseMs: updatedVerse.stage4.timeOnVerseMs,
+          timeOnChunkMs: runtime.chunkElapsedMs,
+          stage4Mode: attemptMode,
+          stage4Phase: runtime.phase,
+          correctionRequiredAfterAttempt: true,
+        ),
+      );
+    }
+
+    final advanced = await _advanceStage4AfterPass(
+      state: state.copyWith(
+        verses: verses,
+        stage4: runtime,
+        currentHintLevel: _stage4EffectiveBaselineHint(updatedVerse.stage4),
+      ),
+      passedVerseIndex: currentIndex,
+      countedPass: countedPass,
+      config: config,
+      nowLocal: effectiveNow,
+    );
+    final budgetAdvance = await _maybeAdvanceStage4AfterBudget(
+      state: advanced,
+      config: config,
+      nowLocal: effectiveNow,
+    );
+    if (budgetAdvance != null) {
+      return budgetAdvance;
+    }
+
+    return ChainAttemptUpdate(
+      state: advanced,
+      telemetry: VerseAttemptTelemetry(
+        stage: state.activeStage,
+        hintLevel: effectiveHintLevel,
+        latencyToStartMs: latencyToStartMs,
+        stopsCount: stopsCount,
+        selfCorrectionsCount: selfCorrectionsCount,
+        evaluatorPassed: true,
+        evaluatorConfidence: evaluation.confidence,
+        evaluatorMode: evaluation.mode,
+        revealedAfterAttempt: false,
+        retrievalStrength: retrievalStrength,
+        attemptType: attemptType,
+        assisted: assisted,
+        autoCheckType: autoCheckRequired ? autoPrompt.type.code : null,
+        autoCheckResult:
+            autoCheckRequired ? (autoEval.passed ? 'pass' : 'fail') : null,
+        timeOnVerseMs: updatedVerse.stage4.timeOnVerseMs,
+        timeOnChunkMs: advanced.stage4?.chunkElapsedMs ?? runtime.chunkElapsedMs,
+        stage4Mode: attemptMode,
+        stage4Phase: advanced.stage4?.phase ?? runtime.phase,
+      ),
+    );
+  }
+
+  Future<ChainRunState> _advanceStage4AfterPass({
+    required ChainRunState state,
+    required int passedVerseIndex,
+    required bool countedPass,
+    required ProgressiveRevealChainConfig config,
+    required DateTime nowLocal,
+  }) async {
+    var runtime = state.stage4!;
+    var verses = [...state.verses];
+
+    var pendingRandomTargets = [...runtime.pendingRandomStartTargets];
+    if (runtime.mode == Stage4Mode.randomStart && countedPass) {
+      pendingRandomTargets.remove(passedVerseIndex);
+    }
+
+    var unresolvedTargets = _stage4UnresolvedTargets(
+      state: state.copyWith(verses: verses),
+      verses: verses,
+      config: runtime.config,
+    );
+
+    if (runtime.phase == Stage4Phase.remediation) {
+      if (countedPass) {
+        final verse = verses[passedVerseIndex];
+        verses[passedVerseIndex] = verse.copyWith(
+          stage4: verse.stage4.copyWith(remediationNeeded: false),
+        );
+      }
+
+      final pending = runtime.remediationTargets.where((index) {
+        if (index < 0 || index >= verses.length) {
+          return false;
+        }
+        return verses[index].stage4.remediationNeeded ||
+            !_stage4IsReady(
+              state: state,
+              verse: verses[index],
+              config: runtime.config,
+            );
+      }).toList(growable: false);
+
+      if (pending.isNotEmpty) {
+        final nextIndex = _nextIndexFromList(
+          indexes: pending,
+          startAfter: passedVerseIndex,
+        );
+        return state.copyWith(
+          verses: verses,
+          stage4: runtime.copyWith(
+            phase: Stage4Phase.remediation,
+            mode: Stage4Mode.remediation,
+            pendingRandomStartTargets: pendingRandomTargets,
+            unresolvedTargets: unresolvedTargets,
+            remediationCursor: pending.indexOf(nextIndex),
+            activeAutoCheckPrompt: _buildStage4AutoCheckPrompt(
+              state: state.copyWith(verses: verses),
+              verses: verses,
+              verseIndex: nextIndex,
+              mode: Stage4Mode.remediation,
+            ),
+          ),
+          currentVerseIndex: nextIndex,
+          currentHintLevel: _stage4EffectiveBaselineHint(verses[nextIndex].stage4),
+          returnVerseIndex: null,
+        );
+      }
+
+      if (runtime.remediationTargets.isNotEmpty) {
+        final targets = runtime.remediationTargets;
+        for (final index in targets) {
+          final verse = verses[index];
+          verses[index] = verse.copyWith(
+            stage4: verse.stage4.copyWith(
+              checkpointAttempted: false,
+              checkpointPassed: false,
+            ),
+          );
+        }
+        final first = targets.first;
+        return state.copyWith(
+          verses: verses,
+          stage4: runtime.copyWith(
+            phase: Stage4Phase.checkpoint,
+            mode: Stage4Mode.checkpoint,
+            pendingRandomStartTargets: pendingRandomTargets,
+            unresolvedTargets: unresolvedTargets,
+            checkpointTargets: targets,
+            checkpointCursor: 0,
+            remediationTargets: const <int>[],
+            remediationCursor: 0,
+            activeAutoCheckPrompt: _buildStage4AutoCheckPrompt(
+              state: state.copyWith(verses: verses),
+              verses: verses,
+              verseIndex: first,
+              mode: Stage4Mode.checkpoint,
+            ),
+          ),
+          currentVerseIndex: first,
+          currentHintLevel: _stage4EffectiveBaselineHint(verses[first].stage4),
+          returnVerseIndex: null,
+        );
+      }
+    }
+
+    if (runtime.phase == Stage4Phase.checkpoint) {
+      final targets = runtime.checkpointTargets.isEmpty
+          ? List<int>.generate(verses.length, (index) => index)
+          : runtime.checkpointTargets;
+      final nextCursor = runtime.checkpointCursor + 1;
+      if (nextCursor < targets.length) {
+        final nextIndex = targets[nextCursor];
+        return state.copyWith(
+          verses: verses,
+          stage4: runtime.copyWith(
+            phase: Stage4Phase.checkpoint,
+            mode: Stage4Mode.checkpoint,
+            checkpointTargets: targets,
+            pendingRandomStartTargets: pendingRandomTargets,
+            unresolvedTargets: unresolvedTargets,
+            checkpointCursor: nextCursor,
+            activeAutoCheckPrompt: _buildStage4AutoCheckPrompt(
+              state: state.copyWith(verses: verses),
+              verses: verses,
+              verseIndex: nextIndex,
+              mode: Stage4Mode.checkpoint,
+            ),
+          ),
+          currentVerseIndex: nextIndex,
+          currentHintLevel: _stage4EffectiveBaselineHint(verses[nextIndex].stage4),
+          returnVerseIndex: null,
+        );
+      }
+
+      final failed = <int>[
+        for (final index in targets)
+          if (!verses[index].stage4.checkpointPassed) index,
+      ];
+      final chunkPassRate = targets.isEmpty
+          ? 0.0
+          : (targets.length - failed.length) / targets.length;
+      final randomStartSatisfied = verses.every(
+        (verse) => verse.stage4.randomStartPasses >= runtime.config.randomStartProbeCount,
+      );
+      final linkingSatisfied =
+          verses.every((verse) => verse.stage4.linkingPassCount >= 1);
+      final everyReady = verses.every(
+        (verse) => _stage4IsReady(
+          state: state,
+          verse: verse,
+          config: runtime.config,
+        ),
+      );
+      unresolvedTargets = _stage4UnresolvedTargets(
+        state: state.copyWith(verses: verses),
+        verses: verses,
+        config: runtime.config,
+      );
+      final passedCheckpoint =
+          chunkPassRate >= runtime.config.checkpointThreshold &&
+              randomStartSatisfied &&
+              linkingSatisfied &&
+              everyReady &&
+              unresolvedTargets.isEmpty;
+      final outcome = Stage4CheckpointOutcome(
+        chunkPassRate: chunkPassRate,
+        failedVerseIndexes: failed,
+        everyVerseReady: everyReady,
+        randomStartSatisfied: randomStartSatisfied,
+        linkingSatisfied: linkingSatisfied,
+        passed: passedCheckpoint,
+      );
+
+      if (passedCheckpoint) {
+        return state.copyWith(
+          verses: verses,
+          stage4: runtime.copyWith(
+            phase: Stage4Phase.completed,
+            mode: Stage4Mode.checkpoint,
+            pendingRandomStartTargets: pendingRandomTargets,
+            unresolvedTargets: const <int>[],
+            lastCheckpointOutcome: outcome,
+            activeAutoCheckPrompt: null,
+          ),
+          currentHintLevel: HintLevel.h0,
+          returnVerseIndex: null,
+        );
+      }
+
+      if (runtime.remediationRounds >=
+          runtime.config.maxCheckpointRemediationRounds) {
+        final unresolvedRatio =
+            verses.isEmpty ? 0.0 : failed.length / verses.length;
+        final route = unresolvedRatio > runtime.config.failUnresolvedRatioThreshold
+            ? 'broad_stage3'
+            : 'targeted_stage3';
+        return state.copyWith(
+          verses: verses,
+          stage4: runtime.copyWith(
+            phase: Stage4Phase.failed,
+            budgetExceeded: false,
+            unresolvedTargets: failed,
+            pendingRandomStartTargets: pendingRandomTargets,
+            lastCheckpointOutcome: outcome,
+            activeAutoCheckPrompt: null,
+            mode: Stage4Mode.remediation,
+            dueKind: '$route:${runtime.dueKind}',
+          ),
+          returnVerseIndex: null,
+        );
+      }
+
+      for (final index in failed) {
+        final verse = verses[index];
+        verses[index] = verse.copyWith(
+          stage4: verse.stage4.copyWith(
+            remediationNeeded: true,
+            weakTarget: true,
+          ),
+        );
+      }
+      final first = failed.first;
+      return state.copyWith(
+        verses: verses,
+        stage4: runtime.copyWith(
+          phase: Stage4Phase.remediation,
+          mode: Stage4Mode.remediation,
+          remediationRounds: runtime.remediationRounds + 1,
+          unresolvedTargets: failed,
+          pendingRandomStartTargets: pendingRandomTargets,
+          remediationTargets: failed,
+          remediationCursor: 0,
+          lastCheckpointOutcome: outcome,
+          activeAutoCheckPrompt: _buildStage4AutoCheckPrompt(
+            state: state.copyWith(verses: verses),
+            verses: verses,
+            verseIndex: first,
+            mode: Stage4Mode.remediation,
+          ),
+        ),
+        currentVerseIndex: first,
+        currentHintLevel: _stage4EffectiveBaselineHint(verses[first].stage4),
+        returnVerseIndex: null,
+      );
+    }
+
+    unresolvedTargets = _stage4UnresolvedTargets(
+      state: state.copyWith(verses: verses),
+      verses: verses,
+      config: runtime.config,
+    );
+
+    final allReady = unresolvedTargets.isEmpty &&
+        pendingRandomTargets.isEmpty &&
+        verses.every((verse) => verse.stage4.linkingPassCount >= 1);
+    if (allReady) {
+      final targets = List<int>.generate(verses.length, (index) => index);
+      for (final index in targets) {
+        final verse = verses[index];
+        verses[index] = verse.copyWith(
+          stage4: verse.stage4.copyWith(
+            checkpointAttempted: false,
+            checkpointPassed: false,
+          ),
+        );
+      }
+      final first = targets.first;
+      return state.copyWith(
+        verses: verses,
+        stage4: runtime.copyWith(
+          phase: Stage4Phase.checkpoint,
+          mode: Stage4Mode.checkpoint,
+          unresolvedTargets: unresolvedTargets,
+          pendingRandomStartTargets: pendingRandomTargets,
+          checkpointTargets: targets,
+          checkpointCursor: 0,
+          activeAutoCheckPrompt: _buildStage4AutoCheckPrompt(
+            state: state.copyWith(verses: verses),
+            verses: verses,
+            verseIndex: first,
+            mode: Stage4Mode.checkpoint,
+          ),
+        ),
+        currentVerseIndex: first,
+        currentHintLevel: _stage4EffectiveBaselineHint(verses[first].stage4),
+        returnVerseIndex: null,
+      );
+    }
+
+    final nextState = state.copyWith(verses: verses);
+    final target = _pickStage4Target(
+      state: nextState.copyWith(stage4: runtime),
+      verses: verses,
+      startAfter: passedVerseIndex,
+      runtime: runtime.copyWith(
+        unresolvedTargets: unresolvedTargets,
+        pendingRandomStartTargets: pendingRandomTargets,
+      ),
+    );
+    if (target == null) {
+      return nextState.copyWith(
+        stage4: runtime.copyWith(
+          phase: Stage4Phase.verification,
+          mode: Stage4Mode.coldStart,
+          unresolvedTargets: unresolvedTargets,
+          pendingRandomStartTargets: pendingRandomTargets,
+          activeAutoCheckPrompt: null,
+        ),
+      );
+    }
+
+    return nextState.copyWith(
+      stage4: runtime.copyWith(
+        phase: target.phase,
+        mode: target.mode,
+        unresolvedTargets: unresolvedTargets,
+        pendingRandomStartTargets: pendingRandomTargets,
+        activeAutoCheckPrompt: target.mode == Stage4Mode.correction
+            ? null
+            : _buildStage4AutoCheckPrompt(
+                state: nextState,
+                verses: verses,
+                verseIndex: target.verseIndex,
+                mode: target.mode,
+              ),
+      ),
+      currentVerseIndex: target.verseIndex,
+      currentHintLevel: _stage4EffectiveBaselineHint(
+        verses[target.verseIndex].stage4,
+      ),
+      returnVerseIndex: null,
+    );
+  }
+
+  Future<ChainAttemptUpdate?> _maybeAdvanceStage4AfterBudget({
+    required ChainRunState state,
+    required ProgressiveRevealChainConfig config,
+    required DateTime nowLocal,
+  }) async {
+    final runtime = state.stage4;
+    if (runtime == null) {
+      return null;
+    }
+    if (runtime.phase == Stage4Phase.completed && !state.completed) {
+      return _finalizeStage4Result(
+        state: state,
+        outcome: 'pass',
+        resultKind: ChainResultKind.completed,
+        nowLocal: nowLocal,
+      );
+    }
+    if (runtime.phase == Stage4Phase.failed && !state.completed) {
+      return _finalizeStage4Result(
+        state: state,
+        outcome: 'fail',
+        resultKind: ChainResultKind.partial,
+        nowLocal: nowLocal,
+      );
+    }
+    if (runtime.phase == Stage4Phase.budgetFallback && !state.completed) {
+      return _finalizeStage4Result(
+        state: state,
+        outcome: 'partial',
+        resultKind: ChainResultKind.partial,
+        nowLocal: nowLocal,
+      );
+    }
+    if (runtime.chunkElapsedMs < runtime.stage4BudgetMs) {
+      return null;
+    }
+
+    final unresolved = _stage4UnresolvedTargets(
+      state: state,
+      verses: state.verses,
+      config: runtime.config,
+    );
+    if (unresolved.isNotEmpty) {
+      final nextState = state.copyWith(
+        stage4: runtime.copyWith(
+          phase: Stage4Phase.budgetFallback,
+          budgetExceeded: true,
+          unresolvedTargets: unresolved,
+          activeAutoCheckPrompt: null,
+        ),
+      );
+      return _finalizeStage4Result(
+        state: nextState,
+        outcome: 'partial',
+        resultKind: ChainResultKind.partial,
+        nowLocal: nowLocal,
+      );
+    }
+
+    return _finalizeStage4Result(
+      state: state.copyWith(
+        stage4: runtime.copyWith(
+          phase: Stage4Phase.completed,
+          activeAutoCheckPrompt: null,
+        ),
+      ),
+      outcome: 'pass',
+      resultKind: ChainResultKind.completed,
+      nowLocal: nowLocal,
+    );
+  }
+
+  Future<ChainAttemptUpdate> _finalizeStage4Result({
+    required ChainRunState state,
+    required String outcome,
+    required ChainResultKind resultKind,
+    required DateTime nowLocal,
+  }) async {
+    final runtime = state.stage4!;
+    final unresolved = _stage4UnresolvedTargets(
+      state: state,
+      verses: state.verses,
+      config: runtime.config,
+    );
+    final summary = await _completeSession(
+      state: state,
+      verseStates: state.verses,
+      nowLocal: nowLocal,
+      resultKind: resultKind,
+    );
+
+    if (runtime.stage4SessionRecordId != null) {
+      final passRate = state.verses.isEmpty
+          ? 0.0
+          : state.verses
+                  .where(
+                    (verse) => _stage4IsReady(
+                      state: state,
+                      verse: verse,
+                      config: runtime.config,
+                    ),
+                  )
+                  .length /
+              state.verses.length;
+      await _companionRepo.completeStage4Session(
+        sessionId: runtime.stage4SessionRecordId!,
+        outcome: outcome,
+        endedDay: localDayIndex(nowLocal),
+        endedSeconds: nowLocalSecondsSinceMidnight(nowLocal),
+        countedPassRate: passRate,
+        randomStartPasses:
+            state.verses.fold<int>(0, (sum, verse) => sum + verse.stage4.randomStartPasses),
+        linkingPasses:
+            state.verses.fold<int>(0, (sum, verse) => sum + verse.stage4.linkingPassCount),
+        discriminationPasses: state.verses.fold<int>(
+          0,
+          (sum, verse) => sum + verse.stage4.discriminationPasses,
+        ),
+        unresolvedTargetsJson: unresolved.isEmpty ? null : jsonEncode(unresolved),
+        telemetryJson: jsonEncode(<String, Object?>{
+          'lifecycle_stage': 'stage4',
+          'stage4_phase': state.stage4?.phase.code,
+          'stage4_mode': state.stage4?.mode.code,
+          'lifecycle_hook': outcome == 'pass' ? 'stage5_candidate' : 'stage4_retry',
+        }),
+      );
+    }
+
+    final unresolvedRatio =
+        state.verses.isEmpty ? 0.0 : unresolved.length / state.verses.length;
+    final strengtheningRoute = unresolvedRatio >
+            runtime.config.failUnresolvedRatioThreshold
+        ? 'broad_stage3'
+        : 'targeted_stage3';
+    final status = switch (outcome) {
+      'pass' => 'passed',
+      'partial' => 'partial',
+      'fail' => 'failed',
+      _ => 'partial',
+    };
+
+    await _companionRepo.upsertLifecycleState(
+      unitId: state.unitId,
+      lifecycleTier: Value(outcome == 'pass' ? 'stable' : 'ready'),
+      stage4Status: Value(status),
+      stage4UnresolvedTargetsJson:
+          Value(unresolved.isEmpty ? null : jsonEncode(unresolved)),
+      stage4StrengtheningRoute:
+          Value(outcome == 'pass' ? null : strengtheningRoute),
+      stage4LastOutcome: Value(outcome),
+      stage4LastSessionId: Value(runtime.stage4SessionRecordId),
+      stage4LastCompletedDay:
+          Value(outcome == 'pass' ? localDayIndex(nowLocal) : null),
+      stage4RetryDueDay:
+          Value(outcome == 'pass' ? null : localDayIndex(nowLocal) + 1),
+      updatedAtDay: localDayIndex(nowLocal),
+      updatedAtSeconds: nowLocalSecondsSinceMidnight(nowLocal),
+    );
+
+    return ChainAttemptUpdate(
+      state: state.copyWith(
+        completed: true,
+        resultKind: resultKind,
+        currentHintLevel: HintLevel.h0,
+        returnVerseIndex: null,
+      ),
+      telemetry: VerseAttemptTelemetry(
+        stage: CompanionStage.hiddenReveal,
+        hintLevel: HintLevel.h0,
+        latencyToStartMs: 0,
+        stopsCount: 0,
+        selfCorrectionsCount: 0,
+        evaluatorPassed: outcome == 'pass',
+        evaluatorConfidence: null,
+        evaluatorMode: EvaluatorMode.manualFallback,
+        revealedAfterAttempt: false,
+        retrievalStrength: 0.0,
+        attemptType: 'checkpoint',
+        assisted: false,
+        timeOnVerseMs: state.verses[state.currentVerseIndex].stage4.timeOnVerseMs,
+        timeOnChunkMs: runtime.chunkElapsedMs,
+        stage4Mode: runtime.mode,
+        stage4Phase: runtime.phase,
+      ),
+      summary: summary,
+    );
+  }
+
   Future<ChainRunState> _advanceStage2AfterPass({
     required ChainRunState state,
     required int passedVerseIndex,
@@ -2667,6 +3660,13 @@ class ProgressiveRevealChainEngine {
                   : verse.markPassedForStage(CompanionStage.hiddenReveal),
           ]
         : state.verses;
+
+    await _scheduleStage4AfterStage3(
+      state: state.copyWith(verses: finalizedVerses),
+      resultKind: resultKind,
+      nowLocal: nowLocal,
+    );
+
     final summary = await _completeSession(
       state: state.copyWith(verses: finalizedVerses),
       verseStates: finalizedVerses,
@@ -2701,6 +3701,60 @@ class ProgressiveRevealChainEngine {
         stage3Phase: state.stage3?.phase,
       ),
       summary: summary,
+    );
+  }
+
+  Future<void> _scheduleStage4AfterStage3({
+    required ChainRunState state,
+    required ChainResultKind resultKind,
+    required DateTime nowLocal,
+  }) async {
+    if (state.launchMode != CompanionLaunchMode.newMemorization ||
+        resultKind != ChainResultKind.completed) {
+      return;
+    }
+    final stage3 = state.stage3;
+    if (stage3 == null) {
+      return;
+    }
+
+    final unresolved = _stage3UnresolvedWeakTargets(
+      state: state,
+      verses: state.verses,
+      config: stage3.config,
+    );
+    final unresolvedRatio = state.verses.isEmpty
+        ? 0.0
+        : unresolved.length / state.verses.length;
+    final day = localDayIndex(nowLocal);
+    final preSleepDueDay = nowLocal.hour < 20 ? day : null;
+    final nextDayDueDay = day + 1;
+    final status = unresolvedRatio > 0.30
+        ? 'needs_reinforcement'
+        : 'pending';
+
+    await _companionRepo.upsertLifecycleState(
+      unitId: state.unitId,
+      lifecycleTier: const Value('ready'),
+      stage4Status: Value(status),
+      stage4PreSleepDueDay: Value(preSleepDueDay),
+      stage4NextDayDueDay: Value(nextDayDueDay),
+      stage4RetryDueDay: const Value(null),
+      stage4UnresolvedTargetsJson:
+          Value(unresolved.isEmpty ? null : jsonEncode(unresolved)),
+      stage4RiskJson: Value(
+        jsonEncode(<String, Object?>{
+          'stage3_budget_exceeded': stage3.budgetExceeded,
+          'weak_target_count': unresolved.length,
+        }),
+      ),
+      stage4StrengtheningRoute:
+          Value(unresolvedRatio > 0.30 ? 'broad_stage3' : null),
+      stage4LastOutcome: const Value(null),
+      stage4LastSessionId: const Value(null),
+      stage4LastCompletedDay: const Value(null),
+      updatedAtDay: day,
+      updatedAtSeconds: nowLocalSecondsSinceMidnight(nowLocal),
     );
   }
 
@@ -2914,6 +3968,145 @@ class ProgressiveRevealChainEngine {
         capAtH1: normalizedWeakPreludeTargets.isNotEmpty,
       ),
       returnVerseIndex: null,
+    );
+  }
+
+  Future<ChainRunState> _initializeStage4Runtime({
+    required ChainRunState state,
+    required ProgressiveRevealChainConfig config,
+    required int nowEpochMs,
+    required DateTime nowLocal,
+  }) async {
+    final lifecycle = await _companionRepo.getLifecycleState(state.unitId);
+    final dueResolution = _resolveStage4DueKind(
+      lifecycle: lifecycle,
+      todayDay: localDayIndex(nowLocal),
+    );
+    final unresolved = _decodeStage4TargetIndexes(
+      raw: lifecycle?.stage4UnresolvedTargetsJson,
+      maxExclusive: state.verses.length,
+    );
+    final unresolvedTargets = unresolved.isEmpty
+        ? List<int>.generate(state.verses.length, (index) => index)
+        : unresolved;
+
+    final stage4BudgetMs = config.stage4.stage4ChunkBudgetMs(
+      ayahCount: state.verses.length,
+      avgNewMinutesPerAyah: state.resolvedAvgNewMinutesPerAyah,
+    );
+    final perVerseCapMs = config.stage4.perVerseCapMs(
+      ayahCount: state.verses.length,
+      stage4ChunkBudgetMs: stage4BudgetMs,
+    );
+
+    final weakSet = unresolvedTargets.toSet();
+    final verses = <ChainVerseState>[
+      for (var i = 0; i < state.verses.length; i++)
+        state.verses[i].copyWith(
+          stage4: state.verses[i].stage4.copyWith(
+            weakTarget: state.verses[i].stage4.weakTarget ||
+                state.verses[i].stage1.weak ||
+                state.verses[i].stage2.weakTarget ||
+                state.verses[i].stage3.weakTarget ||
+                weakSet.contains(i),
+            riskTarget: weakSet.contains(i),
+            cueBaselineHint: HintLevel.h0,
+          ),
+        ),
+    ];
+
+    final stage4SessionRecordId = await _companionRepo.startStage4Session(
+      unitId: state.unitId,
+      chainSessionId: state.sessionId,
+      dueKind: dueResolution.dueKind,
+      startedDay: localDayIndex(nowLocal),
+      startedSeconds: nowLocalSecondsSinceMidnight(nowLocal),
+      unresolvedTargetsJson: jsonEncode(unresolvedTargets),
+      telemetryJson: jsonEncode(<String, Object?>{
+        'lifecycle_stage': 'stage4',
+        'stage4_phase': Stage4Phase.verification.code,
+      }),
+    );
+
+    await _companionRepo.upsertLifecycleState(
+      unitId: state.unitId,
+      lifecycleTier: Value(lifecycle?.lifecycleTier ?? 'ready'),
+      stage4Status: const Value('in_progress'),
+      stage4LastSessionId: Value(stage4SessionRecordId),
+      updatedAtDay: localDayIndex(nowLocal),
+      updatedAtSeconds: nowLocalSecondsSinceMidnight(nowLocal),
+    );
+
+    final randomTargets = _deterministicStage4RandomStartTargets(
+      versesLength: verses.length,
+      randomProbeCount: config.stage4.randomStartProbeCount,
+      unitId: state.unitId,
+      sessionId: state.sessionId,
+      dueDay: dueResolution.dueDay,
+    );
+
+    var runtime = Stage4Runtime(
+      config: config.stage4,
+      phase: Stage4Phase.verification,
+      mode: Stage4Mode.coldStart,
+      startedAtEpochMs: nowEpochMs,
+      lastActionAtEpochMs: nowEpochMs,
+      chunkElapsedMs: 0,
+      stage4BudgetMs: stage4BudgetMs,
+      perVerseCapMs: perVerseCapMs,
+      dueKind: dueResolution.dueKind,
+      stage4SessionRecordId: stage4SessionRecordId,
+      unresolvedTargets: unresolvedTargets,
+      pendingRandomStartTargets: randomTargets,
+      randomStartCursor: 0,
+      budgetExceeded: false,
+      remediationRounds: 0,
+      checkpointTargets: const <int>[],
+      checkpointCursor: 0,
+      remediationTargets: const <int>[],
+      remediationCursor: 0,
+      lastCheckpointOutcome: null,
+      activeAutoCheckPrompt: null,
+      totalCountableAttempts: 0,
+    );
+
+    final seeded = state.copyWith(
+      verses: verses,
+      stage3: null,
+      stage4: runtime,
+      stage3WeakPreludeTargets: const <int>[],
+      stage3WeakPreludeCursor: 0,
+    );
+    final target = _pickStage4Target(
+      state: seeded,
+      verses: verses,
+      startAfter: -1,
+      runtime: runtime,
+    );
+    final currentIndex = target?.verseIndex ?? 0;
+    final mode = target?.mode ?? Stage4Mode.coldStart;
+    runtime = runtime.copyWith(
+      phase: target?.phase ?? Stage4Phase.verification,
+      mode: mode,
+      activeAutoCheckPrompt: mode == Stage4Mode.correction
+          ? null
+          : _buildStage4AutoCheckPrompt(
+              state: seeded,
+              verses: verses,
+              verseIndex: currentIndex,
+              mode: mode,
+            ),
+    );
+
+    return state.copyWith(
+      verses: verses,
+      stage3: null,
+      stage4: runtime,
+      currentVerseIndex: currentIndex,
+      currentHintLevel: _stage4EffectiveBaselineHint(verses[currentIndex].stage4),
+      returnVerseIndex: null,
+      stage3WeakPreludeTargets: const <int>[],
+      stage3WeakPreludeCursor: 0,
     );
   }
 
@@ -3752,6 +4945,35 @@ class ProgressiveRevealChainEngine {
     );
   }
 
+  _Stage4Touched _touchStage4Clock({
+    required ChainRunState state,
+    required DateTime nowLocal,
+  }) {
+    final runtime = state.stage4;
+    if (runtime == null) {
+      return _Stage4Touched(verses: state.verses, runtime: null);
+    }
+    final nowMs = nowLocal.millisecondsSinceEpoch;
+    final deltaMs = nowMs > runtime.lastActionAtEpochMs
+        ? nowMs - runtime.lastActionAtEpochMs
+        : 0;
+    final verses = [...state.verses];
+    final currentIndex = state.currentVerseIndex;
+    final current = verses[currentIndex];
+    verses[currentIndex] = current.copyWith(
+      stage4: current.stage4.copyWith(
+        timeOnVerseMs: current.stage4.timeOnVerseMs + deltaMs,
+      ),
+    );
+    return _Stage4Touched(
+      verses: verses,
+      runtime: runtime.copyWith(
+        lastActionAtEpochMs: nowMs,
+        chunkElapsedMs: runtime.chunkElapsedMs + deltaMs,
+      ),
+    );
+  }
+
   Stage1AutoCheckPrompt _buildStage2AutoCheckPrompt({
     required ChainRunState state,
     required List<ChainVerseState> verses,
@@ -4378,6 +5600,395 @@ class ProgressiveRevealChainEngine {
     );
   }
 
+  Stage1AutoCheckPrompt _buildStage4AutoCheckPrompt({
+    required ChainRunState state,
+    required List<ChainVerseState> verses,
+    required int verseIndex,
+    required Stage4Mode mode,
+  }) {
+    final verse = verses[verseIndex];
+    return _autoCheckEngine.buildPrompt(
+      sessionId: state.sessionId,
+      verseOrder: verseIndex,
+      attemptIndex: verse.attemptCount + 1,
+      attemptType: _attemptTypeForStage4Mode(mode),
+      stage1Mode: _seedStage1ModeForStage4Mode(mode),
+      verse: verse.verse,
+      chunkVerses: verses.map((entry) => entry.verse).toList(growable: false),
+    );
+  }
+
+  Stage1Mode _seedStage1ModeForStage4Mode(Stage4Mode mode) {
+    return switch (mode) {
+      Stage4Mode.coldStart => Stage1Mode.coldProbe,
+      Stage4Mode.randomStart => Stage1Mode.spacedReprobe,
+      Stage4Mode.linking => Stage1Mode.spacedReprobe,
+      Stage4Mode.discrimination => Stage1Mode.spacedReprobe,
+      Stage4Mode.correction => Stage1Mode.correction,
+      Stage4Mode.checkpoint => Stage1Mode.checkpoint,
+      Stage4Mode.remediation => Stage1Mode.checkpoint,
+    };
+  }
+
+  String _attemptTypeForStage4Mode(Stage4Mode mode) {
+    return switch (mode) {
+      Stage4Mode.coldStart => 'probe',
+      Stage4Mode.randomStart => 'probe',
+      Stage4Mode.linking => 'spaced_reprobe',
+      Stage4Mode.discrimination => 'spaced_reprobe',
+      Stage4Mode.correction => 'encode_echo',
+      Stage4Mode.checkpoint => 'checkpoint',
+      Stage4Mode.remediation => 'checkpoint',
+    };
+  }
+
+  String _stage4TelemetryStep(Stage4Mode mode) {
+    return switch (mode) {
+      Stage4Mode.coldStart => 'hidden_attempt',
+      Stage4Mode.randomStart => 'hidden_attempt',
+      Stage4Mode.linking => 'linking',
+      Stage4Mode.discrimination => 'discrimination',
+      Stage4Mode.correction => 'correction_exposure',
+      Stage4Mode.checkpoint => 'checkpoint',
+      Stage4Mode.remediation => 'remediation',
+    };
+  }
+
+  String? _stage4RiskTrigger({
+    required ChainVerseState verse,
+    required Stage4Config config,
+  }) {
+    if (verse.stage4.remediationNeeded) {
+      return 'remediation';
+    }
+    if (verse.stage4.consecutiveFailures >= config.discriminationFailureTrigger) {
+      return 'failure_streak';
+    }
+    if (verse.stage1.weak ||
+        verse.stage2.weakTarget ||
+        verse.stage3.weakTarget ||
+        verse.stage4.weakTarget ||
+        verse.stage4.riskTarget) {
+      return 'weak_target';
+    }
+    return null;
+  }
+
+  bool _stage4IsReady({
+    required ChainRunState state,
+    required ChainVerseState verse,
+    required Stage4Config config,
+  }) {
+    return verse.stage4.isReady(
+      config: config,
+      isWeak: verse.stage1.weak ||
+          verse.stage2.weakTarget ||
+          verse.stage3.weakTarget ||
+          verse.stage4.weakTarget,
+    );
+  }
+
+  List<int> _stage4UnresolvedTargets({
+    required ChainRunState state,
+    required List<ChainVerseState> verses,
+    required Stage4Config config,
+  }) {
+    return <int>[
+      for (var i = 0; i < verses.length; i++)
+        if (!_stage4IsReady(
+              state: state,
+              verse: verses[i],
+              config: config,
+            ) ||
+            verses[i].stage4.remediationNeeded ||
+            verses[i].stage4.correctionRequired)
+          i,
+    ];
+  }
+
+  HintLevel _stage4EffectiveBaselineHint(Stage4VerseStats stats) {
+    var baseline = stats.cueBaselineHint;
+    if (baseline.order > HintLevel.letters.order) {
+      baseline = HintLevel.letters;
+    }
+    return baseline;
+  }
+
+  Stage4Mode _stage4ModeForVerse({
+    required ChainVerseState verse,
+    required Stage4Runtime runtime,
+  }) {
+    if (verse.stage4.correctionRequired) {
+      return Stage4Mode.correction;
+    }
+    if (runtime.phase == Stage4Phase.remediation) {
+      return Stage4Mode.remediation;
+    }
+    if (runtime.phase == Stage4Phase.checkpoint) {
+      return Stage4Mode.checkpoint;
+    }
+
+    final riskTrigger = _stage4RiskTrigger(
+      verse: verse,
+      config: runtime.config,
+    );
+    if (riskTrigger != null &&
+        (verse.stage4.discriminationPasses < 1 ||
+            verse.stage4.consecutiveFailures >=
+                runtime.config.discriminationFailureTrigger ||
+            verse.stage4.remediationNeeded)) {
+      return Stage4Mode.discrimination;
+    }
+
+    if (verse.stage4.linkingPassCount < 1) {
+      return Stage4Mode.linking;
+    }
+    return Stage4Mode.coldStart;
+  }
+
+  _Stage4Target? _pickStage4Target({
+    required ChainRunState state,
+    required List<ChainVerseState> verses,
+    required int startAfter,
+    required Stage4Runtime runtime,
+  }) {
+    if (verses.isEmpty) {
+      return null;
+    }
+
+    final correctionTarget = _nextMatchingIndex(
+      verses: verses,
+      startAfter: startAfter,
+      predicate: (verse) => verse.stage4.correctionRequired,
+    );
+    if (correctionTarget != null) {
+      return _Stage4Target(
+        verseIndex: correctionTarget,
+        mode: Stage4Mode.correction,
+        phase: runtime.phase,
+        weakTarget: true,
+        riskTrigger: 'correction_required',
+      );
+    }
+
+    final unresolvedWeak = <int>[
+      for (var i = 0; i < verses.length; i++)
+        if (!_stage4IsReady(
+              state: state,
+              verse: verses[i],
+              config: runtime.config,
+            ) &&
+            (verses[i].stage1.weak ||
+                verses[i].stage2.weakTarget ||
+                verses[i].stage3.weakTarget ||
+                verses[i].stage4.weakTarget ||
+                verses[i].stage4.riskTarget))
+          i,
+    ];
+    if (unresolvedWeak.isNotEmpty) {
+      final verseIndex = _nextIndexFromList(
+        indexes: unresolvedWeak,
+        startAfter: startAfter,
+      );
+      final verse = verses[verseIndex];
+      return _Stage4Target(
+        verseIndex: verseIndex,
+        mode: _stage4ModeForVerse(verse: verse, runtime: runtime),
+        phase: Stage4Phase.verification,
+        weakTarget: true,
+        riskTrigger: _stage4RiskTrigger(
+          verse: verse,
+          config: runtime.config,
+        ),
+      );
+    }
+
+    if (runtime.pendingRandomStartTargets.isNotEmpty) {
+      final verseIndex = _nextIndexFromList(
+        indexes: runtime.pendingRandomStartTargets,
+        startAfter: startAfter,
+      );
+      return _Stage4Target(
+        verseIndex: verseIndex,
+        mode: Stage4Mode.randomStart,
+        phase: Stage4Phase.verification,
+        weakTarget: verses[verseIndex].stage4.weakTarget,
+        riskTrigger: 'random_start_obligation',
+      );
+    }
+
+    final linkingDeficits = <int>[
+      for (var i = 0; i < verses.length; i++)
+        if (verses[i].stage4.linkingPassCount < 1) i,
+    ];
+    if (linkingDeficits.isNotEmpty) {
+      final verseIndex = _nextIndexFromList(
+        indexes: linkingDeficits,
+        startAfter: startAfter,
+      );
+      return _Stage4Target(
+        verseIndex: verseIndex,
+        mode: Stage4Mode.linking,
+        phase: Stage4Phase.verification,
+        weakTarget: verses[verseIndex].stage4.weakTarget,
+        riskTrigger: 'linking_deficit',
+      );
+    }
+
+    final readinessDeficits = <int>[
+      for (var i = 0; i < verses.length; i++)
+        if (!_stage4IsReady(
+          state: state,
+          verse: verses[i],
+          config: runtime.config,
+        ))
+          i,
+    ];
+    if (readinessDeficits.isNotEmpty) {
+      if (runtime.totalCountableAttempts > 0 &&
+          runtime.totalCountableAttempts % 4 == 0) {
+        final seed = state.unitId +
+            state.sessionId +
+            runtime.totalCountableAttempts +
+            verses.length;
+        final sorted = readinessDeficits.toList(growable: false)..sort();
+        final probeIndex = sorted[seed % sorted.length];
+        return _Stage4Target(
+          verseIndex: probeIndex,
+          mode: Stage4Mode.randomStart,
+          phase: Stage4Phase.verification,
+          weakTarget: verses[probeIndex].stage4.weakTarget,
+          riskTrigger: 'deterministic_probe',
+        );
+      }
+      final verseIndex = _nextIndexFromList(
+        indexes: readinessDeficits,
+        startAfter: startAfter,
+      );
+      final verse = verses[verseIndex];
+      return _Stage4Target(
+        verseIndex: verseIndex,
+        mode: _stage4ModeForVerse(verse: verse, runtime: runtime),
+        phase: Stage4Phase.verification,
+        weakTarget: verse.stage4.weakTarget,
+        riskTrigger: _stage4RiskTrigger(
+          verse: verse,
+          config: runtime.config,
+        ),
+      );
+    }
+
+    final fallback = _routeNextHiddenVerse(
+      state: state,
+      verseStates: verses,
+      currentIndex: startAfter < 0 ? 0 : startAfter,
+      passedCurrent: true,
+      config: const ProgressiveRevealChainConfig(),
+    );
+    return _Stage4Target(
+      verseIndex: fallback.nextIndex,
+      mode: Stage4Mode.coldStart,
+      phase: Stage4Phase.verification,
+      weakTarget: verses[fallback.nextIndex].stage4.weakTarget,
+      riskTrigger: 'fallback_hidden_interleave',
+    );
+  }
+
+  List<int> _deterministicStage4RandomStartTargets({
+    required int versesLength,
+    required int randomProbeCount,
+    required int unitId,
+    required int sessionId,
+    required int dueDay,
+  }) {
+    if (versesLength <= 0 || randomProbeCount <= 0) {
+      return const <int>[];
+    }
+    final count = randomProbeCount.clamp(1, versesLength);
+    final seedBase = unitId + sessionId + dueDay + versesLength;
+    final targets = <int>[];
+    var cursor = seedBase % versesLength;
+    for (var i = 0; i < count; i++) {
+      targets.add(cursor);
+      cursor = (cursor + 2) % versesLength;
+      if (targets.toSet().length != targets.length) {
+        cursor = (cursor + 1) % versesLength;
+      }
+    }
+    return targets.toSet().toList(growable: false)..sort();
+  }
+
+  _Stage4DueResolution _resolveStage4DueKind({
+    required CompanionLifecycleStateData? lifecycle,
+    required int todayDay,
+  }) {
+    final retryDue = lifecycle?.stage4RetryDueDay;
+    if (retryDue != null && retryDue <= todayDay) {
+      return _Stage4DueResolution(
+        dueKind: 'retry_required',
+        dueDay: retryDue,
+        mandatory: true,
+      );
+    }
+    final nextDay = lifecycle?.stage4NextDayDueDay;
+    if (nextDay != null && nextDay <= todayDay) {
+      return _Stage4DueResolution(
+        dueKind: 'next_day_required',
+        dueDay: nextDay,
+        mandatory: true,
+      );
+    }
+    final preSleep = lifecycle?.stage4PreSleepDueDay;
+    if (preSleep != null && preSleep <= todayDay) {
+      return _Stage4DueResolution(
+        dueKind: 'pre_sleep_optional',
+        dueDay: preSleep,
+        mandatory: false,
+      );
+    }
+    return _Stage4DueResolution(
+      dueKind: 'next_day_required',
+      dueDay: todayDay,
+      mandatory: true,
+    );
+  }
+
+  List<int> _decodeStage4TargetIndexes({
+    required String? raw,
+    required int maxExclusive,
+  }) {
+    if (raw == null || raw.trim().isEmpty) {
+      return const <int>[];
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded
+            .whereType<num>()
+            .map((value) => value.toInt())
+            .where((index) => index >= 0 && index < maxExclusive)
+            .toSet()
+            .toList(growable: false)
+          ..sort();
+      }
+      if (decoded is Map<String, dynamic>) {
+        final targets = decoded['targets'];
+        if (targets is List) {
+          return targets
+              .whereType<num>()
+              .map((value) => value.toInt())
+              .where((index) => index >= 0 && index < maxExclusive)
+              .toSet()
+              .toList(growable: false)
+            ..sort();
+        }
+      }
+    } catch (_) {
+      return const <int>[];
+    }
+    return const <int>[];
+  }
+
   int _nextIndexFromList({
     required List<int> indexes,
     required int startAfter,
@@ -4444,12 +6055,15 @@ class ProgressiveRevealChainEngine {
     final timeOnVerseMs = switch (attemptStage) {
       CompanionStage.guidedVisible => verse.stage1.timeOnVerseMs,
       CompanionStage.cuedRecall => verse.stage2.timeOnVerseMs,
-      CompanionStage.hiddenReveal => verse.stage3.timeOnVerseMs,
+      CompanionStage.hiddenReveal => state.stage4 != null
+          ? verse.stage4.timeOnVerseMs
+          : verse.stage3.timeOnVerseMs,
     };
     final timeOnChunkMs = switch (attemptStage) {
       CompanionStage.guidedVisible => state.stage1?.chunkElapsedMs ?? 0,
       CompanionStage.cuedRecall => state.stage2?.chunkElapsedMs ?? 0,
-      CompanionStage.hiddenReveal => state.stage3?.chunkElapsedMs ?? 0,
+      CompanionStage.hiddenReveal =>
+        state.stage4?.chunkElapsedMs ?? state.stage3?.chunkElapsedMs ?? 0,
     };
 
     await _companionRepo.insertVerseAttempt(
@@ -5050,6 +6664,44 @@ class _Stage3Target {
   final Stage3Phase phase;
   final bool weakTarget;
   final String? riskTrigger;
+}
+
+class _Stage4Touched {
+  const _Stage4Touched({
+    required this.verses,
+    required this.runtime,
+  });
+
+  final List<ChainVerseState> verses;
+  final Stage4Runtime? runtime;
+}
+
+class _Stage4Target {
+  const _Stage4Target({
+    required this.verseIndex,
+    required this.mode,
+    required this.phase,
+    required this.weakTarget,
+    required this.riskTrigger,
+  });
+
+  final int verseIndex;
+  final Stage4Mode mode;
+  final Stage4Phase phase;
+  final bool weakTarget;
+  final String? riskTrigger;
+}
+
+class _Stage4DueResolution {
+  const _Stage4DueResolution({
+    required this.dueKind,
+    required this.dueDay,
+    required this.mandatory,
+  });
+
+  final String dueKind;
+  final int dueDay;
+  final bool mandatory;
 }
 
 class _Stage3WeakPreludeRouting {

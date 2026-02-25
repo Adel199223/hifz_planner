@@ -42,7 +42,7 @@ Do not rely on this doc alone when:
 
 Database:
 - class: `AppDatabase`
-- schema version: `6`
+- schema version: `7`
 
 Tables:
 1. `ayah`
@@ -60,6 +60,8 @@ Tables:
 13. `companion_unit_state`
 14. `companion_stage_event`
 15. `companion_step_proficiency`
+16. `companion_lifecycle_state`
+17. `companion_stage4_session`
 
 ## Invariants and Constraints
 
@@ -116,7 +118,7 @@ Tables:
     - `time_on_verse_ms`
     - `time_on_chunk_ms`
     - `telemetry_json` (non-core payload)
-  - Stage-2 and Stage-3 semantics are encoded in `telemetry_json` (no schema change):
+  - Stage-2, Stage-3, and Stage-4 semantics are encoded in `telemetry_json` (no schema change):
     - `stage2_mode`
     - `stage2_phase`
     - `stage2_step`
@@ -131,14 +133,32 @@ Tables:
     - `stage3_phase`
     - `stage3_step` (`hidden_attempt`, `linking`, `discrimination`, `checkpoint`, `remediation`, `stage3_weak_prelude`, `correction_exposure`)
     - `stage3_error_type`
+    - `lifecycle_stage` (`stage4`)
+    - `stage4_mode`
+    - `stage4_phase`
+    - `stage4_step`
+    - `stage4_due_kind`
+    - `stage4_error_type`
+    - `random_start_anchor_verse_order`
+    - `unresolved_targets_count`
   - Stage-3 runtime keeps `attempt_type` within existing constraints:
     - retrieval attempts remain `probe`/`checkpoint`
     - correction exposure remains `encode_echo`
   - stage-aware timing attribution uses existing typed columns:
-    - `time_on_verse_ms` and `time_on_chunk_ms` are written from the active runtime (Stage 1/2/3)
+    - `time_on_verse_ms` and `time_on_chunk_ms` are written from the active runtime (Stage 1/2/3/4)
 - `companion_unit_state` stores per-unit unlocked stage for new memorization resume.
 - `companion_stage_event` stores stage transition telemetry (`auto_unlock`, `user_skip`, `resume_stage`).
 - `companion_step_proficiency` stores EMA proficiency at `(unit, surah, ayah)` granularity.
+- `companion_lifecycle_state` stores persistent lifecycle status and Stage-4 due/outcome state per `unit_id`.
+  - `lifecycle_tier` constrained: `emerging|ready|stable|maintained`
+  - `stage4_status` constrained: `none|pending|due|in_progress|passed|partial|failed|needs_reinforcement`
+  - carries due days (`stage4_pre_sleep_due_day`, `stage4_next_day_due_day`, `stage4_retry_due_day`)
+  - carries unresolved/risk payloads (`stage4_unresolved_targets_json`, `stage4_risk_json`)
+  - tracks override and missed counts for Stage-4 prioritization
+- `companion_stage4_session` stores Stage-4 run-level outcomes and diagnostics.
+  - `due_kind` constrained: `pre_sleep_optional|next_day_required|retry_required`
+  - `outcome` constrained: `pass|partial|fail|abandoned`
+  - stores pass-rate and mode counters plus unresolved/telemetry payloads
 
 ### Indexes (created in migration helpers)
 - `idx_schedule_state_due_day`
@@ -152,6 +172,10 @@ Tables:
 - `idx_companion_step_proficiency_unit`
 - `idx_companion_unit_state_unit_id`
 - `idx_companion_stage_event_session_created`
+- `idx_companion_lifecycle_state_stage4_next_due`
+- `idx_companion_lifecycle_state_stage4_retry_due`
+- `idx_companion_stage4_session_unit_started_day`
+- `idx_companion_stage4_session_chain_session`
 
 ## Migration and Codegen Workflow
 

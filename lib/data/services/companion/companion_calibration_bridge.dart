@@ -18,6 +18,8 @@ class CompanionCalibrationBridge {
       return;
     }
 
+    final hasStage4LifecycleAttempts = attempts.any(_isStage4LifecycleAttempt);
+
     final stageOneAttempts = attempts
         .where(
           (attempt) => attempt.stageCode == CompanionStage.guidedVisible.code,
@@ -28,7 +30,7 @@ class CompanionCalibrationBridge {
       (maxValue, attempt) =>
           attempt.timeOnChunkMs > maxValue ? attempt.timeOnChunkMs : maxValue,
     );
-    if (stage1DurationMs > 0) {
+    if (!hasStage4LifecycleAttempts && stage1DurationMs > 0) {
       final newDurationSeconds = (stage1DurationMs / 1000).round().clamp(1, 86400);
       await _calibrationRepo.insertSample(
         sampleKind: 'new_memorization',
@@ -44,22 +46,35 @@ class CompanionCalibrationBridge {
         .where(
           (attempt) =>
               attempt.stageCode == CompanionStage.hiddenReveal.code &&
+              !_isStage4LifecycleAttempt(attempt) &&
               attempt.attemptType != 'encode_echo' &&
               attempt.evaluatorPassed == 1,
         )
         .toList(growable: false);
 
-    final preferredAttempts = stageThreePassedAttempts.isNotEmpty
-        ? stageThreePassedAttempts
-        : attempts
-            .where(
-              (attempt) =>
-                  attempt.attemptType != 'encode_echo' &&
-                  attempt.evaluatorPassed == 1,
-            )
-            .toList(
-              growable: false,
-            );
+    final stage4PassedAttempts = attempts
+        .where(
+          (attempt) =>
+              _isStage4LifecycleAttempt(attempt) &&
+              attempt.attemptType != 'encode_echo' &&
+              attempt.evaluatorPassed == 1,
+        )
+        .toList(growable: false);
+
+    final preferredAttempts = hasStage4LifecycleAttempts
+        ? stage4PassedAttempts
+        : (stageThreePassedAttempts.isNotEmpty
+            ? stageThreePassedAttempts
+            : attempts
+                .where(
+                  (attempt) =>
+                      !_isStage4LifecycleAttempt(attempt) &&
+                      attempt.attemptType != 'encode_echo' &&
+                      attempt.evaluatorPassed == 1,
+                )
+                .toList(
+                  growable: false,
+                ));
 
     final averageStrength = preferredAttempts.isEmpty
         ? summary.averageRetrievalStrength
@@ -81,5 +96,14 @@ class CompanionCalibrationBridge {
       createdAtDay: localDayIndex(effectiveNow),
       createdAtSeconds: nowLocalSecondsSinceMidnight(effectiveNow),
     );
+  }
+
+  bool _isStage4LifecycleAttempt(CompanionVerseAttemptData attempt) {
+    final telemetry = attempt.telemetryJson;
+    if (telemetry == null || telemetry.trim().isEmpty) {
+      return false;
+    }
+    return telemetry.contains('"lifecycle_stage":"stage4"') ||
+        telemetry.contains('"lifecycle_stage": "stage4"');
   }
 }

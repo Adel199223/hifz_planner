@@ -23,8 +23,10 @@ class TodayScreen extends ConsumerStatefulWidget {
 class _TodayScreenState extends ConsumerState<TodayScreen> {
   bool _isLoading = true;
   bool _isSeedingDebugUnit = false;
+  bool _allowStage4NewOverride = false;
   String? _errorMessage;
   TodayPlan? _plan;
+  List<Stage4DueItem> _remainingStage4Due = const <Stage4DueItem>[];
   List<DueUnitRow> _remainingReviews = const <DueUnitRow>[];
   List<MemUnitData> _remainingNewUnits = const <MemUnitData>[];
   final Set<int> _busyUnitIds = <int>{};
@@ -46,13 +48,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     try {
-      final plan =
-          await ref.read(dailyPlannerProvider).planToday(todayDay: todayDay);
+      final plan = await ref.read(dailyPlannerProvider).planToday(
+            todayDay: todayDay,
+            allowStage4Override: _allowStage4NewOverride,
+          );
       if (!mounted) {
         return;
       }
       setState(() {
         _plan = plan;
+        _remainingStage4Due = List<Stage4DueItem>.from(plan.plannedStage4Due);
         _remainingReviews = List<DueUnitRow>.from(plan.plannedReviews);
         _remainingNewUnits = List<MemUnitData>.from(plan.plannedNewUnits);
         _isLoading = false;
@@ -65,6 +70,73 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         _isLoading = false;
         _errorMessage = strings.failedToLoadTodayPlan;
       });
+    }
+  }
+
+  Future<bool> _confirmStage4Override(AppStrings strings) async {
+    final decision = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(strings.stage4OverrideDialogTitle),
+          content: Text(strings.stage4OverrideDialogMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(strings.cancel),
+            ),
+            FilledButton(
+              key: const ValueKey('today_stage4_override_confirm'),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(strings.stage4OverrideDialogConfirm),
+            ),
+          ],
+        );
+      },
+    );
+    return decision == true;
+  }
+
+  Future<void> _handleStage4Override() async {
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+    final confirmed = await _confirmStage4Override(strings);
+    if (!confirmed) {
+      return;
+    }
+
+    final now = DateTime.now().toLocal();
+    final todayDay = localDayIndex(now);
+    final seconds = nowLocalSecondsSinceMidnight(now);
+    final companionRepo = ref.read(companionRepoProvider);
+
+    try {
+      final mandatoryUnitIds = _remainingStage4Due
+          .where((item) => item.mandatory)
+          .map((item) => item.unit.id)
+          .toSet();
+      for (final unitId in mandatoryUnitIds) {
+        await companionRepo.recordNewOverride(
+          unitId: unitId,
+          todayDay: todayDay,
+          updatedAtSeconds: seconds,
+        );
+      }
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _allowStage4NewOverride = true;
+      });
+      await _loadTodayPlan();
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(strings.stage4OverrideApplied);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(strings.stage4OverrideFailed);
     }
   }
 
@@ -231,6 +303,127 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   for (final dueRow in _remainingReviews) ...[
                     _buildReviewRow(dueRow, strings),
                     const SizedBox(height: 12),
+                  ],
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _stage4DueKindLabel(String dueKind, AppStrings strings) {
+    return switch (dueKind) {
+      'next_day_required' => strings.stage4DueKindNextDayRequired,
+      'retry_required' => strings.stage4DueKindRetryRequired,
+      'pre_sleep_optional' => strings.stage4DueKindPreSleepOptional,
+      _ => strings.stage4DueKindNextDayRequired,
+    };
+  }
+
+  String _stage4RouteForItem(Stage4DueItem item) {
+    final needsStrengthening = item.lifecycle.stage4Status == 'failed' ||
+        item.lifecycle.stage4Status == 'needs_reinforcement' ||
+        item.lifecycle.stage4StrengtheningRoute != null;
+    if (needsStrengthening) {
+      return '/companion/chain?unitId=${item.unit.id}&mode=new';
+    }
+    return '/companion/chain?unitId=${item.unit.id}&mode=stage4';
+  }
+
+  Widget _buildStage4DueSection(AppStrings strings) {
+    final plan = _plan;
+    if (plan == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      key: const ValueKey('today_stage4_section'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.stage4DueSectionTitle,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              strings.stage4TierSummary(
+                plan.stage4QualitySnapshot.emergingCount,
+                plan.stage4QualitySnapshot.readyCount,
+                plan.stage4QualitySnapshot.stableCount,
+                plan.stage4QualitySnapshot.maintainedCount,
+              ),
+            ),
+            if (plan.stage4CatchUpMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                plan.stage4CatchUpMessage!,
+                key: const ValueKey('today_stage4_catchup_message'),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+            if (plan.stage4BlocksNewByDefault) ...[
+              const SizedBox(height: 8),
+              OutlinedButton(
+                key: const ValueKey('today_stage4_override_new_button'),
+                onPressed: _handleStage4Override,
+                child: Text(strings.stage4OverrideNewAction),
+              ),
+            ],
+            const SizedBox(height: 10),
+            if (_remainingStage4Due.isEmpty)
+              Text(strings.stage4NoDueItems)
+            else
+              Column(
+                children: [
+                  for (final item in _remainingStage4Due) ...[
+                    DecoratedBox(
+                      key: ValueKey('today_stage4_row_${item.unit.id}'),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _formatUnitHeader(item.unit, strings),
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(_formatRange(item.unit, strings)),
+                            const SizedBox(height: 4),
+                            Text(
+                              strings.stage4DueItemSummary(
+                                _stage4DueKindLabel(item.dueKind, strings),
+                                item.overdueDays,
+                                item.unresolvedTargetsCount,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton(
+                              key: ValueKey(
+                                'today_open_companion_stage4_${item.unit.id}',
+                              ),
+                              onPressed: () {
+                                context.go(_stage4RouteForItem(item));
+                              },
+                              child: Text(strings.stage4OpenAction),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                   ],
                 ],
               ),
@@ -635,6 +828,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               _buildSessionSection(strings, plan),
               const SizedBox(height: 12),
             ],
+            _buildStage4DueSection(strings),
+            const SizedBox(height: 16),
             _buildReviewSection(strings),
             const SizedBox(height: 16),
             _buildNewMemorizationSection(strings),

@@ -519,6 +519,137 @@ class CompanionStepProficiency extends Table {
       ];
 }
 
+class CompanionLifecycleState extends Table {
+  @override
+  String get tableName => 'companion_lifecycle_state';
+
+  IntColumn get unitId => integer()
+      .named('unit_id')
+      .references(MemUnit, #id, onDelete: KeyAction.cascade)();
+
+  TextColumn get lifecycleTier => text()
+      .named('lifecycle_tier')
+      .withDefault(const Constant('emerging'))
+      .check(
+        const CustomExpression<bool>(
+          "lifecycle_tier IN ('emerging', 'ready', 'stable', 'maintained')",
+        ),
+      )();
+
+  TextColumn get stage4Status => text()
+      .named('stage4_status')
+      .withDefault(const Constant('none'))
+      .check(
+        const CustomExpression<bool>(
+          "stage4_status IN ('none', 'pending', 'due', 'in_progress', 'passed', 'partial', 'failed', 'needs_reinforcement')",
+        ),
+      )();
+
+  IntColumn get stage4PreSleepDueDay =>
+      integer().named('stage4_pre_sleep_due_day').nullable()();
+
+  IntColumn get stage4NextDayDueDay =>
+      integer().named('stage4_next_day_due_day').nullable()();
+
+  IntColumn get stage4RetryDueDay =>
+      integer().named('stage4_retry_due_day').nullable()();
+
+  TextColumn get stage4UnresolvedTargetsJson =>
+      text().named('stage4_unresolved_targets_json').nullable()();
+
+  TextColumn get stage4RiskJson => text().named('stage4_risk_json').nullable()();
+
+  TextColumn get stage4StrengtheningRoute =>
+      text().named('stage4_strengthening_route').nullable().check(
+            const CustomExpression<bool>(
+              "stage4_strengthening_route IS NULL OR stage4_strengthening_route IN ('targeted_stage3', 'broad_stage3')",
+            ),
+          )();
+
+  TextColumn get stage4LastOutcome => text().named('stage4_last_outcome').nullable().check(
+            const CustomExpression<bool>(
+              "stage4_last_outcome IS NULL OR stage4_last_outcome IN ('pass', 'partial', 'fail', 'abandoned')",
+            ),
+          )();
+
+  IntColumn get stage4LastSessionId =>
+      integer().named('stage4_last_session_id').nullable()();
+
+  IntColumn get stage4LastCompletedDay =>
+      integer().named('stage4_last_completed_day').nullable()();
+
+  IntColumn get stage4MissedCount =>
+      integer().named('stage4_missed_count').withDefault(const Constant(0))();
+
+  IntColumn get lastNewOverrideDay =>
+      integer().named('last_new_override_day').nullable()();
+
+  IntColumn get newOverrideCount =>
+      integer().named('new_override_count').withDefault(const Constant(0))();
+
+  IntColumn get updatedAtDay => integer().named('updated_at_day')();
+
+  IntColumn get updatedAtSeconds => integer().named('updated_at_seconds')();
+
+  @override
+  Set<Column> get primaryKey => {unitId};
+}
+
+class CompanionStage4Session extends Table {
+  @override
+  String get tableName => 'companion_stage4_session';
+
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get unitId => integer()
+      .named('unit_id')
+      .references(MemUnit, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get chainSessionId =>
+      integer().named('chain_session_id').nullable().references(
+            CompanionChainSession,
+            #id,
+            onDelete: KeyAction.setNull,
+          )();
+
+  TextColumn get dueKind => text().named('due_kind').check(
+        const CustomExpression<bool>(
+          "due_kind IN ('pre_sleep_optional', 'next_day_required', 'retry_required')",
+        ),
+      )();
+
+  TextColumn get outcome => text().named('outcome').nullable().check(
+        const CustomExpression<bool>(
+          "outcome IS NULL OR outcome IN ('pass', 'partial', 'fail', 'abandoned')",
+        ),
+      )();
+
+  IntColumn get startedDay => integer().named('started_day')();
+
+  IntColumn get startedSeconds => integer().named('started_seconds').nullable()();
+
+  IntColumn get endedDay => integer().named('ended_day').nullable()();
+
+  IntColumn get endedSeconds => integer().named('ended_seconds').nullable()();
+
+  RealColumn get countedPassRate =>
+      real().named('counted_pass_rate').withDefault(const Constant(0.0))();
+
+  IntColumn get randomStartPasses =>
+      integer().named('random_start_passes').withDefault(const Constant(0))();
+
+  IntColumn get linkingPasses =>
+      integer().named('linking_passes').withDefault(const Constant(0))();
+
+  IntColumn get discriminationPasses =>
+      integer().named('discrimination_passes').withDefault(const Constant(0))();
+
+  TextColumn get unresolvedTargetsJson =>
+      text().named('unresolved_targets_json').nullable()();
+
+  TextColumn get telemetryJson => text().named('telemetry_json').nullable()();
+}
+
 class MemProgress extends Table {
   @override
   String get tableName => 'mem_progress';
@@ -552,13 +683,15 @@ class MemProgress extends Table {
     CompanionUnitState,
     CompanionStageEvent,
     CompanionStepProficiency,
+    CompanionLifecycleState,
+    CompanionStage4Session,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -644,6 +777,10 @@ class AppDatabase extends _$AppDatabase {
                 companionVerseAttempt.telemetryJson as GeneratedColumn<Object>,
               );
             }
+          }
+          if (from < 7) {
+            await m.createTable(companionLifecycleState);
+            await m.createTable(companionStage4Session);
           }
           await _createMemorizationIndexes();
           await _createCalibrationIndexes();
@@ -739,6 +876,22 @@ class AppDatabase extends _$AppDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_companion_stage_event_session_created '
       'ON companion_stage_event(session_id, created_day, id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_lifecycle_state_stage4_next_due '
+      'ON companion_lifecycle_state(stage4_status, stage4_next_day_due_day, unit_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_lifecycle_state_stage4_retry_due '
+      'ON companion_lifecycle_state(stage4_status, stage4_retry_due_day, unit_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_stage4_session_unit_started_day '
+      'ON companion_stage4_session(unit_id, started_day, id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_companion_stage4_session_chain_session '
+      'ON companion_stage4_session(chain_session_id)',
     );
   }
 }

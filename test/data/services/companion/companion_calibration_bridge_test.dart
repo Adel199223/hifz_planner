@@ -233,4 +233,101 @@ void main() {
     expect(rows.length, 1);
     expect(rows.single.durationSeconds, 103);
   });
+
+  test('treats lifecycle stage4 attempts as review quality and skips stage1 new-time sample',
+      () async {
+    final unitId = await db.into(db.memUnit).insert(
+          MemUnitCompanion.insert(
+            kind: 'ayah_range',
+            unitKey: 'bridge-stage4-quality',
+            startSurah: const Value(1),
+            startAyah: const Value(1),
+            endSurah: const Value(1),
+            endAyah: const Value(2),
+            createdAtDay: 100,
+            updatedAtDay: 100,
+          ),
+        );
+    final sessionId = await db.into(db.companionChainSession).insert(
+          CompanionChainSessionCompanion.insert(
+            unitId: unitId,
+            targetVerseCount: 2,
+            passedVerseCount: const Value(2),
+            chainResult: 'completed',
+            retrievalStrength: const Value(0.4),
+            createdAtDay: 100,
+            updatedAtDay: 100,
+            startedAtSeconds: const Value(20),
+            endedAtSeconds: const Value(160),
+          ),
+        );
+
+    await db.into(db.companionVerseAttempt).insert(
+          CompanionVerseAttemptCompanion.insert(
+            sessionId: sessionId,
+            unitId: unitId,
+            verseOrder: 0,
+            surah: 1,
+            ayah: 1,
+            attemptIndex: 1,
+            stageCode: Value(CompanionStage.guidedVisible.code),
+            attemptType: const Value('encode_echo'),
+            hintLevel: HintLevel.h0.code,
+            evaluatorMode: EvaluatorMode.manualFallback.code,
+            evaluatorPassed: 1,
+            revealedAfterAttempt: 0,
+            retrievalStrength: 0.0,
+            timeOnChunkMs: const Value(60000),
+            attemptDay: 100,
+            attemptSeconds: const Value(40),
+          ),
+        );
+    await db.into(db.companionVerseAttempt).insert(
+          CompanionVerseAttemptCompanion.insert(
+            sessionId: sessionId,
+            unitId: unitId,
+            verseOrder: 1,
+            surah: 1,
+            ayah: 2,
+            attemptIndex: 2,
+            stageCode: Value(CompanionStage.hiddenReveal.code),
+            attemptType: const Value('checkpoint'),
+            hintLevel: HintLevel.h0.code,
+            evaluatorMode: EvaluatorMode.manualFallback.code,
+            evaluatorPassed: 1,
+            revealedAfterAttempt: 1,
+            retrievalStrength: 0.5,
+            telemetryJson: const Value('{"lifecycle_stage":"stage4"}'),
+            attemptDay: 100,
+            attemptSeconds: const Value(90),
+          ),
+        );
+
+    final attempts = await (db.select(db.companionVerseAttempt)
+          ..where((tbl) => tbl.sessionId.equals(sessionId))
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+        .get();
+
+    await bridge.onChainCompleted(
+      summary: const ChainResultSummary(
+        sessionId: 1,
+        resultKind: ChainResultKind.completed,
+        totalVerses: 2,
+        passedVerses: 2,
+        averageHintLevel: 1.0,
+        averageRetrievalStrength: 0.1,
+      ),
+      ayahCount: 2,
+      attempts: attempts,
+      nowLocal: DateTime(2026, 2, 24, 8, 30),
+    );
+
+    final rows = await (db.select(db.calibrationSample)
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+        .get();
+
+    expect(rows.length, 1);
+    expect(rows.single.sampleKind, 'review');
+    expect(rows.single.durationSeconds, 132);
+  });
 }

@@ -57,10 +57,15 @@ void main() {
     return ProgressiveRevealChainConfig(stage3: stage3);
   }
 
+  ProgressiveRevealChainConfig configForStage4(Stage4Config stage4) {
+    return ProgressiveRevealChainConfig(stage4: stage4);
+  }
+
   String correctOption(ChainRunState state) {
     final prompt = state.stage1?.activeAutoCheckPrompt ??
         state.stage2?.activeAutoCheckPrompt ??
-        state.stage3?.activeAutoCheckPrompt;
+        state.stage3?.activeAutoCheckPrompt ??
+        state.stage4?.activeAutoCheckPrompt;
     expect(prompt, isNotNull);
     return prompt!.correctOptionId;
   }
@@ -1490,6 +1495,190 @@ void main() {
     expect(stage3Attempts.last.timeOnChunkMs, greaterThan(0));
   });
 
+  test('Stage-4 launch mode initializes dedicated runtime on hidden stage',
+      () async {
+    final unitId = await createUnit('stage4-init', endAyah: 2);
+
+    final state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'بسم الله الرحمن الرحيم'),
+        ChainVerse(surah: 1, ayah: 2, text: 'الحمد لله رب العالمين'),
+      ],
+      launchMode: CompanionLaunchMode.stage4Consolidation,
+      nowLocal: DateTime(2026, 2, 26, 7, 0, 0),
+    );
+
+    expect(state.activeStage, CompanionStage.hiddenReveal);
+    expect(state.stage4, isNotNull);
+    expect(state.stage3, isNull);
+    expect(state.stage4?.phase, Stage4Phase.verification);
+    expect(state.stage4?.mode, isNot(Stage4Mode.correction));
+  });
+
+  test('Stage-4 failure requires correction exposure before retry', () async {
+    final unitId = await createUnit('stage4-correction-gate', endAyah: 1);
+    final config = configForStage4(
+      const Stage4Config(
+        readinessWindow: 1,
+        readinessPassesRequired: 1,
+        readinessRequiredH0Passes: 1,
+        randomStartProbeCount: 0,
+      ),
+    );
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'مالك يوم الدين'),
+      ],
+      launchMode: CompanionLaunchMode.stage4Consolidation,
+      config: config,
+      nowLocal: DateTime(2026, 2, 26, 7, 10, 0),
+    );
+
+    final update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: false,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 26, 7, 10, 3),
+    );
+    state = update.state;
+    expect(state.stage4?.mode, Stage4Mode.correction);
+    expect(update.telemetry.correctionRequiredAfterAttempt, isTrue);
+
+    await expectLater(
+      engine.submitAttempt(
+        state: state,
+        evaluator: evaluator,
+        manualFallbackPass: true,
+        selectedAutoCheckOptionId: null,
+        config: config,
+        nowLocal: DateTime(2026, 2, 26, 7, 10, 4),
+      ),
+      throwsA(isA<StateError>()),
+    );
+
+    final correction = await engine.submitCorrectionExposure(
+      state: state,
+      config: config,
+      nowLocal: DateTime(2026, 2, 26, 7, 10, 5),
+    );
+    state = correction.state;
+    expect(state.stage4?.mode, isNot(Stage4Mode.correction));
+  });
+
+  test('Stage-4 budget fallback finalizes as partial and persists unresolved',
+      () async {
+    final unitId = await createUnit('stage4-budget-fallback', endAyah: 1);
+    final config = configForStage4(
+      const Stage4Config(
+        stage4BudgetFractionOfNewTime: 0.01,
+        stage4BudgetMinMs: 1,
+        stage4BudgetMaxMs: 1,
+        randomStartProbeCount: 0,
+      ),
+    );
+
+    final state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'إياك نعبد وإياك نستعين'),
+      ],
+      launchMode: CompanionLaunchMode.stage4Consolidation,
+      config: config,
+      nowLocal: DateTime(2026, 2, 26, 7, 20, 0),
+    );
+
+    final update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: false,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 26, 7, 20, 3),
+    );
+
+    expect(update.state.completed, isTrue);
+    expect(update.summary, isNotNull);
+    expect(update.summary!.resultKind, ChainResultKind.partial);
+    expect(update.state.stage4?.phase, Stage4Phase.budgetFallback);
+
+    final lifecycle = await companionRepo.getLifecycleState(unitId);
+    expect(lifecycle, isNotNull);
+    expect(lifecycle!.stage4Status, 'partial');
+    expect(lifecycle.stage4UnresolvedTargetsJson, isNotNull);
+
+    final sessions = await companionRepo.getStage4SessionsForUnit(unitId);
+    expect(sessions, isNotEmpty);
+    expect(sessions.last.outcome, 'partial');
+    expect(sessions.last.unresolvedTargetsJson, isNotNull);
+  });
+
+  test('Stage-4 pass marks lifecycle stable and stage5-candidate path', () async {
+    final unitId = await createUnit('stage4-pass', endAyah: 1);
+    final config = configForStage4(
+      const Stage4Config(
+        readinessWindow: 1,
+        readinessPassesRequired: 1,
+        readinessRequiredH0Passes: 1,
+        weakRequiredH0Passes: 1,
+        randomStartProbeCount: 0,
+        checkpointThreshold: 1.0,
+      ),
+    );
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'اهدنا الصراط المستقيم'),
+      ],
+      launchMode: CompanionLaunchMode.stage4Consolidation,
+      config: config,
+      nowLocal: DateTime(2026, 2, 26, 7, 30, 0),
+    );
+
+    var update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 26, 7, 30, 2),
+    );
+    state = update.state;
+
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 26, 7, 30, 4),
+    );
+    state = update.state;
+    expect(state.stage4?.phase, Stage4Phase.checkpoint);
+
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 26, 7, 30, 6),
+    );
+
+    expect(update.state.completed, isTrue);
+    expect(update.summary, isNotNull);
+    expect(update.summary!.resultKind, ChainResultKind.completed);
+    final lifecycle = await companionRepo.getLifecycleState(unitId);
+    expect(lifecycle, isNotNull);
+    expect(lifecycle!.lifecycleTier, 'stable');
+    expect(lifecycle.stage4Status, 'passed');
+  });
+
   test('review mode remains hidden-first and bypasses Stage 2 runtime',
       () async {
     final unitId = await createUnit('stage2-review-unchanged', endAyah: 1);
@@ -1508,6 +1697,7 @@ void main() {
     expect(state.activeStage, CompanionStage.hiddenReveal);
     expect(state.stage2, isNull);
     expect(state.stage3, isNull);
+    expect(state.stage4, isNull);
 
     final update = await engine.submitAttempt(
       state: state,
@@ -1519,5 +1709,6 @@ void main() {
     expect(update.state.activeStage, CompanionStage.hiddenReveal);
     expect(update.state.stage2, isNull);
     expect(update.state.stage3, isNull);
+    expect(update.state.stage4, isNull);
   });
 }

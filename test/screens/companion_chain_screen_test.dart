@@ -57,6 +57,13 @@ void main() {
     return textWidget.data ?? '';
   }
 
+  String stage4ModeLabelText(WidgetTester tester) {
+    final textWidget = tester.widget<Text>(
+      find.byKey(const ValueKey('companion_stage4_mode_label')),
+    );
+    return textWidget.data ?? '';
+  }
+
   bool autoplayToggleValue(WidgetTester tester) {
     final toggle =
         tester.widget(find.byKey(const ValueKey('companion_autoplay_toggle')));
@@ -555,6 +562,80 @@ void main() {
     await tester.tap(recordButton);
     await tester.pumpAndSettle();
     expect(stage3ModeLabelText(tester), isNot('Correction'));
+  });
+
+  testWidgets('stage4 mode shows dedicated card, due banner, and hidden prompt',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-stage4-start',
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.stage4Consolidation,
+    );
+
+    expect(stageLabelText(tester), 'Hidden reveal');
+    expect(find.byKey(const ValueKey('companion_stage4_mode_card')),
+        findsOneWidget);
+    expect(stage4ModeLabelText(tester), isNotEmpty);
+    expect(find.byKey(const ValueKey('companion_stage4_due_banner')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('companion_stage4_hidden_prompt')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('companion_stage4_auto_check_card')),
+        findsOneWidget);
+  });
+
+  testWidgets('Stage-4 failure enters correction flow and requires correction',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-stage4-correction',
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.stage4Consolidation,
+    );
+
+    final optionFinder = firstAutoCheckOptionFinder(
+      prefix: 'companion_stage4_auto_check_o',
+    );
+    await tester.ensureVisible(optionFinder.first);
+    await tester.tap(optionFinder.first);
+    await tester.pumpAndSettle();
+
+    final recordButton =
+        find.byKey(const ValueKey('companion_record_start_button'));
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    expect(
+        find.byKey(const ValueKey('companion_mark_incorrect')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('companion_mark_incorrect')));
+    await tester.pumpAndSettle();
+
+    expect(stage4ModeLabelText(tester), 'Correction');
+    expect(find.text('Play Stage-4 Correction'), findsOneWidget);
+
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    expect(stage4ModeLabelText(tester), isNot('Correction'));
   });
 
   testWidgets('review mode still starts hidden with no skip control',

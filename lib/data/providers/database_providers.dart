@@ -108,6 +108,7 @@ final dailyPlannerProvider = Provider<DailyPlanner>((ref) {
   final progressRepo = ref.watch(progressRepoProvider);
   final scheduleRepo = ref.watch(scheduleRepoProvider);
   final quranRepo = ref.watch(quranRepoProvider);
+  final companionRepo = ref.watch(companionRepoProvider);
   final newUnitGenerator = ref.watch(newUnitGeneratorProvider);
   final planningProjectionEngine = ref.watch(planningProjectionEngineProvider);
   return DailyPlanner(
@@ -116,6 +117,7 @@ final dailyPlannerProvider = Provider<DailyPlanner>((ref) {
     progressRepo,
     scheduleRepo,
     quranRepo,
+    companionRepo,
     newUnitGenerator,
     planningProjectionEngine,
   );

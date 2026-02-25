@@ -66,6 +66,20 @@ Use this glossary to keep terminology consistent across Reader, planner/scheduli
 | `companion_stage_guided_visible` | Guided visible | Guide visible | Guiado visivel | موجّه ظاهر |
 | `companion_stage_cued_recall` | Cued recall | Rappel avec indice | Recordacao por pista | استرجاع بالمفتاح |
 | `companion_stage_hidden_reveal` | Hidden reveal | Revelation cachee | Revelacao oculta | كشف مخفي |
+| `stage4_due_section_title` | Stage-4 delayed checks | Verifications differees etape 4 | Verificacoes adiadas etapa 4 | تحققات المرحلة 4 المؤجلة |
+| `stage4_no_due_items` | No Stage-4 delayed checks are due. | Aucune verification differee etape 4 due. | Nenhuma verificacao adiada da etapa 4 pendente. | لا توجد تحققات مرحلة 4 مؤجلة مستحقة. |
+| `stage4_tier_summary` | Stage-4 quality snapshot - Stable: {stable}, Ready: {ready}, Emerging: {emerging} | Apercu qualite etape 4 - Stable: {stable}, Pret: {ready}, Emergent: {emerging} | Panorama de qualidade etapa 4 - Estavel: {stable}, Pronto: {ready}, Emergente: {emerging} | لقطة جودة المرحلة 4 - ثابت: {stable}، جاهز: {ready}، ناشئ: {emerging} |
+| `stage4_due_kind_pre_sleep_optional` | Optional pre-sleep check | Verification optionnelle avant sommeil | Verificacao opcional antes de dormir | تحقق اختياري قبل النوم |
+| `stage4_due_kind_next_day_required` | Mandatory next-day check | Verification obligatoire le lendemain | Verificacao obrigatoria no dia seguinte | تحقق إلزامي في اليوم التالي |
+| `stage4_due_kind_retry_required` | Mandatory retry check | Verification obligatoire de nouvelle tentative | Verificacao obrigatoria de nova tentativa | تحقق إعادة إلزامي |
+| `stage4_due_item_summary` | {dueKind} - overdue by {overdueDays} day(s) - unresolved: {unresolvedCount} | {dueKind} - retard de {overdueDays} jour(s) - non resolu: {unresolvedCount} | {dueKind} - atrasado ha {overdueDays} dia(s) - nao resolvido: {unresolvedCount} | {dueKind} - متأخر {overdueDays} يوم/أيام - غير محلول: {unresolvedCount} |
+| `stage4_open_action` | Open Stage-4 Check | Ouvrir verification etape 4 | Abrir verificacao da etapa 4 | فتح تحقق المرحلة 4 |
+| `stage4_override_new_action` | Start new anyway | Demarrer nouveau quand meme | Iniciar novo mesmo assim | ابدأ الجديد رغم ذلك |
+| `stage4_override_dialog_title` | Mandatory Stage-4 checks due | Verifications obligatoires etape 4 dues | Verificacoes obrigatorias da etapa 4 pendentes | تحققات المرحلة 4 الإلزامية مستحقة |
+| `stage4_override_dialog_message` | Mandatory Stage-4 delayed checks are due. Continue anyway and log override? | Des verifications differees obligatoires de l'etape 4 sont dues. Continuer et enregistrer le contournement ? | Verificacoes adiadas obrigatorias da etapa 4 estao pendentes. Continuar e registrar excecao? | توجد تحققات مرحلة 4 مؤجلة إلزامية. هل تتابع مع تسجيل التجاوز؟ |
+| `stage4_override_dialog_confirm` | Override | Contourner | Ignorar bloqueio | تجاوز |
+| `stage4_override_applied` | New memorization override recorded for today. | Contournement de nouvelle memorisation enregistre pour aujourd'hui. | Excecao de nova memorizacao registrada para hoje. | تم تسجيل تجاوز حفظ جديد لليوم. |
+| `stage4_override_failed` | Could not record override right now. | Impossible d'enregistrer le contournement maintenant. | Nao foi possivel registrar a excecao agora. | تعذر تسجيل التجاوز الآن. |
 | `companion_skip_stage_button` | Skip Stage | Passer l'etape | Pular etapa | تخطي المرحلة |
 | `companion_skip_stage_title` | Skip current stage? | Passer l'etape en cours ? | Pular etapa atual? | تخطي المرحلة الحالية؟ |
 | `companion_skip_stage_confirm` | Skip | Passer | Pular | تخطي |
@@ -112,6 +126,19 @@ Use this glossary to keep terminology consistent across Reader, planner/scheduli
 | `companion_stage3_correction_required_message` | Correction playback is required before the next Stage-3 attempt. | La correction est requise avant le prochain essai de l'etape 3. | A correcao e obrigatoria antes da proxima tentativa da etapa 3. | يلزم تشغيل التصحيح قبل محاولة المرحلة 3 التالية. |
 | `companion_stage3_correction_action` | Play Stage-3 Correction | Lancer la correction etape 3 | Reproduzir correcao da etapa 3 | تشغيل تصحيح المرحلة 3 |
 | `companion_stage3_weak_prelude_banner` | Weak-prelude active: {count} verses must pass before normal hidden flow. | Prelude des versets faibles active : {count} versets doivent reussir avant le flux cache normal. | Preludio fraco ativo: {count} versos devem passar antes do fluxo oculto normal. | تم تفعيل تمهيد الآيات الضعيفة: يجب نجاح {count} آيات قبل التدفق المخفي الطبيعي. |
+| `companion_stage4_mode_label` | Stage 4 mode | Mode etape 4 | Modo da etapa 4 | وضع المرحلة 4 |
+| `companion_stage4_mode_cold_start` | Cold Start | Demarrage a froid | Inicio frio | بداية باردة |
+| `companion_stage4_mode_random_start` | Random Start | Depart aleatoire | Inicio aleatorio | بداية عشوائية |
+| `companion_stage4_mode_linking` | Linking | Liaison | Ligacao | ربط |
+| `companion_stage4_mode_discrimination` | Discrimination | Discrimination | Discriminacao | تمييز |
+| `companion_stage4_mode_correction` | Correction | Correction | Correcao | تصحيح |
+| `companion_stage4_mode_checkpoint` | Checkpoint | Point de controle | Ponto de controle | نقطة تحقق |
+| `companion_stage4_mode_remediation` | Remediation | Remediation | Remediacao | معالجة |
+| `companion_stage4_recite_now` | Recite from delayed hidden recall. | Recite depuis un rappel cache differe. | Recite a partir de recordacao oculta adiada. | رتل من استرجاع مخفي مؤجل. |
+| `companion_stage4_correction_required_message` | Stage-4 correction exposure is required before retry. | L'exposition de correction etape 4 est requise avant de reessayer. | A exposicao de correcao da etapa 4 e obrigatoria antes de tentar novamente. | يلزم عرض تصحيح المرحلة 4 قبل إعادة المحاولة. |
+| `companion_stage4_correction_action` | Play Stage-4 Correction | Lancer la correction etape 4 | Reproduzir correcao da etapa 4 | تشغيل تصحيح المرحلة 4 |
+| `companion_stage4_due_banner` | Stage-4 due type: {dueKind} | Type d'echeance etape 4 : {dueKind} | Tipo de vencimento da etapa 4: {dueKind} | نوع استحقاق المرحلة 4: {dueKind} |
+| `companion_stage4_unresolved_targets` | Unresolved Stage-4 targets: {count} | Cibles etape 4 non resolues : {count} | Alvos nao resolvidos da etapa 4: {count} | أهداف المرحلة 4 غير المحلولة: {count} |
 | `companion_hint_button` | Hint | Indice | Dica | تلميح |
 | `companion_repeat_button` | Repeat | Repeter | Repetir | إعادة |
 | `companion_mark_correct` | Mark correct | Marquer correct | Marcar correto | تحديد كصحيح |
