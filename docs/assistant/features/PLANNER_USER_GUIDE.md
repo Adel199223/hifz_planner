@@ -379,7 +379,7 @@ When not to overuse override:
 - Forecast: projection of likely workload and pressure.
 - Stage-4 delayed check: short, strict verification after time delay.
 - Soft-block: planner discourages/blocks new by default but still allows explicit override.
-- Companion chain: staged memorization flow used to encode, retrieve, and stabilize.
+- Practice from Memory: the guided memorization session used for new practice, review practice, and delayed checks.
 
 ## 11) Related Links
 
