@@ -18,6 +18,7 @@ import '../services/companion/stage1_auto_check_engine.dart';
 import '../services/companion/verse_evaluator.dart';
 import '../services/daily_planner.dart';
 import '../services/forecast_simulation_service.dart';
+import '../services/goal_progress_snapshot_service.dart';
 import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
 import '../services/qurancom_api.dart';
@@ -147,6 +148,11 @@ final forecastSimulationServiceProvider = Provider<ForecastSimulationService>((
     planningProjectionEngine,
   );
 });
+
+final goalProgressSnapshotServiceProvider =
+    Provider<GoalProgressSnapshotService>((ref) {
+      return const GoalProgressSnapshotService();
+    });
 
 final companionCalibrationBridgeProvider = Provider<CompanionCalibrationBridge>(
   (ref) {

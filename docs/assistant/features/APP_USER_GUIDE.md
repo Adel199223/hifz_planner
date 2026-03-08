@@ -125,6 +125,7 @@ This is where you define your system before execution.
 The default setup path is intentionally simple, and the expert tools are hidden under `Advanced`.
 
 What is new in `My Plan`:
+- a small weekly goal summary tied to your current plan posture
 - a `Plan health` card
 - simple status labels: `On track`, `Tight`, `Overloaded`
 - plain-language hints when you should use a lighter day, burn down backlog, or switch into recovery
@@ -133,6 +134,11 @@ What is new in `My Plan`:
 - a simple forecast confidence label so you know whether the estimate is strong or still rough
 - calibration guidance that tells you when you have enough real samples to update planner pace with better confidence
 - a forecast pace-trend note that can tell you when recent real sessions are making the planner slightly more cautious or slightly more permissive than your baseline plan
+
+What the weekly goal summary is for:
+- it is not a separate goal-setting wizard
+- it changes automatically with your current plan pressure
+- it helps you understand whether this week should focus on steady progress, protecting retention, or stabilizing after overload
 
 ## 3) Execute Today’s Work
 
@@ -146,6 +152,7 @@ This screen is intentionally action-oriented: less setup, more execution.
 What you will now see first:
 - a `Do this next` card at the top
 - a short explanation of why that action comes first
+- a small goal block that tells you what counts as a good day right now
 - an `If you only have 10 minutes` fallback
 - sometimes a small `Other practice modes today` section if more than one valid practice path is ready
 - a recovery entry that sends you back to `My Plan` if the day feels too heavy
@@ -153,6 +160,16 @@ What you will now see first:
 - an explanation box that tells you why new work is normal, lighter, or paused
 - a `Recovery assistant` button on heavier days
 - stricter protection against token new work when delayed checks and review already consume the safe part of the day
+
+What the new goal block means:
+- `Steady progress` = your plan still has room for steady forward movement
+- `Protect retention` = review and delayed checks need more attention right now than pushing new material
+- `Recovery and stabilize` = reduce pressure first and rebuild consistency before trying to accelerate
+
+The goal block is there to answer three simple questions:
+- what counts as a good day today
+- how today’s main task helps your week
+- what still counts if the day gets short
 
 ## 4) Practice from Memory
 
@@ -248,13 +265,14 @@ If some remote assets fail temporarily:
 ## Common First-Week Path
 
 1. Set a conservative plan in `My Plan` with `Easy` or `Normal`.
-2. Execute `Today` consistently for several days.
-3. Use `Practice from Memory` for new units, reviews, and delayed checks from `Today` or `Learn`.
-4. Respect delayed checks when they appear.
-5. If `Today` or `My Plan` starts showing `Tight` or `Overloaded`, use the lighter-day and recovery guidance before increasing load.
-6. Use `Advanced` and then calibration/forecast only after enough real samples.
-7. When you open Forecast, read the summary and confidence line first; the detailed curves are there only if you want more detail.
-7. Increase load only after quality is stable.
+2. Read the weekly goal summary in `My Plan` so you know this week’s posture.
+3. Execute `Today` consistently for several days.
+4. Use `Practice from Memory` for new units, reviews, and delayed checks from `Today` or `Learn`.
+5. Respect delayed checks when they appear.
+6. If `Today` or `My Plan` starts showing `Protect retention` or `Recovery and stabilize`, use the lighter-day and recovery guidance before increasing load.
+7. Use `Advanced` and then calibration/forecast only after enough real samples.
+8. When you open Forecast, read the summary and confidence line first; the detailed curves are there only if you want more detail.
+9. Increase load only after quality is stable.
 
 ## Common Mistakes to Avoid
 

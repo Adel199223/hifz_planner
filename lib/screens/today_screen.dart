@@ -9,6 +9,7 @@ import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/repositories/schedule_repo.dart';
 import '../data/services/daily_planner.dart';
+import '../data/services/goal_progress_snapshot_service.dart';
 import '../data/services/planner_feedback.dart';
 import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
@@ -356,6 +357,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   Widget _buildCoachingCard(AppStrings strings, TodayPlan plan) {
     final content = _resolveCoachingContent(strings);
     final feedback = PlannerFeedbackSnapshot.fromTodayPlan(plan);
+    final goalSnapshot = ref
+        .read(goalProgressSnapshotServiceProvider)
+        .fromTodayPlan(plan);
     final extraModes = _buildOtherPracticeModes(strings, content);
     return Card(
       key: const ValueKey('today_coaching_card'),
@@ -381,6 +385,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             ),
             const SizedBox(height: 12),
             _buildTodayExplanationPacket(strings, feedback),
+            const SizedBox(height: 12),
+            _buildGoalFocusCard(strings, goalSnapshot),
             if (plan.recoveryMode) ...[
               const SizedBox(height: 10),
               Text(
@@ -417,10 +423,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               },
               child: Text(content.primaryActionLabel),
             ),
-            if (extraModes != null) ...[
-              const SizedBox(height: 14),
-              extraModes,
-            ],
+            if (extraModes != null) ...[const SizedBox(height: 14), extraModes],
             const SizedBox(height: 14),
             DecoratedBox(
               key: const ValueKey('today_short_day_hint'),
@@ -478,6 +481,102 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildGoalFocusCard(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final (background, foreground) = switch (snapshot.focus) {
+      GoalFocus.steadyProgress => (
+        scheme.secondaryContainer,
+        scheme.onSecondaryContainer,
+      ),
+      GoalFocus.protectRetention => (
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ),
+      GoalFocus.recoveryAndStabilize => (
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+      ),
+    };
+
+    return DecoratedBox(
+      key: const ValueKey('today_goal_focus_card'),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.goalFocusTitle,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            DecoratedBox(
+              key: const ValueKey('today_goal_focus_badge'),
+              decoration: BoxDecoration(
+                color: background,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Text(
+                  _localizedGoalFocusLabel(strings, snapshot.focus),
+                  style: TextStyle(
+                    color: foreground,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildGoalFocusLine(
+              key: const ValueKey('today_goal_good_day'),
+              label: strings.todayGoalGoodDayLabel,
+              value: _localizedTodayGoalGoodDay(strings, snapshot.focus),
+            ),
+            const SizedBox(height: 10),
+            _buildGoalFocusLine(
+              key: const ValueKey('today_goal_support'),
+              label: strings.todayGoalSupportLabel,
+              value: _localizedTodayGoalSupport(strings, snapshot.focus),
+            ),
+            const SizedBox(height: 10),
+            _buildGoalFocusLine(
+              key: const ValueKey('today_goal_short_day'),
+              label: strings.todayGoalShortDayLabel,
+              value: _localizedTodayGoalShortDay(strings, snapshot.focus),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoalFocusLine({
+    required Key key,
+    required String label,
+    required String value,
+  }) {
+    return Column(
+      key: key,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.labelLarge),
+        const SizedBox(height: 2),
+        Text(value),
+      ],
     );
   }
 
@@ -664,6 +763,38 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       PlannerHealthState.onTrack => strings.planHealthOnTrackSummary,
       PlannerHealthState.tight => strings.planHealthTightSummary,
       PlannerHealthState.overloaded => strings.planHealthOverloadedSummary,
+    };
+  }
+
+  String _localizedGoalFocusLabel(AppStrings strings, GoalFocus focus) {
+    return switch (focus) {
+      GoalFocus.steadyProgress => strings.goalFocusSteadyProgress,
+      GoalFocus.protectRetention => strings.goalFocusProtectRetention,
+      GoalFocus.recoveryAndStabilize => strings.goalFocusRecoveryAndStabilize,
+    };
+  }
+
+  String _localizedTodayGoalGoodDay(AppStrings strings, GoalFocus focus) {
+    return switch (focus) {
+      GoalFocus.steadyProgress => strings.todayGoalGoodDaySteady,
+      GoalFocus.protectRetention => strings.todayGoalGoodDayProtect,
+      GoalFocus.recoveryAndStabilize => strings.todayGoalGoodDayRecovery,
+    };
+  }
+
+  String _localizedTodayGoalSupport(AppStrings strings, GoalFocus focus) {
+    return switch (focus) {
+      GoalFocus.steadyProgress => strings.todayGoalSupportSteady,
+      GoalFocus.protectRetention => strings.todayGoalSupportProtect,
+      GoalFocus.recoveryAndStabilize => strings.todayGoalSupportRecovery,
+    };
+  }
+
+  String _localizedTodayGoalShortDay(AppStrings strings, GoalFocus focus) {
+    return switch (focus) {
+      GoalFocus.steadyProgress => strings.todayGoalShortDaySteady,
+      GoalFocus.protectRetention => strings.todayGoalShortDayProtect,
+      GoalFocus.recoveryAndStabilize => strings.todayGoalShortDayRecovery,
     };
   }
 

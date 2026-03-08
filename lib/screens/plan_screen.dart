@@ -7,6 +7,7 @@ import '../app/app_preferences.dart';
 import '../data/providers/database_providers.dart';
 import '../data/services/calibration_service.dart';
 import '../data/services/forecast_simulation_service.dart';
+import '../data/services/goal_progress_snapshot_service.dart';
 import '../data/services/onboarding_defaults.dart';
 import '../data/services/planner_feedback.dart';
 import '../data/services/scheduling/planner_adaptive_pace_signal.dart';
@@ -1140,6 +1141,77 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
   }
 
+  Widget _buildPlanGoalSummaryCard(AppStrings strings) {
+    final snapshot = ref
+        .read(goalProgressSnapshotServiceProvider)
+        .fromWeeklyPlan(_weeklyPlan);
+    final scheme = Theme.of(context).colorScheme;
+    final (background, foreground) = switch (snapshot.focus) {
+      GoalFocus.steadyProgress => (
+        scheme.secondaryContainer,
+        scheme.onSecondaryContainer,
+      ),
+      GoalFocus.protectRetention => (
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ),
+      GoalFocus.recoveryAndStabilize => (
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+      ),
+    };
+
+    return Card(
+      key: const ValueKey('plan_goal_summary_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.goalFocusTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            DecoratedBox(
+              key: const ValueKey('plan_goal_summary_badge'),
+              decoration: BoxDecoration(
+                color: background,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Text(
+                  _localizedGoalFocusLabel(strings, snapshot.focus),
+                  style: TextStyle(
+                    color: foreground,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _localizedPlanGoalSummary(strings, snapshot.focus),
+              key: const ValueKey('plan_goal_summary_text'),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              strings.planGoalSummaryHint,
+              key: const ValueKey('plan_goal_summary_hint'),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildHealthBadge(AppStrings strings, PlannerHealthState health) {
     final scheme = Theme.of(context).colorScheme;
     final (background, foreground) = switch (health) {
@@ -1189,6 +1261,22 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       PlannerHealthState.onTrack => strings.planHealthOnTrackSummary,
       PlannerHealthState.tight => strings.planHealthTightSummary,
       PlannerHealthState.overloaded => strings.planHealthOverloadedSummary,
+    };
+  }
+
+  String _localizedGoalFocusLabel(AppStrings strings, GoalFocus focus) {
+    return switch (focus) {
+      GoalFocus.steadyProgress => strings.goalFocusSteadyProgress,
+      GoalFocus.protectRetention => strings.goalFocusProtectRetention,
+      GoalFocus.recoveryAndStabilize => strings.goalFocusRecoveryAndStabilize,
+    };
+  }
+
+  String _localizedPlanGoalSummary(AppStrings strings, GoalFocus focus) {
+    return switch (focus) {
+      GoalFocus.steadyProgress => strings.planGoalSummarySteady,
+      GoalFocus.protectRetention => strings.planGoalSummaryProtect,
+      GoalFocus.recoveryAndStabilize => strings.planGoalSummaryRecovery,
     };
   }
 
@@ -2126,6 +2214,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             _buildGuidedSetupCard(strings),
             const SizedBox(height: 16),
             _buildPlanSummaryCard(strings, weekdayMinutes, dailyDefault),
+            const SizedBox(height: 16),
+            _buildPlanGoalSummaryCard(strings),
             const SizedBox(height: 16),
             _buildPlanHealthCard(strings),
             const SizedBox(height: 16),

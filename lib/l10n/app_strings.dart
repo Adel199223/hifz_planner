@@ -170,10 +170,8 @@ class AppStrings {
     'learn_practice_from_memory_subtitle',
     'Choose a simple practice path for today. If a direct session is not ready yet, the app will guide you through Today.',
   );
-  String get learnPracticeOrderTitle => _t(
-    'learn_practice_order_title',
-    'Best order for today',
-  );
+  String get learnPracticeOrderTitle =>
+      _t('learn_practice_order_title', 'Best order for today');
   String get learnPracticeOrderFirst => _t(
     'learn_practice_order_first',
     '1. Do delayed check first when it is ready.',
@@ -200,10 +198,8 @@ class AppStrings {
   );
   String get learnPracticeDirectStatus =>
       _t('learn_practice_direct_status', 'Ready now');
-  String get learnPracticeFallbackStatus => _t(
-    'learn_practice_fallback_status',
-    'Opens Today for guidance',
-  );
+  String get learnPracticeFallbackStatus =>
+      _t('learn_practice_fallback_status', 'Opens Today for guidance');
   String get learnPracticeFallbackNote => _t(
     'learn_practice_fallback_note',
     'If a direct session is not ready yet, this opens Today and guides your next best practice step.',
@@ -226,10 +222,8 @@ class AppStrings {
     'library_notes_description',
     'Review your verse-linked notes and reflections.',
   );
-  String get todayOtherPracticeModesTitle => _t(
-    'today_other_practice_modes_title',
-    'Other practice modes today',
-  );
+  String get todayOtherPracticeModesTitle =>
+      _t('today_other_practice_modes_title', 'Other practice modes today');
   String get todayOtherPracticeModesHint => _t(
     'today_other_practice_modes_hint',
     'If you still have time, you can switch to one of these next.',
@@ -639,6 +633,71 @@ class AppStrings {
     'plan_recovery_suggestion_hint',
     'If missed work keeps repeating, open the Recovery assistant from Today and switch to a lighter posture before the backlog grows.',
   );
+  String get goalFocusTitle => _t('goal_focus_title', "This week's goal");
+  String get goalFocusSteadyProgress =>
+      _t('goal_focus_steady_progress', 'Steady progress');
+  String get goalFocusProtectRetention =>
+      _t('goal_focus_protect_retention', 'Protect retention');
+  String get goalFocusRecoveryAndStabilize =>
+      _t('goal_focus_recovery_and_stabilize', 'Recovery and stabilize');
+  String get todayGoalGoodDayLabel =>
+      _t('today_goal_good_day_label', 'A good day');
+  String get todayGoalSupportLabel =>
+      _t('today_goal_support_label', 'How today helps the goal');
+  String get todayGoalShortDayLabel =>
+      _t('today_goal_short_day_label', 'If the day gets short');
+  String get todayGoalGoodDaySteady => _t(
+    'today_goal_good_day_steady',
+    'A good day means finishing the main task and, if time allows, the rest of today\'s planned work.',
+  );
+  String get todayGoalGoodDayProtect => _t(
+    'today_goal_good_day_protect',
+    'A good day means protecting due work first, even if new practice stays lighter.',
+  );
+  String get todayGoalGoodDayRecovery => _t(
+    'today_goal_good_day_recovery',
+    'A good day means doing the safest essential work without forcing a full load.',
+  );
+  String get todayGoalSupportSteady => _t(
+    'today_goal_support_steady',
+    'Today\'s main task supports steady progress by keeping your plan moving without overload.',
+  );
+  String get todayGoalSupportProtect => _t(
+    'today_goal_support_protect',
+    'Today\'s main task supports retention by protecting review and delayed checks first.',
+  );
+  String get todayGoalSupportRecovery => _t(
+    'today_goal_support_recovery',
+    'Today\'s main task supports recovery by lowering pressure and rebuilding consistency.',
+  );
+  String get todayGoalShortDaySteady => _t(
+    'today_goal_short_day_steady',
+    'On a short day, the top planned task still counts as a real win.',
+  );
+  String get todayGoalShortDayProtect => _t(
+    'today_goal_short_day_protect',
+    'On a short day, finishing the highest-priority due work is enough.',
+  );
+  String get todayGoalShortDayRecovery => _t(
+    'today_goal_short_day_recovery',
+    'On a short day, the minimum day is a success, not a setback.',
+  );
+  String get planGoalSummaryHint => _t(
+    'plan_goal_summary_hint',
+    'This changes automatically with your current plan pressure.',
+  );
+  String get planGoalSummarySteady => _t(
+    'plan_goal_summary_steady',
+    'Your plan is light enough to aim for steady, sustainable progress this week.',
+  );
+  String get planGoalSummaryProtect => _t(
+    'plan_goal_summary_protect',
+    'Your plan should protect retention first this week, even if new work stays lighter.',
+  );
+  String get planGoalSummaryRecovery => _t(
+    'plan_goal_summary_recovery',
+    'Your safest weekly goal is to stabilize and reduce pressure before pushing harder.',
+  );
   String planSummaryTimeValue(int weeklyMinutes, int dailyMinutes) => _fmt(
     _t(
       'plan_summary_time_value',
@@ -1036,11 +1095,10 @@ class AppStrings {
       _t('companion_stage2_mode_label', 'What to do now');
   String get companionStage2ModeMinimalCueRecall =>
       _t('companion_stage2_mode_minimal_cue_recall', 'Recite with a small cue');
-  String get companionStage2ModeDiscrimination =>
-      _t(
-        'companion_stage2_mode_discrimination',
-        'Choose the right continuation',
-      );
+  String get companionStage2ModeDiscrimination => _t(
+    'companion_stage2_mode_discrimination',
+    'Choose the right continuation',
+  );
   String get companionStage2ModeLinking =>
       _t('companion_stage2_mode_linking', 'Connect to the next verse');
   String get companionStage2ModeCorrection =>
@@ -1059,25 +1117,28 @@ class AppStrings {
       _t('companion_stage2_correction_action', 'Hear the correction');
   String get companionStage3ModeLabel =>
       _t('companion_stage3_mode_label', 'What to do now');
-  String get companionStage3ModeWeakPrelude =>
-      _t('companion_stage3_mode_weak_prelude', 'Strengthen the weak verses first');
+  String get companionStage3ModeWeakPrelude => _t(
+    'companion_stage3_mode_weak_prelude',
+    'Strengthen the weak verses first',
+  );
   String get companionStage3ModeHiddenRecall =>
       _t('companion_stage3_mode_hidden_recall', 'Recite from memory');
   String get companionStage3ModeLinking =>
       _t('companion_stage3_mode_linking', 'Connect the verses');
-  String get companionStage3ModeDiscrimination =>
-      _t(
-        'companion_stage3_mode_discrimination',
-        'Choose the right continuation',
-      );
+  String get companionStage3ModeDiscrimination => _t(
+    'companion_stage3_mode_discrimination',
+    'Choose the right continuation',
+  );
   String get companionStage3ModeCorrection =>
       _t('companion_stage3_mode_correction', 'Listen to the correction');
   String get companionStage3ModeCheckpoint =>
       _t('companion_stage3_mode_checkpoint', 'Quick memory check');
   String get companionStage3ModeRemediation =>
       _t('companion_stage3_mode_remediation', 'Reinforce the weak part');
-  String get companionStage3ReciteNow =>
-      _t('companion_stage3_recite_now', 'Recite from memory with the text hidden.');
+  String get companionStage3ReciteNow => _t(
+    'companion_stage3_recite_now',
+    'Recite from memory with the text hidden.',
+  );
   String get companionStage3CorrectionRequiredMessage => _t(
     'companion_stage3_correction_required_message',
     'Listen to the correction before you try again.',
@@ -1092,11 +1153,10 @@ class AppStrings {
       _t('companion_stage4_mode_random_start', 'Start from a random point');
   String get companionStage4ModeLinking =>
       _t('companion_stage4_mode_linking', 'Connect the verses');
-  String get companionStage4ModeDiscrimination =>
-      _t(
-        'companion_stage4_mode_discrimination',
-        'Choose the right continuation',
-      );
+  String get companionStage4ModeDiscrimination => _t(
+    'companion_stage4_mode_discrimination',
+    'Choose the right continuation',
+  );
   String get companionStage4ModeCorrection =>
       _t('companion_stage4_mode_correction', 'Listen to the correction');
   String get companionStage4ModeCheckpoint =>
@@ -1130,7 +1190,8 @@ class AppStrings {
     <String, Object>{'count': count},
   );
   String get companionHintButton => _t('companion_hint_button', 'Show hint');
-  String get companionRepeatButton => _t('companion_repeat_button', 'Repeat verse');
+  String get companionRepeatButton =>
+      _t('companion_repeat_button', 'Repeat verse');
   String get companionNextButton => _t('companion_next_button', 'Next verse');
   String companionStageProgress(int current, int total) => _fmt(
     _t('companion_stage_progress', 'Practice step {current}/{total}'),
@@ -1173,8 +1234,7 @@ class AppStrings {
     'Repeat the current verse, then start the next attempt when you are ready.',
   );
   String get companionVersePassed => _t('companion_verse_passed', 'Done');
-  String get companionVerseRevealed =>
-      _t('companion_verse_revealed', 'Shown');
+  String get companionVerseRevealed => _t('companion_verse_revealed', 'Shown');
   String get companionVerseHidden => _t('companion_verse_hidden', 'Hidden');
   String get companionHiddenPlaceholder =>
       _t('companion_hidden_placeholder', '••••••••••');
@@ -1535,6 +1595,39 @@ class AppStrings {
           'Gardez un mélange équilibré entre protection des révisions et nouveau hifz régulier.',
       'plan_review_priority_intensive':
           'Poussez davantage le nouveau hifz quand votre emploi du temps le permet.',
+      'goal_focus_title': 'Objectif de cette semaine',
+      'goal_focus_steady_progress': 'Progrès réguliers',
+      'goal_focus_protect_retention': 'Protéger la rétention',
+      'goal_focus_recovery_and_stabilize': 'Récupérer et stabiliser',
+      'today_goal_good_day_label': 'Une bonne journée',
+      'today_goal_support_label': "Comment la tâche du jour aide",
+      'today_goal_short_day_label': 'Si la journée se raccourcit',
+      'today_goal_good_day_steady':
+          'Une bonne journée consiste à terminer la tâche principale et, si le temps le permet, le reste du travail prévu.',
+      'today_goal_good_day_protect':
+          'Une bonne journée consiste d’abord à protéger le travail dû, même si le nouveau travail reste plus léger.',
+      'today_goal_good_day_recovery':
+          'Une bonne journée consiste à faire le travail essentiel le plus sûr sans forcer une charge complète.',
+      'today_goal_support_steady':
+          "La tâche principale d'aujourd'hui soutient un progrès régulier en faisant avancer le plan sans surcharge.",
+      'today_goal_support_protect':
+          "La tâche principale d'aujourd'hui protège la rétention en donnant d'abord la priorité aux révisions et aux vérifications différées.",
+      'today_goal_support_recovery':
+          "La tâche principale d'aujourd'hui soutient la récupération en baissant la pression et en reconstruisant la régularité.",
+      'today_goal_short_day_steady':
+          "Lors d'une journée courte, la tâche principale prévue compte déjà comme une vraie réussite.",
+      'today_goal_short_day_protect':
+          'Lors d’une journée courte, terminer le travail dû le plus prioritaire suffit.',
+      'today_goal_short_day_recovery':
+          "Lors d'une journée courte, le jour minimum est une réussite, pas un recul.",
+      'plan_goal_summary_hint':
+          'Cela change automatiquement selon la pression actuelle de votre plan.',
+      'plan_goal_summary_steady':
+          'Votre plan est assez léger pour viser des progrès réguliers et durables cette semaine.',
+      'plan_goal_summary_protect':
+          'Votre plan doit protéger la rétention d’abord cette semaine, même si le nouveau travail reste plus léger.',
+      'plan_goal_summary_recovery':
+          'L’objectif le plus sûr cette semaine est de vous stabiliser et de réduire la pression avant d’accélérer.',
       'no_ayahs_for_surah': 'Aucun ayah trouvé pour la sourate {surah}.',
       'no_ayahs_for_page': 'Aucun ayah trouvé pour la page {page}.',
       'onboarding_questionnaire':
@@ -1837,6 +1930,39 @@ class AppStrings {
           'Mantenha um equilíbrio entre proteger a revisão e seguir com nova memorização.',
       'plan_review_priority_intensive':
           'Acelere a nova memorização quando sua rotina puder sustentar isso.',
+      'goal_focus_title': 'Objetivo desta semana',
+      'goal_focus_steady_progress': 'Progresso constante',
+      'goal_focus_protect_retention': 'Proteger a retenção',
+      'goal_focus_recovery_and_stabilize': 'Recuperar e estabilizar',
+      'today_goal_good_day_label': 'Um bom dia',
+      'today_goal_support_label': 'Como a tarefa principal ajuda',
+      'today_goal_short_day_label': 'Se o dia ficar curto',
+      'today_goal_good_day_steady':
+          'Um bom dia significa concluir a tarefa principal e, se o tempo permitir, o restante do trabalho planejado para hoje.',
+      'today_goal_good_day_protect':
+          'Um bom dia significa proteger primeiro o trabalho vencido, mesmo que a prática nova fique mais leve.',
+      'today_goal_good_day_recovery':
+          'Um bom dia significa fazer o trabalho essencial mais seguro sem forçar uma carga completa.',
+      'today_goal_support_steady':
+          'A principal tarefa de hoje apoia um progresso constante ao manter seu plano andando sem sobrecarga.',
+      'today_goal_support_protect':
+          'A principal tarefa de hoje apoia a retenção ao proteger primeiro as revisões e as verificações adiadas.',
+      'today_goal_support_recovery':
+          'A principal tarefa de hoje apoia a recuperação ao reduzir a pressão e reconstruir a consistência.',
+      'today_goal_short_day_steady':
+          'Num dia curto, a principal tarefa planejada ainda conta como uma vitória real.',
+      'today_goal_short_day_protect':
+          'Num dia curto, concluir o trabalho vencido de maior prioridade já é suficiente.',
+      'today_goal_short_day_recovery':
+          'Num dia curto, o dia mínimo é um sucesso, não um retrocesso.',
+      'plan_goal_summary_hint':
+          'Isso muda automaticamente conforme a pressão atual do seu plano.',
+      'plan_goal_summary_steady':
+          'Seu plano está leve o bastante para buscar um progresso constante e sustentável nesta semana.',
+      'plan_goal_summary_protect':
+          'Seu plano deve proteger a retenção primeiro nesta semana, mesmo que o trabalho novo fique mais leve.',
+      'plan_goal_summary_recovery':
+          'A meta mais segura desta semana é estabilizar e reduzir a pressão antes de acelerar de novo.',
       'no_ayahs_for_surah': 'Nenhum ayah encontrado para a Surah {surah}.',
       'no_ayahs_for_page': 'Nenhum ayah encontrado para a Página {page}.',
       'onboarding_questionnaire': 'Questionário inicial ({count} perguntas)',
@@ -2150,6 +2276,38 @@ class AppStrings {
           'حافظ على توازن بين حماية المراجعة واستمرار الحفظ الجديد.',
       'plan_review_priority_intensive':
           'ادفع الحفظ الجديد أكثر عندما يسمح جدولك بذلك.',
+      'goal_focus_title': 'هدف هذا الأسبوع',
+      'goal_focus_steady_progress': 'تقدّم ثابت',
+      'goal_focus_protect_retention': 'احمِ التثبيت',
+      'goal_focus_recovery_and_stabilize': 'التعافي واستعادة التوازن',
+      'today_goal_good_day_label': 'اليوم الجيد',
+      'today_goal_support_label': 'كيف تدعم مهمة اليوم الهدف',
+      'today_goal_short_day_label': 'إذا ضاق وقت اليوم',
+      'today_goal_good_day_steady':
+          'اليوم الجيد يعني إنجاز المهمة الرئيسية، ثم إكمال بقية العمل المخطط إذا سمح الوقت.',
+      'today_goal_good_day_protect':
+          'اليوم الجيد يعني حماية العمل المستحق أولًا، حتى لو بقي العمل الجديد أخف.',
+      'today_goal_good_day_recovery':
+          'اليوم الجيد يعني أداء العمل الأساسي الآمن دون فرض حمل كامل.',
+      'today_goal_support_steady':
+          'مهمة اليوم الرئيسية تدعم التقدم الثابت بإبقاء الخطة تتحرك من دون ضغط زائد.',
+      'today_goal_support_protect':
+          'مهمة اليوم الرئيسية تدعم التثبيت عبر تقديم المراجعة والفحص المؤجل أولًا.',
+      'today_goal_support_recovery':
+          'مهمة اليوم الرئيسية تدعم التعافي عبر خفض الضغط وإعادة بناء الاستمرارية.',
+      'today_goal_short_day_steady':
+          'في اليوم القصير، تبقى المهمة الأساسية المخططة إنجازًا حقيقيًا.',
+      'today_goal_short_day_protect':
+          'في اليوم القصير، يكفي إنهاء أعلى عمل مستحق أولوية.',
+      'today_goal_short_day_recovery':
+          'في اليوم القصير، يُعد اليوم الأدنى نجاحًا لا تراجعًا.',
+      'plan_goal_summary_hint': 'يتغير هذا تلقائيًا حسب ضغط خطتك الحالي.',
+      'plan_goal_summary_steady':
+          'خطتك خفيفة بما يكفي لاستهداف تقدّم ثابت ومستدام هذا الأسبوع.',
+      'plan_goal_summary_protect':
+          'ينبغي أن تركز خطتك هذا الأسبوع على حماية التثبيت أولًا، حتى لو بقي العمل الجديد أخف.',
+      'plan_goal_summary_recovery':
+          'الهدف الأكثر أمانًا هذا الأسبوع هو استعادة التوازن وتقليل الضغط قبل زيادة الوتيرة.',
       'no_ayahs_for_surah': 'لا توجد آيات للسورة {surah}.',
       'no_ayahs_for_page': 'لا توجد آيات للصفحة {page}.',
       'onboarding_questionnaire': 'استبيان البداية ({count} أسئلة)',

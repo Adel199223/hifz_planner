@@ -82,6 +82,7 @@ Do not use this file as primary truth when there is a conflict.
 
 - `Today` now opens with a coaching card instead of raw planner metrics
 - The coaching card chooses one next action, explains why it matters, and gives a short-day fallback
+- `Today` now also shows a small supportive goal-focus block so the learner can see what a good day looks like right now
 - The learner-facing practice actions now use plain labels:
   - `Start new practice`
   - `Continue review practice`
@@ -100,6 +101,7 @@ Do not use this file as primary truth when there is a conflict.
 - `My Plan` now opens with a guided setup flow instead of a full control panel
 - The default path is `Easy`, `Normal`, `Intensive` plus realistic time, fluency, and a plain-language summary
 - Scheduling, forecast, calibration, and other expert controls are still present, but now live behind `Advanced`
+- `My Plan` now also shows a lightweight weekly goal summary derived from the same planner posture used by `Today`
 - The weekly planner preview now follows the guided time inputs rather than stale advanced defaults
 - `My Plan` now also shows a plain-language `Plan health` card with backlog burn-down, minimum-day, and recovery hints when needed
 - The weekly planner preview and Forecast now follow the same stress/new-work rules as `Today`
@@ -107,6 +109,10 @@ Do not use this file as primary truth when there is a conflict.
 - Calibration is now framed as teaching the planner your real pace, with guidance about when enough samples exist to trust the update
 - Recent calibration and grade-distribution data now slightly influence how cautious the shared planner is about review pressure and new work
 - Recent calibration pace can now also add one bounded pace-trend nudge to the shared planner, and Forecast exposes that in plain language instead of hiding it
+- Goals/progress remain integrated:
+  - no separate goals screen
+  - no badges or streak pressure
+  - one shared `GoalProgressSnapshotService` feeds both `Today` and `My Plan`
 
 ## Current Practice Entry Notes
 

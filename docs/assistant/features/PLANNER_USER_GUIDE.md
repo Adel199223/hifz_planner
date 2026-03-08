@@ -131,6 +131,21 @@ Important behavior:
   - review-priority posture
 - Why it matters: this is the plain-language confirmation step before activation.
 
+### Weekly goal summary
+- Where: below the main summary card and above `Plan health`.
+- What it shows:
+  - `Steady progress`
+  - `Protect retention`
+  - `Recovery and stabilize`
+- What it means:
+  - `Steady progress` = the current plan still has room for sustainable forward movement
+  - `Protect retention` = review pressure is high enough that protecting old work matters more than pushing harder
+  - `Recovery and stabilize` = the safest weekly target is to reduce pressure and rebuild consistency first
+- Important:
+  - this is not a separate goal-setting wizard
+  - it changes automatically with your current planner pressure
+  - it is meant to help you interpret the week, not to add more settings
+
 ### Activate
 - Where: primary button in the summary card.
 - What it does: saves your plan and starts using it in `Today`.
@@ -237,6 +252,10 @@ Execution order is designed to protect retention quality:
   - what to do next
   - why it matters today
   - what to do if you only have a short amount of time
+- it now also includes a small goal-focus block that tells you:
+  - what counts as a good day today
+  - how the main task supports the weekly goal
+  - what still counts on a short day
 - if more than one valid practice mode is available, the card can also show secondary shortcuts for the other modes
 - if the day feels too heavy, use the recovery entry to jump back to `My Plan`
 
@@ -256,6 +275,18 @@ Execution order is designed to protect retention quality:
   - then stop without guilt if time is gone
 - This is now enforced more honestly:
   - if the safe time left for new work is too small, the app pauses new assignments instead of creating tiny token tasks
+
+### Supportive goal framing
+- the app now uses one shared goal posture across `Today` and `My Plan`
+- it is intentionally supportive, not gamified
+- there are:
+  - no badges
+  - no streak warnings
+  - no punishment language for missed days
+- the purpose is to help you see whether this week should emphasize:
+  - steady progress
+  - protecting retention
+  - or recovery and stabilization
 
 ### Recovery assistant
 - If the app thinks you are falling behind, you may see `Recovery assistant`.

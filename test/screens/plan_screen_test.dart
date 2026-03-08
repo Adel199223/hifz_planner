@@ -36,6 +36,10 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('plan_summary_card')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('plan_goal_summary_card')),
+        findsOneWidget,
+      );
       expect(find.byKey(const ValueKey('plan_health_card')), findsOneWidget);
       expect(
         find.byKey(const ValueKey('plan_advanced_toggle')),
@@ -92,6 +96,40 @@ void main() {
     expect(find.byKey(const ValueKey('plan_health_card')), findsOneWidget);
     expect(find.byKey(const ValueKey('plan_health_badge')), findsOneWidget);
     expect(find.byKey(const ValueKey('plan_health_summary')), findsOneWidget);
+  });
+
+  testWidgets('weekly goal summary renders supportive plan guidance', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await _pumpPlan(tester, container);
+
+    expect(
+      find.byKey(const ValueKey('plan_goal_summary_card')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_goal_summary_badge')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_goal_summary_text')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_goal_summary_hint')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('running forecast on empty quran data shows incomplete reason', (
@@ -602,7 +640,8 @@ void main() {
 
       final rows = await (db.select(
         db.calibrationSample,
-      )..orderBy([(tbl) => OrderingTerm.asc(tbl.id)])).get();
+      )..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+          .get();
       expect(rows.length, 2);
       expect(rows.first.sampleKind, 'new_memorization');
       expect(rows.last.sampleKind, 'review');
