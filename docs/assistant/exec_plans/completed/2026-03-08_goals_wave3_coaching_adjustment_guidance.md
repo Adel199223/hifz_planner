@@ -77,8 +77,8 @@
   - explicit wording that real completed practice/review/delayed-check work counts, while merely opening a screen does not
   - no schema or route changes
 - Current state:
-  - implemented locally on `feat/goals-wave3-coaching-guidance`
-  - validations passed:
+  - merged to `main` via PR #29 after narrow docs sync and issue-memory refresh
+  - validations passed before publish:
     - `flutter test -j 1 -r expanded test/data/services/goal_progress_snapshot_service_test.dart`
     - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`
     - `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart`
@@ -88,4 +88,4 @@
     - `dart tooling/validate_workspace_hygiene.dart`
 - Follow-up risk:
   - if the progress signal cannot honestly distinguish a coaching branch, the recommendation should fall back to a safer broader option rather than inventing precision.
-  - next closeout step is Assistant Docs Sync, then commit, PR, and merge.
+  - Wave 4 should keep the same honesty rule while aligning the goal/progress language across surfaces.
