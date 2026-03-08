@@ -543,6 +543,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     AppStrings strings,
     GoalProgressSnapshot snapshot,
   ) {
+    final surfaceState = snapshot.surfaceState;
     return DecoratedBox(
       key: const ValueKey('today_weekly_progress_card'),
       decoration: BoxDecoration(
@@ -580,6 +581,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               key: const ValueKey('today_weekly_progress_quality'),
               label: strings.weeklyProgressRecentQualityLabel,
               value: _localizedWeeklyProgressQuality(strings, snapshot),
+            ),
+            const SizedBox(height: 10),
+            _buildGoalFocusLine(
+              key: const ValueKey('today_weekly_progress_note'),
+              label: strings.weeklyProgressNoteLabel,
+              value: _localizedWeeklyProgressNote(strings, surfaceState),
             ),
           ],
         ),
@@ -687,21 +694,18 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     AppStrings strings,
     GoalProgressSnapshot snapshot,
   ) {
-    if (!snapshot.hasRecentHistory) {
-      return strings.weeklyProgressTrendStart;
-    }
-    if (snapshot.focus == GoalFocus.recoveryAndStabilize) {
-      return strings.weeklyProgressTrendRecovery;
-    }
-    final activeDays = snapshot.completedPracticeDaysLast7 ?? 0;
-    if (activeDays >= 4 &&
-        snapshot.recentQualityBand != GoalProgressQualityBand.strained) {
-      return strings.weeklyProgressTrendSteady;
-    }
-    if (snapshot.focus == GoalFocus.protectRetention) {
-      return strings.weeklyProgressTrendProtect;
-    }
-    return strings.weeklyProgressTrendBuilding;
+    return switch (snapshot.surfaceState) {
+      GoalProgressSurfaceState.noMeaningfulHistory =>
+        strings.weeklyProgressTrendStart,
+      GoalProgressSurfaceState.sparseRecentActivity =>
+        strings.weeklyProgressTrendSparse,
+      GoalProgressSurfaceState.steadyProgress =>
+        strings.weeklyProgressTrendSteady,
+      GoalProgressSurfaceState.protectRetention =>
+        strings.weeklyProgressTrendProtect,
+      GoalProgressSurfaceState.recoverySafely =>
+        strings.weeklyProgressTrendRecovery,
+    };
   }
 
   String _localizedWeeklyProgressConsistency(
@@ -711,9 +715,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     if (!snapshot.hasRecentHistory) {
       return strings.weeklyProgressConsistencyStart;
     }
-    return strings.weeklyProgressConsistencyValue(
-      snapshot.completedPracticeDaysLast7 ?? 0,
-    );
+    return strings.weeklyProgressConsistencyValue(snapshot.practiceDaysLast7);
   }
 
   String _localizedWeeklyProgressCounts(
@@ -724,9 +726,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       return strings.weeklyProgressCountsStart;
     }
     return strings.weeklyProgressCountsValue(
-      snapshot.completedReviewsLast7 ?? 0,
-      snapshot.completedDelayedChecksLast7 ?? 0,
-      snapshot.completedNewPracticeLast7 ?? 0,
+      snapshot.reviewsLast7,
+      snapshot.delayedChecksLast7,
+      snapshot.newPracticeLast7,
     );
   }
 
@@ -739,6 +741,24 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       GoalProgressQualityBand.mixed => strings.weeklyProgressQualityMixed,
       GoalProgressQualityBand.strained => strings.weeklyProgressQualityStrained,
       null => strings.weeklyProgressQualityNotEnoughData,
+    };
+  }
+
+  String _localizedWeeklyProgressNote(
+    AppStrings strings,
+    GoalProgressSurfaceState surfaceState,
+  ) {
+    return switch (surfaceState) {
+      GoalProgressSurfaceState.noMeaningfulHistory =>
+        strings.weeklyProgressNoteStart,
+      GoalProgressSurfaceState.sparseRecentActivity =>
+        strings.weeklyProgressNoteSparse,
+      GoalProgressSurfaceState.steadyProgress =>
+        strings.weeklyProgressNoteSteady,
+      GoalProgressSurfaceState.protectRetention =>
+        strings.weeklyProgressNoteProtect,
+      GoalProgressSurfaceState.recoverySafely =>
+        strings.weeklyProgressNoteRecovery,
     };
   }
 
@@ -771,6 +791,69 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         strings.goalCoachingProtectRetentionDetail,
       GoalCoachingRecommendation.lightenSetup =>
         strings.goalCoachingLightenSetupTodayDetail,
+    };
+  }
+
+  String _localizedTodayEmptyTitle(
+    AppStrings strings,
+    GoalProgressSurfaceState surfaceState,
+  ) {
+    return switch (surfaceState) {
+      GoalProgressSurfaceState.noMeaningfulHistory => strings.todayEmptyTitle,
+      GoalProgressSurfaceState.sparseRecentActivity =>
+        strings.todayEmptySparseTitle,
+      GoalProgressSurfaceState.recoverySafely =>
+        strings.todayEmptyRecoveryTitle,
+      GoalProgressSurfaceState.steadyProgress => strings.todayEmptyTitle,
+      GoalProgressSurfaceState.protectRetention => strings.todayEmptyTitle,
+    };
+  }
+
+  String _localizedTodayEmptyMessage(
+    AppStrings strings,
+    GoalProgressSurfaceState surfaceState,
+  ) {
+    return switch (surfaceState) {
+      GoalProgressSurfaceState.noMeaningfulHistory => strings.todayEmptyMessage,
+      GoalProgressSurfaceState.sparseRecentActivity =>
+        strings.todayEmptySparseMessage,
+      GoalProgressSurfaceState.recoverySafely =>
+        strings.todayEmptyRecoveryMessage,
+      GoalProgressSurfaceState.steadyProgress => strings.todayEmptyMessage,
+      GoalProgressSurfaceState.protectRetention => strings.todayEmptyMessage,
+    };
+  }
+
+  String _localizedTodayCompletionTitle(
+    AppStrings strings,
+    GoalProgressSurfaceState surfaceState,
+  ) {
+    return switch (surfaceState) {
+      GoalProgressSurfaceState.noMeaningfulHistory =>
+        strings.todayCompletionStartTitle,
+      GoalProgressSurfaceState.sparseRecentActivity =>
+        strings.todayCompletionSparseTitle,
+      GoalProgressSurfaceState.recoverySafely =>
+        strings.todayCompletionRecoveryTitle,
+      GoalProgressSurfaceState.steadyProgress => strings.todayCompletionTitle,
+      GoalProgressSurfaceState.protectRetention => strings.todayCompletionTitle,
+    };
+  }
+
+  String _localizedTodayCompletionMessage(
+    AppStrings strings,
+    GoalProgressSurfaceState surfaceState,
+  ) {
+    return switch (surfaceState) {
+      GoalProgressSurfaceState.noMeaningfulHistory =>
+        strings.todayCompletionStartMessage,
+      GoalProgressSurfaceState.sparseRecentActivity =>
+        strings.todayCompletionSparseMessage,
+      GoalProgressSurfaceState.recoverySafely =>
+        strings.todayCompletionRecoveryMessage,
+      GoalProgressSurfaceState.steadyProgress => strings.todayCompletionMessage,
+      GoalProgressSurfaceState.protectRetention =>
+        strings.todayCompletionMessage,
     };
   }
 
@@ -1027,6 +1110,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Widget _buildNoWorkStateCard(AppStrings strings, TodayPlan plan) {
+    final goalSnapshot =
+        _goalSnapshot ??
+        ref.read(goalProgressSnapshotServiceProvider).fromTodayPlan(plan);
+    final surfaceState = goalSnapshot.surfaceState;
     if (_shouldShowEmptyState(plan)) {
       return Card(
         key: const ValueKey('today_empty_state'),
@@ -1036,11 +1123,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                strings.todayEmptyTitle,
+                _localizedTodayEmptyTitle(strings, surfaceState),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
-              Text(strings.todayEmptyMessage),
+              Text(_localizedTodayEmptyMessage(strings, surfaceState)),
               const SizedBox(height: 12),
               FilledButton(
                 key: const ValueKey('today_empty_open_plan'),
@@ -1063,11 +1150,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              strings.todayCompletionTitle,
+              _localizedTodayCompletionTitle(strings, surfaceState),
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
-            Text(strings.todayCompletionMessage),
+            Text(_localizedTodayCompletionMessage(strings, surfaceState)),
           ],
         ),
       ),

@@ -434,11 +434,41 @@ class AppStrings {
     'today_completion_message',
     'Today’s planned memorization and review are complete.',
   );
+  String get todayCompletionStartTitle =>
+      _t('today_completion_start_title', 'A real start counts');
+  String get todayCompletionStartMessage => _t(
+    'today_completion_start_message',
+    'You finished a real day of practice. That is enough to start building consistency.',
+  );
+  String get todayCompletionSparseTitle =>
+      _t('today_completion_sparse_title', 'A calm restart still counts');
+  String get todayCompletionSparseMessage => _t(
+    'today_completion_sparse_message',
+    'You completed real work today. A few calm days like this are enough to rebuild trust in the plan.',
+  );
+  String get todayCompletionRecoveryTitle =>
+      _t('today_completion_recovery_title', 'Recovery work still counts');
+  String get todayCompletionRecoveryMessage => _t(
+    'today_completion_recovery_message',
+    'You protected retention with a lighter day. That is a safe win while the plan is stabilizing.',
+  );
   String get todayEmptyTitle =>
       _t('today_empty_title', 'Nothing is scheduled yet');
   String get todayEmptyMessage => _t(
     'today_empty_message',
     'Open My Plan to set a realistic daily rhythm and see today’s next steps here.',
+  );
+  String get todayEmptySparseTitle =>
+      _t('today_empty_sparse_title', 'Today can stay light');
+  String get todayEmptySparseMessage => _t(
+    'today_empty_sparse_message',
+    'You are getting back into rhythm. Open My Plan if you want a clearer next step for the week.',
+  );
+  String get todayEmptyRecoveryTitle =>
+      _t('today_empty_recovery_title', 'A recovery pause can be intentional');
+  String get todayEmptyRecoveryMessage => _t(
+    'today_empty_recovery_message',
+    'The planner is keeping today light so you can stabilize safely. Open My Plan if you want to review or lighten the week further.',
   );
   String get plannedReviews => _t('planned_reviews', 'Planned Reviews');
   String get noPlannedReviewsLeft =>
@@ -686,6 +716,18 @@ class AppStrings {
     'plan_goal_summary_hint',
     'This changes automatically with your current plan pressure.',
   );
+  String get planGoalSummaryHintStart => _t(
+    'plan_goal_summary_hint_start',
+    'Start with a few real sessions this week. The summary will fill in automatically.',
+  );
+  String get planGoalSummaryHintSparse => _t(
+    'plan_goal_summary_hint_sparse',
+    'A calm, repeatable week is enough. A few more real sessions will make this summary clearer.',
+  );
+  String get planGoalSummaryHintRecovery => _t(
+    'plan_goal_summary_hint_recovery',
+    'This week is about stabilizing safely, not proving speed.',
+  );
   String get planGoalSummarySteady => _t(
     'plan_goal_summary_steady',
     'Your plan is light enough to aim for steady, sustainable progress this week.',
@@ -759,6 +801,10 @@ class AppStrings {
     'weekly_progress_trend_building',
     'You are building consistency. Keep the main task simple and repeatable.',
   );
+  String get weeklyProgressTrendSparse => _t(
+    'weekly_progress_trend_sparse',
+    'You are getting back into rhythm. A few calm, real sessions are enough this week.',
+  );
   String get weeklyProgressTrendProtect => _t(
     'weekly_progress_trend_protect',
     'Recent work is happening, but retention still needs the safer share of your time.',
@@ -806,6 +852,28 @@ class AppStrings {
   String get weeklyProgressQualityNotEnoughData => _t(
     'weekly_progress_quality_not_enough_data',
     'Not enough review data yet',
+  );
+  String get weeklyProgressNoteLabel =>
+      _t('weekly_progress_note_label', 'How to read this');
+  String get weeklyProgressNoteStart => _t(
+    'weekly_progress_note_start',
+    'One real session is enough to begin. This block fills in automatically as you complete real work.',
+  );
+  String get weeklyProgressNoteSparse => _t(
+    'weekly_progress_note_sparse',
+    'A gentle return still counts. Keep the next few sessions simple and repeatable.',
+  );
+  String get weeklyProgressNoteSteady => _t(
+    'weekly_progress_note_steady',
+    'Keep repeating the main task and let steady days add up.',
+  );
+  String get weeklyProgressNoteProtect => _t(
+    'weekly_progress_note_protect',
+    'Let reviews and delayed checks keep the safer share of your time until pressure drops.',
+  );
+  String get weeklyProgressNoteRecovery => _t(
+    'weekly_progress_note_recovery',
+    'A lighter week still counts while the planner is helping you stabilize safely.',
   );
   String weeklyProgressRecentQualityLine(String value) => _fmt(
     _t('weekly_progress_recent_quality_line', 'Recent review quality: {value}'),
@@ -1667,6 +1735,23 @@ class AppStrings {
       'failed_to_load_today_plan': "Échec du chargement du plan d'aujourd'hui.",
       'grade_saved': 'Évaluation enregistrée.',
       'failed_to_save_grade': "Échec de l'enregistrement de l'évaluation.",
+      'today_completion_start_title': 'Un vrai début compte',
+      'today_completion_start_message':
+          'Vous avez accompli une vraie journée de pratique. Cela suffit pour commencer à construire la régularité.',
+      'today_completion_sparse_title': 'Une reprise calme compte aussi',
+      'today_completion_sparse_message':
+          'Vous avez accompli un vrai travail aujourd’hui. Quelques jours calmes comme celui-ci suffisent pour reconstruire la confiance dans le plan.',
+      'today_completion_recovery_title':
+          'Le travail de récupération compte aussi',
+      'today_completion_recovery_message':
+          'Vous avez protégé la rétention avec une journée plus légère. C’est une victoire sûre pendant que le plan se stabilise.',
+      'today_empty_sparse_title': 'La journée peut rester légère',
+      'today_empty_sparse_message':
+          'Vous reprenez doucement le rythme. Ouvrez Mon plan si vous voulez une prochaine étape plus claire pour la semaine.',
+      'today_empty_recovery_title':
+          'Une pause de récupération peut être intentionnelle',
+      'today_empty_recovery_message':
+          'Le plan garde cette journée légère pour que vous puissiez vous stabiliser en sécurité. Ouvrez Mon plan si vous voulez revoir ou alléger davantage la semaine.',
       'range_unavailable': 'Plage indisponible',
       'grade_good': 'Bon',
       'grade_medium': 'Moyen',
@@ -1735,6 +1820,12 @@ class AppStrings {
           "Lors d'une journée courte, le jour minimum est une réussite, pas un recul.",
       'plan_goal_summary_hint':
           'Cela change automatiquement selon la pression actuelle de votre plan.',
+      'plan_goal_summary_hint_start':
+          'Commencez par quelques vraies séances cette semaine. Le résumé se remplira automatiquement.',
+      'plan_goal_summary_hint_sparse':
+          'Une semaine calme et répétable suffit. Quelques vraies séances de plus rendront ce résumé plus clair.',
+      'plan_goal_summary_hint_recovery':
+          'Cette semaine consiste à se stabiliser en sécurité, pas à prouver sa vitesse.',
       'plan_goal_summary_steady':
           'Votre plan est assez léger pour viser des progrès réguliers et durables cette semaine.',
       'plan_goal_summary_protect':
@@ -1751,6 +1842,8 @@ class AppStrings {
           'Votre travail récent soutient un rythme hebdomadaire stable.',
       'weekly_progress_trend_building':
           'Vous construisez votre régularité. Gardez la tâche principale simple et répétable.',
+      'weekly_progress_trend_sparse':
+          'Vous reprenez votre rythme. Quelques séances calmes et réelles suffisent cette semaine.',
       'weekly_progress_trend_protect':
           'Le travail avance, mais la rétention a encore besoin de la part la plus sûre de votre temps.',
       'weekly_progress_trend_recovery':
@@ -1768,6 +1861,17 @@ class AppStrings {
       'weekly_progress_quality_strained': 'Besoin d’un rythme plus doux',
       'weekly_progress_quality_not_enough_data':
           'Pas encore assez de données de révision',
+      'weekly_progress_note_label': 'Comment le lire',
+      'weekly_progress_note_start':
+          'Une vraie séance suffit pour commencer. Ce bloc se remplit automatiquement à mesure que vous accomplissez un vrai travail.',
+      'weekly_progress_note_sparse':
+          'Un retour en douceur compte aussi. Gardez les prochaines séances simples et répétables.',
+      'weekly_progress_note_steady':
+          'Continuez à répéter la tâche principale et laissez les journées régulières s’additionner.',
+      'weekly_progress_note_protect':
+          'Laissez les révisions et vérifications différées garder la part la plus sûre de votre temps jusqu’à ce que la pression baisse.',
+      'weekly_progress_note_recovery':
+          'Une semaine plus légère compte aussi pendant que le plan vous aide à vous stabiliser en sécurité.',
       'weekly_progress_recent_quality_line':
           'Qualité récente des révisions : {value}',
       'no_ayahs_for_surah': 'Aucun ayah trouvé pour la sourate {surah}.',
@@ -2031,6 +2135,22 @@ class AppStrings {
       'failed_to_load_today_plan': 'Falha ao carregar plano de hoje.',
       'grade_saved': 'Nota salva.',
       'failed_to_save_grade': 'Falha ao salvar nota.',
+      'today_completion_start_title': 'Um começo real conta',
+      'today_completion_start_message':
+          'Você concluiu um dia real de prática. Isso já basta para começar a construir consistência.',
+      'today_completion_sparse_title': 'Um recomeço calmo também conta',
+      'today_completion_sparse_message':
+          'Você concluiu trabalho real hoje. Alguns dias calmos assim já bastam para reconstruir a confiança no plano.',
+      'today_completion_recovery_title': 'Trabalho de recuperação também conta',
+      'today_completion_recovery_message':
+          'Você protegeu a retenção com um dia mais leve. Isso é uma vitória segura enquanto o plano se estabiliza.',
+      'today_empty_sparse_title': 'Hoje pode continuar leve',
+      'today_empty_sparse_message':
+          'Você está voltando ao ritmo. Abra Meu Plano se quiser um próximo passo mais claro para a semana.',
+      'today_empty_recovery_title':
+          'Uma pausa de recuperação pode ser intencional',
+      'today_empty_recovery_message':
+          'O planejador está deixando hoje mais leve para você se estabilizar com segurança. Abra Meu Plano se quiser revisar ou aliviar mais a semana.',
       'range_unavailable': 'Intervalo indisponível',
       'grade_good': 'Bom',
       'grade_medium': 'Médio',
@@ -2099,6 +2219,12 @@ class AppStrings {
           'Num dia curto, o dia mínimo é um sucesso, não um retrocesso.',
       'plan_goal_summary_hint':
           'Isso muda automaticamente conforme a pressão atual do seu plano.',
+      'plan_goal_summary_hint_start':
+          'Comece com algumas sessões reais nesta semana. O resumo vai se preencher automaticamente.',
+      'plan_goal_summary_hint_sparse':
+          'Uma semana calma e repetível já basta. Mais algumas sessões reais deixarão este resumo mais claro.',
+      'plan_goal_summary_hint_recovery':
+          'Esta semana é para se estabilizar com segurança, não para provar velocidade.',
       'plan_goal_summary_steady':
           'Seu plano está leve o bastante para buscar um progresso constante e sustentável nesta semana.',
       'plan_goal_summary_protect':
@@ -2115,6 +2241,8 @@ class AppStrings {
           'Seu trabalho recente sustenta um ritmo semanal estável.',
       'weekly_progress_trend_building':
           'Você está construindo consistência. Mantenha a tarefa principal simples e repetível.',
+      'weekly_progress_trend_sparse':
+          'Você está retomando o ritmo. Algumas sessões calmas e reais já bastam nesta semana.',
       'weekly_progress_trend_protect':
           'Há trabalho recente, mas a retenção ainda precisa da parte mais segura do seu tempo.',
       'weekly_progress_trend_recovery':
@@ -2132,6 +2260,17 @@ class AppStrings {
       'weekly_progress_quality_strained': 'Precisa de um ritmo mais leve',
       'weekly_progress_quality_not_enough_data':
           'Ainda não há dados de revisão suficientes',
+      'weekly_progress_note_label': 'Como ler isto',
+      'weekly_progress_note_start':
+          'Uma sessão real já basta para começar. Este bloco se preenche automaticamente conforme você conclui trabalho real.',
+      'weekly_progress_note_sparse':
+          'Uma volta suave também conta. Mantenha as próximas sessões simples e repetíveis.',
+      'weekly_progress_note_steady':
+          'Continue repetindo a tarefa principal e deixe os dias constantes se acumularem.',
+      'weekly_progress_note_protect':
+          'Deixe revisões e verificações adiadas ficarem com a parte mais segura do seu tempo até a pressão cair.',
+      'weekly_progress_note_recovery':
+          'Uma semana mais leve também conta enquanto o planejador ajuda você a se estabilizar com segurança.',
       'weekly_progress_recent_quality_line':
           'Qualidade recente das revisões: {value}',
       'no_ayahs_for_surah': 'Nenhum ayah encontrado para a Surah {surah}.',
@@ -2408,6 +2547,21 @@ class AppStrings {
       'failed_to_load_today_plan': 'تعذر تحميل خطة اليوم.',
       'grade_saved': 'تم حفظ التقييم.',
       'failed_to_save_grade': 'فشل حفظ التقييم.',
+      'today_completion_start_title': 'بداية حقيقية تُحسب',
+      'today_completion_start_message':
+          'أكملت يومًا حقيقيًا من التدريب. وهذا يكفي لبدء بناء الانتظام.',
+      'today_completion_sparse_title': 'العودة الهادئة تُحسب أيضًا',
+      'today_completion_sparse_message':
+          'أكملت عملًا حقيقيًا اليوم. بضع أيام هادئة كهذا تكفي لإعادة الثقة بالخطة.',
+      'today_completion_recovery_title': 'عمل التعافي يُحسب أيضًا',
+      'today_completion_recovery_message':
+          'لقد حميت التثبيت بيوم أخف. وهذا نجاح آمن بينما تستعيد الخطة توازنها.',
+      'today_empty_sparse_title': 'يمكن أن يبقى اليوم خفيفًا',
+      'today_empty_sparse_message':
+          'أنت تعود إلى الإيقاع بهدوء. افتح خطتي إذا أردت خطوة أسبوعية أوضح.',
+      'today_empty_recovery_title': 'قد تكون استراحة التعافي مقصودة',
+      'today_empty_recovery_message':
+          'المخطط يبقي اليوم خفيفًا لتستعيد التوازن بأمان. افتح خطتي إذا أردت مراجعة الأسبوع أو تخفيفه أكثر.',
       'range_unavailable': 'النطاق غير متاح',
       'grade_good': 'جيد',
       'grade_medium': 'متوسط',
@@ -2473,6 +2627,12 @@ class AppStrings {
       'today_goal_short_day_recovery':
           'في اليوم القصير، يُعد اليوم الأدنى نجاحًا لا تراجعًا.',
       'plan_goal_summary_hint': 'يتغير هذا تلقائيًا حسب ضغط خطتك الحالي.',
+      'plan_goal_summary_hint_start':
+          'ابدأ ببضع جلسات حقيقية هذا الأسبوع. سيمتلئ الملخص تلقائيًا.',
+      'plan_goal_summary_hint_sparse':
+          'يكفي أسبوع هادئ وقابل للتكرار. وستجعل بضع جلسات حقيقية إضافية هذا الملخص أوضح.',
+      'plan_goal_summary_hint_recovery':
+          'هذا الأسبوع مخصص لاستعادة التوازن بأمان، لا لإثبات السرعة.',
       'plan_goal_summary_steady':
           'خطتك خفيفة بما يكفي لاستهداف تقدّم ثابت ومستدام هذا الأسبوع.',
       'plan_goal_summary_protect':
@@ -2489,6 +2649,8 @@ class AppStrings {
           'عملك الأخير يدعم إيقاعًا أسبوعيًا ثابتًا.',
       'weekly_progress_trend_building':
           'أنت تبني الانتظام. اجعل المهمة الأساسية بسيطة وقابلة للتكرار.',
+      'weekly_progress_trend_sparse':
+          'أنت تعود إلى الإيقاع. بضع جلسات هادئة وحقيقية تكفي هذا الأسبوع.',
       'weekly_progress_trend_protect':
           'يوجد عمل حديث، لكن التثبيت ما زال يحتاج إلى الحصة الأكثر أمانًا من وقتك.',
       'weekly_progress_trend_recovery':
@@ -2505,6 +2667,17 @@ class AppStrings {
       'weekly_progress_quality_strained': 'تحتاج إلى وتيرة ألطف',
       'weekly_progress_quality_not_enough_data':
           'لا توجد بيانات مراجعة كافية بعد',
+      'weekly_progress_note_label': 'كيف تقرأ هذا',
+      'weekly_progress_note_start':
+          'جلسة حقيقية واحدة تكفي للبداية. سيمتلئ هذا الجزء تلقائيًا كلما أنجزت عملًا حقيقيًا.',
+      'weekly_progress_note_sparse':
+          'العودة الهادئة تُحسب أيضًا. اجعل الجلسات القادمة بسيطة وقابلة للتكرار.',
+      'weekly_progress_note_steady':
+          'واصل تكرار المهمة الأساسية ودع الأيام الثابتة تتراكم.',
+      'weekly_progress_note_protect':
+          'دع المراجعات والتحققات المؤجلة تأخذ الحصة الأكثر أمانًا من وقتك حتى ينخفض الضغط.',
+      'weekly_progress_note_recovery':
+          'الأسبوع الأخف يُحسب أيضًا بينما يساعدك المخطط على استعادة التوازن بأمان.',
       'weekly_progress_recent_quality_line': 'جودة المراجعة مؤخرًا: {value}',
       'no_ayahs_for_surah': 'لا توجد آيات للسورة {surah}.',
       'no_ayahs_for_page': 'لا توجد آيات للصفحة {page}.',

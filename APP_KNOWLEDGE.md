@@ -121,6 +121,7 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
   - `Today` and `My Plan` now share one internal goal-focus layer
   - `Today` and `My Plan` now also share one last-7-days progress snapshot
   - `Today` and `My Plan` now also share one advice-only coaching recommendation layer
+  - `Today` and `My Plan` now also share one derived progress-state layer so no-history, sparse-history, steady, protect-retention, and recovery-safe wording stay aligned
   - there is still no separate goals tab or progress dashboard
 
 ### Routes
@@ -488,6 +489,11 @@ Current capabilities:
   - delayed-check count
   - completed practice count
   - simple recent review-quality band
+- `My Plan` now uses the same derived progress-state framing as `Today`, so:
+  - no meaningful history yet
+  - sparse recent activity
+  - recovery-safe lighter weeks
+  all use aligned summary/hint wording instead of drifting between surfaces
 - Current persisted data does not yet separate new-vs-review non-stage4 practice completions reliably, so that count is intentionally framed as generic completed practice instead of pretending to be more precise
 - Plan health copy can now explain:
   - when backlog burn-down is recommended
@@ -546,6 +552,7 @@ Current capabilities:
   - completed practice completions
   - a simple recent review-quality band
   - calm no-history wording when the learner is just starting
+  - calm sparse-history wording when the learner is only just getting back into rhythm
   - count-based summaries instead of duration-minute claims
 - Render a health badge and explanation packet so the learner can see whether the day is:
   - `On track`
@@ -565,6 +572,10 @@ Current capabilities:
 - Render dedicated Stage-4 delayed-consolidation due items with urgency metadata
 - Mandatory Stage-4 due now reserves planner minutes before new memorization is assigned, even when the learner explicitly overrides the default block
 - Render completion and empty-state cards when there is no remaining actionable work
+- Empty and completion states now stay aligned with the same progress-state layer used by the weekly trust block:
+  - no meaningful history yet
+  - sparse recent activity
+  - recovery-safe lighter days
 - Render sessionized day blocks (timed or untimed) with recovery signal
 - Save grades (`q=5/4/3/2/0`)
 - "Open in Reader" deep-link with page mode + verse range highlight params

@@ -161,8 +161,9 @@ Important behavior:
 - Important:
   - it is count-based on purpose
   - it does not pretend to measure everything with exact minutes
-  - completed non-stage4 practice is currently shown as generic completed practice, not as a more specific label the app cannot yet prove reliably
-  - the no-history state is intentionally calm and supportive instead of looking like a failed or empty dashboard
+- completed non-stage4 practice is currently shown as generic completed practice, not as a more specific label the app cannot yet prove reliably
+- the no-history state is intentionally calm and supportive instead of looking like a failed or empty dashboard
+- if recent activity is still sparse, the summary now says that you are getting back into rhythm instead of pretending the weekly signal is already strong
 
 ### Recommendation layer
 - Where: directly alongside the summary area in `My Plan`.
@@ -176,9 +177,10 @@ Important behavior:
   - keeping `My Plan` aligned with the same guidance logic used by `Today`
   - helping you understand when the right move is to simplify rather than force more output
 - Important:
-  - this is advice-only
-  - it does not silently change your settings
-  - it now says explicitly that only real completed practice, review, or delayed-check work counts as progress
+- this is advice-only
+- it does not silently change your settings
+- it now says explicitly that only real completed practice, review, or delayed-check work counts as progress
+- it now stays aligned with the same progress-state wording used by `Today`
 
 ### Activate
 - Where: primary button in the summary card.
@@ -209,6 +211,15 @@ Important behavior:
 Simple rule:
 - if you see `Tight`, stay conservative
 - if you see `Overloaded`, lighten the next few days before increasing new work again
+
+## Cross-Surface Consistency
+
+`Today` and `My Plan` now use the same calm progress language for:
+- no meaningful history yet
+- sparse recent activity
+- recovery-safe lighter weeks
+
+That means the weekly summary, the hint text, and the surrounding guidance should no longer feel like two different systems.
 
 ## 4) Advanced
 

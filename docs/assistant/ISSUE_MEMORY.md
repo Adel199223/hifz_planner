@@ -53,7 +53,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 
 - first seen: 2026-03-08
 - last seen: 2026-03-08
-- repeat count: 2
+- repeat count: 3
 - status: mitigated
 - trigger source:
   - local Flutter validation in isolated worktrees
@@ -95,6 +95,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 - attempted fix history:
   - Wave 2: allowed the initial validation bootstrap to complete, then manually reverted incidental `pubspec.lock` churn before closeout
   - Wave 3: the first fresh-worktree test run touched `pubspec.lock` again, and the incidental change was reverted after validation
+  - Wave 4: `flutter test` touched `pubspec.lock` again in a fresh worktree, and the incidental change was reverted before closeout
 - accepted fix:
   - treat lockfile churn as incidental unless dependencies were intentionally changed, and revert it before closeout
 - regressed after fix:
@@ -109,3 +110,4 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 - evidence refs:
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md`
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave3_coaching_adjustment_guidance.md`
+  - `docs/assistant/exec_plans/active/2026-03-08_goals_wave4_cross_surface_consistency.md`

@@ -9,6 +9,14 @@ enum GoalFocus { steadyProgress, protectRetention, recoveryAndStabilize }
 
 enum GoalProgressQualityBand { steady, mixed, strained }
 
+enum GoalProgressSurfaceState {
+  noMeaningfulHistory,
+  sparseRecentActivity,
+  steadyProgress,
+  protectRetention,
+  recoverySafely,
+}
+
 enum GoalCoachingRecommendation {
   staySteady,
   useMinimumDay,
@@ -36,11 +44,35 @@ class GoalProgressSnapshot {
   bool get isSteadyProgress => focus == GoalFocus.steadyProgress;
   bool get isProtectRetention => focus == GoalFocus.protectRetention;
   bool get isRecoveryAndStabilize => focus == GoalFocus.recoveryAndStabilize;
+  int get practiceDaysLast7 => completedPracticeDaysLast7 ?? 0;
+  int get delayedChecksLast7 => completedDelayedChecksLast7 ?? 0;
+  int get reviewsLast7 => completedReviewsLast7 ?? 0;
+  int get newPracticeLast7 => completedNewPracticeLast7 ?? 0;
+  int get totalCompletedWorkLast7 =>
+      delayedChecksLast7 + reviewsLast7 + newPracticeLast7;
   bool get hasRecentHistory =>
-      (completedPracticeDaysLast7 ?? 0) > 0 ||
-      (completedDelayedChecksLast7 ?? 0) > 0 ||
-      (completedReviewsLast7 ?? 0) > 0 ||
-      (completedNewPracticeLast7 ?? 0) > 0;
+      practiceDaysLast7 > 0 ||
+      delayedChecksLast7 > 0 ||
+      reviewsLast7 > 0 ||
+      newPracticeLast7 > 0;
+  bool get hasMeaningfulHistory =>
+      practiceDaysLast7 >= 2 || totalCompletedWorkLast7 >= 3;
+  bool get isSparseRecentActivity => hasRecentHistory && !hasMeaningfulHistory;
+  GoalProgressSurfaceState get surfaceState {
+    if (focus == GoalFocus.recoveryAndStabilize) {
+      return GoalProgressSurfaceState.recoverySafely;
+    }
+    if (!hasRecentHistory) {
+      return GoalProgressSurfaceState.noMeaningfulHistory;
+    }
+    if (isSparseRecentActivity) {
+      return GoalProgressSurfaceState.sparseRecentActivity;
+    }
+    if (focus == GoalFocus.protectRetention) {
+      return GoalProgressSurfaceState.protectRetention;
+    }
+    return GoalProgressSurfaceState.steadyProgress;
+  }
 }
 
 class GoalCoachingAdvice {

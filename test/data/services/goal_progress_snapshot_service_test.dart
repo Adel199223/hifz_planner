@@ -113,6 +113,7 @@ void main() {
     expect(snapshot.completedNewPracticeLast7, 0);
     expect(snapshot.recentQualityBand, isNull);
     expect(snapshot.hasRecentHistory, isFalse);
+    expect(snapshot.surfaceState, GoalProgressSurfaceState.noMeaningfulHistory);
   });
 
   test('buildWeeklySnapshot recognizes steady recent practice', () async {
@@ -134,6 +135,7 @@ void main() {
     expect(snapshot.completedNewPracticeLast7, 4);
     expect(snapshot.recentQualityBand, GoalProgressQualityBand.steady);
     expect(snapshot.hasRecentHistory, isTrue);
+    expect(snapshot.surfaceState, GoalProgressSurfaceState.steadyProgress);
   });
 
   test('buildWeeklySnapshot recognizes retention-heavy recent work', () async {
@@ -154,6 +156,7 @@ void main() {
     expect(snapshot.completedDelayedChecksLast7, 3);
     expect(snapshot.completedReviewsLast7, 5);
     expect(snapshot.recentQualityBand, GoalProgressQualityBand.mixed);
+    expect(snapshot.surfaceState, GoalProgressSurfaceState.protectRetention);
   });
 
   test(
@@ -174,8 +177,28 @@ void main() {
       expect(snapshot.focus, GoalFocus.recoveryAndStabilize);
       expect(snapshot.completedPracticeDaysLast7, 1);
       expect(snapshot.recentQualityBand, GoalProgressQualityBand.strained);
+      expect(snapshot.surfaceState, GoalProgressSurfaceState.recoverySafely);
     },
   );
+
+  test('surfaceState treats light recent activity as sparse return', () {
+    const snapshot = GoalProgressSnapshot(
+      focus: GoalFocus.steadyProgress,
+      completedPracticeDaysLast7: 1,
+      completedDelayedChecksLast7: 0,
+      completedReviewsLast7: 1,
+      completedNewPracticeLast7: 1,
+      recentQualityBand: GoalProgressQualityBand.mixed,
+    );
+
+    expect(snapshot.hasRecentHistory, isTrue);
+    expect(snapshot.hasMeaningfulHistory, isFalse);
+    expect(snapshot.isSparseRecentActivity, isTrue);
+    expect(
+      snapshot.surfaceState,
+      GoalProgressSurfaceState.sparseRecentActivity,
+    );
+  });
 
   test('buildWeeklySnapshot derives recent quality band from grades', () async {
     await _seedMeaningfulProgress(
