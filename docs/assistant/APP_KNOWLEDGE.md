@@ -64,6 +64,13 @@ Do not use this file as primary truth when there is a conflict.
 - `lib/app/router.dart`
 - `lib/app/navigation_shell.dart`
 
+## Current App Shell
+
+- Primary rail: `Today`, `Read`, `My Plan`, `Library`
+- `Library` routes users to `Bookmarks` and `Notes`
+- Top-right drawer is the `More` surface for `Settings`, `About`, `Reciters`, and the demoted Explore entries
+- Reader top actions are now responsive, with the settings button on its own row to avoid narrow-layout collisions
+
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`
 - `lib/data/services/qurancom_api.dart`

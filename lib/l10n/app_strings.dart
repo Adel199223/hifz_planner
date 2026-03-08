@@ -35,9 +35,13 @@ class AppStrings {
   String get bookmarks => _t('bookmarks', 'Bookmarks');
   String get notes => _t('notes', 'Notes');
   String get plan => _t('plan', 'Plan');
+  String get myPlan => _t('my_plan', 'My Plan');
   String get today => _t('today', 'Today');
+  String get library => _t('library', 'Library');
   String get settings => _t('settings', 'Settings');
   String get about => _t('about', 'About');
+  String get tools => _t('tools', 'Tools');
+  String get explore => _t('explore', 'Explore');
   String get retry => _t('retry', 'Retry');
   String get done => _t('done', 'Done');
   String get reset => _t('reset', 'Reset');
@@ -110,74 +114,83 @@ class AppStrings {
   String get tajweed => _t('tajweed', 'Tajweed');
   String get indoPakSoon => _t('indopak_soon', 'IndoPak (Soon)');
   String get showTajweedRulesWhileReading => _t(
-        'show_tajweed_rules_while_reading',
-        'Show Tajweed rules while reading',
-      );
+    'show_tajweed_rules_while_reading',
+    'Show Tajweed rules while reading',
+  );
   String get fontSize => _t('font_size', 'Font size');
   String get selectedReciter => _t('selected_reciter', 'Selected Reciter');
   String get preview => _t('preview', 'Preview');
   String get word => _t('word', 'Word');
   String get basmalaTranslation => _t(
-        'basmala_translation',
-        'In the Name of Allah - the Most Compassionate, Most Merciful',
-      );
+    'basmala_translation',
+    'In the Name of Allah - the Most Compassionate, Most Merciful',
+  );
 
   String translationLabel(String label) => _fmt(
-        _t('translation_label', 'Translation: {label}'),
-        <String, Object>{'label': label},
-      );
+    _t('translation_label', 'Translation: {label}'),
+    <String, Object>{'label': label},
+  );
   String pageLabel(int pageNumber) => _fmt(
-        _t('page_label', 'Page {page}'),
-        <String, Object>{'page': pageNumber},
-      );
-  String juzLabel(int juzNumber) => _fmt(
-        _t('juz_label', 'Juz {juz}'),
-        <String, Object>{'juz': juzNumber},
-      );
+    _t('page_label', 'Page {page}'),
+    <String, Object>{'page': pageNumber},
+  );
+  String juzLabel(int juzNumber) =>
+      _fmt(_t('juz_label', 'Juz {juz}'), <String, Object>{'juz': juzNumber});
   String hizbLabel(int hizbNumber) => _fmt(
-        _t('hizb_label', 'Hizb {hizb}'),
-        <String, Object>{'hizb': hizbNumber},
-      );
+    _t('hizb_label', 'Hizb {hizb}'),
+    <String, Object>{'hizb': hizbNumber},
+  );
   String surahLabel(int surahNumber) => _fmt(
-        _t('surah_label', 'Surah {surah}'),
-        <String, Object>{'surah': surahNumber},
-      );
+    _t('surah_label', 'Surah {surah}'),
+    <String, Object>{'surah': surahNumber},
+  );
   String ayahLabel(int ayahNumber) => _fmt(
-        _t('ayah_label', 'Ayah {ayah}'),
-        <String, Object>{'ayah': ayahNumber},
-      );
+    _t('ayah_label', 'Ayah {ayah}'),
+    <String, Object>{'ayah': ayahNumber},
+  );
   String surahAyahLabel(int surahNumber, int ayahNumber) => _fmt(
-        _t('surah_ayah_label', '{surah}:{ayah}'),
-        <String, Object>{'surah': surahNumber, 'ayah': ayahNumber},
-      );
+    _t('surah_ayah_label', '{surah}:{ayah}'),
+    <String, Object>{'surah': surahNumber, 'ayah': ayahNumber},
+  );
 
   String get learnTitle => _t('learn_title', 'Learning Plans');
   String get learnSubtitle => _t(
-        'learn_subtitle',
-        'Build your long-term Quran routine and track progress over time.',
-      );
+    'learn_subtitle',
+    'Build your long-term Quran routine and track progress over time.',
+  );
   String get hifzPlanTitle => _t('hifz_plan_title', 'Hifz Plan');
-  String get hifzPlanSubtitle => _t(
-        'hifz_plan_subtitle',
-        'Create and maintain your memorization plan.',
-      );
+  String get hifzPlanSubtitle =>
+      _t('hifz_plan_subtitle', 'Create and maintain your memorization plan.');
   String get openHifzPlan => _t('open_hifz_plan', 'Open Hifz Plan');
   String get aboutTitle => _t('about_title', 'About');
 
   String get bookmarksTitle => _t('bookmarks_title', 'Bookmarks');
+  String get libraryTitle => _t('library_title', 'Library');
+  String get librarySubtitle =>
+      _t('library_subtitle', 'Keep your saved places and notes together.');
+  String get libraryBookmarksDescription => _t(
+    'library_bookmarks_description',
+    'Return to your saved verses and pages quickly.',
+  );
+  String get libraryNotesDescription => _t(
+    'library_notes_description',
+    'Review your verse-linked notes and reflections.',
+  );
+  String get openBookmarks => _t('open_bookmarks', 'Open Bookmarks');
+  String get openNotes => _t('open_notes', 'Open Notes');
   String get failedToLoadBookmarks =>
       _t('failed_to_load_bookmarks', 'Failed to load bookmarks.');
   String get failedToLoadReciters =>
       _t('failed_to_load_reciters', 'Failed to load reciters.');
   String get noBookmarksYet => _t('no_bookmarks_yet', 'No bookmarks yet.');
   String savedLabel(String timestamp) => _fmt(
-        _t('saved_label', 'Saved {timestamp}'),
-        <String, Object>{'timestamp': timestamp},
-      );
+    _t('saved_label', 'Saved {timestamp}'),
+    <String, Object>{'timestamp': timestamp},
+  );
   String surahAyahListLabel(int surahNumber, int ayahNumber) => _fmt(
-        _t('surah_ayah_list_label', 'Surah {surah}, Ayah {ayah}'),
-        <String, Object>{'surah': surahNumber, 'ayah': ayahNumber},
-      );
+    _t('surah_ayah_list_label', 'Surah {surah}, Ayah {ayah}'),
+    <String, Object>{'surah': surahNumber, 'ayah': ayahNumber},
+  );
   String get goToVerse => _t('go_to_verse', 'Go to verse');
   String get goToPage => _t('go_to_page', 'Go to page');
 
@@ -204,68 +217,63 @@ class AppStrings {
             'linked_verse_with_page',
             'Linked verse: Surah {surah}, Ayah {ayah} (Page {page})',
           );
-    return _fmt(
-      template,
-      <String, Object?>{
-        'surah': surahNumber,
-        'ayah': ayahNumber,
-        'page': pageNumber,
-      },
-    );
+    return _fmt(template, <String, Object?>{
+      'surah': surahNumber,
+      'ayah': ayahNumber,
+      'page': pageNumber,
+    });
   }
 
   String get settingsTitle => _t('settings_title', 'Settings');
   String get readyToImportBundledQuranAssets => _t(
-        'ready_to_import_bundled_quran_assets',
-        "Ready to import bundled Qur'an assets.",
-      );
+    'ready_to_import_bundled_quran_assets',
+    "Ready to import bundled Qur'an assets.",
+  );
   String get startingQuranTextImport =>
       _t('starting_quran_text_import', "Starting Qur'an text import...");
   String get alreadyImported => _t('already_imported', 'Already imported');
   String get importSkippedAyahTableHasData => _t(
-        'import_skipped_ayah_table_has_data',
-        'Import skipped: ayah table already has data.',
-      );
+    'import_skipped_ayah_table_has_data',
+    'Import skipped: ayah table already has data.',
+  );
   String importCompleteSummary(int insertedRows, int ignoredRows) => _fmt(
-        _t(
-          'import_complete_summary',
-          'Import complete: {inserted} inserted, {ignored} ignored.',
-        ),
-        <String, Object>{'inserted': insertedRows, 'ignored': ignoredRows},
-      );
+    _t(
+      'import_complete_summary',
+      'Import complete: {inserted} inserted, {ignored} ignored.',
+    ),
+    <String, Object>{'inserted': insertedRows, 'ignored': ignoredRows},
+  );
   String quranTextImportFailed(String error) => _fmt(
-        _t('quran_text_import_failed', "Qur'an text import failed: {error}"),
-        <String, Object>{'error': error},
-      );
+    _t('quran_text_import_failed', "Qur'an text import failed: {error}"),
+    <String, Object>{'error': error},
+  );
   String get startingPageMetadataImport =>
       _t('starting_page_metadata_import', 'Starting page metadata import...');
   String get pageMetadataAlreadyUpToDate => _t(
-        'page_metadata_already_up_to_date',
-        'Page metadata already up to date',
-      );
+    'page_metadata_already_up_to_date',
+    'Page metadata already up to date',
+  );
   String pageMetadataImportCompleteSummary({
     required int updatedRows,
     required int unchangedRows,
     required int missingRows,
     required int parsedRows,
-  }) =>
-      _fmt(
-        _t(
-          'page_metadata_import_complete_summary',
-          'Page metadata import complete: {updated} updated, {unchanged} unchanged, {missing} missing, {parsed} parsed.',
-        ),
-        <String, Object>{
-          'updated': updatedRows,
-          'unchanged': unchangedRows,
-          'missing': missingRows,
-          'parsed': parsedRows,
-        },
-      );
+  }) => _fmt(
+    _t(
+      'page_metadata_import_complete_summary',
+      'Page metadata import complete: {updated} updated, {unchanged} unchanged, {missing} missing, {parsed} parsed.',
+    ),
+    <String, Object>{
+      'updated': updatedRows,
+      'unchanged': unchangedRows,
+      'missing': missingRows,
+      'parsed': parsedRows,
+    },
+  );
   String pageMetadataImportFailed(String error) => _fmt(
-        _t('page_metadata_import_failed',
-            'Page metadata import failed: {error}'),
-        <String, Object>{'error': error},
-      );
+    _t('page_metadata_import_failed', 'Page metadata import failed: {error}'),
+    <String, Object>{'error': error},
+  );
   String get completed => _t('completed', 'completed');
   String get importQuranText => _t('import_quran_text', "Import Qur'an Text");
   String get importPageMetadata =>
@@ -276,112 +284,97 @@ class AppStrings {
   String get noPlannedReviewsLeft =>
       _t('no_planned_reviews_left', 'No planned reviews left.');
   String dueDayLabel(int dueDay) => _fmt(
-        _t('due_day_label', 'Due day {day}'),
-        <String, Object>{'day': dueDay},
-      );
+    _t('due_day_label', 'Due day {day}'),
+    <String, Object>{'day': dueDay},
+  );
   String get newMemorization => _t('new_memorization', 'New Memorization');
   String get noPlannedNewUnitsLeft =>
       _t('no_planned_new_units_left', 'No planned new units left.');
   String get openInReader => _t('open_in_reader', 'Open in Reader');
   String get openCompanionChain =>
       _t('open_companion_chain', 'Open Companion Chain');
-  String get stage4DueSectionTitle => _t(
-        'stage4_due_section_title',
-        'Stage 4 - Delayed Consolidation',
-      );
-  String get stage4NoDueItems => _t(
-        'stage4_no_due_items',
-        'No Stage-4 delayed checks are due.',
-      );
+  String get stage4DueSectionTitle =>
+      _t('stage4_due_section_title', 'Stage 4 - Delayed Consolidation');
+  String get stage4NoDueItems =>
+      _t('stage4_no_due_items', 'No Stage-4 delayed checks are due.');
   String stage4TierSummary(
     int emerging,
     int ready,
     int stable,
     int maintained,
-  ) =>
-      _fmt(
-        _t(
-          'stage4_tier_summary',
-          'Tiers - Emerging: {emerging}, Ready: {ready}, Stable: {stable}, Maintained: {maintained}',
-        ),
-        <String, Object>{
-          'emerging': emerging,
-          'ready': ready,
-          'stable': stable,
-          'maintained': maintained,
-        },
-      );
-  String get stage4DueKindPreSleepOptional => _t(
-        'stage4_due_kind_pre_sleep_optional',
-        'Pre-sleep optional check',
-      );
-  String get stage4DueKindNextDayRequired => _t(
-        'stage4_due_kind_next_day_required',
-        'Next-day required check',
-      );
-  String get stage4DueKindRetryRequired => _t(
-        'stage4_due_kind_retry_required',
-        'Retry required',
-      );
+  ) => _fmt(
+    _t(
+      'stage4_tier_summary',
+      'Tiers - Emerging: {emerging}, Ready: {ready}, Stable: {stable}, Maintained: {maintained}',
+    ),
+    <String, Object>{
+      'emerging': emerging,
+      'ready': ready,
+      'stable': stable,
+      'maintained': maintained,
+    },
+  );
+  String get stage4DueKindPreSleepOptional =>
+      _t('stage4_due_kind_pre_sleep_optional', 'Pre-sleep optional check');
+  String get stage4DueKindNextDayRequired =>
+      _t('stage4_due_kind_next_day_required', 'Next-day required check');
+  String get stage4DueKindRetryRequired =>
+      _t('stage4_due_kind_retry_required', 'Retry required');
   String stage4DueItemSummary(
     String dueKind,
     int overdueDays,
     int unresolvedTargets,
-  ) =>
-      _fmt(
-        _t(
-          'stage4_due_item_summary',
-          '{dueKind} - overdue {overdueDays}d - unresolved targets {unresolvedTargets}',
-        ),
-        <String, Object>{
-          'dueKind': dueKind,
-          'overdueDays': overdueDays,
-          'unresolvedTargets': unresolvedTargets,
-        },
-      );
-  String get stage4OpenAction =>
-      _t('stage4_open_action', 'Open Stage-4 Check');
+  ) => _fmt(
+    _t(
+      'stage4_due_item_summary',
+      '{dueKind} - overdue {overdueDays}d - unresolved targets {unresolvedTargets}',
+    ),
+    <String, Object>{
+      'dueKind': dueKind,
+      'overdueDays': overdueDays,
+      'unresolvedTargets': unresolvedTargets,
+    },
+  );
+  String get stage4OpenAction => _t('stage4_open_action', 'Open Stage-4 Check');
   String get stage4OverrideNewAction => _t(
-        'stage4_override_new_action',
-        'Override once and allow new memorization',
-      );
-  String get stage4OverrideDialogTitle => _t(
-        'stage4_override_dialog_title',
-        'New Memorization Override',
-      );
+    'stage4_override_new_action',
+    'Override once and allow new memorization',
+  );
+  String get stage4OverrideDialogTitle =>
+      _t('stage4_override_dialog_title', 'New Memorization Override');
   String get stage4OverrideDialogMessage => _t(
-        'stage4_override_dialog_message',
-        'Mandatory Stage-4 delayed checks are due. Continue anyway and log override?',
-      );
+    'stage4_override_dialog_message',
+    'Mandatory Stage-4 delayed checks are due. Continue anyway and log override?',
+  );
   String get stage4OverrideDialogConfirm =>
       _t('stage4_override_dialog_confirm', 'Override');
   String get stage4OverrideApplied => _t(
-        'stage4_override_applied',
-        'Override logged. New memorization unlocked for today.',
-      );
-  String get stage4OverrideFailed => _t(
-        'stage4_override_failed',
-        'Failed to log override. Please try again.',
-      );
+    'stage4_override_applied',
+    'Override logged. New memorization unlocked for today.',
+  );
+  String get stage4OverrideFailed =>
+      _t('stage4_override_failed', 'Failed to log override. Please try again.');
   String get pageMetadataRequiredToOpenInReader => _t(
-        'page_metadata_required_to_open_in_reader',
-        'Page metadata required to open in Reader.',
-      );
+    'page_metadata_required_to_open_in_reader',
+    'Page metadata required to open in Reader.',
+  );
   String get selfCheckGrade => _t('self_check_grade', 'Self-check grade');
   String plannedReviewMinutes(Object value) => _fmt(
-        _t('planned_review_minutes', 'Planned review minutes: {value}'),
-        <String, Object>{'value': value},
-      );
+    _t('planned_review_minutes', 'Planned review minutes: {value}'),
+    <String, Object>{'value': value},
+  );
   String plannedNewMinutes(Object value) => _fmt(
-        _t('planned_new_minutes', 'Planned new minutes: {value}'),
-        <String, Object>{'value': value},
-      );
+    _t('planned_new_minutes', 'Planned new minutes: {value}'),
+    <String, Object>{'value': value},
+  );
   String reviewPressureLabel(Object value) => _fmt(
-        _t('review_pressure_label', 'Review pressure: {value}'),
-        <String, Object>{'value': value},
-      );
+    _t('review_pressure_label', 'Review pressure: {value}'),
+    <String, Object>{'value': value},
+  );
   String get recoveryModeActive => _t(
-      'recovery_mode_active', 'Recovery mode active: new memorization paused');
+    'recovery_mode_active',
+    'Recovery mode active: new memorization paused',
+  );
   String get todaySessions => _t('today_sessions', 'Today Sessions');
   String get noSessionsPlanned =>
       _t('no_sessions_planned', 'No sessions planned.');
@@ -393,9 +386,9 @@ class AppStrings {
   String get sessionStatusMissed => _t('session_status_missed', 'missed');
   String get sessionStatusDueSoon => _t('session_status_due_soon', 'due-soon');
   String sessionMinutes(int minutes) => _fmt(
-        _t('session_minutes', '{minutes} min'),
-        <String, Object>{'minutes': minutes},
-      );
+    _t('session_minutes', '{minutes} min'),
+    <String, Object>{'minutes': minutes},
+  );
   String get untimedSessionLabel => _t('untimed_session_label', 'Untimed');
   String get failedToLoadTodayPlan =>
       _t('failed_to_load_today_plan', 'Failed to load today plan.');
@@ -410,13 +403,16 @@ class AppStrings {
   String get gradeFail => _t('grade_fail', 'Fail');
 
   String onboardingQuestionnaire(int questionCount) => _fmt(
-        _t('onboarding_questionnaire',
-            'Onboarding Questionnaire ({count} questions)'),
-        <String, Object>{'count': questionCount},
-      );
+    _t(
+      'onboarding_questionnaire',
+      'Onboarding Questionnaire ({count} questions)',
+    ),
+    <String, Object>{'count': questionCount},
+  );
   String get forecastDeterministicSimulation => _t(
-      'forecast_deterministic_simulation',
-      'Forecast (Deterministic Simulation)');
+    'forecast_deterministic_simulation',
+    'Forecast (Deterministic Simulation)',
+  );
   String get automaticSchedulingTitle =>
       _t('automatic_scheduling_title', 'Automatic Scheduling');
   String get twoSessionsPerDay =>
@@ -424,9 +420,9 @@ class AppStrings {
   String get setExactTimesQuestion =>
       _t('set_exact_times_question', 'Set exact times?');
   String sessionTimeLabel(String sessionLabel, String value) => _fmt(
-        _t('session_time_label', 'Session {session}: {value}'),
-        <String, Object>{'session': sessionLabel, 'value': value},
-      );
+    _t('session_time_label', 'Session {session}: {value}'),
+    <String, Object>{'session': sessionLabel, 'value': value},
+  );
   String get studyDaysLabel => _t('study_days_label', 'Study days');
   String get advancedSchedulingMode =>
       _t('advanced_scheduling_mode', 'Advanced scheduling mode');
@@ -447,10 +443,8 @@ class AppStrings {
   String get timingStrategyUntimed => _t('timing_strategy_untimed', 'Untimed');
   String get timingStrategyFixed => _t('timing_strategy_fixed', 'Fixed times');
   String get timingStrategyAuto => _t('timing_strategy_auto', 'Auto-placement');
-  String get flexOutsideWindowsLabel => _t(
-        'flex_outside_windows_label',
-        'Allow placement outside windows',
-      );
+  String get flexOutsideWindowsLabel =>
+      _t('flex_outside_windows_label', 'Allow placement outside windows');
   String get revisionOnlyDaysLabel =>
       _t('revision_only_days_label', 'Revision-only days');
   String get specificHoursWindowsLabel =>
@@ -472,25 +466,24 @@ class AppStrings {
     int minutes,
     String timeLabel,
     String status,
-  ) =>
-      _fmt(
-        _t(
-          'weekly_session_line',
-          '{session} • {focus} • {minutes} min • {time} • {status}',
-        ),
-        <String, Object>{
-          'session': sessionLabel,
-          'focus': focus,
-          'minutes': minutes,
-          'time': timeLabel,
-          'status': status,
-        },
-      );
+  ) => _fmt(
+    _t(
+      'weekly_session_line',
+      '{session} • {focus} • {minutes} min • {time} • {status}',
+    ),
+    <String, Object>{
+      'session': sessionLabel,
+      'focus': focus,
+      'minutes': minutes,
+      'time': timeLabel,
+      'status': status,
+    },
+  );
   String get skipDayLabel => _t('skip_day_label', 'Skip day / holiday');
   String overrideSessionTime(String sessionLabel) => _fmt(
-        _t('override_session_time', 'Override Session {session} time'),
-        <String, Object>{'session': sessionLabel},
-      );
+    _t('override_session_time', 'Override Session {session} time'),
+    <String, Object>{'session': sessionLabel},
+  );
   String get weekdayShortMon => _t('weekday_short_mon', 'Mon');
   String get weekdayShortTue => _t('weekday_short_tue', 'Tue');
   String get weekdayShortWed => _t('weekday_short_wed', 'Wed');
@@ -501,35 +494,35 @@ class AppStrings {
   String get runForecast => _t('run_forecast', 'Run Forecast');
   String get running => _t('running', 'Running...');
   String estimatedCompletion(String date) => _fmt(
-        _t('estimated_completion', 'Estimated completion: {date}'),
-        <String, Object>{'date': date},
-      );
+    _t('estimated_completion', 'Estimated completion: {date}'),
+    <String, Object>{'date': date},
+  );
   String get completionEstimateUnavailable =>
       _t('completion_estimate_unavailable', 'Completion estimate unavailable.');
   String weeklyMinutesCurve(String curveText) => _fmt(
-        _t('weekly_minutes_curve', 'Weekly minutes: {curve}'),
-        <String, Object>{'curve': curveText},
-      );
+    _t('weekly_minutes_curve', 'Weekly minutes: {curve}'),
+    <String, Object>{'curve': curveText},
+  );
   String revisionOnlyRatioCurve(String curveText) => _fmt(
-        _t('revision_only_ratio_curve', 'Revision-only ratio: {curve}'),
-        <String, Object>{'curve': curveText},
-      );
+    _t('revision_only_ratio_curve', 'Revision-only ratio: {curve}'),
+    <String, Object>{'curve': curveText},
+  );
   String avgNewPagesPerDayCurve(String curveText) => _fmt(
-        _t('avg_new_pages_per_day_curve', 'Avg new pages/day: {curve}'),
-        <String, Object>{'curve': curveText},
-      );
+    _t('avg_new_pages_per_day_curve', 'Avg new pages/day: {curve}'),
+    <String, Object>{'curve': curveText},
+  );
   String get suggestedPlanEditable =>
       _t('suggested_plan_editable', 'Suggested Plan (Editable)');
   String get dailyMinutesByWeekday =>
       _t('daily_minutes_by_weekday', 'Daily minutes by weekday');
   String derivedDailyDefault(int value) => _fmt(
-        _t('derived_daily_default', 'Derived daily default: {value}'),
-        <String, Object>{'value': value},
-      );
+    _t('derived_daily_default', 'Derived daily default: {value}'),
+    <String, Object>{'value': value},
+  );
   String weekdayMinutesChip(String dayKey, int minutes) => _fmt(
-        _t('weekday_minutes_chip', '{day}: {minutes}'),
-        <String, Object>{'day': dayKey, 'minutes': minutes},
-      );
+    _t('weekday_minutes_chip', '{day}: {minutes}'),
+    <String, Object>{'day': dayKey, 'minutes': minutes},
+  );
   String get avgNewMinutesPerAyah =>
       _t('avg_new_minutes_per_ayah', 'Avg new minutes per ayah');
   String get avgReviewMinutesPerAyah =>
@@ -546,20 +539,17 @@ class AppStrings {
   String get addNewSample => _t('add_new_sample', 'Add new sample');
   String get addReviewSample => _t('add_review_sample', 'Add review sample');
   String newSamplesPreview(int count, String median) => _fmt(
-        _t('new_samples_preview', 'New samples: {count}, median: {median}'),
-        <String, Object>{'count': count, 'median': median},
-      );
+    _t('new_samples_preview', 'New samples: {count}, median: {median}'),
+    <String, Object>{'count': count, 'median': median},
+  );
   String reviewSamplesPreview(int count, String median) => _fmt(
-        _t(
-          'review_samples_preview',
-          'Review samples: {count}, median: {median}',
-        ),
-        <String, Object>{'count': count, 'median': median},
-      );
+    _t('review_samples_preview', 'Review samples: {count}, median: {median}'),
+    <String, Object>{'count': count, 'median': median},
+  );
   String get typicalGradeDistributionPercent => _t(
-        'typical_grade_distribution_percent',
-        'Typical grade distribution (%)',
-      );
+    'typical_grade_distribution_percent',
+    'Typical grade distribution (%)',
+  );
   String get applyTiming => _t('apply_timing', 'Apply timing');
   String get applyNow => _t('apply_now', 'Apply now');
   String get applyFromTomorrow =>
@@ -589,47 +579,44 @@ class AppStrings {
   String get durationMinutes => _t('duration_minutes', 'Duration (minutes)');
   String get ayahCount => _t('ayah_count', 'Ayah count');
   String get enterValidPositiveValuesBeforeActivating => _t(
-        'enter_valid_positive_values_before_activating',
-        'Please enter valid positive values before activating.',
-      );
+    'enter_valid_positive_values_before_activating',
+    'Please enter valid positive values before activating.',
+  );
   String get planActivatedSuccessfully =>
       _t('plan_activated_successfully', 'Plan activated successfully.');
   String get failedToActivatePlanTryAgain => _t(
-        'failed_to_activate_plan_try_again',
-        'Failed to activate plan. Please try again.',
-      );
+    'failed_to_activate_plan_try_again',
+    'Failed to activate plan. Please try again.',
+  );
   String get enterPositiveDurationAndAyahCount => _t(
-        'enter_positive_duration_and_ayah_count',
-        'Enter positive duration and ayah count.',
-      );
+    'enter_positive_duration_and_ayah_count',
+    'Enter positive duration and ayah count.',
+  );
   String get calibrationSampleAdded =>
       _t('calibration_sample_added', 'Calibration sample added.');
   String failedToAddSample(String error) => _fmt(
-        _t('failed_to_add_sample', 'Failed to add sample: {error}'),
-        <String, Object>{'error': error},
-      );
+    _t('failed_to_add_sample', 'Failed to add sample: {error}'),
+    <String, Object>{'error': error},
+  );
   String get calibrationAppliedImmediately =>
       _t('calibration_applied_immediately', 'Calibration applied immediately.');
   String get calibrationQueuedForTomorrow =>
       _t('calibration_queued_for_tomorrow', 'Calibration queued for tomorrow.');
   String calibrationApplyFailed(String error) => _fmt(
-        _t('calibration_apply_failed', 'Calibration apply failed: {error}'),
-        <String, Object>{'error': error},
-      );
+    _t('calibration_apply_failed', 'Calibration apply failed: {error}'),
+    <String, Object>{'error': error},
+  );
   String forecastFailed(String error) => _fmt(
-        _t('forecast_failed', 'Forecast failed: {error}'),
-        <String, Object>{'error': error},
-      );
+    _t('forecast_failed', 'Forecast failed: {error}'),
+    <String, Object>{'error': error},
+  );
 
-  String get companionProgressiveRevealTitle => _t(
-        'companion_progressive_reveal_title',
-        'Progressive Reveal Chain',
-      );
+  String get companionProgressiveRevealTitle =>
+      _t('companion_progressive_reveal_title', 'Progressive Reveal Chain');
   String companionCurrentVersePosition(int current, int total) => _fmt(
-        _t('companion_current_verse_position',
-            'Current verse: {current}/{total}'),
-        <String, Object>{'current': current, 'total': total},
-      );
+    _t('companion_current_verse_position', 'Current verse: {current}/{total}'),
+    <String, Object>{'current': current, 'total': total},
+  );
   String get companionActiveHintLabel =>
       _t('companion_active_hint_label', 'Active hint');
   String get companionHintLevelH0 =>
@@ -637,9 +624,9 @@ class AppStrings {
   String get companionHintUnavailable =>
       _t('companion_hint_unavailable', 'Hint unavailable');
   String get companionTafsirCuePlaceholder => _t(
-        'companion_tafsir_cue_placeholder',
-        'Meaning cue (Tafsir al-Muyassar placeholder)',
-      );
+    'companion_tafsir_cue_placeholder',
+    'Meaning cue (Tafsir al-Muyassar placeholder)',
+  );
   String get companionPlayCurrentAyah =>
       _t('companion_play_current_ayah', 'Play current ayah');
   String get companionAutoplayNextAyah =>
@@ -666,40 +653,36 @@ class AppStrings {
   String get companionStage1ReciteNow =>
       _t('companion_stage1_recite_now', 'Recite now.');
   String get companionStage1ReciteNowHiddenPrompt => _t(
-        'companion_stage1_recite_now_hidden_prompt',
-        'Recite now (text hidden).',
-      );
+    'companion_stage1_recite_now_hidden_prompt',
+    'Recite now (text hidden).',
+  );
   String get companionStage1CorrectionRequiredMessage => _t(
-        'companion_stage1_correction_required_message',
-        'Correction playback is required before the next cold attempt.',
-      );
-  String get companionStage1CorrectionAction => _t(
-        'companion_stage1_correction_action',
-        'Play Correction',
-      );
+    'companion_stage1_correction_required_message',
+    'Correction playback is required before the next cold attempt.',
+  );
+  String get companionStage1CorrectionAction =>
+      _t('companion_stage1_correction_action', 'Play Correction');
   String get companionStage1AutoCheckTitle =>
       _t('companion_stage1_auto_check_title', 'Micro-check');
   String get companionStage1AutoCheckRequiredSelection => _t(
-        'companion_stage1_auto_check_required_selection',
-        'Select an answer for the micro-check first.',
-      );
+    'companion_stage1_auto_check_required_selection',
+    'Select an answer for the micro-check first.',
+  );
   String get companionStage1HintLockedMessage => _t(
-        'companion_stage1_hint_locked_message',
-        'Hints unlock after the first cold attempt.',
-      );
+    'companion_stage1_hint_locked_message',
+    'Hints unlock after the first cold attempt.',
+  );
   String companionStage1WeakVerses(int count) => _fmt(
-        _t(
-          'companion_stage1_weak_verses',
-          'Weak verses flagged for reinforcement: {count}',
-        ),
-        <String, Object>{'count': count},
-      );
+    _t(
+      'companion_stage1_weak_verses',
+      'Weak verses flagged for reinforcement: {count}',
+    ),
+    <String, Object>{'count': count},
+  );
   String get companionStage2ModeLabel =>
       _t('companion_stage2_mode_label', 'Stage 2 mode');
-  String get companionStage2ModeMinimalCueRecall => _t(
-        'companion_stage2_mode_minimal_cue_recall',
-        'Minimal-Cue Recall',
-      );
+  String get companionStage2ModeMinimalCueRecall =>
+      _t('companion_stage2_mode_minimal_cue_recall', 'Minimal-Cue Recall');
   String get companionStage2ModeDiscrimination =>
       _t('companion_stage2_mode_discrimination', 'Discrimination');
   String get companionStage2ModeLinking =>
@@ -713,13 +696,11 @@ class AppStrings {
   String get companionStage2ReciteNow =>
       _t('companion_stage2_recite_now', 'Recite with minimal cue.');
   String get companionStage2CorrectionRequiredMessage => _t(
-        'companion_stage2_correction_required_message',
-        'Correction playback is required before the next Stage-2 attempt.',
-      );
-  String get companionStage2CorrectionAction => _t(
-        'companion_stage2_correction_action',
-        'Play Stage-2 Correction',
-      );
+    'companion_stage2_correction_required_message',
+    'Correction playback is required before the next Stage-2 attempt.',
+  );
+  String get companionStage2CorrectionAction =>
+      _t('companion_stage2_correction_action', 'Play Stage-2 Correction');
   String get companionStage3ModeLabel =>
       _t('companion_stage3_mode_label', 'Stage 3 mode');
   String get companionStage3ModeWeakPrelude =>
@@ -739,13 +720,11 @@ class AppStrings {
   String get companionStage3ReciteNow =>
       _t('companion_stage3_recite_now', 'Recite from hidden recall.');
   String get companionStage3CorrectionRequiredMessage => _t(
-        'companion_stage3_correction_required_message',
-        'Correction playback is required before the next Stage-3 attempt.',
-      );
-  String get companionStage3CorrectionAction => _t(
-        'companion_stage3_correction_action',
-        'Play Stage-3 Correction',
-      );
+    'companion_stage3_correction_required_message',
+    'Correction playback is required before the next Stage-3 attempt.',
+  );
+  String get companionStage3CorrectionAction =>
+      _t('companion_stage3_correction_action', 'Play Stage-3 Correction');
   String get companionStage4ModeLabel =>
       _t('companion_stage4_mode_label', 'Stage 4 mode');
   String get companionStage4ModeColdStart =>
@@ -765,41 +744,36 @@ class AppStrings {
   String get companionStage4ReciteNow =>
       _t('companion_stage4_recite_now', 'Recite from delayed hidden recall.');
   String get companionStage4CorrectionRequiredMessage => _t(
-        'companion_stage4_correction_required_message',
-        'Stage-4 correction exposure is required before retry.',
-      );
-  String get companionStage4CorrectionAction => _t(
-        'companion_stage4_correction_action',
-        'Play Stage-4 Correction',
-      );
+    'companion_stage4_correction_required_message',
+    'Stage-4 correction exposure is required before retry.',
+  );
+  String get companionStage4CorrectionAction =>
+      _t('companion_stage4_correction_action', 'Play Stage-4 Correction');
   String companionStage4DueBanner(String dueKind) => _fmt(
-        _t(
-          'companion_stage4_due_banner',
-          'Stage-4 due type: {dueKind}',
-        ),
-        <String, Object>{'dueKind': dueKind},
-      );
+    _t('companion_stage4_due_banner', 'Stage-4 due type: {dueKind}'),
+    <String, Object>{'dueKind': dueKind},
+  );
   String companionStage4UnresolvedTargets(int count) => _fmt(
-        _t(
-          'companion_stage4_unresolved_targets',
-          'Unresolved Stage-4 targets: {count}',
-        ),
-        <String, Object>{'count': count},
-      );
+    _t(
+      'companion_stage4_unresolved_targets',
+      'Unresolved Stage-4 targets: {count}',
+    ),
+    <String, Object>{'count': count},
+  );
   String companionStage3WeakPreludeBanner(int count) => _fmt(
-        _t(
-          'companion_stage3_weak_prelude_banner',
-          'Weak-prelude active: {count} verses must pass before normal hidden flow.',
-        ),
-        <String, Object>{'count': count},
-      );
+    _t(
+      'companion_stage3_weak_prelude_banner',
+      'Weak-prelude active: {count} verses must pass before normal hidden flow.',
+    ),
+    <String, Object>{'count': count},
+  );
   String get companionHintButton => _t('companion_hint_button', 'Hint');
   String get companionRepeatButton => _t('companion_repeat_button', 'Repeat');
   String get companionNextButton => _t('companion_next_button', 'Next');
   String companionStageProgress(int current, int total) => _fmt(
-        _t('companion_stage_progress', 'Stage {current}/{total}'),
-        <String, Object>{'current': current, 'total': total},
-      );
+    _t('companion_stage_progress', 'Stage {current}/{total}'),
+    <String, Object>{'current': current, 'total': total},
+  );
   String get companionStageGuidedVisible =>
       _t('companion_stage_guided_visible', 'Guided visible');
   String get companionStageCuedRecall =>
@@ -811,12 +785,12 @@ class AppStrings {
   String get companionSkipStageTitle =>
       _t('companion_skip_stage_title', 'Skip current stage?');
   String companionSkipStageBody(String stageLabel) => _fmt(
-        _t(
-          'companion_skip_stage_body',
-          'Skip {stage} for this run and continue to the next stage.',
-        ),
-        <String, Object>{'stage': stageLabel},
-      );
+    _t(
+      'companion_skip_stage_body',
+      'Skip {stage} for this run and continue to the next stage.',
+    ),
+    <String, Object>{'stage': stageLabel},
+  );
   String get companionSkipStageConfirm =>
       _t('companion_skip_stage_confirm', 'Skip');
   String get companionStageSkipped =>
@@ -826,16 +800,16 @@ class AppStrings {
   String get companionMarkIncorrect =>
       _t('companion_mark_incorrect', 'Mark incorrect');
   String companionFailedToSaveAttempt(String error) => _fmt(
-        _t(
-          'companion_failed_to_save_attempt',
-          'Failed to save companion attempt: {error}',
-        ),
-        <String, Object>{'error': error},
-      );
+    _t(
+      'companion_failed_to_save_attempt',
+      'Failed to save companion attempt: {error}',
+    ),
+    <String, Object>{'error': error},
+  );
   String get companionRepeatPrompt => _t(
-        'companion_repeat_prompt',
-        'Repeat the current verse and press Record/Start when ready.',
-      );
+    'companion_repeat_prompt',
+    'Repeat the current verse and press Record/Start when ready.',
+  );
   String get companionVersePassed => _t('companion_verse_passed', 'Passed');
   String get companionVerseRevealed =>
       _t('companion_verse_revealed', 'Revealed');
@@ -843,34 +817,33 @@ class AppStrings {
   String get companionHiddenPlaceholder =>
       _t('companion_hidden_placeholder', '••••••••••');
   String companionProficiency(String value) => _fmt(
-        _t('companion_proficiency', 'Proficiency: {value}'),
-        <String, Object>{'value': value},
-      );
+    _t('companion_proficiency', 'Proficiency: {value}'),
+    <String, Object>{'value': value},
+  );
   String get companionSessionComplete =>
       _t('companion_session_complete', 'Session complete');
   String companionSummaryPassed(int passed, int total) => _fmt(
-        _t('companion_summary_passed', 'Passed: {passed}/{total}'),
-        <String, Object>{'passed': passed, 'total': total},
-      );
+    _t('companion_summary_passed', 'Passed: {passed}/{total}'),
+    <String, Object>{'passed': passed, 'total': total},
+  );
   String companionSummaryHint(String value) => _fmt(
-        _t('companion_summary_hint', 'Average hint level: {value}'),
-        <String, Object>{'value': value},
-      );
+    _t('companion_summary_hint', 'Average hint level: {value}'),
+    <String, Object>{'value': value},
+  );
   String companionSummaryStrength(String value) => _fmt(
-        _t('companion_summary_strength', 'Average retrieval strength: {value}'),
-        <String, Object>{'value': value},
-      );
+    _t('companion_summary_strength', 'Average retrieval strength: {value}'),
+    <String, Object>{'value': value},
+  );
   String get companionNoSessionState =>
       _t('companion_no_session_state', 'No companion session state.');
   String get enterAllQPercentagesOrBlank => _t(
-        'enter_all_q_percentages_or_blank',
-        'Enter all q percentages (5,4,3,2,0) or leave all blank.',
-      );
+    'enter_all_q_percentages_or_blank',
+    'Enter all q percentages (5,4,3,2,0) or leave all blank.',
+  );
   String qMustBeIntegerPercentage(int q) => _fmt(
-        _t('q_must_be_integer_percentage',
-            'q{q} must be an integer percentage.'),
-        <String, Object>{'q': q},
-      );
+    _t('q_must_be_integer_percentage', 'q{q} must be an integer percentage.'),
+    <String, Object>{'q': q},
+  );
   String get qPercentagesMustSum100 =>
       _t('q_percentages_must_sum_100', 'q percentages must sum to 100.');
 
@@ -887,19 +860,19 @@ class AppStrings {
   String get noPagesAvailable =>
       _t('no_pages_available', 'No pages available.');
   String noAyahsForSurah(int surahNumber) => _fmt(
-        _t('no_ayahs_for_surah', 'No ayahs found for Surah {surah}.'),
-        <String, Object>{'surah': surahNumber},
-      );
+    _t('no_ayahs_for_surah', 'No ayahs found for Surah {surah}.'),
+    <String, Object>{'surah': surahNumber},
+  );
   String noAyahsForPage(int? pageNumber) => _fmt(
-        _t('no_ayahs_for_page', 'No ayahs found for Page {page}.'),
-        <String, Object>{'page': pageNumber ?? ''},
-      );
+    _t('no_ayahs_for_page', 'No ayahs found for Page {page}.'),
+    <String, Object>{'page': pageNumber ?? ''},
+  );
   String get failedToLoadVerses =>
       _t('failed_to_load_verses', 'Failed to load verses.');
   String get noVersesAvailableForSelectedSurah => _t(
-        'no_verses_available_for_selected_surah',
-        'No verses available for selected surah.',
-      );
+    'no_verses_available_for_selected_surah',
+    'No verses available for selected surah.',
+  );
   String get failedToLoadJuzIndex =>
       _t('failed_to_load_juz_index', 'Failed to load Juz index.');
   String get noJuzEntriesFound =>
@@ -910,40 +883,46 @@ class AppStrings {
   String get searchJuz => _t('search_juz', 'Search Juz');
   String get searchPage => _t('search_page', 'Search Page');
   String get noPageMetadataImportInSettings => _t(
-        'no_page_metadata_import_in_settings',
-        'No page metadata found. Import Page Metadata in Settings.',
-      );
+    'no_page_metadata_import_in_settings',
+    'No page metadata found. Import Page Metadata in Settings.',
+  );
   String get targetAyahNoPageMetadataYet => _t(
-      'target_ayah_no_page_metadata', 'Target ayah has no page metadata yet.');
+    'target_ayah_no_page_metadata',
+    'Target ayah has no page metadata yet.',
+  );
   String get targetAyahPageUnavailable => _t(
-        'target_ayah_page_unavailable_import',
-        'Target ayah page is not available in imported metadata.',
-      );
+    'target_ayah_page_unavailable_import',
+    'Target ayah page is not available in imported metadata.',
+  );
   String get tajweedTagsUnavailableShowingPlain => _t(
-        'tajweed_tags_unavailable_showing_plain',
-        'Tajweed tags unavailable. Showing plain text.',
-      );
+    'tajweed_tags_unavailable_showing_plain',
+    'Tajweed tags unavailable. Showing plain text.',
+  );
   String noPageMetadataForSurah(int surahNumber) => _fmt(
-        _t('no_page_metadata_for_surah',
-            'No page metadata found for Surah {surah}.'),
-        <String, Object>{'surah': surahNumber},
-      );
+    _t(
+      'no_page_metadata_for_surah',
+      'No page metadata found for Surah {surah}.',
+    ),
+    <String, Object>{'surah': surahNumber},
+  );
   String noPageMetadataForSurahAyah(int surahNumber, int ayahNumber) => _fmt(
-        _t(
-          'no_page_metadata_for_surah_ayah',
-          'No page metadata found for {surah}:{ayah}.',
-        ),
-        <String, Object>{'surah': surahNumber, 'ayah': ayahNumber},
-      );
+    _t(
+      'no_page_metadata_for_surah_ayah',
+      'No page metadata found for {surah}:{ayah}.',
+    ),
+    <String, Object>{'surah': surahNumber, 'ayah': ayahNumber},
+  );
   String get targetAyahNotVisibleOnSelectedPage => _t(
-        'target_ayah_not_visible_on_selected_page',
-        'Target ayah is not visible on the selected page.',
-      );
+    'target_ayah_not_visible_on_selected_page',
+    'Target ayah is not visible on the selected page.',
+  );
   String ayahNotFoundInSurah(int ayahNumber, int surahNumber) => _fmt(
-        _t('ayah_not_found_in_surah',
-            'Ayah {ayah} was not found in Surah {surah}.'),
-        <String, Object>{'ayah': ayahNumber, 'surah': surahNumber},
-      );
+    _t(
+      'ayah_not_found_in_surah',
+      'Ayah {ayah} was not found in Surah {surah}.',
+    ),
+    <String, Object>{'ayah': ayahNumber, 'surah': surahNumber},
+  );
   String get verseAlreadyBookmarked =>
       _t('verse_already_bookmarked', 'Verse already bookmarked.');
   String get bookmarkSaved => _t('bookmark_saved', 'Bookmark saved.');
@@ -952,31 +931,28 @@ class AppStrings {
   String get noteAdded => _t('note_added', 'Note added.');
   String get copiedVerseText => _t('copied_verse_text', 'Copied verse text.');
   String audioLoadFailed(String error) => _fmt(
-        _t('audio_load_failed', 'Audio playback failed: {error}'),
-        <String, Object>{'error': error},
-      );
+    _t('audio_load_failed', 'Audio playback failed: {error}'),
+    <String, Object>{'error': error},
+  );
   String get audioPluginUnavailable => _t(
-        'audio_plugin_unavailable',
-        'Audio plugin unavailable. Restart app after full rebuild.',
-      );
+    'audio_plugin_unavailable',
+    'Audio plugin unavailable. Restart app after full rebuild.',
+  );
   String get audioNetworkError => _t(
-        'audio_network_error',
-        'Audio source unavailable. Check your internet connection.',
-      );
+    'audio_network_error',
+    'Audio source unavailable. Check your internet connection.',
+  );
   String reciterNotAvailableForStreaming(String reciter) => _fmt(
-        _t(
-          'reciter_not_available_for_streaming',
-          '{reciter} is not available for streaming right now.',
-        ),
-        <String, Object>{'reciter': reciter},
-      );
+    _t(
+      'reciter_not_available_for_streaming',
+      '{reciter} is not available for streaming right now.',
+    ),
+    <String, Object>{'reciter': reciter},
+  );
   String reciterAppliedWithBitrate(String reciter, int bitrate) => _fmt(
-        _t(
-          'reciter_applied_with_bitrate',
-          '{reciter} selected ({bitrate} kbps).',
-        ),
-        <String, Object>{'reciter': reciter, 'bitrate': bitrate},
-      );
+    _t('reciter_applied_with_bitrate', '{reciter} selected ({bitrate} kbps).'),
+    <String, Object>{'reciter': reciter, 'bitrate': bitrate},
+  );
   String get audioControlsComingSoon =>
       _t('audio_controls_coming_soon', 'Audio controls are coming soon.');
   String get downloadComingSoon =>
@@ -984,13 +960,13 @@ class AppStrings {
   String get experienceComingSoon =>
       _t('experience_coming_soon', 'Experience settings are coming soon.');
   String elapsedTimeLabel(String value) => _fmt(
-        _t('elapsed_time_label', 'Elapsed {value}'),
-        <String, Object>{'value': value},
-      );
+    _t('elapsed_time_label', 'Elapsed {value}'),
+    <String, Object>{'value': value},
+  );
   String totalTimeLabel(String value) => _fmt(
-        _t('total_time_label', 'Total {value}'),
-        <String, Object>{'value': value},
-      );
+    _t('total_time_label', 'Total {value}'),
+    <String, Object>{'value': value},
+  );
   String get shareComingSoon =>
       _t('share_coming_soon', 'Share is coming soon.');
   String get tafsirsComingSoon =>
@@ -1000,19 +976,20 @@ class AppStrings {
   String get reflectionsComingSoon =>
       _t('reflections_coming_soon', 'Reflections are coming soon.');
   String get translationSettingsComingSoon => _t(
-      'translation_settings_coming_soon',
-      'Translation settings are coming soon.');
+    'translation_settings_coming_soon',
+    'Translation settings are coming soon.',
+  );
   String get wordByWordSettingsComingSoon => _t(
-        'word_by_word_settings_coming_soon',
-        'Word by Word settings are coming soon.',
-      );
+    'word_by_word_settings_coming_soon',
+    'Word by Word settings are coming soon.',
+  );
   String get verseActionsUnavailable => _t(
-        'verse_actions_unavailable',
-        'Verse actions unavailable for this page data.',
-      );
+    'verse_actions_unavailable',
+    'Verse actions unavailable for this page data.',
+  );
 
-  static const Map<AppLanguage, Map<String, String>> _overrides =
-      <AppLanguage, Map<String, String>>{
+  static const Map<AppLanguage, Map<String, String>>
+  _overrides = <AppLanguage, Map<String, String>>{
     AppLanguage.french: <String, String>{
       'close': 'Fermer',
       'language': 'Langue',
@@ -1027,9 +1004,13 @@ class AppStrings {
       'bookmarks': 'Signets',
       'notes': 'Notes',
       'plan': 'Plan',
+      'my_plan': 'Mon plan',
       'today': "Aujourd'hui",
+      'library': 'Bibliothèque',
       'settings': 'Paramètres',
       'about': 'À propos',
+      'tools': 'Outils',
+      'explore': 'Explorer',
       'retry': 'Réessayer',
       'done': 'Fait',
       'copy': 'Copier',
@@ -1104,6 +1085,15 @@ class AppStrings {
       'search_surah': 'Rechercher une sourate',
       'learn_title': "Plans d'apprentissage",
       'bookmarks_title': 'Signets',
+      'library_title': 'Bibliothèque',
+      'library_subtitle':
+          'Gardez vos emplacements enregistrés et vos notes au même endroit.',
+      'library_bookmarks_description':
+          'Revenez rapidement à vos versets et pages enregistrés.',
+      'library_notes_description':
+          'Relisez vos notes et réflexions liées aux versets.',
+      'open_bookmarks': 'Ouvrir les signets',
+      'open_notes': 'Ouvrir les notes',
       'failed_to_load_bookmarks': 'Échec du chargement des signets.',
       'no_bookmarks_yet': 'Aucun signet pour le moment.',
       'saved_label': 'Enregistré {timestamp}',
@@ -1288,9 +1278,13 @@ class AppStrings {
       'bookmarks': 'Favoritos',
       'notes': 'Notas',
       'plan': 'Plano',
+      'my_plan': 'Meu plano',
       'today': 'Hoje',
+      'library': 'Biblioteca',
       'settings': 'Configurações',
       'about': 'Sobre',
+      'tools': 'Ferramentas',
+      'explore': 'Explorar',
       'retry': 'Tentar novamente',
       'done': 'Feito',
       'copy': 'Copiar',
@@ -1356,6 +1350,15 @@ class AppStrings {
       'search_surah': 'Pesquisar Surah',
       'learn_title': 'Planos de aprendizado',
       'bookmarks_title': 'Favoritos',
+      'library_title': 'Biblioteca',
+      'library_subtitle':
+          'Mantenha seus lugares salvos e notas no mesmo lugar.',
+      'library_bookmarks_description':
+          'Volte rapidamente aos versículos e páginas salvos.',
+      'library_notes_description':
+          'Revise suas notas e reflexões ligadas aos versículos.',
+      'open_bookmarks': 'Abrir favoritos',
+      'open_notes': 'Abrir notas',
       'failed_to_load_bookmarks': 'Falha ao carregar favoritos.',
       'no_bookmarks_yet': 'Ainda não há favoritos.',
       'saved_label': 'Salvo {timestamp}',
@@ -1542,9 +1545,13 @@ class AppStrings {
       'bookmarks': 'العلامات',
       'notes': 'الملاحظات',
       'plan': 'الخطة',
+      'my_plan': 'خطتي',
       'today': 'اليوم',
+      'library': 'المكتبة',
       'settings': 'الإعدادات',
       'about': 'حول',
+      'tools': 'الأدوات',
+      'explore': 'استكشف',
       'retry': 'أعد المحاولة',
       'done': 'تم',
       'copy': 'نسخ',
@@ -1626,6 +1633,13 @@ class AppStrings {
       'search_surah': 'ابحث عن سورة',
       'learn_title': 'خطط التعلّم',
       'bookmarks_title': 'العلامات',
+      'library_title': 'المكتبة',
+      'library_subtitle': 'احتفظ بمواضعك المحفوظة وملاحظاتك في مكان واحد.',
+      'library_bookmarks_description':
+          'ارجع بسرعة إلى الآيات والصفحات المحفوظة.',
+      'library_notes_description': 'راجع ملاحظاتك وتأملاتك المرتبطة بالآيات.',
+      'open_bookmarks': 'فتح العلامات',
+      'open_notes': 'فتح الملاحظات',
       'failed_to_load_bookmarks': 'تعذر تحميل العلامات.',
       'no_bookmarks_yet': 'لا توجد علامات بعد.',
       'saved_label': 'تم الحفظ {timestamp}',

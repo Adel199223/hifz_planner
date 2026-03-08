@@ -50,22 +50,38 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
   @override
   Widget build(BuildContext context) {
     final destinations = ref.watch(navDestinationsProvider);
-    final selectedIndex =
-        destinations.indexWhere((d) => d.path == widget.location);
-    final currentIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    final selectedIndex = destinations.indexWhere(
+      (d) => d.matches(widget.location),
+    );
+    final int? currentIndex = selectedIndex >= 0 ? selectedIndex : null;
     final prefs = ref.watch(appPreferencesProvider);
     final isReaderSettingsOpen = ref.watch(readerSettingsPaneOpenProvider);
     final strings = AppStrings.of(prefs.language);
     final isReaderRoute = widget.location == '/reader';
     final shouldShowGlobalMenuButton = !(isReaderRoute && isReaderSettingsOpen);
 
-    final menuItems = <_GlobalMenuDestination>[
+    final toolItems = <_GlobalMenuDestination>[
       _GlobalMenuDestination(
-        key: const ValueKey('global_menu_item_read'),
-        label: strings.read,
-        path: '/reader',
-        icon: Icons.home_outlined,
+        key: const ValueKey('global_menu_item_settings'),
+        label: strings.settings,
+        path: '/settings',
+        icon: Icons.settings_outlined,
       ),
+      _GlobalMenuDestination(
+        key: const ValueKey('global_menu_item_about'),
+        label: strings.about,
+        path: '/about',
+        icon: Icons.info_outline,
+      ),
+      _GlobalMenuDestination(
+        key: const ValueKey('global_menu_item_reciters'),
+        label: strings.reciters,
+        path: '/reciters',
+        icon: Icons.mic_none,
+      ),
+    ];
+
+    final exploreItems = <_GlobalMenuDestination>[
       _GlobalMenuDestination(
         key: const ValueKey('global_menu_item_learn'),
         label: strings.learn,
@@ -77,18 +93,14 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
         label: strings.myQuran,
         path: '/my-quran',
         icon: Icons.bookmark_border,
+        subtitle: strings.comingSoon,
       ),
       _GlobalMenuDestination(
         key: const ValueKey('global_menu_item_quran_radio'),
         label: strings.quranRadio,
         path: '/quran-radio',
         icon: Icons.headphones_outlined,
-      ),
-      _GlobalMenuDestination(
-        key: const ValueKey('global_menu_item_reciters'),
-        label: strings.reciters,
-        path: '/reciters',
-        icon: Icons.mic_none,
+        subtitle: strings.comingSoon,
       ),
     ];
 
@@ -113,7 +125,7 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
                   children: [
                     Expanded(
                       child: Text(
-                        strings.menu,
+                        strings.more,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                     ),
@@ -128,29 +140,29 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
               ),
               Divider(height: 1, color: drawerBorderColor),
               Expanded(
-                child: ListView.builder(
+                child: ListView(
                   key: const ValueKey('global_menu_list'),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-                  itemCount: menuItems.length,
-                  itemBuilder: (context, index) {
-                    final item = menuItems[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: ListTile(
-                        key: item.key,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        leading: Icon(item.icon),
-                        title: Text(
-                          item.label,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 16,
+                  ),
+                  children: [
+                    _DrawerSectionHeader(label: strings.tools),
+                    for (final item in toolItems)
+                      _DrawerDestinationTile(
+                        item: item,
+                        selected: widget.location == item.path,
                         onTap: () => _navigateFromMenu(item.path),
                       ),
-                    );
-                  },
+                    const SizedBox(height: 18),
+                    _DrawerSectionHeader(label: strings.explore),
+                    for (final item in exploreItems)
+                      _DrawerDestinationTile(
+                        item: item,
+                        selected: widget.location == item.path,
+                        onTap: () => _navigateFromMenu(item.path),
+                      ),
+                  ],
                 ),
               ),
               Divider(height: 1, color: drawerBorderColor),
@@ -205,9 +217,9 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
                         tooltip: strings.changeTheme,
                         initialValue: prefs.theme,
                         onSelected: (value) {
-                          ref.read(appPreferencesProvider.notifier).setTheme(
-                                value,
-                              );
+                          ref
+                              .read(appPreferencesProvider.notifier)
+                              .setTheme(value);
                         },
                         itemBuilder: (context) {
                           return [
@@ -275,7 +287,7 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
                   ),
                   child: IconButton(
                     key: const ValueKey('global_menu_button'),
-                    tooltip: strings.menu,
+                    tooltip: strings.more,
                     onPressed: _openMenuDrawer,
                     icon: const Icon(Icons.menu),
                   ),
@@ -294,12 +306,56 @@ class _GlobalMenuDestination {
     required this.label,
     required this.path,
     required this.icon,
+    this.subtitle,
   });
 
   final Key key;
   final String label;
   final String path;
   final IconData icon;
+  final String? subtitle;
+}
+
+class _DrawerSectionHeader extends StatelessWidget {
+  const _DrawerSectionHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 0, 6, 10),
+      child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+    );
+  }
+}
+
+class _DrawerDestinationTile extends StatelessWidget {
+  const _DrawerDestinationTile({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _GlobalMenuDestination item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: ListTile(
+        key: item.key,
+        selected: selected,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        leading: Icon(item.icon),
+        title: Text(item.label, style: Theme.of(context).textTheme.titleMedium),
+        subtitle: item.subtitle == null ? null : Text(item.subtitle!),
+        onTap: onTap,
+      ),
+    );
+  }
 }
 
 class _DrawerPillButton extends StatelessWidget {
@@ -317,9 +373,7 @@ class _DrawerPillButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: ShapeDecoration(
-        shape: StadiumBorder(
-          side: BorderSide(color: borderColor),
-        ),
+        shape: StadiumBorder(side: BorderSide(color: borderColor)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -330,11 +384,7 @@ class _DrawerPillButton extends StatelessWidget {
             Icon(icon, size: 18),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ],
         ),

@@ -7,8 +7,8 @@ import 'nav_destination.dart';
 
 final readerSettingsPaneOpenProvider =
     NotifierProvider<_ReaderSettingsPaneOpenNotifier, bool>(
-  _ReaderSettingsPaneOpenNotifier.new,
-);
+      _ReaderSettingsPaneOpenNotifier.new,
+    );
 
 class _ReaderSettingsPaneOpenNotifier extends Notifier<bool> {
   @override
@@ -20,45 +20,32 @@ class _ReaderSettingsPaneOpenNotifier extends Notifier<bool> {
 }
 
 final navDestinationsProvider = Provider<List<NavDestination>>((ref) {
-  final language =
-      ref.watch(appPreferencesProvider.select((state) => state.language));
+  final language = ref.watch(
+    appPreferencesProvider.select((state) => state.language),
+  );
   final strings = AppStrings.of(language);
 
   return [
-    NavDestination(
-      label: strings.reader,
-      path: '/reader',
-      icon: Icons.menu_book_outlined,
-    ),
-    NavDestination(
-      label: strings.bookmarks,
-      path: '/bookmarks',
-      icon: Icons.bookmark_border,
-    ),
-    NavDestination(
-      label: strings.notes,
-      path: '/notes',
-      icon: Icons.note_alt_outlined,
-    ),
-    NavDestination(
-      label: strings.plan,
-      path: '/plan',
-      icon: Icons.event_note_outlined,
-    ),
     NavDestination(
       label: strings.today,
       path: '/today',
       icon: Icons.today_outlined,
     ),
     NavDestination(
-      label: strings.settings,
-      path: '/settings',
-      icon: Icons.settings_outlined,
+      label: strings.read,
+      path: '/reader',
+      icon: Icons.menu_book_outlined,
     ),
     NavDestination(
-      label: strings.about,
-      path: '/about',
-      icon: Icons.info_outline,
+      label: strings.myPlan,
+      path: '/plan',
+      icon: Icons.event_note_outlined,
+    ),
+    NavDestination(
+      label: strings.library,
+      path: '/library',
+      icon: Icons.folder_outlined,
+      activePaths: const ['/bookmarks', '/notes'],
     ),
   ];
 });

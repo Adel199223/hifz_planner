@@ -34,7 +34,7 @@ If this guide conflicts with technical docs:
 
 ## Quick Start (No Technical Background)
 
-1. Open `Plan` and set a conservative daily/weekly load you can keep for at least 7 days.
+1. Open `My Plan` and set a conservative daily/weekly load you can keep for at least 7 days.
 2. Open `Today` and complete tasks in the shown order (delayed checks, review, then new work).
 3. Use Companion stages only from `Today` actions to avoid skipping required sequence.
 4. Re-check your plan after several consistent days before increasing new material.
@@ -65,20 +65,24 @@ Use this guide if you are:
 ## Main Navigation Map
 
 Primary areas:
-- Reader
+- Today
+- Read
+- My Plan
+- Library
+
+Inside `Library`:
 - Bookmarks
 - Notes
-- Plan
-- Today
+
+Inside `More`:
 - Settings
 - About
-
-Additional top-right menu areas:
-- Read
+- Reciters
 - Learn
 - My Quran
 - Quran Radio
-- Reciters
+
+`More` is the top-right menu button.
 
 ## Known Limits and Placeholder Areas
 
@@ -87,29 +91,28 @@ Additional top-right menu areas:
 
 ## What Each Area Is For
 
-- Reader: read Quran in focused reading modes, with audio and word-level aids.
-- Bookmarks: keep important places for quick return.
-- Notes: capture reflections or reminders linked to verses.
-- Plan: configure memorization workload and scheduling rules.
 - Today: execute the day’s work in priority order.
+- Read: open the Reader for focused Quran reading, listening, and verse tools.
+- My Plan: configure memorization workload and scheduling rules.
+- Library: open saved material and writing tools in one place.
 - Companion chain: run the memorization stages for specific units.
-- Settings: language/theme and data/import controls.
+- More: open settings, reciters, about, and secondary exploration areas.
 
 ## Core User Journeys
 
 ## 1) Read and Reflect
 
-Go to Reader when your goal is comprehension, listening, and context.
+Go to `Read` when your goal is comprehension, listening, and context.
 
 Typical actions:
 - navigate by surah/ayah/page/juz
 - listen to recitation
 - use translation and word interactions
-- add bookmarks/notes
+- add bookmarks/notes from the Reader, then revisit them later in `Library`
 
 ## 2) Plan Your Memorization
 
-Go to Plan when you need to set or revise:
+Go to `My Plan` when you need to set or revise:
 - your available time
 - new/review pacing
 - weekly schedule structure
@@ -183,17 +186,17 @@ If some remote assets fail temporarily:
 
 ## Where to Go for X (Quick Decision Table)
 
-- I want to set my daily/weekly memorization load -> Plan
+- I want to set my daily/weekly memorization load -> My Plan
 - I want to do what is due right now -> Today
 - I need to run a memorization stage -> Companion
-- I want pure Quran reading/listening -> Reader
-- I need to revisit saved locations -> Bookmarks
-- I want to store verse-linked thoughts -> Notes
-- I need language/theme adjustments -> Settings
+- I want pure Quran reading/listening -> Read
+- I need to revisit saved locations -> Library -> Bookmarks
+- I want to store verse-linked thoughts -> Library -> Notes
+- I need language/theme adjustments -> More -> Settings
 
 ## Common First-Week Path
 
-1. Set a conservative plan in `Plan`.
+1. Set a conservative plan in `My Plan`.
 2. Execute `Today` consistently for several days.
 3. Use Companion for new units and reviews from Today actions.
 4. Respect delayed checks when they appear.
