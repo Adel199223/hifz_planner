@@ -52,7 +52,7 @@
 
 ## Progress
 - [x] Publish Stage 1-5 roadmap docs
-- [ ] Merge Wave 1
+- [x] Merge Wave 1
 - [ ] Merge post-Wave1 critical fixes
 - [ ] Start Wave 2
 - [ ] Merge Wave 2
@@ -88,8 +88,8 @@
 | Stream | Status | Branch | Worktree | Notes |
 |---|---|---|---|---|
 | Stage 1-5 roadmap publication | merged | `feat/stage1-product-audit` | `/home/fa507/dev/hifz_planner_stage1` | Merged to `main` as PR #3 |
-| Wave 1 | active | `feat/ux-wave1-navigation-copy` | `/home/fa507/dev/hifz_planner_wave1` | Simplified shell, Library hub, responsive Reader top actions, narrow docs sync |
-| Post-Wave1 critical fixes | planned | `feat/stability-post-wave1-critical-fixes` | not created yet | Will port only approved runtime/test fixes |
+| Wave 1 | merged | `feat/ux-wave1-navigation-copy` | `/home/fa507/dev/hifz_planner_wave1` | Merged to `main` as PR #4 |
+| Post-Wave1 critical fixes | active | `feat/stability-post-wave1-critical-fixes` | `/home/fa507/dev/hifz_planner_stability` | Porting only approved runtime/test fixes from the dirty audit branch |
 | Wave 2 | planned | `feat/ux-wave2-today-coaching` | not created yet | Starts after Wave 1 and stability port merge |
 | Wave 3 | planned | `feat/ux-wave3-my-plan-preset-flow` | not created yet | Resume after Wave 2 |
 | Wave 4 | planned | `feat/planner-wave4-health-explanations` | not created yet | Depends on Wave 3 contract |
@@ -103,5 +103,6 @@
 - Detours and plan updates:
   - 2026-03-08: Research/spec work completed before broader implementation. Preserve it before merging app code branches.
   - 2026-03-08: Roadmap publication finished first so the execution tracker exists on `main` before Wave 1 closes.
+  - 2026-03-08: Wave 1 merged cleanly after syncing the tracker/research docs from `main`.
 - Next recommended action:
-  - Validate Wave 1, publish it through PR flow, then start the clean post-Wave1 critical-fix port.
+  - Finish the clean post-Wave1 critical-fix port, then branch from updated `main` for Wave 2.

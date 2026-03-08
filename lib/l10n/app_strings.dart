@@ -930,6 +930,8 @@ class AppStrings {
       _t('failed_to_save_bookmark', 'Failed to save bookmark.');
   String get noteAdded => _t('note_added', 'Note added.');
   String get copiedVerseText => _t('copied_verse_text', 'Copied verse text.');
+  String get failedToCopyVerseText =>
+      _t('failed_to_copy_verse_text', 'Failed to copy verse text.');
   String audioLoadFailed(String error) => _fmt(
     _t('audio_load_failed', 'Audio playback failed: {error}'),
     <String, Object>{'error': error},

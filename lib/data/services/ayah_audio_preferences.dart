@@ -1,4 +1,10 @@
+import 'dart:developer' as developer;
+
 import 'package:shared_preferences/shared_preferences.dart';
+
+typedef SharedPreferencesLoader = Future<SharedPreferences> Function();
+typedef PreferenceErrorReporter =
+    void Function(String operation, Object error, StackTrace stackTrace);
 
 class AyahAudioPreferencesState {
   const AyahAudioPreferencesState({
@@ -68,7 +74,11 @@ abstract class AyahAudioPreferencesStore {
 
 class SharedPrefsAyahAudioPreferencesStore
     implements AyahAudioPreferencesStore {
-  const SharedPrefsAyahAudioPreferencesStore();
+  SharedPrefsAyahAudioPreferencesStore({
+    SharedPreferencesLoader? loadPreferences,
+    PreferenceErrorReporter? reportError,
+  }) : _loadPreferences = loadPreferences ?? SharedPreferences.getInstance,
+       _reportError = reportError ?? _defaultReportError;
 
   static const String _editionKey = 'reader_audio.edition';
   static const String _bitrateKey = 'reader_audio.bitrate';
@@ -76,10 +86,13 @@ class SharedPrefsAyahAudioPreferencesStore
   static const String _repeatCountKey = 'reader_audio.repeat_count';
   static const String _reciterNameKey = 'reader_audio.reciter_name';
 
+  final SharedPreferencesLoader _loadPreferences;
+  final PreferenceErrorReporter _reportError;
+
   @override
   Future<StoredAyahAudioPreferences> load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _loadPreferences();
       return StoredAyahAudioPreferences(
         edition: prefs.getString(_editionKey),
         bitrate: prefs.getInt(_bitrateKey),
@@ -87,58 +100,81 @@ class SharedPrefsAyahAudioPreferencesStore
         repeatCount: prefs.getInt(_repeatCountKey),
         reciterDisplayName: prefs.getString(_reciterNameKey),
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _reportError('load reader audio preferences', error, stackTrace);
       return const StoredAyahAudioPreferences();
     }
   }
 
   @override
   Future<void> saveEdition(String edition) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_editionKey, edition);
-    } catch (_) {
-      // Keep runtime behavior stable when local persistence is unavailable.
-    }
+    await _savePreference(
+      operation: 'save reader audio edition',
+      action: (prefs) => prefs.setString(_editionKey, edition),
+    );
   }
 
   @override
   Future<void> saveBitrate(int bitrate) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(_bitrateKey, bitrate);
-    } catch (_) {
-      // Keep runtime behavior stable when local persistence is unavailable.
-    }
+    await _savePreference(
+      operation: 'save reader audio bitrate',
+      action: (prefs) => prefs.setInt(_bitrateKey, bitrate),
+    );
   }
 
   @override
   Future<void> saveSpeed(double speed) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setDouble(_speedKey, speed);
-    } catch (_) {
-      // Keep runtime behavior stable when local persistence is unavailable.
-    }
+    await _savePreference(
+      operation: 'save reader audio speed',
+      action: (prefs) => prefs.setDouble(_speedKey, speed),
+    );
   }
 
   @override
   Future<void> saveRepeatCount(int repeatCount) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(_repeatCountKey, repeatCount);
-    } catch (_) {
-      // Keep runtime behavior stable when local persistence is unavailable.
-    }
+    await _savePreference(
+      operation: 'save reader audio repeat count',
+      action: (prefs) => prefs.setInt(_repeatCountKey, repeatCount),
+    );
   }
 
   @override
   Future<void> saveReciterDisplayName(String displayName) async {
+    await _savePreference(
+      operation: 'save reader audio reciter display name',
+      action: (prefs) => prefs.setString(_reciterNameKey, displayName),
+    );
+  }
+
+  Future<void> _savePreference({
+    required String operation,
+    required Future<bool> Function(SharedPreferences prefs) action,
+  }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_reciterNameKey, displayName);
-    } catch (_) {
-      // Keep runtime behavior stable when local persistence is unavailable.
+      final prefs = await _loadPreferences();
+      final didSave = await action(prefs);
+      if (!didSave) {
+        _reportError(
+          operation,
+          StateError('$operation returned false.'),
+          StackTrace.current,
+        );
+      }
+    } catch (error, stackTrace) {
+      _reportError(operation, error, stackTrace);
     }
   }
+}
+
+void _defaultReportError(
+  String operation,
+  Object error,
+  StackTrace stackTrace,
+) {
+  developer.log(
+    operation,
+    name: 'ayah_audio_preferences',
+    error: error,
+    stackTrace: stackTrace,
+  );
 }

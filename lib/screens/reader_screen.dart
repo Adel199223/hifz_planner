@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:developer' as developer;
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -1422,15 +1424,24 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _copyText(AyahData ayah) async {
-    _showSnackBar(_strings.copiedVerseText);
-    unawaited(
-      Clipboard.setData(ClipboardData(text: ayah.textUthmani)).catchError((
-        Object _,
-        StackTrace __,
-      ) {
-        // Surface consistent UI feedback even if clipboard channel is unavailable.
-      }),
-    );
+    try {
+      await Clipboard.setData(ClipboardData(text: ayah.textUthmani));
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(_strings.copiedVerseText);
+    } catch (error, stackTrace) {
+      developer.log(
+        'copying ayah text to the clipboard',
+        name: 'reader_screen',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(_strings.failedToCopyVerseText);
+    }
   }
 
   Future<_NoteDraft?> _showNoteDialog(NoteData? existing) async {

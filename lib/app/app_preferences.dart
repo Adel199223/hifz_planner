@@ -58,7 +58,7 @@ class AppPreferencesState {
 }
 
 final appPreferencesStoreProvider = Provider<AppPreferencesStore>((ref) {
-  return const SharedPrefsAppPreferencesStore();
+  return SharedPrefsAppPreferencesStore();
 });
 
 final appPreferencesProvider =

@@ -1,7 +1,8 @@
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hifz_planner/data/database/app_database.dart';
+import 'package:hifz_planner/data/database/app_database.dart'
+    hide CompanionUnitState;
 import 'package:hifz_planner/data/repositories/companion_repo.dart';
 import 'package:hifz_planner/data/services/companion/companion_models.dart';
 
@@ -215,6 +216,32 @@ void main() {
     expect(updated.unlockedStage, CompanionStage.cuedRecall);
     expect(updated.updatedAtDay, 12345);
     expect(updated.updatedAtSeconds, 500);
+  });
+
+  test('companion_unit_state concurrent creators keep a single row', () async {
+    final unitId = await createUnit();
+
+    final created = await Future.wait(
+      List<Future<CompanionUnitState>>.generate(
+        6,
+        (_) => repo.getOrCreateUnitState(
+          unitId,
+          nowLocal: DateTime.utc(2026, 2, 24, 8, 30),
+        ),
+      ),
+    );
+
+    expect(
+      created.every(
+        (state) => state.unlockedStage == CompanionStage.guidedVisible,
+      ),
+      isTrue,
+    );
+
+    final rows = await (db.select(
+      db.companionUnitState,
+    )..where((tbl) => tbl.unitId.equals(unitId))).get();
+    expect(rows, hasLength(1));
   });
 
   test('companion_stage_event inserts and orders by created day and id',

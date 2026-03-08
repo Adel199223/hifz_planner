@@ -62,7 +62,7 @@ class ReciterSelectionResult {
 }
 
 final ayahAudioPreferencesStoreProvider = Provider<AyahAudioPreferencesStore>(
-  (ref) => const SharedPrefsAyahAudioPreferencesStore(),
+  (ref) => SharedPrefsAyahAudioPreferencesStore(),
 );
 
 final ayahAudioPreferencesProvider =

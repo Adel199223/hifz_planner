@@ -149,6 +149,9 @@ Defined in `lib/app/router.dart`:
 - Companion options:
   - `Autoplay next ayah` toggle for Companion recitation (default off)
 - Stored via SharedPreferences and restored on startup.
+- SharedPreferences fallback remains no-crash:
+  - if local persistence is unavailable, the app still loads defaults
+  - unexpected load/save failures are now logged as non-fatal diagnostics instead of being silently swallowed
 
 Files:
 - `lib/app/app_preferences.dart`
@@ -202,6 +205,9 @@ Behavior:
 - Verse-by-Verse suppresses Quran.com end-marker circle tokens (`char_type_name=end`) at display time.
 - No "whole-row tap opens old sheet" behavior.
 - Bookmark/note/copy are wired to existing logic.
+- Copy feedback is truthful:
+  - success appears only after the clipboard write completes
+  - clipboard failures show a failure snackbar instead of a false success message
 - Play/share/extra actions are scaffold-safe where backend is not ready.
 
 Chapter header behavior:
@@ -394,6 +400,7 @@ Key points:
     - `telemetry_json`
   - per-unit staged unlock state (`companion_unit_state`)
   - stage transition/skip/resume telemetry (`companion_stage_event`)
+- `companion_unit_state` creation now uses conflict-safe insertion so parallel readers do not hide unexpected storage issues behind a broad catch.
 - companion attempt/proficiency tables are indexed for session/verse/unit lookup.
 - schedule/review/calibration indexes are created in migration helpers
 - singleton rows are enforced via `ensureSingletonRows()`
