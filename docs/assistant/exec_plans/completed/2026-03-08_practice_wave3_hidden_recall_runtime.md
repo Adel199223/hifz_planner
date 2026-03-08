@@ -56,12 +56,14 @@
 
 ## Progress
 - [x] Start Wave 3 ExecPlan
-- [ ] Audit current hidden-recall/runtime gaps against the Stage 3 spec
-- [ ] Implement hidden-recall runtime completion
-- [ ] Run focused validation
+- [x] Audit current hidden-recall/runtime gaps against the Stage 3 spec
+- [x] Implement hidden-recall runtime completion
+- [x] Run focused validation
 
 ## Surprises and Adjustments
 - Use this section for runtime mismatches between the existing engine and the Stage 3 spec, especially if a spec detail would force broader scope than planned.
+- 2026-03-08: The current `main` already contains the hidden-recall runtime contract required by the Stage 3 spec, including deterministic weak-prelude routing, correction-before-retry gates, budget fallback, lifecycle hooks, and schema-free Stage-3 telemetry.
+- 2026-03-08: Wave 3 therefore closed as a verification-and-alignment pass rather than a new engine patch; no route, schema, or runtime behavior changes were required on this branch.
 
 ## Handoff
 - Wave 3 should end with:
@@ -70,3 +72,7 @@
   - updated focused tests for the engine and practice screen
 - Follow-up risk:
   - daily practice framing and integration still waits for Wave 4.
+- Current closeout state:
+  - focused validation is green
+  - no docs sync is needed because no user-facing behavior changed in this verification pass
+  - next closeout action is to archive this plan and advance the tracker to Wave 4
