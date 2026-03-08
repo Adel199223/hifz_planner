@@ -75,6 +75,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       SchedulingPreferencesV1.defaults;
   SchedulingOverridesV1 _schedulingOverrides = SchedulingOverridesV1.empty;
   WeeklyPlan? _weeklyPlan;
+  GoalProgressSnapshot? _goalSnapshot;
   bool _isLoadingScheduling = true;
   bool _isRefreshingWeeklyPlan = false;
   String? _weeklyPlanError;
@@ -604,6 +605,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         overrides: _schedulingOverrides,
         qualitySignal: qualitySignal,
       );
+      final goalSnapshot = await ref
+          .read(goalProgressSnapshotServiceProvider)
+          .buildWeeklySnapshot(plan: weeklyPlan, todayDay: startDay);
 
       if (!mounted) {
         return;
@@ -611,6 +615,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       setState(() {
         _schedulingPreferences = syncedPreferences;
         _weeklyPlan = weeklyPlan;
+        _goalSnapshot = goalSnapshot;
         _isRefreshingWeeklyPlan = false;
       });
     } catch (error) {
@@ -620,6 +625,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       setState(() {
         _isRefreshingWeeklyPlan = false;
         _weeklyPlanError = error.toString();
+        _goalSnapshot = null;
       });
     }
   }
@@ -1142,9 +1148,11 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
   }
 
   Widget _buildPlanGoalSummaryCard(AppStrings strings) {
-    final snapshot = ref
-        .read(goalProgressSnapshotServiceProvider)
-        .fromWeeklyPlan(_weeklyPlan);
+    final snapshot =
+        _goalSnapshot ??
+        ref
+            .read(goalProgressSnapshotServiceProvider)
+            .fromWeeklyPlan(_weeklyPlan);
     final scheme = Theme.of(context).colorScheme;
     final (background, foreground) = switch (snapshot.focus) {
       GoalFocus.steadyProgress => (
@@ -1206,6 +1214,48 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
+            const SizedBox(height: 16),
+            DecoratedBox(
+              key: const ValueKey('plan_weekly_progress_card'),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.weeklyProgressTitle,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _localizedWeeklyProgressTrend(strings, snapshot),
+                      key: const ValueKey('plan_weekly_progress_summary'),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      _localizedWeeklyProgressConsistency(strings, snapshot),
+                      key: const ValueKey('plan_weekly_progress_consistency'),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _localizedWeeklyProgressCounts(strings, snapshot),
+                      key: const ValueKey('plan_weekly_progress_counts'),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      strings.weeklyProgressRecentQualityLine(
+                        _localizedWeeklyProgressQuality(strings, snapshot),
+                      ),
+                      key: const ValueKey('plan_weekly_progress_quality'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -1261,6 +1311,65 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       PlannerHealthState.onTrack => strings.planHealthOnTrackSummary,
       PlannerHealthState.tight => strings.planHealthTightSummary,
       PlannerHealthState.overloaded => strings.planHealthOverloadedSummary,
+    };
+  }
+
+  String _localizedWeeklyProgressTrend(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    if (!snapshot.hasRecentHistory) {
+      return strings.weeklyProgressTrendStart;
+    }
+    if (snapshot.focus == GoalFocus.recoveryAndStabilize) {
+      return strings.weeklyProgressTrendRecovery;
+    }
+    final activeDays = snapshot.completedPracticeDaysLast7 ?? 0;
+    if (activeDays >= 4 &&
+        snapshot.recentQualityBand != GoalProgressQualityBand.strained) {
+      return strings.weeklyProgressTrendSteady;
+    }
+    if (snapshot.focus == GoalFocus.protectRetention) {
+      return strings.weeklyProgressTrendProtect;
+    }
+    return strings.weeklyProgressTrendBuilding;
+  }
+
+  String _localizedWeeklyProgressConsistency(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    if (!snapshot.hasRecentHistory) {
+      return strings.weeklyProgressConsistencyStart;
+    }
+    return strings.weeklyProgressConsistencyValue(
+      snapshot.completedPracticeDaysLast7 ?? 0,
+    );
+  }
+
+  String _localizedWeeklyProgressCounts(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    if (!snapshot.hasRecentHistory) {
+      return strings.weeklyProgressCountsStart;
+    }
+    return strings.weeklyProgressCountsValue(
+      snapshot.completedReviewsLast7 ?? 0,
+      snapshot.completedDelayedChecksLast7 ?? 0,
+      snapshot.completedNewPracticeLast7 ?? 0,
+    );
+  }
+
+  String _localizedWeeklyProgressQuality(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    return switch (snapshot.recentQualityBand) {
+      GoalProgressQualityBand.steady => strings.weeklyProgressQualitySteady,
+      GoalProgressQualityBand.mixed => strings.weeklyProgressQualityMixed,
+      GoalProgressQualityBand.strained => strings.weeklyProgressQualityStrained,
+      null => strings.weeklyProgressQualityNotEnoughData,
     };
   }
 

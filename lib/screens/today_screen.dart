@@ -29,6 +29,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   bool _allowStage4NewOverride = false;
   String? _errorMessage;
   TodayPlan? _plan;
+  GoalProgressSnapshot? _goalSnapshot;
   List<Stage4DueItem> _remainingStage4Due = const <Stage4DueItem>[];
   List<DueUnitRow> _remainingReviews = const <DueUnitRow>[];
   List<MemUnitData> _remainingNewUnits = const <MemUnitData>[];
@@ -57,11 +58,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             todayDay: todayDay,
             allowStage4Override: _allowStage4NewOverride,
           );
+      final goalSnapshot = await ref
+          .read(goalProgressSnapshotServiceProvider)
+          .buildTodaySnapshot(plan: plan, todayDay: todayDay);
       if (!mounted) {
         return;
       }
       setState(() {
         _plan = plan;
+        _goalSnapshot = goalSnapshot;
         _remainingStage4Due = List<Stage4DueItem>.from(plan.plannedStage4Due);
         _remainingReviews = List<DueUnitRow>.from(plan.plannedReviews);
         _remainingNewUnits = List<MemUnitData>.from(plan.plannedNewUnits);
@@ -74,6 +79,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       setState(() {
         _isLoading = false;
         _errorMessage = strings.failedToLoadTodayPlan;
+        _goalSnapshot = null;
       });
     }
   }
@@ -357,9 +363,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   Widget _buildCoachingCard(AppStrings strings, TodayPlan plan) {
     final content = _resolveCoachingContent(strings);
     final feedback = PlannerFeedbackSnapshot.fromTodayPlan(plan);
-    final goalSnapshot = ref
-        .read(goalProgressSnapshotServiceProvider)
-        .fromTodayPlan(plan);
+    final goalSnapshot =
+        _goalSnapshot ??
+        ref.read(goalProgressSnapshotServiceProvider).fromTodayPlan(plan);
     final extraModes = _buildOtherPracticeModes(strings, content);
     return Card(
       key: const ValueKey('today_coaching_card'),
@@ -387,6 +393,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             _buildTodayExplanationPacket(strings, feedback),
             const SizedBox(height: 12),
             _buildGoalFocusCard(strings, goalSnapshot),
+            const SizedBox(height: 12),
+            _buildWeeklyProgressCard(strings, goalSnapshot),
             if (plan.recoveryMode) ...[
               const SizedBox(height: 10),
               Text(
@@ -478,6 +486,54 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 child: Text(strings.recoveryAssistantTitle),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeeklyProgressCard(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    return DecoratedBox(
+      key: const ValueKey('today_weekly_progress_card'),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.weeklyProgressTitle,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _localizedWeeklyProgressTrend(strings, snapshot),
+              key: const ValueKey('today_weekly_progress_summary'),
+            ),
+            const SizedBox(height: 10),
+            _buildGoalFocusLine(
+              key: const ValueKey('today_weekly_progress_consistency'),
+              label: strings.weeklyProgressConsistencyLabel,
+              value: _localizedWeeklyProgressConsistency(strings, snapshot),
+            ),
+            const SizedBox(height: 10),
+            _buildGoalFocusLine(
+              key: const ValueKey('today_weekly_progress_counts'),
+              label: strings.weeklyProgressCompletedWorkLabel,
+              value: _localizedWeeklyProgressCounts(strings, snapshot),
+            ),
+            const SizedBox(height: 10),
+            _buildGoalFocusLine(
+              key: const ValueKey('today_weekly_progress_quality'),
+              label: strings.weeklyProgressRecentQualityLabel,
+              value: _localizedWeeklyProgressQuality(strings, snapshot),
+            ),
           ],
         ),
       ),
@@ -578,6 +634,65 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         Text(value),
       ],
     );
+  }
+
+  String _localizedWeeklyProgressTrend(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    if (!snapshot.hasRecentHistory) {
+      return strings.weeklyProgressTrendStart;
+    }
+    if (snapshot.focus == GoalFocus.recoveryAndStabilize) {
+      return strings.weeklyProgressTrendRecovery;
+    }
+    final activeDays = snapshot.completedPracticeDaysLast7 ?? 0;
+    if (activeDays >= 4 &&
+        snapshot.recentQualityBand != GoalProgressQualityBand.strained) {
+      return strings.weeklyProgressTrendSteady;
+    }
+    if (snapshot.focus == GoalFocus.protectRetention) {
+      return strings.weeklyProgressTrendProtect;
+    }
+    return strings.weeklyProgressTrendBuilding;
+  }
+
+  String _localizedWeeklyProgressConsistency(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    if (!snapshot.hasRecentHistory) {
+      return strings.weeklyProgressConsistencyStart;
+    }
+    return strings.weeklyProgressConsistencyValue(
+      snapshot.completedPracticeDaysLast7 ?? 0,
+    );
+  }
+
+  String _localizedWeeklyProgressCounts(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    if (!snapshot.hasRecentHistory) {
+      return strings.weeklyProgressCountsStart;
+    }
+    return strings.weeklyProgressCountsValue(
+      snapshot.completedReviewsLast7 ?? 0,
+      snapshot.completedDelayedChecksLast7 ?? 0,
+      snapshot.completedNewPracticeLast7 ?? 0,
+    );
+  }
+
+  String _localizedWeeklyProgressQuality(
+    AppStrings strings,
+    GoalProgressSnapshot snapshot,
+  ) {
+    return switch (snapshot.recentQualityBand) {
+      GoalProgressQualityBand.steady => strings.weeklyProgressQualitySteady,
+      GoalProgressQualityBand.mixed => strings.weeklyProgressQualityMixed,
+      GoalProgressQualityBand.strained => strings.weeklyProgressQualityStrained,
+      null => strings.weeklyProgressQualityNotEnoughData,
+    };
   }
 
   Widget? _buildOtherPracticeModes(

@@ -1,5 +1,64 @@
 {
   "version": 1,
   "last_updated": "2026-03-08",
-  "issues": []
+  "issues": [
+    {
+      "id": "flutter_parallel_test_plugin_symlink_race",
+      "first_seen": "2026-03-08",
+      "last_seen": "2026-03-08",
+      "repeat_count": 2,
+      "status": "mitigated",
+      "trigger_source": "local Flutter validation in isolated worktrees",
+      "symptoms": [
+        "parallel flutter test runs in one worktree can break plugin-symlink state",
+        "validation output becomes noisy or untrustworthy until rerun sequentially"
+      ],
+      "likely_root_cause": "concurrent Flutter test processes race shared ephemeral/plugin-symlink state inside one worktree",
+      "attempted_fix_history": [
+        "Wave 1 reran the failing validation set sequentially after the parallel run failed noisily",
+        "Wave 2 kept Flutter validation sequential from the start"
+      ],
+      "accepted_fix": "Run Flutter test commands sequentially per worktree.",
+      "regressed_after_fix": false,
+      "affected_workflows": [
+        "feature_validation",
+        "closeout_validation",
+        "future_wave_implementation"
+      ],
+      "bootstrap_relevance": "possible",
+      "docs_sync_relevance": "required",
+      "evidence_refs": [
+        "docs/assistant/exec_plans/active/2026-03-08_goals_progress_execution.md",
+        "docs/assistant/exec_plans/active/2026-03-08_goals_wave2_weekly_progress.md"
+      ]
+    },
+    {
+      "id": "fresh_worktree_flutter_validation_lockfile_churn",
+      "first_seen": "2026-03-08",
+      "last_seen": "2026-03-08",
+      "repeat_count": 1,
+      "status": "mitigated",
+      "trigger_source": "first Flutter validation in a fresh isolated worktree",
+      "symptoms": [
+        "the first validation run may resolve dependencies and touch pubspec.lock",
+        "lockfile changes can appear even when the feature is not changing dependencies"
+      ],
+      "likely_root_cause": "dependency resolution/bootstrap happens lazily on the first Flutter command in a new worktree",
+      "attempted_fix_history": [
+        "Wave 2 allowed the first Flutter validation bootstrap to complete",
+        "Wave 2 reverted incidental pubspec.lock churn before closeout"
+      ],
+      "accepted_fix": "Treat lockfile churn as incidental unless dependencies were intentionally changed, and revert it before closeout.",
+      "regressed_after_fix": false,
+      "affected_workflows": [
+        "feature_validation",
+        "commit_publish_hygiene"
+      ],
+      "bootstrap_relevance": "possible",
+      "docs_sync_relevance": "possible",
+      "evidence_refs": [
+        "docs/assistant/exec_plans/active/2026-03-08_goals_wave2_weekly_progress.md"
+      ]
+    }
+  ]
 }

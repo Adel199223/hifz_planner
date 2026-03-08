@@ -151,7 +151,8 @@ final forecastSimulationServiceProvider = Provider<ForecastSimulationService>((
 
 final goalProgressSnapshotServiceProvider =
     Provider<GoalProgressSnapshotService>((ref) {
-      return const GoalProgressSnapshotService();
+      final db = ref.watch(appDatabaseProvider);
+      return GoalProgressSnapshotService(db);
     });
 
 final companionCalibrationBridgeProvider = Provider<CompanionCalibrationBridge>(

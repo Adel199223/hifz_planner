@@ -83,6 +83,7 @@ Do not use this file as primary truth when there is a conflict.
 - `Today` now opens with a coaching card instead of raw planner metrics
 - The coaching card chooses one next action, explains why it matters, and gives a short-day fallback
 - `Today` now also shows a small supportive goal-focus block so the learner can see what a good day looks like right now
+- `Today` now also shows a small last-7-days progress block so the learner can trust what the app means by consistency, completed work, and recent review quality
 - The learner-facing practice actions now use plain labels:
   - `Start new practice`
   - `Continue review practice`
@@ -102,6 +103,7 @@ Do not use this file as primary truth when there is a conflict.
 - The default path is `Easy`, `Normal`, `Intensive` plus realistic time, fluency, and a plain-language summary
 - Scheduling, forecast, calibration, and other expert controls are still present, but now live behind `Advanced`
 - `My Plan` now also shows a lightweight weekly goal summary derived from the same planner posture used by `Today`
+- `My Plan` now also shows a fuller last-7-days progress summary from the same shared snapshot used by `Today`
 - The weekly planner preview now follows the guided time inputs rather than stale advanced defaults
 - `My Plan` now also shows a plain-language `Plan health` card with backlog burn-down, minimum-day, and recovery hints when needed
 - The weekly planner preview and Forecast now follow the same stress/new-work rules as `Today`
@@ -113,6 +115,8 @@ Do not use this file as primary truth when there is a conflict.
   - no separate goals screen
   - no badges or streak pressure
   - one shared `GoalProgressSnapshotService` feeds both `Today` and `My Plan`
+  - current weekly progress metrics stay count-based and calm instead of pretending session-minute precision
+  - current completed-practice counts are intentionally generic because non-stage4 new-vs-review completions are not yet reliably separated in persisted data
 
 ## Current Practice Entry Notes
 

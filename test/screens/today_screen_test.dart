@@ -444,6 +444,10 @@ void main() {
     await _pumpToday(tester, container);
 
     expect(find.byKey(const ValueKey('today_goal_focus_card')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('today_weekly_progress_card')),
+      findsOneWidget,
+    );
     expect(find.text('Steady progress'), findsOneWidget);
     expect(
       find.text(
@@ -453,10 +457,54 @@ void main() {
     );
     expect(
       find.text(
+        'Start building consistency with one real practice, review, or delayed check today.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
         'On a short day, the top planned task still counts as a real win.',
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('weekly progress card summarizes recent real work', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    await _seedWeeklyProgressActivity(db, todayDay: todayDay);
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.byKey(const ValueKey('today_weekly_progress_card')),
+      findsOneWidget,
+    );
+    expect(find.text('3 active days in the last 7 days.'), findsOneWidget);
+    expect(
+      find.text('2 reviews, 1 delayed checks, 2 practice completions.'),
+      findsOneWidget,
+    );
+    expect(find.text('Mostly steady'), findsOneWidget);
   });
 
   testWidgets(
@@ -1030,6 +1078,124 @@ Future<List<MemUnitData>> _fetchPlannedNewUnits(
         )
         ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
       .get();
+}
+
+Future<void> _seedWeeklyProgressActivity(
+  AppDatabase db, {
+  required int todayDay,
+}) async {
+  final practiceUnitA = await db
+      .into(db.memUnit)
+      .insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(10),
+          endSurah: const Value(1),
+          endAyah: const Value(10),
+          unitKey: 'weekly-progress-a',
+          createdAtDay: todayDay - 2,
+          updatedAtDay: todayDay - 2,
+        ),
+      );
+  final practiceUnitB = await db
+      .into(db.memUnit)
+      .insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(11),
+          endSurah: const Value(1),
+          endAyah: const Value(11),
+          unitKey: 'weekly-progress-b',
+          createdAtDay: todayDay - 1,
+          updatedAtDay: todayDay - 1,
+        ),
+      );
+  final reviewUnit = await db
+      .into(db.memUnit)
+      .insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(12),
+          endSurah: const Value(1),
+          endAyah: const Value(12),
+          unitKey: 'weekly-progress-review',
+          createdAtDay: todayDay - 3,
+          updatedAtDay: todayDay - 3,
+        ),
+      );
+  final stage4Unit = await db
+      .into(db.memUnit)
+      .insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(13),
+          endSurah: const Value(1),
+          endAyah: const Value(13),
+          unitKey: 'weekly-progress-stage4',
+          createdAtDay: todayDay - 1,
+          updatedAtDay: todayDay - 1,
+        ),
+      );
+
+  await db.batch((batch) {
+    batch.insertAll(db.companionChainSession, [
+      CompanionChainSessionCompanion.insert(
+        unitId: practiceUnitA,
+        targetVerseCount: 1,
+        passedVerseCount: const Value(1),
+        chainResult: 'completed',
+        retrievalStrength: const Value(0.8),
+        createdAtDay: todayDay - 2,
+        updatedAtDay: todayDay - 2,
+        startedAtSeconds: const Value(100),
+        endedAtSeconds: const Value(180),
+      ),
+      CompanionChainSessionCompanion.insert(
+        unitId: practiceUnitB,
+        targetVerseCount: 1,
+        passedVerseCount: const Value(1),
+        chainResult: 'completed',
+        retrievalStrength: const Value(0.85),
+        createdAtDay: todayDay - 1,
+        updatedAtDay: todayDay - 1,
+        startedAtSeconds: const Value(100),
+        endedAtSeconds: const Value(180),
+      ),
+    ]);
+    batch.insertAll(db.reviewLog, [
+      ReviewLogCompanion.insert(
+        unitId: reviewUnit,
+        tsDay: todayDay - 3,
+        tsSeconds: const Value(200),
+        gradeQ: 5,
+      ),
+      ReviewLogCompanion.insert(
+        unitId: reviewUnit,
+        tsDay: todayDay - 1,
+        tsSeconds: const Value(210),
+        gradeQ: 4,
+      ),
+    ]);
+    batch.insertAll(db.companionStage4Session, [
+      CompanionStage4SessionCompanion.insert(
+        unitId: stage4Unit,
+        dueKind: 'next_day_required',
+        startedDay: todayDay - 1,
+        startedSeconds: const Value(300),
+        endedDay: Value(todayDay - 1),
+        endedSeconds: const Value(340),
+        outcome: const Value('pass'),
+      ),
+    ]);
+  });
 }
 
 Future<void> _pumpToday(

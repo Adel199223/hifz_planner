@@ -119,6 +119,7 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
   - the existing `Hifz Plan` card
 - Goals and progress remain integrated into existing surfaces:
   - `Today` and `My Plan` now share one internal goal-focus layer
+  - `Today` and `My Plan` now also share one last-7-days progress snapshot
   - there is still no separate goals tab or progress dashboard
 
 ### Routes
@@ -479,6 +480,14 @@ Current capabilities:
 - The weekly goal summary is read-only:
   - it is not a separate goal wizard
   - it changes automatically with current plan pressure
+- `My Plan` now also shows a last-7-days progress summary from the same shared snapshot used by `Today`
+- The current progress summary is intentionally count-based:
+  - active days
+  - review count
+  - delayed-check count
+  - completed practice count
+  - simple recent review-quality band
+- Current persisted data does not yet separate new-vs-review non-stage4 practice completions reliably, so that count is intentionally framed as generic completed practice instead of pretending to be more precise
 - Plan health copy can now explain:
   - when backlog burn-down is recommended
   - when a minimum viable day is safer than pushing full load
@@ -529,6 +538,14 @@ Current capabilities:
   - what counts as a good day today
   - how the main task supports that goal
   - what still counts on a short day
+- Render a weekly trust/progress block inside the coaching card that shows:
+  - active days in the last 7 days
+  - completed reviews
+  - completed delayed checks
+  - completed practice completions
+  - a simple recent review-quality band
+  - calm no-history wording when the learner is just starting
+  - count-based summaries instead of duration-minute claims
 - Render a health badge and explanation packet so the learner can see whether the day is:
   - `On track`
   - `Tight`

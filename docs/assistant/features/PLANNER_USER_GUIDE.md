@@ -146,6 +146,24 @@ Important behavior:
   - it changes automatically with your current planner pressure
   - it is meant to help you interpret the week, not to add more settings
 
+### Last 7 days summary
+- Where: inside the same summary area in `My Plan`.
+- What it shows:
+  - active days in the last 7 days
+  - completed reviews
+  - completed delayed checks
+  - completed practice completions
+  - a simple recent review-quality label
+- What it is for:
+  - helping you trust whether the current plan is actually being carried out
+  - showing recent consistency without turning progress into a streak game
+  - giving a calm no-history state when you are just starting or restarting
+- Important:
+  - it is count-based on purpose
+  - it does not pretend to measure everything with exact minutes
+  - completed non-stage4 practice is currently shown as generic completed practice, not as a more specific label the app cannot yet prove reliably
+  - the no-history state is intentionally calm and supportive instead of looking like a failed or empty dashboard
+
 ### Activate
 - Where: primary button in the summary card.
 - What it does: saves your plan and starts using it in `Today`.
@@ -256,6 +274,10 @@ Execution order is designed to protect retention quality:
   - what counts as a good day today
   - how the main task supports the weekly goal
   - what still counts on a short day
+- it now also includes a small last-7-days progress block that tells you:
+  - whether recent consistency is building
+  - what kind of real work you completed recently
+  - whether review quality looks steady, mixed, or strained
 - if more than one valid practice mode is available, the card can also show secondary shortcuts for the other modes
 - if the day feels too heavy, use the recovery entry to jump back to `My Plan`
 
