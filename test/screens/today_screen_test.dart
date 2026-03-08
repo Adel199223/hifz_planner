@@ -85,11 +85,10 @@ void main() {
 
     await _tapVisible(tester, gradeButton);
 
-    final logs =
-        await (db.select(db.reviewLog)
-              ..where((tbl) => tbl.unitId.equals(dueUnitId))
-              ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
-            .get();
+    final logs = await (db.select(db.reviewLog)
+          ..where((tbl) => tbl.unitId.equals(dueUnitId))
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+        .get();
     expect(logs.length, 1);
     expect(logs.single.tsDay, todayDay);
     expect(logs.single.tsSeconds, isNotNull);
@@ -99,7 +98,8 @@ void main() {
 
     final schedule = await (db.select(
       db.scheduleState,
-    )..where((tbl) => tbl.unitId.equals(dueUnitId))).getSingle();
+    )..where((tbl) => tbl.unitId.equals(dueUnitId)))
+        .getSingle();
     expect(schedule.lastGradeQ, 5);
     expect(schedule.lastReviewDay, todayDay);
     expect(schedule.dueDay, todayDay + 1);
@@ -140,11 +140,10 @@ void main() {
 
     await _tapVisible(tester, gradeButton);
 
-    final logs =
-        await (db.select(db.reviewLog)
-              ..where((tbl) => tbl.unitId.equals(unitId))
-              ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
-            .get();
+    final logs = await (db.select(db.reviewLog)
+          ..where((tbl) => tbl.unitId.equals(unitId))
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+        .get();
     expect(logs.length, 1);
     expect(logs.single.tsDay, todayDay);
     expect(logs.single.tsSeconds, isNotNull);
@@ -154,7 +153,8 @@ void main() {
 
     final schedule = await (db.select(
       db.scheduleState,
-    )..where((tbl) => tbl.unitId.equals(unitId))).getSingle();
+    )..where((tbl) => tbl.unitId.equals(unitId)))
+        .getSingle();
     expect(schedule.lastGradeQ, 4);
     expect(schedule.lastReviewDay, todayDay);
     expect(schedule.dueDay, todayDay + 1);
@@ -208,8 +208,7 @@ void main() {
     await pumpUntilFound(tester, openButton);
     await _tapVisible(tester, openButton);
 
-    final expectedRouteText =
-        'Reader route mode=page page=${unit.pageMadina} '
+    final expectedRouteText = 'Reader route mode=page page=${unit.pageMadina} '
         'target=${unit.startSurah}:${unit.startAyah} '
         'highlight=${unit.startSurah}:${unit.startAyah}-${unit.endSurah}:${unit.endAyah}';
     await pumpUntilFound(tester, find.text(expectedRouteText));
@@ -521,6 +520,51 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Mostly steady'), findsOneWidget);
+    expect(
+      find.text('Keep repeating the main task and let steady days add up.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('weekly progress card handles sparse returning activity calmly', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    await _seedSparseWeeklyProgressActivity(db, todayDay: todayDay);
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.text(
+        'You are getting back into rhythm. A few calm, real sessions are enough this week.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('1 active days in the last 7 days.'), findsOneWidget);
+    expect(
+      find.text(
+        'A gentle return still counts. Keep the next few sessions simple and repeatable.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -679,7 +723,8 @@ void main() {
 
     final lifecycle = await (db.select(
       db.companionLifecycleState,
-    )..where((tbl) => tbl.unitId.equals(dueUnitId))).getSingle();
+    )..where((tbl) => tbl.unitId.equals(dueUnitId)))
+        .getSingle();
     expect(lifecycle.lastNewOverrideDay, todayDay);
     expect(lifecycle.newOverrideCount, 1);
 
@@ -834,6 +879,13 @@ void main() {
       tester,
       find.byKey(const ValueKey('today_empty_state')),
     );
+    expect(find.text('Nothing is scheduled yet'), findsOneWidget);
+    expect(
+      find.text(
+        'Open My Plan to set a realistic daily rhythm and see today’s next steps here.',
+      ),
+      findsOneWidget,
+    );
 
     await _tapVisible(
       tester,
@@ -878,6 +930,13 @@ void main() {
     await _tapVisible(tester, gradeButton);
 
     expect(find.byKey(const ValueKey('today_completion_card')), findsOneWidget);
+    expect(find.text('A real start counts'), findsOneWidget);
+    expect(
+      find.text(
+        'You finished a real day of practice. That is enough to start building consistency.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -957,15 +1016,14 @@ void main() {
       find.byKey(const ValueKey('today_debug_seed_new_unit')),
     );
 
-    final seededUnits =
-        await (db.select(db.memUnit)
-              ..where(
-                (tbl) =>
-                    tbl.kind.equals('page_segment') &
-                    tbl.createdAtDay.equals(todayDay),
-              )
-              ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
-            .get();
+    final seededUnits = await (db.select(db.memUnit)
+          ..where(
+            (tbl) =>
+                tbl.kind.equals('page_segment') &
+                tbl.createdAtDay.equals(todayDay),
+          )
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+        .get();
     expect(seededUnits, isNotEmpty);
 
     final seededUnit = seededUnits.first;
@@ -1032,9 +1090,7 @@ Future<void> _insertStage4DueLifecycle(
   required int unitId,
   required int todayDay,
 }) async {
-  await db
-      .into(db.companionLifecycleState)
-      .insert(
+  await db.into(db.companionLifecycleState).insert(
         CompanionLifecycleStateCompanion.insert(
           unitId: Value(unitId),
           lifecycleTier: const Value('ready'),
@@ -1051,9 +1107,7 @@ Future<int> _insertDueReviewUnit(
   AppDatabase db, {
   required int todayDay,
 }) async {
-  final unitId = await db
-      .into(db.memUnit)
-      .insert(
+  final unitId = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
@@ -1067,9 +1121,7 @@ Future<int> _insertDueReviewUnit(
         ),
       );
 
-  await db
-      .into(db.scheduleState)
-      .insert(
+  await db.into(db.scheduleState).insert(
         ScheduleStateCompanion.insert(
           unitId: Value(unitId),
           ef: 2.5,
@@ -1100,9 +1152,7 @@ Future<void> _seedWeeklyProgressActivity(
   AppDatabase db, {
   required int todayDay,
 }) async {
-  final practiceUnitA = await db
-      .into(db.memUnit)
-      .insert(
+  final practiceUnitA = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
@@ -1115,9 +1165,7 @@ Future<void> _seedWeeklyProgressActivity(
           updatedAtDay: todayDay - 2,
         ),
       );
-  final practiceUnitB = await db
-      .into(db.memUnit)
-      .insert(
+  final practiceUnitB = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
@@ -1130,9 +1178,7 @@ Future<void> _seedWeeklyProgressActivity(
           updatedAtDay: todayDay - 1,
         ),
       );
-  final reviewUnit = await db
-      .into(db.memUnit)
-      .insert(
+  final reviewUnit = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
@@ -1145,9 +1191,7 @@ Future<void> _seedWeeklyProgressActivity(
           updatedAtDay: todayDay - 3,
         ),
       );
-  final stage4Unit = await db
-      .into(db.memUnit)
-      .insert(
+  final stage4Unit = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
@@ -1211,6 +1255,51 @@ Future<void> _seedWeeklyProgressActivity(
         outcome: const Value('pass'),
       ),
     ]);
+  });
+}
+
+Future<void> _seedSparseWeeklyProgressActivity(
+  AppDatabase db, {
+  required int todayDay,
+}) async {
+  final practiceUnit = await db.into(db.memUnit).insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(40),
+          endSurah: const Value(1),
+          endAyah: const Value(40),
+          unitKey: 'weekly-progress-sparse',
+          createdAtDay: todayDay - 1,
+          updatedAtDay: todayDay - 1,
+        ),
+      );
+
+  await db.batch((batch) {
+    batch.insert(
+      db.companionChainSession,
+      CompanionChainSessionCompanion.insert(
+        unitId: practiceUnit,
+        targetVerseCount: 1,
+        passedVerseCount: const Value(1),
+        chainResult: 'completed',
+        retrievalStrength: const Value(0.7),
+        createdAtDay: todayDay - 1,
+        updatedAtDay: todayDay - 1,
+        startedAtSeconds: const Value(100),
+        endedAtSeconds: const Value(160),
+      ),
+    );
+    batch.insert(
+      db.reviewLog,
+      ReviewLogCompanion.insert(
+        unitId: practiceUnit,
+        tsDay: todayDay - 1,
+        tsSeconds: const Value(200),
+        gradeQ: 4,
+      ),
+    );
   });
 }
 

@@ -184,6 +184,7 @@ What you will now see first:
 - an explanation box that tells you why new work is normal, lighter, or paused
 - a `Recovery assistant` button on heavier days
 - stricter protection against token new work when delayed checks and review already consume the safe part of the day
+- an empty/completion state that now uses the same calm weekly-progress wording instead of feeling disconnected from the rest of the screen
 
 What the new goal block means:
 - `Steady progress` = your plan still has room for steady forward movement
@@ -200,12 +201,18 @@ The weekly progress block is there to answer three different questions:
 - what kind of real work did I actually complete this week?
 - does recent review quality look mostly steady, mixed, or strained?
 
+How the weekly progress block stays calm:
+- if you have no meaningful history yet, it tells you to start with one real day
+- if you have only a little recent activity, it treats that as a gentle return, not a failure
+- if the planner is in recovery, it explains that lighter real work still counts
+
 The recommendation block is there to answer one more question:
 - what is the safest next adjustment right now?
 
 Important honesty rule:
 - only real completed practice, review, or delayed check work counts as progress here
 - just opening a screen does not count
+- if your recent history is still light, the app now says that plainly instead of pretending you already have a strong weekly pattern
 
 ## 4) Practice from Memory
 

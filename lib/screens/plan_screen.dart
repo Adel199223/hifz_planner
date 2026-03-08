@@ -1153,6 +1153,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         ref
             .read(goalProgressSnapshotServiceProvider)
             .fromWeeklyPlan(_weeklyPlan);
+    final surfaceState = snapshot.surfaceState;
     final scheme = Theme.of(context).colorScheme;
     final (background, foreground) = switch (snapshot.focus) {
       GoalFocus.steadyProgress => (
@@ -1208,7 +1209,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              strings.planGoalSummaryHint,
+              _localizedPlanGoalSummaryHint(strings, surfaceState),
               key: const ValueKey('plan_goal_summary_hint'),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1251,6 +1252,16 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                         _localizedWeeklyProgressQuality(strings, snapshot),
                       ),
                       key: const ValueKey('plan_weekly_progress_quality'),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      strings.weeklyProgressNoteLabel,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _localizedWeeklyProgressNote(strings, surfaceState),
+                      key: const ValueKey('plan_weekly_progress_note'),
                     ),
                   ],
                 ),
@@ -1366,21 +1377,18 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     AppStrings strings,
     GoalProgressSnapshot snapshot,
   ) {
-    if (!snapshot.hasRecentHistory) {
-      return strings.weeklyProgressTrendStart;
-    }
-    if (snapshot.focus == GoalFocus.recoveryAndStabilize) {
-      return strings.weeklyProgressTrendRecovery;
-    }
-    final activeDays = snapshot.completedPracticeDaysLast7 ?? 0;
-    if (activeDays >= 4 &&
-        snapshot.recentQualityBand != GoalProgressQualityBand.strained) {
-      return strings.weeklyProgressTrendSteady;
-    }
-    if (snapshot.focus == GoalFocus.protectRetention) {
-      return strings.weeklyProgressTrendProtect;
-    }
-    return strings.weeklyProgressTrendBuilding;
+    return switch (snapshot.surfaceState) {
+      GoalProgressSurfaceState.noMeaningfulHistory =>
+        strings.weeklyProgressTrendStart,
+      GoalProgressSurfaceState.sparseRecentActivity =>
+        strings.weeklyProgressTrendSparse,
+      GoalProgressSurfaceState.steadyProgress =>
+        strings.weeklyProgressTrendSteady,
+      GoalProgressSurfaceState.protectRetention =>
+        strings.weeklyProgressTrendProtect,
+      GoalProgressSurfaceState.recoverySafely =>
+        strings.weeklyProgressTrendRecovery,
+    };
   }
 
   String _localizedWeeklyProgressConsistency(
@@ -1390,9 +1398,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     if (!snapshot.hasRecentHistory) {
       return strings.weeklyProgressConsistencyStart;
     }
-    return strings.weeklyProgressConsistencyValue(
-      snapshot.completedPracticeDaysLast7 ?? 0,
-    );
+    return strings.weeklyProgressConsistencyValue(snapshot.practiceDaysLast7);
   }
 
   String _localizedWeeklyProgressCounts(
@@ -1403,9 +1409,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       return strings.weeklyProgressCountsStart;
     }
     return strings.weeklyProgressCountsValue(
-      snapshot.completedReviewsLast7 ?? 0,
-      snapshot.completedDelayedChecksLast7 ?? 0,
-      snapshot.completedNewPracticeLast7 ?? 0,
+      snapshot.reviewsLast7,
+      snapshot.delayedChecksLast7,
+      snapshot.newPracticeLast7,
     );
   }
 
@@ -1418,6 +1424,24 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       GoalProgressQualityBand.mixed => strings.weeklyProgressQualityMixed,
       GoalProgressQualityBand.strained => strings.weeklyProgressQualityStrained,
       null => strings.weeklyProgressQualityNotEnoughData,
+    };
+  }
+
+  String _localizedWeeklyProgressNote(
+    AppStrings strings,
+    GoalProgressSurfaceState surfaceState,
+  ) {
+    return switch (surfaceState) {
+      GoalProgressSurfaceState.noMeaningfulHistory =>
+        strings.weeklyProgressNoteStart,
+      GoalProgressSurfaceState.sparseRecentActivity =>
+        strings.weeklyProgressNoteSparse,
+      GoalProgressSurfaceState.steadyProgress =>
+        strings.weeklyProgressNoteSteady,
+      GoalProgressSurfaceState.protectRetention =>
+        strings.weeklyProgressNoteProtect,
+      GoalProgressSurfaceState.recoverySafely =>
+        strings.weeklyProgressNoteRecovery,
     };
   }
 
@@ -1434,6 +1458,22 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       GoalFocus.steadyProgress => strings.planGoalSummarySteady,
       GoalFocus.protectRetention => strings.planGoalSummaryProtect,
       GoalFocus.recoveryAndStabilize => strings.planGoalSummaryRecovery,
+    };
+  }
+
+  String _localizedPlanGoalSummaryHint(
+    AppStrings strings,
+    GoalProgressSurfaceState surfaceState,
+  ) {
+    return switch (surfaceState) {
+      GoalProgressSurfaceState.noMeaningfulHistory =>
+        strings.planGoalSummaryHintStart,
+      GoalProgressSurfaceState.sparseRecentActivity =>
+        strings.planGoalSummaryHintSparse,
+      GoalProgressSurfaceState.recoverySafely =>
+        strings.planGoalSummaryHintRecovery,
+      GoalProgressSurfaceState.steadyProgress => strings.planGoalSummaryHint,
+      GoalProgressSurfaceState.protectRetention => strings.planGoalSummaryHint,
     };
   }
 

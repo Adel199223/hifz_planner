@@ -85,6 +85,7 @@ Do not use this file as primary truth when there is a conflict.
 - `Today` now also shows a small supportive goal-focus block so the learner can see what a good day looks like right now
 - `Today` now also shows a small last-7-days progress block so the learner can trust what the app means by consistency, completed work, and recent review quality
 - `Today` now also shows one advice-only recommendation block that can stay steady, recommend the minimum day, protect retention for a few days, or send the learner back to `My Plan` to lighten the setup
+- `Today` empty/completion states now stay aligned with the same shared progress-state layer used by the weekly progress block
 - The learner-facing practice actions now use plain labels:
   - `Start new practice`
   - `Continue review practice`
@@ -106,6 +107,7 @@ Do not use this file as primary truth when there is a conflict.
 - `My Plan` now also shows a lightweight weekly goal summary derived from the same planner posture used by `Today`
 - `My Plan` now also shows a fuller last-7-days progress summary from the same shared snapshot used by `Today`
 - `My Plan` now also shows the same recommendation layer so weekly guidance and daily guidance stay aligned
+- `My Plan` now also uses the same derived progress-state layer as `Today`, so no-history, sparse-history, and recovery-safe wording do not drift across surfaces
 - The weekly planner preview now follows the guided time inputs rather than stale advanced defaults
 - `My Plan` now also shows a plain-language `Plan health` card with backlog burn-down, minimum-day, and recovery hints when needed
 - The weekly planner preview and Forecast now follow the same stress/new-work rules as `Today`

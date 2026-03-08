@@ -135,9 +135,11 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.text(
-        'Start building consistency with one real practice, review, or delayed check today.',
-      ),
+      find.byKey(const ValueKey('plan_weekly_progress_summary')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_goal_summary_hint')),
       findsOneWidget,
     );
   });
@@ -171,6 +173,10 @@ void main() {
     );
     expect(find.text('Recent review quality: Mostly steady'), findsOneWidget);
     expect(
+      find.byKey(const ValueKey('plan_weekly_progress_note')),
+      findsOneWidget,
+    );
+    expect(
       find.byKey(const ValueKey('plan_goal_coaching_card')),
       findsOneWidget,
     );
@@ -180,55 +186,93 @@ void main() {
     );
   });
 
-  testWidgets(
-    'recovery learners see stabilization framing in weekly progress',
-    (tester) async {
-      final db = AppDatabase(NativeDatabase.memory());
-      final container = ProviderContainer(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            ref.onDispose(db.close);
-            return db;
-          }),
-        ],
-      );
-      addTearDown(container.dispose);
+  testWidgets('recovery learners see stabilization framing in weekly progress',
+      (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
 
-      await SettingsRepo(db).updateSettings(
-        forceRevisionOnly: 1,
-        requirePageMetadata: 0,
-        maxNewPagesPerDay: 1,
-        maxNewUnitsPerDay: 1,
-        avgNewMinutesPerAyah: 1.0,
-        avgReviewMinutesPerAyah: 1.0,
-        dailyMinutesDefault: 20,
-      );
-      await _seedStrainedWeeklyProgressActivity(
-        db,
-        todayDay: localDayIndex(DateTime.now().toLocal()),
-      );
-      await _pumpPlan(tester, container);
+    await SettingsRepo(db).updateSettings(
+      forceRevisionOnly: 1,
+      requirePageMetadata: 0,
+      maxNewPagesPerDay: 1,
+      maxNewUnitsPerDay: 1,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      dailyMinutesDefault: 20,
+    );
+    await _seedStrainedWeeklyProgressActivity(
+      db,
+      todayDay: localDayIndex(DateTime.now().toLocal()),
+    );
+    await _pumpPlan(tester, container);
 
-      expect(
-        find.text(
-          'Recovery still counts. A lighter but real day protects the plan.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.text('Recent review quality: Needs a gentler pace'),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('plan_goal_coaching_card')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('plan_goal_coaching_progress_rule')),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(
+      find.text(
+        'Recovery still counts. A lighter but real day protects the plan.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Recent review quality: Needs a gentler pace'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('This week is about stabilizing safely, not proving speed.'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_weekly_progress_note')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_goal_coaching_card')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_goal_coaching_progress_rule')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('sparse recent activity stays calm and actionable', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedSparseWeeklyProgressActivity(db, todayDay: todayDay);
+    await _pumpPlan(tester, container);
+
+    expect(
+      find.byKey(const ValueKey('plan_weekly_progress_summary')),
+      findsOneWidget,
+    );
+    expect(find.text('1 active days in the last 7 days.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_goal_summary_hint')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('plan_weekly_progress_note')),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('running forecast on empty quran data shows incomplete reason', (
     tester,
@@ -738,7 +782,8 @@ void main() {
 
       final rows = await (db.select(
         db.calibrationSample,
-      )..orderBy([(tbl) => OrderingTerm.asc(tbl.id)])).get();
+      )..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+          .get();
       expect(rows.length, 2);
       expect(rows.first.sampleKind, 'new_memorization');
       expect(rows.last.sampleKind, 'review');
@@ -1013,9 +1058,7 @@ Future<void> _seedWeeklyProgressActivity(
   AppDatabase db, {
   required int todayDay,
 }) async {
-  final practiceUnitA = await db
-      .into(db.memUnit)
-      .insert(
+  final practiceUnitA = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
@@ -1028,9 +1071,7 @@ Future<void> _seedWeeklyProgressActivity(
           updatedAtDay: todayDay - 2,
         ),
       );
-  final practiceUnitB = await db
-      .into(db.memUnit)
-      .insert(
+  final practiceUnitB = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
@@ -1043,9 +1084,7 @@ Future<void> _seedWeeklyProgressActivity(
           updatedAtDay: todayDay - 1,
         ),
       );
-  final reviewUnit = await db
-      .into(db.memUnit)
-      .insert(
+  final reviewUnit = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
@@ -1058,9 +1097,7 @@ Future<void> _seedWeeklyProgressActivity(
           updatedAtDay: todayDay - 3,
         ),
       );
-  final stage4Unit = await db
-      .into(db.memUnit)
-      .insert(
+  final stage4Unit = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
@@ -1127,13 +1164,56 @@ Future<void> _seedWeeklyProgressActivity(
   });
 }
 
+Future<void> _seedSparseWeeklyProgressActivity(
+  AppDatabase db, {
+  required int todayDay,
+}) async {
+  final practiceUnit = await db.into(db.memUnit).insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(50),
+          endSurah: const Value(1),
+          endAyah: const Value(50),
+          unitKey: 'plan-weekly-progress-sparse',
+          createdAtDay: todayDay - 1,
+          updatedAtDay: todayDay - 1,
+        ),
+      );
+
+  await db.batch((batch) {
+    batch.insert(
+      db.companionChainSession,
+      CompanionChainSessionCompanion.insert(
+        unitId: practiceUnit,
+        targetVerseCount: 1,
+        passedVerseCount: const Value(1),
+        chainResult: 'completed',
+        retrievalStrength: const Value(0.72),
+        createdAtDay: todayDay - 1,
+        updatedAtDay: todayDay - 1,
+        startedAtSeconds: const Value(100),
+        endedAtSeconds: const Value(160),
+      ),
+    );
+    batch.insert(
+      db.reviewLog,
+      ReviewLogCompanion.insert(
+        unitId: practiceUnit,
+        tsDay: todayDay - 1,
+        tsSeconds: const Value(200),
+        gradeQ: 4,
+      ),
+    );
+  });
+}
+
 Future<void> _seedStrainedWeeklyProgressActivity(
   AppDatabase db, {
   required int todayDay,
 }) async {
-  final reviewUnit = await db
-      .into(db.memUnit)
-      .insert(
+  final reviewUnit = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(2),
