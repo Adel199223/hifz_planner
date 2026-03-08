@@ -81,8 +81,8 @@
   - simple recent-quality guidance derived from existing review data
   - no schema changes and no new top-level navigation
 - Current state:
-  - implemented locally on `feat/goals-wave2-weekly-progress`
-  - validations passed:
+  - merged to `main` via PR #27 after docs sync and issue-memory closeout
+  - validations passed before publish:
     - `flutter test -j 1 -r expanded test/data/services/goal_progress_snapshot_service_test.dart`
     - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`
     - `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart`
@@ -92,4 +92,4 @@
     - `dart tooling/validate_workspace_hygiene.dart`
 - Follow-up risk:
   - if one of the intended recent-progress metrics cannot be derived honestly from existing local data, it should be removed instead of forcing a migration.
-  - next closeout step is commit, PR, and merge.
+  - Wave 3 should keep the same honesty rule for progress-derived coaching guidance.
