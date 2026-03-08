@@ -64,13 +64,15 @@
 
 ## Progress
 - [x] Start Wave 2 ExecPlan and tracker update
-- [ ] Extend shared progress snapshot with recent 7-day metrics
-- [ ] Integrate Today weekly consistency summary
-- [ ] Integrate My Plan recent-progress summary
-- [ ] Run focused validation
+- [x] Extend shared progress snapshot with recent 7-day metrics
+- [x] Integrate Today weekly consistency summary
+- [x] Integrate My Plan recent-progress summary
+- [x] Run focused validation
 
 ## Surprises and Adjustments
-- Use this section for scope corrections or blockers discovered during implementation.
+- 2026-03-08: Existing persisted data does not separate new-vs-review non-stage4 practice sessions, so the shared snapshot uses a best-effort non-stage4 practice completion count instead of inventing a schema change mid-roadmap.
+- 2026-03-08: Sequential Flutter test runs remained the reliable validation path in this worktree; dependency resolution ran automatically on the first test invocation, then the full Wave 2 validation set passed cleanly.
+- 2026-03-08: Repeatable local validation issues from this wave were promoted into `docs/assistant/ISSUE_MEMORY.md` and `docs/assistant/ISSUE_MEMORY.json` so future restarts keep the sequential Flutter-test rule and the incidental lockfile-churn cleanup rule.
 
 ## Handoff
 - Wave 2 should end with:
@@ -79,6 +81,15 @@
   - simple recent-quality guidance derived from existing review data
   - no schema changes and no new top-level navigation
 - Current state:
-  - started on `feat/goals-wave2-weekly-progress`
+  - implemented locally on `feat/goals-wave2-weekly-progress`
+  - validations passed:
+    - `flutter test -j 1 -r expanded test/data/services/goal_progress_snapshot_service_test.dart`
+    - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`
+    - `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart`
+    - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+    - `dart tooling/validate_localization.dart`
+    - `dart tooling/validate_agent_docs.dart`
+    - `dart tooling/validate_workspace_hygiene.dart`
 - Follow-up risk:
   - if one of the intended recent-progress metrics cannot be derived honestly from existing local data, it should be removed instead of forcing a migration.
+  - next closeout step is commit, PR, and merge.

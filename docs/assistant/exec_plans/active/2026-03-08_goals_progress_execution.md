@@ -109,7 +109,19 @@
   - 2026-03-08: Wave 1 validation is green after rerunning Flutter tests sequentially; parallel `flutter test` launches in the same worktree triggered a Flutter plugin-symlink crash, so the clean validation record for this wave is the sequential run.
   - 2026-03-08: Wave 1 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, app user guide, and planner user guide.
   - 2026-03-08: PR #25 merged Goals Wave 1 to `main`; the next roadmap action returns to Wave 2 after this archive/update lands.
-  - 2026-03-08: PR #26 archived the completed Wave 1 plan and reset the tracker on `main`, so Wave 2 can now start from a clean baseline.
-  - 2026-03-08: Wave 2 started in isolated worktree `/home/fa507/dev/hifz_planner_goals_wave2` on branch `feat/goals-wave2-weekly-progress`.
+- 2026-03-08: PR #26 archived the completed Wave 1 plan and reset the tracker on `main`, so Wave 2 can now start from a clean baseline.
+- 2026-03-08: Wave 2 started in isolated worktree `/home/fa507/dev/hifz_planner_goals_wave2` on branch `feat/goals-wave2-weekly-progress`.
+- 2026-03-08: Wave 2 now has a shared recent-progress snapshot feeding both `Today` and `My Plan`, including active-day counts, delayed-check counts, review counts, a best-effort practice completion count, and a simple recent-quality band from review grades.
+- 2026-03-08: Wave 2 validation is green in the isolated worktree after sequential Flutter runs:
+  - `flutter test -j 1 -r expanded test/data/services/goal_progress_snapshot_service_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart`
+  - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+  - `dart tooling/validate_localization.dart`
+  - `dart tooling/validate_agent_docs.dart`
+  - `dart tooling/validate_workspace_hygiene.dart`
+- 2026-03-08: Wave 2 pre-closeout docs sync also refreshed issue memory with the repeatable local validation issues from this stream:
+  - parallel Flutter test plugin-symlink races inside one worktree
+  - incidental `pubspec.lock` churn on first Flutter validation in a fresh worktree
 - Next recommended action:
-  - Implement Wave 2 weekly progress and trust layer.
+  - Close Wave 2 with commit, PR, and merge.

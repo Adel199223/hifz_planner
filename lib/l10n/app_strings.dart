@@ -698,6 +698,77 @@ class AppStrings {
     'plan_goal_summary_recovery',
     'Your safest weekly goal is to stabilize and reduce pressure before pushing harder.',
   );
+  String get weeklyProgressTitle => _t('weekly_progress_title', 'Last 7 days');
+  String get weeklyProgressConsistencyLabel =>
+      _t('weekly_progress_consistency_label', 'Consistency');
+  String get weeklyProgressCompletedWorkLabel =>
+      _t('weekly_progress_completed_work_label', 'Completed work');
+  String get weeklyProgressRecentQualityLabel =>
+      _t('weekly_progress_recent_quality_label', 'Recent review quality');
+  String get weeklyProgressTrendStart => _t(
+    'weekly_progress_trend_start',
+    'Start building consistency with one real practice, review, or delayed check today.',
+  );
+  String get weeklyProgressTrendSteady => _t(
+    'weekly_progress_trend_steady',
+    'Your recent work supports a steady weekly rhythm.',
+  );
+  String get weeklyProgressTrendBuilding => _t(
+    'weekly_progress_trend_building',
+    'You are building consistency. Keep the main task simple and repeatable.',
+  );
+  String get weeklyProgressTrendProtect => _t(
+    'weekly_progress_trend_protect',
+    'Recent work is happening, but retention still needs the safer share of your time.',
+  );
+  String get weeklyProgressTrendRecovery => _t(
+    'weekly_progress_trend_recovery',
+    'Recovery still counts. A lighter but real day protects the plan.',
+  );
+  String get weeklyProgressConsistencyStart => _t(
+    'weekly_progress_consistency_start',
+    'No meaningful history yet. One real day is enough to begin.',
+  );
+  String weeklyProgressConsistencyValue(int days) => _fmt(
+    _t(
+      'weekly_progress_consistency_value',
+      '{days} active days in the last 7 days.',
+    ),
+    <String, Object>{'days': days},
+  );
+  String get weeklyProgressCountsStart => _t(
+    'weekly_progress_counts_start',
+    'Completed work will start showing here after your first real session.',
+  );
+  String weeklyProgressCountsValue(
+    int reviews,
+    int delayedChecks,
+    int practiceCompletions,
+  ) => _fmt(
+    _t(
+      'weekly_progress_counts_value',
+      '{reviews} reviews, {delayedChecks} delayed checks, {practiceCompletions} practice completions.',
+    ),
+    <String, Object>{
+      'reviews': reviews,
+      'delayedChecks': delayedChecks,
+      'practiceCompletions': practiceCompletions,
+    },
+  );
+  String get weeklyProgressQualitySteady =>
+      _t('weekly_progress_quality_steady', 'Mostly steady');
+  String get weeklyProgressQualityMixed =>
+      _t('weekly_progress_quality_mixed', 'Mixed');
+  String get weeklyProgressQualityStrained =>
+      _t('weekly_progress_quality_strained', 'Needs a gentler pace');
+  String get weeklyProgressQualityNotEnoughData => _t(
+    'weekly_progress_quality_not_enough_data',
+    'Not enough review data yet',
+  );
+  String weeklyProgressRecentQualityLine(String value) => _fmt(
+    _t('weekly_progress_recent_quality_line', 'Recent review quality: {value}'),
+    <String, Object>{'value': value},
+  );
   String planSummaryTimeValue(int weeklyMinutes, int dailyMinutes) => _fmt(
     _t(
       'plan_summary_time_value',
@@ -1628,6 +1699,35 @@ class AppStrings {
           'Votre plan doit protéger la rétention d’abord cette semaine, même si le nouveau travail reste plus léger.',
       'plan_goal_summary_recovery':
           'L’objectif le plus sûr cette semaine est de vous stabiliser et de réduire la pression avant d’accélérer.',
+      'weekly_progress_title': '7 derniers jours',
+      'weekly_progress_consistency_label': 'Régularité',
+      'weekly_progress_completed_work_label': 'Travail accompli',
+      'weekly_progress_recent_quality_label': 'Qualité récente des révisions',
+      'weekly_progress_trend_start':
+          "Commencez à construire votre régularité avec une vraie séance aujourd'hui : pratique, révision ou vérification différée.",
+      'weekly_progress_trend_steady':
+          'Votre travail récent soutient un rythme hebdomadaire stable.',
+      'weekly_progress_trend_building':
+          'Vous construisez votre régularité. Gardez la tâche principale simple et répétable.',
+      'weekly_progress_trend_protect':
+          'Le travail avance, mais la rétention a encore besoin de la part la plus sûre de votre temps.',
+      'weekly_progress_trend_recovery':
+          'La récupération compte aussi. Une journée plus légère mais réelle protège le plan.',
+      'weekly_progress_consistency_start':
+          'Pas encore d’historique significatif. Une vraie journée suffit pour commencer.',
+      'weekly_progress_consistency_value':
+          '{days} jours actifs sur les 7 derniers jours.',
+      'weekly_progress_counts_start':
+          'Le travail accompli apparaîtra ici après votre première vraie séance.',
+      'weekly_progress_counts_value':
+          '{reviews} révisions, {delayedChecks} vérifications différées, {practiceCompletions} pratiques terminées.',
+      'weekly_progress_quality_steady': 'Plutôt stable',
+      'weekly_progress_quality_mixed': 'Mitigée',
+      'weekly_progress_quality_strained': 'Besoin d’un rythme plus doux',
+      'weekly_progress_quality_not_enough_data':
+          'Pas encore assez de données de révision',
+      'weekly_progress_recent_quality_line':
+          'Qualité récente des révisions : {value}',
       'no_ayahs_for_surah': 'Aucun ayah trouvé pour la sourate {surah}.',
       'no_ayahs_for_page': 'Aucun ayah trouvé pour la page {page}.',
       'onboarding_questionnaire':
@@ -1963,6 +2063,35 @@ class AppStrings {
           'Seu plano deve proteger a retenção primeiro nesta semana, mesmo que o trabalho novo fique mais leve.',
       'plan_goal_summary_recovery':
           'A meta mais segura desta semana é estabilizar e reduzir a pressão antes de acelerar de novo.',
+      'weekly_progress_title': 'Últimos 7 dias',
+      'weekly_progress_consistency_label': 'Consistência',
+      'weekly_progress_completed_work_label': 'Trabalho concluído',
+      'weekly_progress_recent_quality_label': 'Qualidade recente das revisões',
+      'weekly_progress_trend_start':
+          'Comece a construir consistência com uma sessão real hoje: prática, revisão ou verificação adiada.',
+      'weekly_progress_trend_steady':
+          'Seu trabalho recente sustenta um ritmo semanal estável.',
+      'weekly_progress_trend_building':
+          'Você está construindo consistência. Mantenha a tarefa principal simples e repetível.',
+      'weekly_progress_trend_protect':
+          'Há trabalho recente, mas a retenção ainda precisa da parte mais segura do seu tempo.',
+      'weekly_progress_trend_recovery':
+          'Recuperação também conta. Um dia mais leve, mas real, protege o plano.',
+      'weekly_progress_consistency_start':
+          'Ainda não há histórico significativo. Um dia real já basta para começar.',
+      'weekly_progress_consistency_value':
+          '{days} dias ativos nos últimos 7 dias.',
+      'weekly_progress_counts_start':
+          'O trabalho concluído começará a aparecer aqui após sua primeira sessão real.',
+      'weekly_progress_counts_value':
+          '{reviews} revisões, {delayedChecks} verificações adiadas, {practiceCompletions} práticas concluídas.',
+      'weekly_progress_quality_steady': 'Principalmente estável',
+      'weekly_progress_quality_mixed': 'Mista',
+      'weekly_progress_quality_strained': 'Precisa de um ritmo mais leve',
+      'weekly_progress_quality_not_enough_data':
+          'Ainda não há dados de revisão suficientes',
+      'weekly_progress_recent_quality_line':
+          'Qualidade recente das revisões: {value}',
       'no_ayahs_for_surah': 'Nenhum ayah encontrado para a Surah {surah}.',
       'no_ayahs_for_page': 'Nenhum ayah encontrado para a Página {page}.',
       'onboarding_questionnaire': 'Questionário inicial ({count} perguntas)',
@@ -2308,6 +2437,33 @@ class AppStrings {
           'ينبغي أن تركز خطتك هذا الأسبوع على حماية التثبيت أولًا، حتى لو بقي العمل الجديد أخف.',
       'plan_goal_summary_recovery':
           'الهدف الأكثر أمانًا هذا الأسبوع هو استعادة التوازن وتقليل الضغط قبل زيادة الوتيرة.',
+      'weekly_progress_title': 'آخر 7 أيام',
+      'weekly_progress_consistency_label': 'الانتظام',
+      'weekly_progress_completed_work_label': 'العمل المنجز',
+      'weekly_progress_recent_quality_label': 'جودة المراجعة مؤخرًا',
+      'weekly_progress_trend_start':
+          'ابدأ ببناء الانتظام من خلال جلسة حقيقية اليوم: تدريب أو مراجعة أو تحقق مؤجل.',
+      'weekly_progress_trend_steady':
+          'عملك الأخير يدعم إيقاعًا أسبوعيًا ثابتًا.',
+      'weekly_progress_trend_building':
+          'أنت تبني الانتظام. اجعل المهمة الأساسية بسيطة وقابلة للتكرار.',
+      'weekly_progress_trend_protect':
+          'يوجد عمل حديث، لكن التثبيت ما زال يحتاج إلى الحصة الأكثر أمانًا من وقتك.',
+      'weekly_progress_trend_recovery':
+          'التعافي يُحسب أيضًا. يوم أخف لكنه حقيقي يحمي الخطة.',
+      'weekly_progress_consistency_start':
+          'لا يوجد سجل ذو معنى بعد. يوم حقيقي واحد يكفي للبداية.',
+      'weekly_progress_consistency_value': '{days} أيام نشطة خلال آخر 7 أيام.',
+      'weekly_progress_counts_start':
+          'سيظهر العمل المنجز هنا بعد أول جلسة حقيقية لك.',
+      'weekly_progress_counts_value':
+          '{reviews} مراجعات، {delayedChecks} تحققات مؤجلة، {practiceCompletions} جلسات تدريب مكتملة.',
+      'weekly_progress_quality_steady': 'مستقرة في الغالب',
+      'weekly_progress_quality_mixed': 'مختلطة',
+      'weekly_progress_quality_strained': 'تحتاج إلى وتيرة ألطف',
+      'weekly_progress_quality_not_enough_data':
+          'لا توجد بيانات مراجعة كافية بعد',
+      'weekly_progress_recent_quality_line': 'جودة المراجعة مؤخرًا: {value}',
       'no_ayahs_for_surah': 'لا توجد آيات للسورة {surah}.',
       'no_ayahs_for_page': 'لا توجد آيات للصفحة {page}.',
       'onboarding_questionnaire': 'استبيان البداية ({count} أسئلة)',

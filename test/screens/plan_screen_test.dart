@@ -130,7 +130,89 @@ void main() {
       find.byKey(const ValueKey('plan_goal_summary_hint')),
       findsOneWidget,
     );
+    expect(
+      find.byKey(const ValueKey('plan_weekly_progress_card')),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'Start building consistency with one real practice, review, or delayed check today.',
+      ),
+      findsOneWidget,
+    );
   });
+
+  testWidgets('weekly progress card summarizes recent work calmly', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedWeeklyProgressActivity(db, todayDay: todayDay);
+    await _pumpPlan(tester, container);
+
+    expect(
+      find.byKey(const ValueKey('plan_weekly_progress_card')),
+      findsOneWidget,
+    );
+    expect(find.text('3 active days in the last 7 days.'), findsOneWidget);
+    expect(
+      find.text('2 reviews, 1 delayed checks, 2 practice completions.'),
+      findsOneWidget,
+    );
+    expect(find.text('Recent review quality: Mostly steady'), findsOneWidget);
+  });
+
+  testWidgets(
+    'recovery learners see stabilization framing in weekly progress',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await SettingsRepo(db).updateSettings(
+        forceRevisionOnly: 1,
+        requirePageMetadata: 0,
+        maxNewPagesPerDay: 1,
+        maxNewUnitsPerDay: 1,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        dailyMinutesDefault: 20,
+      );
+      await _seedStrainedWeeklyProgressActivity(
+        db,
+        todayDay: localDayIndex(DateTime.now().toLocal()),
+      );
+      await _pumpPlan(tester, container);
+
+      expect(
+        find.text(
+          'Recovery still counts. A lighter but real day protects the plan.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Recent review quality: Needs a gentler pace'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('running forecast on empty quran data shows incomplete reason', (
     tester,
@@ -640,8 +722,7 @@ void main() {
 
       final rows = await (db.select(
         db.calibrationSample,
-      )..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
-          .get();
+      )..orderBy([(tbl) => OrderingTerm.asc(tbl.id)])).get();
       expect(rows.length, 2);
       expect(rows.first.sampleKind, 'new_memorization');
       expect(rows.last.sampleKind, 'review');
@@ -910,4 +991,171 @@ Future<void> _enterTextVisible(
   await tester.pumpAndSettle();
   await tester.enterText(finder, text);
   await tester.pumpAndSettle();
+}
+
+Future<void> _seedWeeklyProgressActivity(
+  AppDatabase db, {
+  required int todayDay,
+}) async {
+  final practiceUnitA = await db
+      .into(db.memUnit)
+      .insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(20),
+          endSurah: const Value(1),
+          endAyah: const Value(20),
+          unitKey: 'plan-weekly-progress-a',
+          createdAtDay: todayDay - 2,
+          updatedAtDay: todayDay - 2,
+        ),
+      );
+  final practiceUnitB = await db
+      .into(db.memUnit)
+      .insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(21),
+          endSurah: const Value(1),
+          endAyah: const Value(21),
+          unitKey: 'plan-weekly-progress-b',
+          createdAtDay: todayDay - 1,
+          updatedAtDay: todayDay - 1,
+        ),
+      );
+  final reviewUnit = await db
+      .into(db.memUnit)
+      .insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(22),
+          endSurah: const Value(1),
+          endAyah: const Value(22),
+          unitKey: 'plan-weekly-progress-review',
+          createdAtDay: todayDay - 3,
+          updatedAtDay: todayDay - 3,
+        ),
+      );
+  final stage4Unit = await db
+      .into(db.memUnit)
+      .insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(23),
+          endSurah: const Value(1),
+          endAyah: const Value(23),
+          unitKey: 'plan-weekly-progress-stage4',
+          createdAtDay: todayDay - 1,
+          updatedAtDay: todayDay - 1,
+        ),
+      );
+
+  await db.batch((batch) {
+    batch.insertAll(db.companionChainSession, [
+      CompanionChainSessionCompanion.insert(
+        unitId: practiceUnitA,
+        targetVerseCount: 1,
+        passedVerseCount: const Value(1),
+        chainResult: 'completed',
+        retrievalStrength: const Value(0.8),
+        createdAtDay: todayDay - 2,
+        updatedAtDay: todayDay - 2,
+        startedAtSeconds: const Value(100),
+        endedAtSeconds: const Value(180),
+      ),
+      CompanionChainSessionCompanion.insert(
+        unitId: practiceUnitB,
+        targetVerseCount: 1,
+        passedVerseCount: const Value(1),
+        chainResult: 'completed',
+        retrievalStrength: const Value(0.85),
+        createdAtDay: todayDay - 1,
+        updatedAtDay: todayDay - 1,
+        startedAtSeconds: const Value(100),
+        endedAtSeconds: const Value(180),
+      ),
+    ]);
+    batch.insertAll(db.reviewLog, [
+      ReviewLogCompanion.insert(
+        unitId: reviewUnit,
+        tsDay: todayDay - 3,
+        tsSeconds: const Value(200),
+        gradeQ: 5,
+      ),
+      ReviewLogCompanion.insert(
+        unitId: reviewUnit,
+        tsDay: todayDay - 1,
+        tsSeconds: const Value(210),
+        gradeQ: 4,
+      ),
+    ]);
+    batch.insertAll(db.companionStage4Session, [
+      CompanionStage4SessionCompanion.insert(
+        unitId: stage4Unit,
+        dueKind: 'next_day_required',
+        startedDay: todayDay - 1,
+        startedSeconds: const Value(300),
+        endedDay: Value(todayDay - 1),
+        endedSeconds: const Value(340),
+        outcome: const Value('pass'),
+      ),
+    ]);
+  });
+}
+
+Future<void> _seedStrainedWeeklyProgressActivity(
+  AppDatabase db, {
+  required int todayDay,
+}) async {
+  final reviewUnit = await db
+      .into(db.memUnit)
+      .insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(2),
+          startSurah: const Value(1),
+          startAyah: const Value(30),
+          endSurah: const Value(1),
+          endAyah: const Value(30),
+          unitKey: 'plan-weekly-progress-strained',
+          createdAtDay: todayDay - 2,
+          updatedAtDay: todayDay - 2,
+        ),
+      );
+
+  await db.batch((batch) {
+    batch.insertAll(db.reviewLog, [
+      ReviewLogCompanion.insert(
+        unitId: reviewUnit,
+        tsDay: todayDay - 2,
+        tsSeconds: const Value(200),
+        gradeQ: 2,
+      ),
+      ReviewLogCompanion.insert(
+        unitId: reviewUnit,
+        tsDay: todayDay - 1,
+        tsSeconds: const Value(210),
+        gradeQ: 0,
+      ),
+    ]);
+    batch.insertAll(db.companionStage4Session, [
+      CompanionStage4SessionCompanion.insert(
+        unitId: reviewUnit,
+        dueKind: 'retry_required',
+        startedDay: todayDay - 1,
+        startedSeconds: const Value(300),
+        endedDay: Value(todayDay - 1),
+        endedSeconds: const Value(340),
+        outcome: const Value('fail'),
+      ),
+    ]);
+  });
 }
