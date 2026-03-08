@@ -2,6 +2,20 @@
 
 A new Flutter project.
 
+## Local developer start
+
+If you are working in this repo locally, start with `README_START_HERE.md`.
+
+Recommended workspace:
+
+```bash
+code /home/fa507/dev/hifz_planner-only.code-workspace
+```
+
+If local tools or WSL routing are unclear:
+- `docs/assistant/LOCAL_CAPABILITIES.md`
+- `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+
 ## Agent onboarding docs
 
 - `AGENTS.md`
