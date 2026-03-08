@@ -187,7 +187,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('learn_hifz_plan_open')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Suggested Plan (Editable)'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_guided_setup_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_summary_card')), findsOneWidget);
   });
 
   testWidgets('language selector shows four options and updates state', (

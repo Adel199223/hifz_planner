@@ -107,14 +107,14 @@
 | Wave 1 | merged | `feat/ux-wave1-navigation-copy` | `/home/fa507/dev/hifz_planner_wave1` | Merged to `main` as PR #4 |
 | Post-Wave1 critical fixes | merged | `feat/stability-post-wave1-critical-fixes` | `/home/fa507/dev/hifz_planner_stability` | Merged to `main` as PR #5 |
 | Wave 2 | merged | `feat/ux-wave2-today-coaching` | `/home/fa507/dev/hifz_planner_wave2` | Merged to `main` as PR #6 |
-| Wave 3 | merged-ready | `feat/ux-wave3-my-plan-preset-flow` | `/home/fa507/dev/hifz_planner_wave3` | Guided setup, advanced gate, planner-preview sync, and narrow docs sync are ready for PR |
+| Wave 3 | merged | `feat/ux-wave3-my-plan-preset-flow` | removed | Merged to `main` as PR #8; closeout follow-up fixed the stale navigation-shell assertion and archived the plan |
 | Wave 4 | planned | `feat/planner-wave4-health-explanations` | not created yet | Depends on Wave 3 contract |
 | Wave 5 | planned | `feat/planner-wave5-scheduler-v2` | not created yet | Deterministic allocation replacement |
 | Wave 6 | planned | `feat/planner-wave6-forecast-calibration-refine` | not created yet | Post-scheduler refinement |
 | Wave 7 | planned | `feat/planner-wave7-optional-adaptive-followup` | not created yet | Optional only |
 
 - Current blockers:
-  - No blocker is currently recorded for active Wave 3 work.
+  - No blocker is currently recorded for starting Wave 4 from clean `main`.
 - Detours and plan updates:
   - 2026-03-08: Research/spec work completed before broader implementation. Preserve it before merging app code branches.
   - 2026-03-08: Roadmap publication finished first so the execution tracker exists on `main` before Wave 1 closes.
@@ -123,5 +123,6 @@
   - 2026-03-08: Wave 2 landed on the clean post-stability baseline, so the next recommended stream returns to the planned Wave 3 sequence.
   - 2026-03-08: Wave 3 started in `/home/fa507/dev/hifz_planner_wave3` with a new wave-specific ExecPlan to preserve the preset-first scope and the planner-preview sync fix.
   - 2026-03-08: Wave 3 implementation validated locally, then received a narrow planner docs sync and the roadmap-return rule before publish.
+  - 2026-03-08: PR #8 merged the Wave 3 feature before the final CI-fix commit landed, so a small closeout branch ported the stale navigation-shell assertion fix and completed the tracker/archive cleanup on top of `main`.
 - Next recommended action:
-  - Close Wave 3 with commit, PR, and merge, then return to this tracker on `main` before opening Wave 4.
+  - Start `feat/planner-wave4-health-explanations` from clean `main` and create the Wave 4 ExecPlan before coding.
