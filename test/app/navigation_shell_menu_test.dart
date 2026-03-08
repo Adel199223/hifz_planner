@@ -156,9 +156,7 @@ void main() {
     expect(find.byKey(const ValueKey('library_screen_root')), findsOneWidget);
   });
 
-  testWidgets('Learn menu route opens Learn screen and Hifz Plan', (
-    tester,
-  ) async {
+  testWidgets('Learn menu route opens practice and plan cards', (tester) async {
     final fakeStore = _FakeAppPreferencesStore();
     final container = _createContainer(fakeStore);
     addTearDown(container.dispose);
@@ -182,12 +180,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('learn_screen_root')), findsOneWidget);
+    expect(find.byKey(const ValueKey('learn_practice_card')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('learn_practice_new_button')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('learn_hifz_plan_card')), findsOneWidget);
 
+    await tester
+        .ensureVisible(find.byKey(const ValueKey('learn_hifz_plan_open')));
     await tester.tap(find.byKey(const ValueKey('learn_hifz_plan_open')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('plan_guided_setup_card')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('plan_guided_setup_card')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('plan_summary_card')), findsOneWidget);
   });
 
@@ -465,7 +473,7 @@ ProviderContainer _createContainer(_FakeAppPreferencesStore fakeStore) {
 
 class _FakeAppPreferencesStore implements AppPreferencesStore {
   _FakeAppPreferencesStore({StoredAppPreferences? initial})
-    : _stored = initial ?? const StoredAppPreferences();
+      : _stored = initial ?? const StoredAppPreferences();
 
   StoredAppPreferences _stored;
   String? savedLanguageCode;

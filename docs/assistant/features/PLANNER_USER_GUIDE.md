@@ -61,7 +61,7 @@ This guide is for learners, teachers, and anyone supporting a learner.
 The app lifecycle is:
 - `My Plan` -> define your capacity and schedule rules
 - `Today` -> execute what is due (reviews, new memorization, delayed checks)
-- `Companion` -> run memorization/retrieval stages for each unit
+- `Practice from Memory` -> run the memorization/retrieval session for each unit
 - Delayed consolidation checks -> verify stability after time has passed (especially next day)
 
 Planner is the system that decides how much to assign and in what order, so your memorization load stays sustainable.

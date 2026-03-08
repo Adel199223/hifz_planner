@@ -52,6 +52,12 @@ class AppStrings {
   String get more => _t('more', 'More');
   String get comingSoon => _t('coming_soon', 'Coming soon.');
   String get unknown => _t('unknown', 'Unknown');
+  String get practiceFromMemoryTitle =>
+      _t('practice_from_memory_title', 'Practice from Memory');
+  String get startNewPractice => _t('start_new_practice', 'Start new practice');
+  String get continueReviewPractice =>
+      _t('continue_review_practice', 'Continue review practice');
+  String get doDelayedCheck => _t('do_delayed_check', 'Do delayed check');
 
   String get verseByVerse => _t('verse_by_verse', 'Verse by Verse');
   String get reading => _t('reading', 'Reading');
@@ -156,7 +162,25 @@ class AppStrings {
   String get learnTitle => _t('learn_title', 'Learning Plans');
   String get learnSubtitle => _t(
     'learn_subtitle',
-    'Build your long-term Quran routine and track progress over time.',
+    'Start practice from memory or adjust your long-term Quran plan.',
+  );
+  String get learnPracticeFromMemoryTitle =>
+      _t('learn_practice_from_memory_title', 'Practice from Memory');
+  String get learnPracticeFromMemorySubtitle => _t(
+    'learn_practice_from_memory_subtitle',
+    'Choose a simple practice path for today. If a direct session is not ready yet, the app will guide you through Today.',
+  );
+  String get learnPracticeNewSubtitle => _t(
+    'learn_practice_new_subtitle',
+    'Begin today’s next new portion with guided practice.',
+  );
+  String get learnPracticeReviewSubtitle => _t(
+    'learn_practice_review_subtitle',
+    'Return to the oldest due portion first.',
+  );
+  String get learnPracticeDelayedCheckSubtitle => _t(
+    'learn_practice_delayed_check_subtitle',
+    'Protect recent memorization with a delayed recall check.',
   );
   String get hifzPlanTitle => _t('hifz_plan_title', 'Hifz Plan');
   String get hifzPlanSubtitle =>
@@ -351,7 +375,7 @@ class AppStrings {
     'Start the first delayed check. Even one strong check protects the most fragile work.',
   );
   String get todayFocusStage4Action =>
-      _t('today_focus_stage4_action', 'Start delayed check');
+      _t('today_focus_stage4_action', 'Do delayed check');
   String get todayFocusReviewTitle =>
       _t('today_focus_review_title', 'Clear the oldest due review first');
   String get todayFocusReviewReason => _t(
@@ -360,10 +384,10 @@ class AppStrings {
   );
   String get todayFocusReviewShortDay => _t(
     'today_focus_review_short_day',
-    'Finish the first due review row and leave the rest for later.',
+    'Finish the first review practice and leave the rest for later.',
   );
   String get todayFocusReviewAction =>
-      _t('today_focus_review_action', 'Review the first due unit');
+      _t('today_focus_review_action', 'Continue review practice');
   String get todayFocusNewTitle =>
       _t('today_focus_new_title', 'Today is clear for new memorization');
   String get todayFocusNewReason => _t(
@@ -372,10 +396,10 @@ class AppStrings {
   );
   String get todayFocusNewShortDay => _t(
     'today_focus_new_short_day',
-    'Open the first new unit, read it once, then do a quick self-check.',
+    'Start the first new practice session and stop after one strong pass if time is tight.',
   );
   String get todayFocusNewAction =>
-      _t('today_focus_new_action', 'Start today’s new portion');
+      _t('today_focus_new_action', 'Start new practice');
   String get todayCompletionTitle =>
       _t('today_completion_title', 'You are done for today');
   String get todayCompletionMessage => _t(
@@ -402,13 +426,13 @@ class AppStrings {
   String get openCompanionChain =>
       _t('open_companion_chain', 'Open Companion Chain');
   String get stage4DueSectionTitle =>
-      _t('stage4_due_section_title', 'Stage 4 - Delayed Consolidation');
+      _t('stage4_due_section_title', 'Delayed checks');
   String get todayStage4Explanation => _t(
     'today_stage4_explanation',
     'Delayed checks come first because they test whether recent memorization stayed strong.',
   );
   String get stage4NoDueItems =>
-      _t('stage4_no_due_items', 'No Stage-4 delayed checks are due.');
+      _t('stage4_no_due_items', 'No delayed checks are due.');
   String stage4TierSummary(
     int emerging,
     int ready,
@@ -447,22 +471,20 @@ class AppStrings {
       'unresolvedTargets': unresolvedTargets,
     },
   );
-  String get stage4OpenAction => _t('stage4_open_action', 'Open Stage-4 Check');
-  String get stage4OverrideNewAction => _t(
-    'stage4_override_new_action',
-    'Override once and allow new memorization',
-  );
+  String get stage4OpenAction => _t('stage4_open_action', 'Do delayed check');
+  String get stage4OverrideNewAction =>
+      _t('stage4_override_new_action', 'Override once and allow new practice');
   String get stage4OverrideDialogTitle =>
-      _t('stage4_override_dialog_title', 'New Memorization Override');
+      _t('stage4_override_dialog_title', 'Delayed check override');
   String get stage4OverrideDialogMessage => _t(
     'stage4_override_dialog_message',
-    'Mandatory Stage-4 delayed checks are due. Continue anyway and log override?',
+    'A required delayed check is still due. Continue anyway and log the override?',
   );
   String get stage4OverrideDialogConfirm =>
       _t('stage4_override_dialog_confirm', 'Override');
   String get stage4OverrideApplied => _t(
     'stage4_override_applied',
-    'Override logged. New memorization unlocked for today.',
+    'Override logged. New practice unlocked for today.',
   );
   String get stage4OverrideFailed =>
       _t('stage4_override_failed', 'Failed to log override. Please try again.');
@@ -902,6 +924,8 @@ class AppStrings {
 
   String get companionProgressiveRevealTitle =>
       _t('companion_progressive_reveal_title', 'Progressive Reveal Chain');
+  String get companionPracticeTitle =>
+      _t('companion_practice_title', 'Practice from Memory');
   String companionCurrentVersePosition(int current, int total) => _fmt(
     _t('companion_current_verse_position', 'Current verse: {current}/{total}'),
     <String, Object>{'current': current, 'total': total},
