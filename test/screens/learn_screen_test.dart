@@ -33,8 +33,16 @@ void main() {
 
       expect(find.byKey(const ValueKey('learn_practice_card')), findsOneWidget);
       expect(
+        find.byKey(const ValueKey('learn_practice_order_card')),
+        findsOneWidget,
+      );
+      expect(
         find.byKey(const ValueKey('learn_practice_fallback_note')),
         findsOneWidget,
+      );
+      expect(
+        find.text('Opens Today for guidance'),
+        findsNWidgets(3),
       );
 
       await _tapVisible(
@@ -85,6 +93,10 @@ void main() {
       addTearDown(router.dispose);
 
       await _pumpLearn(tester, container, router);
+      final status = tester.widget<Text>(
+        find.byKey(const ValueKey('learn_practice_review_status')),
+      );
+      expect(status.data, 'Ready now');
 
       await _tapVisible(
         tester,
@@ -137,6 +149,10 @@ void main() {
       addTearDown(router.dispose);
 
       await _pumpLearn(tester, container, router);
+      final status = tester.widget<Text>(
+        find.byKey(const ValueKey('learn_practice_stage4_status')),
+      );
+      expect(status.data, 'Ready now');
 
       await _tapVisible(
         tester,
@@ -189,6 +205,10 @@ void main() {
       addTearDown(router.dispose);
 
       await _pumpLearn(tester, container, router);
+      final status = tester.widget<Text>(
+        find.byKey(const ValueKey('learn_practice_new_status')),
+      );
+      expect(status.data, 'Ready now');
 
       await _tapVisible(
         tester,

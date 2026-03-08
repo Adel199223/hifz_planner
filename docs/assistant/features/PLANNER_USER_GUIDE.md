@@ -237,6 +237,7 @@ Execution order is designed to protect retention quality:
   - what to do next
   - why it matters today
   - what to do if you only have a short amount of time
+- if more than one valid practice mode is available, the card can also show secondary shortcuts for the other modes
 - if the day feels too heavy, use the recovery entry to jump back to `My Plan`
 
 ### Health and explanation layer

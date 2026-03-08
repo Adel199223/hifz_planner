@@ -170,6 +170,22 @@ class AppStrings {
     'learn_practice_from_memory_subtitle',
     'Choose a simple practice path for today. If a direct session is not ready yet, the app will guide you through Today.',
   );
+  String get learnPracticeOrderTitle => _t(
+    'learn_practice_order_title',
+    'Best order for today',
+  );
+  String get learnPracticeOrderFirst => _t(
+    'learn_practice_order_first',
+    '1. Do delayed check first when it is ready.',
+  );
+  String get learnPracticeOrderSecond => _t(
+    'learn_practice_order_second',
+    '2. Continue review practice before adding new work.',
+  );
+  String get learnPracticeOrderThird => _t(
+    'learn_practice_order_third',
+    '3. Start new practice after review feels stable.',
+  );
   String get learnPracticeNewSubtitle => _t(
     'learn_practice_new_subtitle',
     'Begin today’s next new portion with guided practice.',
@@ -181,6 +197,16 @@ class AppStrings {
   String get learnPracticeDelayedCheckSubtitle => _t(
     'learn_practice_delayed_check_subtitle',
     'Protect recent memorization with a delayed recall check.',
+  );
+  String get learnPracticeDirectStatus =>
+      _t('learn_practice_direct_status', 'Ready now');
+  String get learnPracticeFallbackStatus => _t(
+    'learn_practice_fallback_status',
+    'Opens Today for guidance',
+  );
+  String get learnPracticeFallbackNote => _t(
+    'learn_practice_fallback_note',
+    'If a direct session is not ready yet, this opens Today and guides your next best practice step.',
   );
   String get hifzPlanTitle => _t('hifz_plan_title', 'Hifz Plan');
   String get hifzPlanSubtitle =>
@@ -199,6 +225,14 @@ class AppStrings {
   String get libraryNotesDescription => _t(
     'library_notes_description',
     'Review your verse-linked notes and reflections.',
+  );
+  String get todayOtherPracticeModesTitle => _t(
+    'today_other_practice_modes_title',
+    'Other practice modes today',
+  );
+  String get todayOtherPracticeModesHint => _t(
+    'today_other_practice_modes_hint',
+    'If you still have time, you can switch to one of these next.',
   );
   String get openBookmarks => _t('open_bookmarks', 'Open Bookmarks');
   String get openNotes => _t('open_notes', 'Open Notes');
