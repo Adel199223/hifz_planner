@@ -67,8 +67,7 @@
   - `Learn` exposing direct practice entry cards
   - no learner needing the word `Companion` to start a session
 - Current state:
-  - implemented, docs-synced, and validated locally
-  - not yet published
+  - implemented, docs-synced, validated, and merged to `main`
 - Validation run:
   - `flutter test -j 1 -r expanded test/screens/learn_screen_test.dart`
   - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`

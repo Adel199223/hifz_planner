@@ -55,7 +55,7 @@
 
 ## Progress
 - [x] Start Wave 1
-- [ ] Merge Wave 1
+- [x] Merge Wave 1
 - [ ] Start Wave 2
 - [ ] Merge Wave 2
 - [ ] Start Wave 3
@@ -100,7 +100,7 @@
 | Stream | Status | Branch | Worktree | Notes |
 |---|---|---|---|---|
 | Previous planner roadmap | merged | historical | removed | Wave 1-7 completed before this roadmap started |
-| Practice Wave 1 | active | `feat/practice-wave1-entry-language` | `/home/fa507/dev/hifz_planner_practice_wave1` | Entry language and launch simplification in progress |
+| Practice Wave 1 | merged | `feat/practice-wave1-entry-language` | `/home/fa507/dev/hifz_planner_practice_wave1` | Merged to `main` as PR #18 |
 | Practice Wave 2 | planned | `feat/practice-wave2-screen-simplification` | not created | Task-first screen wording and reduced jargon |
 | Practice Wave 3 | planned | `feat/practice-wave3-hidden-recall-runtime` | not created | Uses the existing hidden recall design spec |
 | Practice Wave 4 | planned | `feat/practice-wave4-daily-modes` | not created | Daily practice integration and walkthrough polish |
@@ -111,5 +111,6 @@
   - 2026-03-08: New roadmap opened after the planner/product redesign roadmap completed.
   - 2026-03-08: Wave 1 is implemented and validated locally in `/home/fa507/dev/hifz_planner_practice_wave1`; `Today` now launches new work into practice-first flow, `Learn` exposes a practice hub, and the practice screen title no longer leads with `Progressive Reveal Chain`.
   - 2026-03-08: Wave 1 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, app user guide, and one planner guide reference.
+  - 2026-03-08: PR #18 merged Wave 1 to `main`; the next roadmap action returns to Wave 2 after the Wave 1 plan is archived.
 - Next recommended action:
-  - Commit, PR, and merge Practice Wave 1 before opening Wave 2.
+  - Start Practice Wave 2 on a fresh isolated worktree after archiving the finished Wave 1 plan.
