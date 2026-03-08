@@ -70,4 +70,6 @@
 
 ## Handoff
 - Wave 3 leaves `My Plan` usable without expert knowledge while preserving the existing advanced tools for later waves.
-- Branch is ready for commit, PR, and merge after the validation gate stays green.
+- PR #8 merged the main Wave 3 feature and docs set; the closeout follow-up branch carried the missed navigation-shell CI fix plus tracker/archive cleanup on top of `main`.
+- All research stages are complete; implementation continues by wave.
+- Next step: Wave 4 - Plan Health, Recovery, and Explanation Layer
