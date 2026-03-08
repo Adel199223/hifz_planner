@@ -745,6 +745,22 @@ class AppStrings {
     ),
     <String, Object>{'count': sampleCount},
   );
+  String get forecastPaceTrendAligned => _t(
+    'forecast_pace_trend_aligned',
+    'Recent calibration is close to your active pace, so the planner is staying near your current baseline.',
+  );
+  String get forecastPaceTrendSlightlySlower => _t(
+    'forecast_pace_trend_slightly_slower',
+    'Recent calibration is a bit slower than your active pace, so the planner is protecting a little more review time.',
+  );
+  String get forecastPaceTrendMuchSlower => _t(
+    'forecast_pace_trend_much_slower',
+    'Recent calibration is clearly slower than your active pace, so the planner is holding back new work more aggressively for now.',
+  );
+  String get forecastPaceTrendSlightlyFaster => _t(
+    'forecast_pace_trend_slightly_faster',
+    'Recent calibration is a bit faster than your active pace, so the planner can allow a little more new work while keeping review protected.',
+  );
   String estimatedCompletion(String date) => _fmt(
     _t('estimated_completion', 'Estimated completion: {date}'),
     <String, Object>{'date': date},

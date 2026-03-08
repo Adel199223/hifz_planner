@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
+import 'package:hifz_planner/data/repositories/calibration_repo.dart';
 import 'package:hifz_planner/data/repositories/companion_repo.dart';
 import 'package:hifz_planner/data/repositories/mem_unit_repo.dart';
 import 'package:hifz_planner/data/repositories/progress_repo.dart';
@@ -16,6 +17,7 @@ void main() {
   late AppDatabase db;
   late QuranRepo quranRepo;
   late MemUnitRepo memUnitRepo;
+  late CalibrationRepo calibrationRepo;
   late CompanionRepo companionRepo;
   late ScheduleRepo scheduleRepo;
   late SettingsRepo settingsRepo;
@@ -27,6 +29,7 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     quranRepo = QuranRepo(db);
     memUnitRepo = MemUnitRepo(db);
+    calibrationRepo = CalibrationRepo(db);
     companionRepo = CompanionRepo(db);
     scheduleRepo = ScheduleRepo(db);
     settingsRepo = SettingsRepo(db);
@@ -34,6 +37,7 @@ void main() {
     newUnitGenerator = NewUnitGenerator(quranRepo, memUnitRepo, scheduleRepo);
     dailyPlanner = DailyPlanner(
       db,
+      calibrationRepo,
       settingsRepo,
       progressRepo,
       scheduleRepo,
@@ -96,58 +100,55 @@ void main() {
     },
   );
 
-  test(
-    'profile changes the resulting weighted stress posture',
-    () async {
-      const todayDay = 100;
-      await _seedDueUnits(memUnitRepo, db, todayDay: todayDay, count: 10);
+  test('profile changes the resulting weighted stress posture', () async {
+    const todayDay = 100;
+    await _seedDueUnits(memUnitRepo, db, todayDay: todayDay, count: 10);
 
-      await _configureSettings(
-        settingsRepo,
-        profile: 'support',
-        forceRevisionOnly: 0,
-        dailyMinutesDefault: 10,
-        maxNewPagesPerDay: 5,
-        maxNewUnitsPerDay: 0,
-        avgNewMinutesPerAyah: 1.0,
-        avgReviewMinutesPerAyah: 1.0,
-        requirePageMetadata: 0,
-      );
-      final supportPlan = await dailyPlanner.planToday(todayDay: todayDay);
+    await _configureSettings(
+      settingsRepo,
+      profile: 'support',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 10,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+    final supportPlan = await dailyPlanner.planToday(todayDay: todayDay);
 
-      await _configureSettings(
-        settingsRepo,
-        profile: 'standard',
-        forceRevisionOnly: 0,
-        dailyMinutesDefault: 10,
-        maxNewPagesPerDay: 5,
-        maxNewUnitsPerDay: 0,
-        avgNewMinutesPerAyah: 1.0,
-        avgReviewMinutesPerAyah: 1.0,
-        requirePageMetadata: 0,
-      );
-      final standardPlan = await dailyPlanner.planToday(todayDay: todayDay);
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 10,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+    final standardPlan = await dailyPlanner.planToday(todayDay: todayDay);
 
-      await _configureSettings(
-        settingsRepo,
-        profile: 'accelerated',
-        forceRevisionOnly: 0,
-        dailyMinutesDefault: 10,
-        maxNewPagesPerDay: 5,
-        maxNewUnitsPerDay: 0,
-        avgNewMinutesPerAyah: 1.0,
-        avgReviewMinutesPerAyah: 1.0,
-        requirePageMetadata: 0,
-      );
-      final acceleratedPlan = await dailyPlanner.planToday(todayDay: todayDay);
+    await _configureSettings(
+      settingsRepo,
+      profile: 'accelerated',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 10,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+    final acceleratedPlan = await dailyPlanner.planToday(todayDay: todayDay);
 
-      expect(supportPlan.reviewPressure, lessThan(standardPlan.reviewPressure));
-      expect(
-        standardPlan.reviewPressure,
-        lessThan(acceleratedPlan.reviewPressure),
-      );
-    },
-  );
+    expect(supportPlan.reviewPressure, lessThan(standardPlan.reviewPressure));
+    expect(
+      standardPlan.reviewPressure,
+      lessThan(acceleratedPlan.reviewPressure),
+    );
+  });
 
   test('sorts due rows by overdue desc, reps asc, lapse_count desc', () async {
     const todayDay = 10;
@@ -270,6 +271,42 @@ void main() {
       expect(plan.plannedReviews.length, 5);
       expect(plan.plannedNewUnits, isEmpty);
       expect(plan.minutesPlannedNew, 0);
+    },
+  );
+
+  test(
+    'slower calibration samples reduce new generation before review becomes overloaded',
+    () async {
+      const todayDay = 100;
+      await _configureSettings(
+        settingsRepo,
+        profile: 'standard',
+        forceRevisionOnly: 0,
+        dailyMinutesDefault: 38,
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 5,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 0,
+      );
+
+      final baselinePlan = await dailyPlanner.planToday(todayDay: todayDay);
+
+      for (var day = 1; day <= 3; day++) {
+        await calibrationRepo.insertSample(
+          sampleKind: 'new_memorization',
+          durationSeconds: 120,
+          ayahCount: 1,
+          createdAtDay: day,
+        );
+      }
+
+      final plan = await dailyPlanner.planToday(todayDay: todayDay);
+
+      expect(plan.revisionOnly, isFalse);
+      expect(plan.plannedNewUnits.length,
+          lessThan(baselinePlan.plannedNewUnits.length));
+      expect(plan.minutesPlannedNew, lessThan(baselinePlan.minutesPlannedNew));
     },
   );
 

@@ -489,10 +489,12 @@ Current capabilities:
   - a plain-language summary
   - a simple confidence label
   - a short explanation of why that confidence is high, medium, or low
+- Forecast can now also surface a plain-language pace-trend note when recent calibration shows the learner is moving materially slower or faster than the active plan
 - Calibration now behaves more like `teach the planner your pace` than a raw tuning panel:
   - it encourages a few real samples first
   - it can apply now or starting tomorrow
   - its sample data and grade distribution now slightly influence how cautiously the shared planner treats review pressure and new-work budget
+  - recent calibration pace now also adds one bounded adaptive nudge to the shared planner, so `Today`, weekly planning, and Forecast can all become slightly more cautious or slightly more permissive without diverging into separate rule systems
 
 ### Today screen
 File: `lib/screens/today_screen.dart`

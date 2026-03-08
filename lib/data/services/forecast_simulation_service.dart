@@ -4,12 +4,14 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart' show OrderingTerm;
 
 import '../database/app_database.dart';
+import '../repositories/calibration_repo.dart';
 import '../repositories/progress_repo.dart';
 import '../repositories/quran_repo.dart';
 import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
 import '../time/local_day_time.dart';
 import 'scheduling/planning_projection_engine.dart';
+import 'scheduling/planner_adaptive_pace_signal.dart';
 import 'scheduling/planner_quality_signal.dart';
 import 'spaced_repetition_scheduler.dart';
 
@@ -56,6 +58,7 @@ class ForecastSimulationResult {
     required this.calibrationSampleCount,
     required this.avgRevisionOnlyRatio,
     required this.qualitySignalBand,
+    required this.adaptivePaceBand,
   });
 
   final DateTime? estimatedCompletionDate;
@@ -70,11 +73,13 @@ class ForecastSimulationResult {
   final int calibrationSampleCount;
   final double avgRevisionOnlyRatio;
   final PlannerQualitySignalBand qualitySignalBand;
+  final PlannerAdaptivePaceBand adaptivePaceBand;
 }
 
 class ForecastSimulationService {
   ForecastSimulationService(
     this._db,
+    this._calibrationRepo,
     this._settingsRepo,
     this._progressRepo,
     this._scheduleRepo,
@@ -83,6 +88,7 @@ class ForecastSimulationService {
   );
 
   final AppDatabase _db;
+  final CalibrationRepo _calibrationRepo;
   final SettingsRepo _settingsRepo;
   final ProgressRepo _progressRepo;
   final ScheduleRepo _scheduleRepo;
@@ -125,7 +131,11 @@ class ForecastSimulationService {
     final schedulingOverrides = _projectionEngine.overridesFromSettings(
       settings,
     );
-    final qualitySignal = _projectionEngine.qualitySignalFromSettings(settings);
+    final adaptivePaceSignal = await _adaptivePaceSignalForSettings(settings);
+    final qualitySignal = _projectionEngine.mergedQualitySignalFromSettings(
+      settings,
+      adaptivePaceSignal: adaptivePaceSignal,
+    );
     final minutesByDay = _projectionEngine.resolveMinutesForHorizon(
       startDay: startDay,
       horizonDays: maxSimulationDays,
@@ -147,6 +157,7 @@ class ForecastSimulationService {
         gradeStrategyUsed: gradeSource.strategy,
         calibrationSampleCount: calibrationSampleCount,
         qualitySignalBand: qualitySignal.band,
+        adaptivePaceBand: adaptivePaceSignal.band,
       );
     }
 
@@ -351,6 +362,7 @@ class ForecastSimulationService {
       gradeStrategyUsed: gradeSource.strategy,
       calibrationSampleCount: calibrationSampleCount,
       qualitySignalBand: qualitySignal.band,
+      adaptivePaceBand: adaptivePaceSignal.band,
     );
   }
 
@@ -361,6 +373,7 @@ class ForecastSimulationService {
     required ForecastGradeStrategy gradeStrategyUsed,
     required int calibrationSampleCount,
     required PlannerQualitySignalBand qualitySignalBand,
+    required PlannerAdaptivePaceBand adaptivePaceBand,
   }) {
     final estimatedCompletionDate = completionDay == null
         ? null
@@ -405,6 +418,7 @@ class ForecastSimulationService {
       calibrationSampleCount: calibrationSampleCount,
       avgRevisionOnlyRatio: avgRevisionOnlyRatio,
       qualitySignalBand: qualitySignalBand,
+      adaptivePaceBand: adaptivePaceBand,
     );
   }
 
@@ -477,6 +491,25 @@ class ForecastSimulationService {
               ..limit(limitPerType))
             .get();
     return newSamples.length + reviewSamples.length;
+  }
+
+  Future<PlannerAdaptivePaceSignal> _adaptivePaceSignalForSettings(
+    AppSettingsData settings,
+  ) async {
+    final newSamples = await _calibrationRepo.getRecentSamples(
+      sampleKind: 'new_memorization',
+      limit: 30,
+    );
+    final reviewSamples = await _calibrationRepo.getRecentSamples(
+      sampleKind: 'review',
+      limit: 30,
+    );
+    return plannerAdaptivePaceSignalFromSamples(
+      newSamples: newSamples,
+      reviewSamples: reviewSamples,
+      activeNewMinutesPerAyah: settings.avgNewMinutesPerAyah,
+      activeReviewMinutesPerAyah: settings.avgReviewMinutesPerAyah,
+    );
   }
 
   Future<bool> _isCompletionReached({

@@ -57,6 +57,7 @@
 - 2026-03-08: Wave 7 starts only after Wave 6 so adaptive follow-up is evaluated against a stable deterministic planner.
 - 2026-03-08: The default stance is skepticism: adaptive behavior must earn its place by staying explainable and low-risk.
 - 2026-03-08: Wave 7 may legitimately conclude that the best result is to keep the deterministic planner unchanged for now.
+- 2026-03-08: The accepted Wave 7 refinement is a bounded pace-trend signal from recent calibration samples, merged into the existing deterministic planner instead of creating a separate adaptive rule path.
 
 ## Validation
 - `flutter analyze --no-fatal-infos --no-fatal-warnings`
@@ -69,15 +70,16 @@
 ## Progress
 - [x] Create the Wave 7 branch/worktree and mark it active in the master tracker
 - [x] Create this Wave 7 ExecPlan
-- [ ] Audit the current planner/calibration path for safe adaptive opportunities
-- [ ] Decide whether a Wave 7 adaptive refinement is justified
-- [ ] Implement and validate only the accepted adaptive refinement, if any
+- [x] Audit the current planner/calibration path for safe adaptive opportunities
+- [x] Decide whether a Wave 7 adaptive refinement is justified
+- [x] Implement and validate only the accepted adaptive refinement, if any
 
 ## Surprises and Adjustments
 - Use this section for any evidence that Wave 7 should stay exploratory or stop without shipping adaptive behavior.
+- `flutter test` refreshed `pubspec.lock` during the first validation pass; that incidental lockfile churn was restored before keeping the branch active.
 
 ## Handoff
 - Wave 7 is active on `feat/planner-wave7-optional-adaptive-followup` in `/home/fa507/dev/hifz_planner_wave7`.
-- The next implementation pass should audit the current deterministic planner and decide whether any adaptive follow-up is both useful and explainable.
+- Wave 7 now adds one explainable adaptive refinement: recent calibration pace can nudge the shared planner slightly slower or faster, and the forecast UI explains that pace trend in plain language.
 - All research stages are complete; implementation continues by wave.
-- Next step: Wave 7 - Optional Adaptive Follow-Up
+- Next step: close Wave 7 with docs sync and PR merge

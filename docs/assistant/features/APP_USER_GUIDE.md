@@ -131,6 +131,7 @@ What is new in `My Plan`:
 - a forecast summary that explains the big picture first, before showing detailed curves
 - a simple forecast confidence label so you know whether the estimate is strong or still rough
 - calibration guidance that tells you when you have enough real samples to update planner pace with better confidence
+- a forecast pace-trend note that can tell you when recent real sessions are making the planner slightly more cautious or slightly more permissive than your baseline plan
 
 ## 3) Execute Today’s Work
 

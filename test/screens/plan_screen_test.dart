@@ -176,10 +176,28 @@ void main() {
           createdAtDay: 2,
         ),
         CalibrationSampleCompanion.insert(
+          sampleKind: 'new_memorization',
+          durationSeconds: 150,
+          ayahCount: 1,
+          createdAtDay: 3,
+        ),
+        CalibrationSampleCompanion.insert(
           sampleKind: 'review',
           durationSeconds: 45,
           ayahCount: 1,
-          createdAtDay: 3,
+          createdAtDay: 4,
+        ),
+        CalibrationSampleCompanion.insert(
+          sampleKind: 'review',
+          durationSeconds: 55,
+          ayahCount: 1,
+          createdAtDay: 5,
+        ),
+        CalibrationSampleCompanion.insert(
+          sampleKind: 'review',
+          durationSeconds: 60,
+          ayahCount: 1,
+          createdAtDay: 6,
         ),
       ]);
     });
@@ -202,6 +220,10 @@ void main() {
     );
     expect(
       find.byKey(const ValueKey('plan_forecast_confidence_hint')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_forecast_pace_trend')),
       findsOneWidget,
     );
     expect(

@@ -3,17 +3,12 @@ import 'dart:convert';
 import '../database/app_database.dart';
 import '../repositories/calibration_repo.dart';
 import '../repositories/settings_repo.dart';
+import 'scheduling/planner_adaptive_pace_signal.dart';
 import '../time/local_day_time.dart';
 
-enum CalibrationSampleKind {
-  newMemorization,
-  review,
-}
+enum CalibrationSampleKind { newMemorization, review }
 
-enum CalibrationApplyTiming {
-  immediate,
-  tomorrow,
-}
+enum CalibrationApplyTiming { immediate, tomorrow }
 
 class CalibrationPreview {
   const CalibrationPreview({
@@ -86,6 +81,27 @@ class CalibrationService {
     );
   }
 
+  Future<PlannerAdaptivePaceSignal> getAdaptivePaceSignal({
+    required double activeNewMinutesPerAyah,
+    required double activeReviewMinutesPerAyah,
+    int limitPerType = 30,
+  }) async {
+    final newSamples = await _calibrationRepo.getRecentSamples(
+      sampleKind: _sampleKindToDb(CalibrationSampleKind.newMemorization),
+      limit: limitPerType,
+    );
+    final reviewSamples = await _calibrationRepo.getRecentSamples(
+      sampleKind: _sampleKindToDb(CalibrationSampleKind.review),
+      limit: limitPerType,
+    );
+    return plannerAdaptivePaceSignalFromSamples(
+      newSamples: newSamples,
+      reviewSamples: reviewSamples,
+      activeNewMinutesPerAyah: activeNewMinutesPerAyah,
+      activeReviewMinutesPerAyah: activeReviewMinutesPerAyah,
+    );
+  }
+
   Future<void> applyCalibration({
     required CalibrationApplyTiming timing,
     Map<int, int>? gradeDistributionPercent,
@@ -93,8 +109,9 @@ class CalibrationService {
     DateTime? nowLocal,
   }) async {
     final preview = await getPreview(limitPerType: limitPerType);
-    final gradeDistributionJson =
-        _encodeGradeDistributionOrNull(gradeDistributionPercent);
+    final gradeDistributionJson = _encodeGradeDistributionOrNull(
+      gradeDistributionPercent,
+    );
 
     if (preview.medianNewMinutesPerAyah == null &&
         preview.medianReviewMinutesPerAyah == null &&
@@ -148,9 +165,7 @@ class CalibrationService {
     });
 
     if (total != 100) {
-      throw ArgumentError(
-        'Grade distribution percentages must sum to 100.',
-      );
+      throw ArgumentError('Grade distribution percentages must sum to 100.');
     }
 
     final encoded = <String, int>{
@@ -169,12 +184,11 @@ double? medianMinutesPerAyah(List<CalibrationSampleData> samples) {
     return null;
   }
 
-  final values = samples
-      .map(
-        (sample) => (sample.durationSeconds / 60.0) / sample.ayahCount,
-      )
-      .toList()
-    ..sort();
+  final values =
+      samples
+          .map((sample) => (sample.durationSeconds / 60.0) / sample.ayahCount)
+          .toList()
+        ..sort();
 
   final middle = values.length ~/ 2;
   if (values.length.isOdd) {

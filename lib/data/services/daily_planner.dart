@@ -2,12 +2,14 @@ import 'dart:math' as math;
 import 'dart:convert';
 
 import '../database/app_database.dart';
+import '../repositories/calibration_repo.dart';
 import '../repositories/companion_repo.dart';
 import '../repositories/progress_repo.dart';
 import '../repositories/quran_repo.dart';
 import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
 import 'scheduling/planning_projection_engine.dart';
+import 'scheduling/planner_adaptive_pace_signal.dart';
 import 'scheduling/weekly_plan_generator.dart';
 import 'new_unit_generator.dart';
 
@@ -84,6 +86,7 @@ class Stage4QualitySnapshot {
 class DailyPlanner {
   DailyPlanner(
     this._db,
+    this._calibrationRepo,
     this._settingsRepo,
     this._progressRepo,
     this._scheduleRepo,
@@ -94,6 +97,7 @@ class DailyPlanner {
   );
 
   final AppDatabase _db;
+  final CalibrationRepo _calibrationRepo;
   final SettingsRepo _settingsRepo;
   final ProgressRepo _progressRepo;
   final ScheduleRepo _scheduleRepo;
@@ -130,8 +134,10 @@ class DailyPlanner {
       final schedulingOverrides = _projectionEngine.overridesFromSettings(
         settings,
       );
-      final qualitySignal = _projectionEngine.qualitySignalFromSettings(
+      final adaptivePaceSignal = await _adaptivePaceSignalForSettings(settings);
+      final qualitySignal = _projectionEngine.mergedQualitySignalFromSettings(
         settings,
+        adaptivePaceSignal: adaptivePaceSignal,
       );
       final weeklyPlan = await _projectionEngine.generateWeeklyPlan(
         startDay: todayDay,
@@ -141,6 +147,7 @@ class DailyPlanner {
         quranRepo: _quranRepo,
         preferences: schedulingPreferences,
         overrides: schedulingOverrides,
+        qualitySignal: qualitySignal,
       );
       final todaySchedule = weeklyPlan.days.isNotEmpty
           ? weeklyPlan.days.first
@@ -404,6 +411,25 @@ class DailyPlanner {
         '1 rabt linking check',
         '1 discrimination set',
       ],
+    );
+  }
+
+  Future<PlannerAdaptivePaceSignal> _adaptivePaceSignalForSettings(
+    AppSettingsData settings,
+  ) async {
+    final newSamples = await _calibrationRepo.getRecentSamples(
+      sampleKind: 'new_memorization',
+      limit: 30,
+    );
+    final reviewSamples = await _calibrationRepo.getRecentSamples(
+      sampleKind: 'review',
+      limit: 30,
+    );
+    return plannerAdaptivePaceSignalFromSamples(
+      newSamples: newSamples,
+      reviewSamples: reviewSamples,
+      activeNewMinutesPerAyah: settings.avgNewMinutesPerAyah,
+      activeReviewMinutesPerAyah: settings.avgReviewMinutesPerAyah,
     );
   }
 

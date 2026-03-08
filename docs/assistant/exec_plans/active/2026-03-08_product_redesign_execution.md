@@ -122,7 +122,7 @@
 | Wave 4 | merged | `feat/planner-wave4-health-explanations` | removed | Merged to `main` as PR #10; finished plan archived to `completed/` |
 | Wave 5 | merged | `feat/planner-wave5-scheduler-v2` | removed | Merged to `main` as PR #12; finished plan archived to `completed/` |
 | Wave 6 | merged | `feat/planner-wave6-forecast-calibration-refine` | `/home/fa507/dev/hifz_planner_wave6` | Merged to `main` as PR #14; finished plan archived to `completed/` |
-| Wave 7 | active | `feat/planner-wave7-optional-adaptive-followup` | `/home/fa507/dev/hifz_planner_wave7` | Optional adaptive follow-up investigation on top of the deterministic planner |
+| Wave 7 | active | `feat/planner-wave7-optional-adaptive-followup` | `/home/fa507/dev/hifz_planner_wave7` | Optional adaptive follow-up implemented locally as a bounded pace-trend signal on top of the deterministic planner |
 
 - Current blockers:
   - No blocker is currently recorded for the Wave 7 startup.
@@ -150,5 +150,6 @@
   - 2026-03-08: Wave 6 validation passed locally, including forecast, plan screen, daily planner, Today screen, localization, and agent-doc checks, so the next action is publish-oriented rather than more implementation.
   - 2026-03-08: PR #14 merged Wave 6, so the roadmap now returns to the planned Wave 7 optional adaptive follow-up stream.
   - 2026-03-08: Wave 7 started from clean `main` in `/home/fa507/dev/hifz_planner_wave7` with a new wave-specific ExecPlan so the optional adaptive follow-up remains isolated from Wave 6 closeout cleanup.
+  - 2026-03-08: Wave 7 accepted one adaptive refinement only: recent calibration pace now nudges the shared planner slightly slower or faster in a bounded way, and the forecast UI explains that pace trend instead of hiding it.
 - Next recommended action:
-  - Audit the current deterministic planner and calibration signals in the active Wave 7 worktree, then decide whether any adaptive refinement is justified without weakening explainability.
+  - Close Wave 7 with a narrow Assistant Docs Sync, then publish the branch through the normal PR flow.
