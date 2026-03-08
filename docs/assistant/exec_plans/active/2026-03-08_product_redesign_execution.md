@@ -32,6 +32,7 @@
 6. Merge Wave 4 and return the roadmap to Wave 5.
 7. Merge Wave 5 and return the roadmap to Wave 6.
 8. Start Wave 6.
+9. Merge Wave 6 and return the roadmap to Wave 7.
 
 ## Detailed Steps
 1. Publish the research docs from `feat/stage1-product-audit`.
@@ -64,6 +65,7 @@
 - [x] Start Wave 5
 - [x] Merge Wave 5
 - [x] Start Wave 6
+- [x] Merge Wave 6
 
 ## Surprises and Adjustments
 - Use this section for new sequence changes, blockers, or scope corrections discovered during implementation.
@@ -117,11 +119,11 @@
 | Wave 3 | merged | `feat/ux-wave3-my-plan-preset-flow` | removed | Merged to `main` as PR #8; closeout follow-up fixed the stale navigation-shell assertion and archived the plan |
 | Wave 4 | merged | `feat/planner-wave4-health-explanations` | removed | Merged to `main` as PR #10; finished plan archived to `completed/` |
 | Wave 5 | merged | `feat/planner-wave5-scheduler-v2` | removed | Merged to `main` as PR #12; finished plan archived to `completed/` |
-| Wave 6 | active | `feat/planner-wave6-forecast-calibration-refine` | `/home/fa507/dev/hifz_planner_wave6` | Forecast and calibration refinement on top of the Wave 5 deterministic scheduler |
+| Wave 6 | merged | `feat/planner-wave6-forecast-calibration-refine` | `/home/fa507/dev/hifz_planner_wave6` | Merged to `main` as PR #14; finished plan archived to `completed/` |
 | Wave 7 | planned | `feat/planner-wave7-optional-adaptive-followup` | not created yet | Optional only |
 
 - Current blockers:
-  - No blocker is currently recorded for Wave 6 closeout.
+  - No blocker is currently recorded for Wave 7 startup.
 - Detours and plan updates:
   - 2026-03-08: Research/spec work completed before broader implementation. Preserve it before merging app code branches.
   - 2026-03-08: Roadmap publication finished first so the execution tracker exists on `main` before Wave 1 closes.
@@ -144,5 +146,6 @@
   - 2026-03-08: Wave 5 cleanup completed, the stale Wave 5 worktree/branch was removed, and Wave 6 started from clean `main` in `/home/fa507/dev/hifz_planner_wave6` with a new wave-specific ExecPlan.
   - 2026-03-08: Wave 6 refined the existing shared planner instead of inventing a forecast-only rule path by adding a small calibration-quality signal into the shared allocator used by Today, Forecast, and weekly planning.
   - 2026-03-08: Wave 6 validation passed locally, including forecast, plan screen, daily planner, Today screen, localization, and agent-doc checks, so the next action is publish-oriented rather than more implementation.
+  - 2026-03-08: PR #14 merged Wave 6, so the roadmap now returns to the planned Wave 7 optional adaptive follow-up stream.
 - Next recommended action:
-  - Run a narrow Assistant Docs Sync for the Wave 6 forecast/calibration behavior changes, then close Wave 6 with commit, PR, and merge.
+  - Create `feat/planner-wave7-optional-adaptive-followup` from clean `main`, add the Wave 7 ExecPlan, and start the optional adaptive follow-up investigation.
