@@ -37,12 +37,12 @@ If this guide conflicts with technical docs:
 1. Open `My Plan` and choose `Easy`, `Normal`, or `Intensive`.
 2. Enter realistic weekly or weekday minutes, then choose the fluency option that best matches you.
 3. Check the summary card and press `Activate`.
-4. Open `Advanced` only if you need to fine-tune scheduling, calibration, or forecast later.
+4. Open `Advanced` only if you need to fine-tune scheduling, pace calibration, or forecast later.
 
 ## Terms in Plain English
 
-- Calibration: teaching the planner your real speed so future assignments fit better.
-- Forecast: a forward estimate of workload based on your current settings and history.
+- Calibration: teaching the planner your real speed with a few real samples so future assignments fit better.
+- Forecast: a forward estimate of workload based on your current settings, your calibration data, and current planner pressure.
 - Revision-only day: a day focused on review without adding new memorization.
 - Canonical: the final source to trust if two docs disagree (`APP_KNOWLEDGE.md`, then source code).
 
@@ -205,12 +205,21 @@ Most learners do not need it on first setup.
 - Purpose: teach the planner your real speed using real sessions.
 - Use this after you have enough actual memorization/review samples.
 - It is no longer part of the normal first-run path.
+- It now gives plain guidance:
+  - if you still need more samples
+  - or if you have enough samples for a reasonably useful pace update
+- Applying calibration can update the planner today or starting tomorrow.
 
 ### Forecast
 - Purpose: run a deterministic workload projection.
 - Use this after your base plan is already stable.
 - It is also no longer part of the normal first-run path.
 - Forecast now shares the same allocation policy as `Today`, so it should feel more consistent with the real day view.
+- Forecast now starts with:
+  - a plain-language summary
+  - a simple confidence label
+  - a short hint about why the estimate is strong or weak
+- The detailed curves are still there, but they are no longer the first thing a learner has to interpret.
 
 ## 5) Today Screen Execution Flow
 

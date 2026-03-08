@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'availability_interpreter.dart';
 import 'daily_content_allocator.dart';
+import 'planner_quality_signal.dart';
 import 'scheduling_preferences_codec.dart';
 
 enum PlannedSessionFocus {
@@ -96,6 +97,7 @@ class WeeklyPlanGenerator {
     required Map<int, double> dueReviewMinutesByDay,
     required double reviewBudgetRatio,
     required bool forceRevisionOnly,
+    PlannerQualitySignal qualitySignal = const PlannerQualitySignal.neutral(),
   }) {
     final minutesByDay = _availabilityInterpreter
         .resolveTargetMinutesForHorizon(
@@ -139,6 +141,7 @@ class WeeklyPlanGenerator {
         dueReviewMinutes: dueReviewMinutes,
         baseReviewRatio: reviewBudgetRatio,
         forceRevisionOnly: forceRevisionOnly || availability.revisionOnlyDay,
+        qualitySignal: qualitySignal,
       );
 
       final desiredSessions = preferences.sessionsPerDay.clamp(1, 2);

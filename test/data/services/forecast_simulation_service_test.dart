@@ -152,82 +152,156 @@ void main() {
     expect(result.revisionOnlyRatioCurve.first, closeTo(1.0, 1e-9));
   });
 
-  test('simulate returns null completion with reason when horizon exceeded',
-      () async {
-    await _seedLinearAyahs(db, ayahCount: 10, includePageMetadata: true);
-    await _configureSettings(
-      settingsRepo,
-      forceRevisionOnly: 0,
-      requirePageMetadata: 0,
-      maxNewPagesPerDay: 1,
-      maxNewUnitsPerDay: 0,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      dailyMinutesDefault: 45,
-    );
+  test(
+    'simulate returns null completion with reason when horizon exceeded',
+    () async {
+      await _seedLinearAyahs(db, ayahCount: 10, includePageMetadata: true);
+      await _configureSettings(
+        settingsRepo,
+        forceRevisionOnly: 0,
+        requirePageMetadata: 0,
+        maxNewPagesPerDay: 1,
+        maxNewUnitsPerDay: 0,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        dailyMinutesDefault: 45,
+      );
 
-    final result = await service.simulate(
-      startDayOverride: 50,
-      maxSimulationDays: 5,
-      targetSurah: 1,
-      targetAyah: 10,
-    );
+      final result = await service.simulate(
+        startDayOverride: 50,
+        maxSimulationDays: 5,
+        targetSurah: 1,
+        targetAyah: 10,
+      );
 
-    expect(result.estimatedCompletionDate, isNull);
-    expect(result.incompleteReason, isNotNull);
-    expect(result.incompleteReason, contains('horizon'));
-  });
+      expect(result.estimatedCompletionDate, isNull);
+      expect(result.incompleteReason, isNotNull);
+      expect(result.incompleteReason, contains('horizon'));
+    },
+  );
 
   test(
-      'simulate chooses distribution cycle strategy when grade distribution exists',
-      () async {
-    await _seedLinearAyahs(db, ayahCount: 1, includePageMetadata: true);
-    await _configureSettings(
-      settingsRepo,
-      forceRevisionOnly: 0,
-      requirePageMetadata: 0,
-      maxNewPagesPerDay: 1,
-      maxNewUnitsPerDay: 0,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      dailyMinutesDefault: 10,
-      typicalGradeDistributionJson: '{"5":40,"4":30,"3":20,"2":8,"0":2}',
-    );
+    'simulate chooses distribution cycle strategy when grade distribution exists',
+    () async {
+      await _seedLinearAyahs(db, ayahCount: 1, includePageMetadata: true);
+      await _configureSettings(
+        settingsRepo,
+        forceRevisionOnly: 0,
+        requirePageMetadata: 0,
+        maxNewPagesPerDay: 1,
+        maxNewUnitsPerDay: 0,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        dailyMinutesDefault: 10,
+        typicalGradeDistributionJson: '{"5":40,"4":30,"3":20,"2":8,"0":2}',
+      );
 
-    final result = await service.simulate(
-      startDayOverride: 1,
-      maxSimulationDays: 1,
-      targetSurah: 1,
-      targetAyah: 2,
-    );
+      final result = await service.simulate(
+        startDayOverride: 1,
+        maxSimulationDays: 1,
+        targetSurah: 1,
+        targetAyah: 2,
+      );
 
-    expect(result.gradeStrategyUsed, ForecastGradeStrategy.distributionCycle);
-  });
+      expect(result.gradeStrategyUsed, ForecastGradeStrategy.distributionCycle);
+    },
+  );
 
-  test('simulate falls back to default strategy without distribution',
-      () async {
-    await _seedLinearAyahs(db, ayahCount: 1, includePageMetadata: true);
-    await _configureSettings(
-      settingsRepo,
-      forceRevisionOnly: 0,
-      requirePageMetadata: 0,
-      maxNewPagesPerDay: 1,
-      maxNewUnitsPerDay: 0,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      dailyMinutesDefault: 10,
-      typicalGradeDistributionJson: '{"5":50}',
-    );
+  test(
+    'simulate falls back to default strategy without distribution',
+    () async {
+      await _seedLinearAyahs(db, ayahCount: 1, includePageMetadata: true);
+      await _configureSettings(
+        settingsRepo,
+        forceRevisionOnly: 0,
+        requirePageMetadata: 0,
+        maxNewPagesPerDay: 1,
+        maxNewUnitsPerDay: 0,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        dailyMinutesDefault: 10,
+        typicalGradeDistributionJson: '{"5":50}',
+      );
 
-    final result = await service.simulate(
-      startDayOverride: 1,
-      maxSimulationDays: 1,
-      targetSurah: 1,
-      targetAyah: 2,
-    );
+      final result = await service.simulate(
+        startDayOverride: 1,
+        maxSimulationDays: 1,
+        targetSurah: 1,
+        targetAyah: 2,
+      );
 
-    expect(result.gradeStrategyUsed, ForecastGradeStrategy.defaultFallback);
-  });
+      expect(result.gradeStrategyUsed, ForecastGradeStrategy.defaultFallback);
+    },
+  );
+
+  test(
+    'simulate surfaces confidence and summary from calibration data',
+    () async {
+      await _seedLinearAyahs(db, ayahCount: 10, includePageMetadata: true);
+      await _configureSettings(
+        settingsRepo,
+        forceRevisionOnly: 0,
+        requirePageMetadata: 0,
+        maxNewPagesPerDay: 10,
+        maxNewUnitsPerDay: 10,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        dailyMinutesDefault: 60,
+        typicalGradeDistributionJson: '{"5":50,"4":25,"3":15,"2":8,"0":2}',
+      );
+      await db.batch((batch) {
+        batch.insertAll(db.calibrationSample, [
+          CalibrationSampleCompanion.insert(
+            sampleKind: 'new_memorization',
+            durationSeconds: 120,
+            ayahCount: 1,
+            createdAtDay: 1,
+          ),
+          CalibrationSampleCompanion.insert(
+            sampleKind: 'new_memorization',
+            durationSeconds: 150,
+            ayahCount: 1,
+            createdAtDay: 2,
+          ),
+          CalibrationSampleCompanion.insert(
+            sampleKind: 'new_memorization',
+            durationSeconds: 135,
+            ayahCount: 1,
+            createdAtDay: 3,
+          ),
+          CalibrationSampleCompanion.insert(
+            sampleKind: 'review',
+            durationSeconds: 45,
+            ayahCount: 1,
+            createdAtDay: 4,
+          ),
+          CalibrationSampleCompanion.insert(
+            sampleKind: 'review',
+            durationSeconds: 60,
+            ayahCount: 1,
+            createdAtDay: 5,
+          ),
+          CalibrationSampleCompanion.insert(
+            sampleKind: 'review',
+            durationSeconds: 55,
+            ayahCount: 1,
+            createdAtDay: 6,
+          ),
+        ]);
+      });
+
+      final result = await service.simulate(
+        startDayOverride: 100,
+        maxSimulationDays: 30,
+        targetSurah: 1,
+        targetAyah: 10,
+      );
+
+      expect(result.calibrationSampleCount, 6);
+      expect(result.confidenceBand, ForecastConfidenceBand.high);
+      expect(result.summaryState, ForecastSummaryState.steadyProgress);
+    },
+  );
 }
 
 Future<void> _configureSettings(
@@ -286,7 +360,9 @@ Future<void> _insertDueCustomUnits(
   required int dueDay,
 }) async {
   for (var i = 0; i < count; i++) {
-    final unitId = await db.into(db.memUnit).insert(
+    final unitId = await db
+        .into(db.memUnit)
+        .insert(
           MemUnitCompanion.insert(
             kind: 'custom',
             unitKey: 'due-custom-$i',
@@ -295,7 +371,9 @@ Future<void> _insertDueCustomUnits(
           ),
         );
 
-    await db.into(db.scheduleState).insert(
+    await db
+        .into(db.scheduleState)
+        .insert(
           ScheduleStateCompanion.insert(
             unitId: Value(unitId),
             ef: 2.5,
@@ -309,17 +387,16 @@ Future<void> _insertDueCustomUnits(
 }
 
 Future<int> _tableCount(AppDatabase db, String table) async {
-  final row =
-      await db.customSelect('SELECT COUNT(*) AS c FROM $table').getSingle();
+  final row = await db
+      .customSelect('SELECT COUNT(*) AS c FROM $table')
+      .getSingle();
   return row.read<int>('c');
 }
 
 Future<List<String>> _scheduleSnapshot(AppDatabase db) async {
-  final rows = await (db.select(db.scheduleState)
-        ..orderBy([
-          (tbl) => OrderingTerm.asc(tbl.unitId),
-        ]))
-      .get();
+  final rows = await (db.select(
+    db.scheduleState,
+  )..orderBy([(tbl) => OrderingTerm.asc(tbl.unitId)])).get();
 
   return rows
       .map(

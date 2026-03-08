@@ -37,13 +37,13 @@ If this guide conflicts with technical docs:
 1. Open `My Plan`, choose `Easy`, `Normal`, or `Intensive`, then enter a realistic weekly or weekday time budget.
 2. Open `Today` and complete tasks in the shown order (delayed checks, review, then new work).
 3. Use Companion stages only from `Today` actions to avoid skipping required sequence.
-4. Open `Advanced` in `My Plan` only if you need to fine-tune scheduling, forecast, or calibration later.
+4. Open `Advanced` in `My Plan` only if you need to fine-tune scheduling, forecast, or pace calibration later.
 5. If the app says the plan is `Tight` or `Overloaded`, use the lighter-day guidance before forcing more new work.
 
 ## Terms in Plain English
 
 - Delayed check: a later memory check (usually next day) to confirm recall is still stable.
-- Calibration: adjusting planner estimates using your real session pace.
+- Calibration: teaching the planner your real session pace using a few real samples.
 - Canonical: the final source to trust if two docs disagree (`APP_KNOWLEDGE.md`, then source code).
 
 ## What This App Is For
@@ -128,6 +128,9 @@ What is new in `My Plan`:
 - simple status labels: `On track`, `Tight`, `Overloaded`
 - plain-language hints when you should use a lighter day, burn down backlog, or switch into recovery
 - a weekly preview and forecast that now follow the same load-protection logic as `Today`
+- a forecast summary that explains the big picture first, before showing detailed curves
+- a simple forecast confidence label so you know whether the estimate is strong or still rough
+- calibration guidance that tells you when you have enough real samples to update planner pace with better confidence
 
 ## 3) Execute Today’s Work
 
@@ -219,7 +222,7 @@ If some remote assets fail temporarily:
 - I need to revisit saved locations -> Library -> Bookmarks
 - I want to store verse-linked thoughts -> Library -> Notes
 - I need language/theme adjustments -> More -> Settings
-- I want forecast or calibration tools -> My Plan -> Advanced
+- I want forecast or pace calibration tools -> My Plan -> Advanced
 - I want to check whether the week and Today are using the same workload logic -> My Plan -> Advanced -> Forecast
 
 ## Common First-Week Path
@@ -230,6 +233,7 @@ If some remote assets fail temporarily:
 4. Respect delayed checks when they appear.
 5. If `Today` or `My Plan` starts showing `Tight` or `Overloaded`, use the lighter-day and recovery guidance before increasing load.
 6. Use `Advanced` and then calibration/forecast only after enough real samples.
+7. When you open Forecast, read the summary and confidence line first; the detailed curves are there only if you want more detail.
 7. Increase load only after quality is stable.
 
 ## Common Mistakes to Avoid

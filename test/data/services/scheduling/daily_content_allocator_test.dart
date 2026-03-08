@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/services/scheduling/daily_content_allocator.dart';
+import 'package:hifz_planner/data/services/scheduling/planner_quality_signal.dart';
 
 void main() {
   const allocator = DailyContentAllocator();
@@ -67,5 +68,48 @@ void main() {
     expect(allocation.newAssignmentsAllowed, isFalse);
     expect(allocation.reviewCapacityMinutes, 45);
     expect(allocation.learnerMode, DailyAllocationLearnerMode.revisionOnly);
+  });
+
+  test('quality signal can make the allocator more protective', () {
+    const supportive = PlannerQualitySignal(
+      band: PlannerQualitySignalBand.supportive,
+      averageQ: 4.4,
+      struggleRatio: 0.05,
+      reviewDemandMultiplier: 0.92,
+      newBudgetMultiplier: 1.08,
+      hasDistribution: true,
+    );
+    const fragile = PlannerQualitySignal(
+      band: PlannerQualitySignalBand.fragile,
+      averageQ: 2.8,
+      struggleRatio: 0.30,
+      reviewDemandMultiplier: 1.22,
+      newBudgetMultiplier: 0.75,
+      hasDistribution: true,
+    );
+
+    final supportiveAllocation = allocator.allocate(
+      dailyMinutes: 12,
+      dueReviewMinutes: 6,
+      baseReviewRatio: 0.7,
+      forceRevisionOnly: false,
+      qualitySignal: supportive,
+    );
+    final fragileAllocation = allocator.allocate(
+      dailyMinutes: 12,
+      dueReviewMinutes: 6,
+      baseReviewRatio: 0.7,
+      forceRevisionOnly: false,
+      qualitySignal: fragile,
+    );
+
+    expect(
+      fragileAllocation.reviewPressure,
+      greaterThan(supportiveAllocation.reviewPressure),
+    );
+    expect(
+      fragileAllocation.newBudgetMinutes,
+      lessThan(supportiveAllocation.newBudgetMinutes),
+    );
   });
 }

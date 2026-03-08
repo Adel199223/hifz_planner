@@ -617,10 +617,8 @@ class AppStrings {
     ),
     <String, Object>{'count': questionCount},
   );
-  String get forecastDeterministicSimulation => _t(
-    'forecast_deterministic_simulation',
-    'Forecast (Deterministic Simulation)',
-  );
+  String get forecastDeterministicSimulation =>
+      _t('forecast_deterministic_simulation', 'Forecast');
   String get automaticSchedulingTitle =>
       _t('automatic_scheduling_title', 'Automatic Scheduling');
   String get twoSessionsPerDay =>
@@ -699,8 +697,54 @@ class AppStrings {
   String get weekdayShortFri => _t('weekday_short_fri', 'Fri');
   String get weekdayShortSat => _t('weekday_short_sat', 'Sat');
   String get weekdayShortSun => _t('weekday_short_sun', 'Sun');
-  String get runForecast => _t('run_forecast', 'Run Forecast');
+  String get runForecast => _t('run_forecast', 'Refresh Forecast');
   String get running => _t('running', 'Running...');
+  String get forecastSummaryIntro => _t(
+    'forecast_summary_intro',
+    'Start with the plain-language summary, then use the details only if you need them.',
+  );
+  String get forecastSummarySteadyProgress => _t(
+    'forecast_summary_steady_progress',
+    'Your current plan looks sustainable if today’s pattern stays consistent.',
+  );
+  String get forecastSummaryWatchLoad => _t(
+    'forecast_summary_watch_load',
+    'You can keep moving, but review pressure is likely to slow new memorization.',
+  );
+  String get forecastSummaryProtectReview => _t(
+    'forecast_summary_protect_review',
+    'Review load is heavy right now. Protect retention first before expecting steady new work.',
+  );
+  String get forecastSummaryInsufficientData => _t(
+    'forecast_summary_insufficient_data',
+    'Forecast needs more usable data before it can give a reliable completion picture.',
+  );
+  String forecastConfidenceLine(String confidence) => _fmt(
+    _t('forecast_confidence_line', 'Confidence: {confidence}'),
+    <String, Object>{'confidence': confidence},
+  );
+  String get forecastConfidenceHigh => _t('forecast_confidence_high', 'High');
+  String get forecastConfidenceMedium =>
+      _t('forecast_confidence_medium', 'Medium');
+  String get forecastConfidenceLow => _t('forecast_confidence_low', 'Low');
+  String get forecastConfidenceHighHint => _t(
+    'forecast_confidence_high_hint',
+    'This estimate is backed by recent calibration and a stable planner signal.',
+  );
+  String forecastConfidenceMediumHint(int sampleCount) => _fmt(
+    _t(
+      'forecast_confidence_medium_hint',
+      'This estimate is useful, but it still relies on some assumptions. Calibration samples logged: {count}.',
+    ),
+    <String, Object>{'count': sampleCount},
+  );
+  String forecastConfidenceLowHint(int sampleCount) => _fmt(
+    _t(
+      'forecast_confidence_low_hint',
+      'This estimate is based on limited calibration or incomplete forecast data. Calibration samples logged: {count}.',
+    ),
+    <String, Object>{'count': sampleCount},
+  );
   String estimatedCompletion(String date) => _fmt(
     _t('estimated_completion', 'Estimated completion: {date}'),
     <String, Object>{'date': date},
@@ -740,7 +784,11 @@ class AppStrings {
   String get activating => _t('activating', 'Activating...');
   String get activate => _t('activate', 'Activate');
   String get calibrationModeOptional =>
-      _t('calibration_mode_optional', 'Calibration Mode (Optional)');
+      _t('calibration_mode_optional', 'Teach the planner your pace (optional)');
+  String get calibrationIntro => _t(
+    'calibration_intro',
+    'Log a few real sessions so the planner can estimate your pace more realistically.',
+  );
   String get newMemorizationSample =>
       _t('new_memorization_sample', 'New memorization sample');
   String get reviewSample => _t('review_sample', 'Review sample');
@@ -759,11 +807,25 @@ class AppStrings {
     'Typical grade distribution (%)',
   );
   String get applyTiming => _t('apply_timing', 'Apply timing');
-  String get applyNow => _t('apply_now', 'Apply now');
+  String get applyNow => _t('apply_now', 'Use today');
   String get applyFromTomorrow =>
-      _t('apply_from_tomorrow', 'Apply from tomorrow');
+      _t('apply_from_tomorrow', 'Use starting tomorrow');
   String get applying => _t('applying', 'Applying...');
-  String get applyCalibration => _t('apply_calibration', 'Apply Calibration');
+  String get applyCalibration => _t('apply_calibration', 'Use This Pace');
+  String calibrationGuidanceNeedMore(int count) => _fmt(
+    _t(
+      'calibration_guidance_need_more',
+      'You have {count} logged samples. Add a few more real sessions for a stronger estimate.',
+    ),
+    <String, Object>{'count': count},
+  );
+  String calibrationGuidanceReady(int count) => _fmt(
+    _t(
+      'calibration_guidance_ready',
+      'You have {count} logged samples. This is enough to update the planner pace with reasonable confidence.',
+    ),
+    <String, Object>{'count': count},
+  );
   String get timeInput => _t('time_input', '2) How much time is realistic?');
   String get weeklyTotal => _t('weekly_total', 'Weekly total');
   String get perWeekday => _t('per_weekday', 'Per weekday');
@@ -808,11 +870,13 @@ class AppStrings {
     <String, Object>{'error': error},
   );
   String get calibrationAppliedImmediately =>
-      _t('calibration_applied_immediately', 'Calibration applied immediately.');
-  String get calibrationQueuedForTomorrow =>
-      _t('calibration_queued_for_tomorrow', 'Calibration queued for tomorrow.');
+      _t('calibration_applied_immediately', 'Planner pace updated for today.');
+  String get calibrationQueuedForTomorrow => _t(
+    'calibration_queued_for_tomorrow',
+    'Planner pace will update tomorrow.',
+  );
   String calibrationApplyFailed(String error) => _fmt(
-    _t('calibration_apply_failed', 'Calibration apply failed: {error}'),
+    _t('calibration_apply_failed', 'Could not update planner pace: {error}'),
     <String, Object>{'error': error},
   );
   String forecastFailed(String error) => _fmt(

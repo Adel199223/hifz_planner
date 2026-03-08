@@ -159,7 +159,30 @@ void main() {
       avgNewMinutesPerAyah: 1.0,
       avgReviewMinutesPerAyah: 1.0,
       dailyMinutesDefault: 60,
+      typicalGradeDistributionJson: '{"5":50,"4":25,"3":15,"2":8,"0":2}',
     );
+    await db.batch((batch) {
+      batch.insertAll(db.calibrationSample, [
+        CalibrationSampleCompanion.insert(
+          sampleKind: 'new_memorization',
+          durationSeconds: 120,
+          ayahCount: 1,
+          createdAtDay: 1,
+        ),
+        CalibrationSampleCompanion.insert(
+          sampleKind: 'new_memorization',
+          durationSeconds: 140,
+          ayahCount: 1,
+          createdAtDay: 2,
+        ),
+        CalibrationSampleCompanion.insert(
+          sampleKind: 'review',
+          durationSeconds: 45,
+          ayahCount: 1,
+          createdAtDay: 3,
+        ),
+      ]);
+    });
 
     await _pumpPlan(tester, container);
     await _expandAdvanced(tester);
@@ -170,6 +193,15 @@ void main() {
 
     expect(
       find.byKey(const ValueKey('plan_forecast_completion_date')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('plan_forecast_summary')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('plan_forecast_confidence')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_forecast_confidence_hint')),
       findsOneWidget,
     );
     expect(
@@ -694,7 +726,7 @@ void main() {
         find.byKey(const ValueKey('plan_calibration_add_new')),
       );
 
-      await _tapVisible(tester, find.text('Apply from tomorrow'));
+      await _tapVisible(tester, find.text('Use starting tomorrow'));
       await _tapVisible(
         tester,
         find.byKey(const ValueKey('plan_apply_calibration_button')),

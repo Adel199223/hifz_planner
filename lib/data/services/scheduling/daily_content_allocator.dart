@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'planner_quality_signal.dart';
+
 enum DailyAllocationLearnerMode {
   easy,
   normal,
@@ -58,6 +60,7 @@ class DailyContentAllocator {
     required bool forceRevisionOnly,
     double mandatoryStage4Minutes = 0,
     double optionalCatchUpMinutes = 0,
+    PlannerQualitySignal qualitySignal = const PlannerQualitySignal.neutral(),
   }) {
     final normalizedDailyMinutes = dailyMinutes < 0 ? 0.0 : dailyMinutes;
     final normalizedMandatoryStage4 = mandatoryStage4Minutes < 0
@@ -99,10 +102,16 @@ class DailyContentAllocator {
     final baseNewBudget = (normalizedDailyMinutes - retentionCapacityMinutes)
         .clamp(0.0, normalizedDailyMinutes);
 
+    final adjustedCriticalReview =
+        normalizedCriticalReview * qualitySignal.reviewDemandMultiplier;
+    final adjustedOptionalCatchUp =
+        normalizedOptionalCatchUp *
+        (1 + ((qualitySignal.reviewDemandMultiplier - 1) * 0.5));
+
     final weightedDemand =
         (normalizedMandatoryStage4 * 1.25) +
-        (normalizedCriticalReview * 1.10) +
-        (normalizedOptionalCatchUp * 0.35);
+        (adjustedCriticalReview * 1.10) +
+        (adjustedOptionalCatchUp * 0.35);
     final weightedStress = weightedDemand <= 0
         ? 0.0
         : weightedDemand / retentionCapacityMinutes;
@@ -135,7 +144,10 @@ class DailyContentAllocator {
 
     var newBudgetMinutes = forceRevisionOnly
         ? 0.0
-        : baseNewBudget * (1.0 - reductionFraction);
+        : baseNewBudget *
+              qualitySignal.newBudgetMultiplier *
+              (1.0 - reductionFraction);
+    newBudgetMinutes = newBudgetMinutes.clamp(0.0, normalizedDailyMinutes);
     if (!forceRevisionOnly && newBudgetMinutes < minimumViableNewMinutes) {
       newBudgetMinutes = 0.0;
     }
