@@ -164,6 +164,22 @@ Important behavior:
   - completed non-stage4 practice is currently shown as generic completed practice, not as a more specific label the app cannot yet prove reliably
   - the no-history state is intentionally calm and supportive instead of looking like a failed or empty dashboard
 
+### Recommendation layer
+- Where: directly alongside the summary area in `My Plan`.
+- What it shows:
+  - `Stay steady`
+  - `Use the minimum day for now`
+  - `Protect retention for a few days`
+  - `Lighten the setup here`
+- What it is for:
+  - turning your current weekly picture into one calm recommendation
+  - keeping `My Plan` aligned with the same guidance logic used by `Today`
+  - helping you understand when the right move is to simplify rather than force more output
+- Important:
+  - this is advice-only
+  - it does not silently change your settings
+  - it now says explicitly that only real completed practice, review, or delayed-check work counts as progress
+
 ### Activate
 - Where: primary button in the summary card.
 - What it does: saves your plan and starts using it in `Today`.

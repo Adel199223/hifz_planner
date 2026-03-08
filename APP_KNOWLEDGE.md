@@ -120,6 +120,7 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
 - Goals and progress remain integrated into existing surfaces:
   - `Today` and `My Plan` now share one internal goal-focus layer
   - `Today` and `My Plan` now also share one last-7-days progress snapshot
+  - `Today` and `My Plan` now also share one advice-only coaching recommendation layer
   - there is still no separate goals tab or progress dashboard
 
 ### Routes

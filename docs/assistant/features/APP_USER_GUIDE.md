@@ -127,6 +127,7 @@ The default setup path is intentionally simple, and the expert tools are hidden 
 What is new in `My Plan`:
 - a small weekly goal summary tied to your current plan posture
 - a last-7-days progress summary so you can see whether the week is actually moving
+- a recommendation block that turns the current plan + recent progress into one calm next step
 - a `Plan health` card
 - simple status labels: `On track`, `Tight`, `Overloaded`
 - plain-language hints when you should use a lighter day, burn down backlog, or switch into recovery
@@ -152,6 +153,15 @@ What the new weekly progress summary is for:
 - if you have little or no history yet, it stays calm and tells you to start building consistency instead of showing an empty dashboard
 - `completed practice` is intentionally generic for now, because the app does not yet prove a perfect split between non-stage4 new practice and non-stage4 review practice in saved history
 
+What the recommendation block is for:
+- it turns the current weekly picture into one calm suggestion
+- it can tell you to:
+  - stay steady
+  - use the minimum day
+  - protect retention for a few days
+  - lighten the setup in `My Plan`
+- it does not silently change your settings for you
+
 ## 3) Execute Today’s Work
 
 Go to Today to act on:
@@ -166,6 +176,7 @@ What you will now see first:
 - a short explanation of why that action comes first
 - a small goal block that tells you what counts as a good day right now
 - a small last-7-days progress block that shows recent consistency and completed work
+- a small recommendation block that tells you the safest adjustment right now
 - an `If you only have 10 minutes` fallback
 - sometimes a small `Other practice modes today` section if more than one valid practice path is ready
 - a recovery entry that sends you back to `My Plan` if the day feels too heavy
@@ -188,6 +199,13 @@ The weekly progress block is there to answer three different questions:
 - am I showing up consistently yet?
 - what kind of real work did I actually complete this week?
 - does recent review quality look mostly steady, mixed, or strained?
+
+The recommendation block is there to answer one more question:
+- what is the safest next adjustment right now?
+
+Important honesty rule:
+- only real completed practice, review, or delayed check work counts as progress here
+- just opening a screen does not count
 
 ## 4) Practice from Memory
 

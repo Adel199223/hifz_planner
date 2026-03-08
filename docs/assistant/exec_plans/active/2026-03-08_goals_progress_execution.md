@@ -54,7 +54,7 @@
 - [x] Merge Wave 1
 - [x] Start Wave 2
 - [x] Merge Wave 2
-- [ ] Start Wave 3
+- [x] Start Wave 3
 - [ ] Merge Wave 3
 - [ ] Start Wave 4
 - [ ] Merge Wave 4
@@ -97,7 +97,7 @@
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
 | Goals Wave 1 | merged | `feat/goals-wave1-daily-wins` | removed after merge | Merged to `main` as PR #25; plan archived in `docs/assistant/exec_plans/completed/` |
 | Goals Wave 2 | merged | `feat/goals-wave2-weekly-progress` | removed after merge | Weekly recent-progress snapshot and trust layer merged to `main` as PR #27; plan archived in `docs/assistant/exec_plans/completed/` |
-| Goals Wave 3 | planned | not created | not created | Advice-only goal coaching and adjustment guidance |
+| Goals Wave 3 | active | `feat/goals-wave3-coaching-guidance` | `/home/fa507/dev/hifz_planner_goals_wave3` | Advice-only goal coaching and adjustment guidance |
 | Goals Wave 4 | planned | not created | not created | Cross-surface wording alignment and roadmap closeout |
 
 - Current blockers:
@@ -124,5 +124,16 @@
   - parallel Flutter test plugin-symlink races inside one worktree
   - incidental `pubspec.lock` churn on first Flutter validation in a fresh worktree
 - 2026-03-08: PR #27 merged Goals Wave 2 to `main`; the closeout step is now archive/tracker bookkeeping only, and the roadmap resumes at Wave 3 after cleanup.
+- 2026-03-08: Wave 3 started in isolated worktree `/home/fa507/dev/hifz_planner_goals_wave3` on branch `feat/goals-wave3-coaching-guidance`.
+- 2026-03-08: Wave 3 now adds one shared, advice-only coaching recommendation layer used by both `Today` and `My Plan`, and it explicitly tells the learner that only real completed practice, review, or delayed-check work counts as progress.
+- 2026-03-08: Wave 3 validation is green in the isolated worktree after sequential Flutter runs:
+  - `flutter test -j 1 -r expanded test/data/services/goal_progress_snapshot_service_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart`
+  - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+  - `dart tooling/validate_localization.dart`
+  - `dart tooling/validate_agent_docs.dart`
+  - `dart tooling/validate_workspace_hygiene.dart`
+- 2026-03-08: Wave 3 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, user guides, and the repeated issue-memory entry for fresh-worktree lockfile churn.
 - Next recommended action:
-  - Wave 3 - Goal Coaching and Adjustment Guidance
+  - Close Wave 3 with docs sync and PR merge.

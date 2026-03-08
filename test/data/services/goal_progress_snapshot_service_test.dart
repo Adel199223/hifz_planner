@@ -191,6 +191,93 @@ void main() {
 
     expect(snapshot.recentQualityBand, GoalProgressQualityBand.strained);
   });
+
+  test('coachingFromWeeklyPlan stays steady for stable recent work', () {
+    final advice = service.coachingFromWeeklyPlan(
+      null,
+      snapshot: const GoalProgressSnapshot(
+        focus: GoalFocus.steadyProgress,
+        completedPracticeDaysLast7: 4,
+        completedDelayedChecksLast7: 0,
+        completedReviewsLast7: 3,
+        completedNewPracticeLast7: 3,
+        recentQualityBand: GoalProgressQualityBand.steady,
+      ),
+    );
+
+    expect(advice.recommendation, GoalCoachingRecommendation.staySteady);
+  });
+
+  test(
+    'coachingFromTodayPlan recommends minimum day on a sparse tight day',
+    () {
+      final advice = service.coachingFromTodayPlan(
+        const TodayPlan(
+          plannedReviews: <DueUnitRow>[],
+          plannedNewUnits: <MemUnitData>[],
+          plannedStage4Due: <Stage4DueItem>[],
+          revisionOnly: false,
+          minutesPlannedReviews: 20,
+          minutesPlannedNew: 10,
+          stage4BlocksNewByDefault: false,
+          stage4QualitySnapshot: Stage4QualitySnapshot(),
+          reviewPressure: 0.95,
+          recoveryMode: false,
+        ),
+        snapshot: const GoalProgressSnapshot(
+          focus: GoalFocus.protectRetention,
+          completedPracticeDaysLast7: 1,
+          completedDelayedChecksLast7: 0,
+          completedReviewsLast7: 1,
+          completedNewPracticeLast7: 0,
+          recentQualityBand: GoalProgressQualityBand.mixed,
+        ),
+      );
+
+      expect(advice.recommendation, GoalCoachingRecommendation.useMinimumDay);
+    },
+  );
+
+  test(
+    'coachingFromWeeklyPlan protects retention when recent quality strains',
+    () {
+      final advice = service.coachingFromWeeklyPlan(
+        _protectRetentionPlan(),
+        snapshot: const GoalProgressSnapshot(
+          focus: GoalFocus.protectRetention,
+          completedPracticeDaysLast7: 3,
+          completedDelayedChecksLast7: 2,
+          completedReviewsLast7: 5,
+          completedNewPracticeLast7: 2,
+          recentQualityBand: GoalProgressQualityBand.strained,
+        ),
+      );
+
+      expect(
+        advice.recommendation,
+        GoalCoachingRecommendation.protectRetention,
+      );
+    },
+  );
+
+  test(
+    'coachingFromWeeklyPlan asks to lighten setup when recovery stays strained',
+    () {
+      final advice = service.coachingFromWeeklyPlan(
+        _recoveryPlan(),
+        snapshot: const GoalProgressSnapshot(
+          focus: GoalFocus.recoveryAndStabilize,
+          completedPracticeDaysLast7: 1,
+          completedDelayedChecksLast7: 2,
+          completedReviewsLast7: 3,
+          completedNewPracticeLast7: 1,
+          recentQualityBand: GoalProgressQualityBand.strained,
+        ),
+      );
+
+      expect(advice.recommendation, GoalCoachingRecommendation.lightenSetup);
+    },
+  );
 }
 
 Stage4DueItem _stage4DueItem() {
@@ -292,7 +379,9 @@ Future<void> _seedMeaningfulProgress(
 }) async {
   var unitSeed = 1;
   for (final day in days) {
-    final unitId = await db.into(db.memUnit).insert(
+    final unitId = await db
+        .into(db.memUnit)
+        .insert(
           MemUnitCompanion.insert(
             kind: 'ayah_range',
             pageMadina: const Value(1),
@@ -305,7 +394,9 @@ Future<void> _seedMeaningfulProgress(
             updatedAtDay: day,
           ),
         );
-    await db.into(db.companionChainSession).insert(
+    await db
+        .into(db.companionChainSession)
+        .insert(
           CompanionChainSessionCompanion.insert(
             unitId: unitId,
             targetVerseCount: 1,
@@ -323,7 +414,9 @@ Future<void> _seedMeaningfulProgress(
 
   if (reviewGrades.isNotEmpty) {
     final sourceDays = days.isNotEmpty ? days : <int>[50];
-    final reviewUnitId = await db.into(db.memUnit).insert(
+    final reviewUnitId = await db
+        .into(db.memUnit)
+        .insert(
           MemUnitCompanion.insert(
             kind: 'ayah_range',
             pageMadina: const Value(1),
@@ -338,7 +431,9 @@ Future<void> _seedMeaningfulProgress(
         );
     for (var i = 0; i < reviewGrades.length; i++) {
       final day = sourceDays[i % sourceDays.length];
-      await db.into(db.reviewLog).insert(
+      await db
+          .into(db.reviewLog)
+          .insert(
             ReviewLogCompanion.insert(
               unitId: reviewUnitId,
               tsDay: day,
@@ -351,7 +446,9 @@ Future<void> _seedMeaningfulProgress(
 
   if (stage4Outcomes.isNotEmpty) {
     final sourceDays = days.isNotEmpty ? days : <int>[50];
-    final stage4UnitId = await db.into(db.memUnit).insert(
+    final stage4UnitId = await db
+        .into(db.memUnit)
+        .insert(
           MemUnitCompanion.insert(
             kind: 'ayah_range',
             pageMadina: const Value(2),
@@ -366,7 +463,9 @@ Future<void> _seedMeaningfulProgress(
         );
     for (var i = 0; i < stage4Outcomes.length; i++) {
       final day = sourceDays[i % sourceDays.length];
-      await db.into(db.companionStage4Session).insert(
+      await db
+          .into(db.companionStage4Session)
+          .insert(
             CompanionStage4SessionCompanion.insert(
               unitId: stage4UnitId,
               dueKind: 'next_day_required',

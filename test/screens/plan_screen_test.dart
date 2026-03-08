@@ -170,6 +170,14 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Recent review quality: Mostly steady'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('plan_goal_coaching_card')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('plan_goal_coaching_progress_rule')),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -209,6 +217,14 @@ void main() {
       );
       expect(
         find.text('Recent review quality: Needs a gentler pace'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('plan_goal_coaching_card')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('plan_goal_coaching_progress_rule')),
         findsOneWidget,
       );
     },
