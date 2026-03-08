@@ -123,5 +123,6 @@
   - 2026-03-08: Wave 2 landed on the clean post-stability baseline, so the next recommended stream returns to the planned Wave 3 sequence.
   - 2026-03-08: Wave 3 started in `/home/fa507/dev/hifz_planner_wave3` with a new wave-specific ExecPlan to preserve the preset-first scope and the planner-preview sync fix.
   - 2026-03-08: Wave 3 implementation validated locally, then received a narrow planner docs sync and the roadmap-return rule before publish.
+  - 2026-03-08: Wave 3 CI failed on a stale navigation-shell assertion that still expected the old My Plan landing text; fix the assertion, rerun the affected test suite, then resume Wave 3 merge.
 - Next recommended action:
-  - Close Wave 3 with commit, PR, and merge, then return to this tracker on `main` before opening Wave 4.
+  - Fix the stale Wave 3 navigation-shell assertion, republish the branch, then close Wave 3 with PR merge before opening Wave 4.

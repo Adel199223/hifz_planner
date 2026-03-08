@@ -51,6 +51,7 @@
 - `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart`
 - `flutter test -j 1 -r expanded test/data/services/onboarding_defaults_test.dart`
 - `flutter test -j 1 -r expanded test/l10n/app_strings_test.dart`
+- `flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart`
 - `dart tooling/validate_localization.dart`
 - `dart tooling/validate_agent_docs.dart`
 - `dart tooling/validate_workspace_hygiene.dart`
@@ -65,6 +66,7 @@
 - The pre-Wave3 planner stored legacy time inputs separately from `schedulingPrefsJson`, which could make the weekly plan preview ignore the visible setup values.
 - A transient Flutter shader write crash appeared only when two Flutter commands ran in parallel in the same worktree; sequential validation was stable.
 - The narrow docs sync stayed limited to planner-facing and support-facing docs; no workflow or manifest routing changes were needed beyond the roadmap-return rule already being added in this branch.
+- GitHub CI exposed one stale navigation-shell assertion that still expected the old Learn -> My Plan landing text; the fix was to assert the new guided-setup card and summary card instead.
 
 ## Handoff
 - Wave 3 leaves `My Plan` usable without expert knowledge while preserving the existing advanced tools for later waves.
