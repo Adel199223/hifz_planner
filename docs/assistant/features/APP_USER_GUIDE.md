@@ -129,6 +129,12 @@ Go to Today to act on:
 
 This screen is intentionally action-oriented: less setup, more execution.
 
+What you will now see first:
+- a `Do this next` card at the top
+- a short explanation of why that action comes first
+- an `If you only have 10 minutes` fallback
+- a recovery entry that sends you back to `My Plan` if the day feels too heavy
+
 ## 4) Memorize with Companion Stages
 
 Open Companion from Today rows to run staged memorization flows:
@@ -158,6 +164,10 @@ Today prioritization is quality-driven:
 - new memorization is important, but not at the cost of collapsing retention
 
 If delayed checks are due, new memorization can be soft-blocked by default to protect quality.
+
+Plain-language rule:
+- do the one thing at the top of `Today` first
+- if your day is tight, use the short-day suggestion before trying to finish everything
 
 ## Personalization and Preferences
 

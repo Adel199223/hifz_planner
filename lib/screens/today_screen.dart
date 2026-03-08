@@ -331,6 +331,201 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     return '/companion/chain?unitId=${item.unit.id}&mode=stage4';
   }
 
+  String _reviewRouteForUnit(int unitId) {
+    return '/companion/chain?unitId=$unitId&mode=review';
+  }
+
+  String _newRouteForUnit(MemUnitData unit) {
+    if (_canOpenInReader(unit)) {
+      return _buildReaderRoute(unit);
+    }
+    return '/companion/chain?unitId=${unit.id}&mode=new';
+  }
+
+  bool get _hasRemainingWork =>
+      _remainingStage4Due.isNotEmpty ||
+      _remainingReviews.isNotEmpty ||
+      _remainingNewUnits.isNotEmpty;
+
+  bool _shouldShowEmptyState(TodayPlan plan) {
+    return !_hasRemainingWork &&
+        plan.minutesPlannedReviews == 0 &&
+        plan.minutesPlannedNew == 0;
+  }
+
+  Widget _buildCoachingCard(AppStrings strings, TodayPlan plan) {
+    final content = _resolveCoachingContent(strings);
+    return Card(
+      key: const ValueKey('today_coaching_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.todayDoThisNext,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              content.title,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            if (plan.recoveryMode) ...[
+              const SizedBox(height: 10),
+              Text(
+                strings.recoveryModeActive,
+                key: const ValueKey('today_recovery_mode_badge'),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(strings.todayRecoveryModeHint),
+            ],
+            if (plan.message != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                plan.message!,
+                key: const ValueKey('today_coaching_plan_note'),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+            const SizedBox(height: 14),
+            Text(
+              strings.todayWhyItMatters,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(content.reason),
+            const SizedBox(height: 14),
+            FilledButton(
+              key: const ValueKey('today_coaching_primary_action'),
+              onPressed: () {
+                context.go(content.primaryRoute);
+              },
+              child: Text(content.primaryActionLabel),
+            ),
+            const SizedBox(height: 14),
+            DecoratedBox(
+              key: const ValueKey('today_short_day_hint'),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.todayShortDayTitle,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(content.shortDayHint),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(strings.todayRecoveryEntryHint),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              key: const ValueKey('today_recovery_entry'),
+              onPressed: () {
+                context.go('/plan');
+              },
+              child: Text(strings.todayOpenMyPlan),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  _TodayCoachingContent _resolveCoachingContent(AppStrings strings) {
+    if (_remainingStage4Due.isNotEmpty) {
+      final firstStage4 = _remainingStage4Due.first;
+      return _TodayCoachingContent(
+        title: strings.todayFocusStage4Title,
+        reason: strings.todayFocusStage4Reason,
+        shortDayHint: strings.todayFocusStage4ShortDay,
+        primaryActionLabel: strings.todayFocusStage4Action,
+        primaryRoute: _stage4RouteForItem(firstStage4),
+      );
+    }
+    if (_remainingReviews.isNotEmpty) {
+      final firstReview = _remainingReviews.first;
+      return _TodayCoachingContent(
+        title: strings.todayFocusReviewTitle,
+        reason: strings.todayFocusReviewReason,
+        shortDayHint: strings.todayFocusReviewShortDay,
+        primaryActionLabel: strings.todayFocusReviewAction,
+        primaryRoute: _reviewRouteForUnit(firstReview.unit.id),
+      );
+    }
+    final firstNew = _remainingNewUnits.first;
+    return _TodayCoachingContent(
+      title: strings.todayFocusNewTitle,
+      reason: strings.todayFocusNewReason,
+      shortDayHint: strings.todayFocusNewShortDay,
+      primaryActionLabel: strings.todayFocusNewAction,
+      primaryRoute: _newRouteForUnit(firstNew),
+    );
+  }
+
+  Widget _buildNoWorkStateCard(AppStrings strings, TodayPlan plan) {
+    if (_shouldShowEmptyState(plan)) {
+      return Card(
+        key: const ValueKey('today_empty_state'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.todayEmptyTitle,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(strings.todayEmptyMessage),
+              const SizedBox(height: 12),
+              FilledButton(
+                key: const ValueKey('today_empty_open_plan'),
+                onPressed: () {
+                  context.go('/plan');
+                },
+                child: Text(strings.todayOpenMyPlan),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      key: const ValueKey('today_completion_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.todayCompletionTitle,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(strings.todayCompletionMessage),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStage4DueSection(AppStrings strings) {
     final plan = _plan;
     if (plan == null) {
@@ -347,6 +542,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             Text(
               strings.stage4DueSectionTitle,
               style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              strings.todayStage4Explanation,
+              key: const ValueKey('today_stage4_explanation'),
             ),
             const SizedBox(height: 6),
             Text(
@@ -788,42 +988,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               strings.todayTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 8),
             if (plan != null) ...[
-              Text(
-                strings.plannedReviewMinutes(
-                  plan.minutesPlannedReviews.toStringAsFixed(1),
-                ),
-              ),
-              Text(
-                strings.plannedNewMinutes(
-                  plan.minutesPlannedNew.toStringAsFixed(1),
-                ),
-              ),
-              Text(
-                strings.reviewPressureLabel(
-                  plan.reviewPressure.toStringAsFixed(2),
-                ),
-              ),
-              if (plan.recoveryMode)
-                Text(
-                  strings.recoveryModeActive,
-                  key: const ValueKey('today_recovery_mode_badge'),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              if (plan.message != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  plan.message!,
-                  key: const ValueKey('today_plan_message'),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-              ],
+              const SizedBox(height: 12),
+              if (_hasRemainingWork)
+                _buildCoachingCard(strings, plan)
+              else
+                _buildNoWorkStateCard(strings, plan),
               const SizedBox(height: 12),
               _buildSessionSection(strings, plan),
               const SizedBox(height: 12),
@@ -946,4 +1116,20 @@ class _GradeOption {
 
   final String label;
   final int q;
+}
+
+class _TodayCoachingContent {
+  const _TodayCoachingContent({
+    required this.title,
+    required this.reason,
+    required this.shortDayHint,
+    required this.primaryActionLabel,
+    required this.primaryRoute,
+  });
+
+  final String title;
+  final String reason;
+  final String shortDayHint;
+  final String primaryActionLabel;
+  final String primaryRoute;
 }
