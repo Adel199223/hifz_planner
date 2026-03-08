@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/services/tajweed_tags_service.dart';
 
@@ -48,5 +50,16 @@ void main() {
 
     expect(service.hasAnyTags, isFalse);
     expect(service.getTajweedHtmlFor(1, 1), isNull);
+  });
+
+  test('bundled tajweed tags asset is populated', () async {
+    final service = TajweedTagsService(
+      loadAssetText: (assetPath) => File(assetPath).readAsString(),
+    );
+
+    await service.ensureLoaded();
+
+    expect(service.hasAnyTags, isTrue);
+    expect(service.getTajweedHtmlFor(1, 1), isNotEmpty);
   });
 }

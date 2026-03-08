@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
+import 'package:hifz_planner/data/services/scheduling/scheduling_preferences_codec.dart';
 import 'package:hifz_planner/data/time/local_day_time.dart';
 
 void main() {
@@ -31,6 +32,8 @@ void main() {
     expect(settings.avgReviewMinutesPerAyah, 0.8);
     expect(settings.requirePageMetadata, 1);
     expect(settings.typicalGradeDistributionJson, isNull);
+    expect(settings.schedulingPrefsJson, isNull);
+    expect(settings.schedulingOverridesJson, isNull);
   });
 
   test('updateSettings partially updates fields and updates updated_at_day',
@@ -107,5 +110,56 @@ void main() {
     );
     expect(pending, isNotNull);
     expect(pending!.effectiveDay, 20000);
+  });
+
+  test('getSchedulingPreferences falls back to legacy minute settings',
+      () async {
+    await repo.updateSettings(
+      dailyMinutesDefault: 60,
+      minutesByWeekdayJson:
+          '{"mon":30,"tue":40,"wed":50,"thu":60,"fri":70,"sat":80,"sun":90}',
+    );
+
+    final prefs = await repo.getSchedulingPreferences();
+
+    expect(prefs.sessionsPerDay, 2);
+    expect(prefs.minutesPerDayDefault, 60);
+    expect(prefs.minutesByWeekday[DateTime.monday], 30);
+    expect(prefs.minutesByWeekday[DateTime.sunday], 90);
+  });
+
+  test('saveSchedulingPreferences persists JSON round trip', () async {
+    final prefs = SchedulingPreferencesV1.defaults.copyWith(
+      sessionsPerDay: 1,
+      exactTimesEnabled: true,
+      sessionATimeMinute: 7 * 60,
+      sessionBTimeMinute: 20 * 60,
+      advancedModeEnabled: true,
+      availabilityModel: AvailabilityModel.minutesPerWeek,
+      minutesPerWeekDefault: 210,
+    );
+    final overrides = SchedulingOverridesV1(
+      overridesByDay: <int, SchedulingDayOverrideV1>{
+        25000: const SchedulingDayOverrideV1(
+          dayIndex: 25000,
+          skipDay: true,
+        ),
+      },
+    );
+
+    final saved = await repo.saveSchedulingPreferences(
+      preferences: prefs,
+      overrides: overrides,
+      updatedAtDay: 25000,
+    );
+
+    final reloadedPrefs = await repo.getSchedulingPreferences();
+    final reloadedOverrides = await repo.getSchedulingOverrides();
+
+    expect(saved, isTrue);
+    expect(reloadedPrefs.sessionsPerDay, 1);
+    expect(reloadedPrefs.availabilityModel, AvailabilityModel.minutesPerWeek);
+    expect(reloadedPrefs.minutesPerWeekDefault, 210);
+    expect(reloadedOverrides[25000]?.skipDay, isTrue);
   });
 }

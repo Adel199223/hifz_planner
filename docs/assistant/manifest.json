@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 10,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
@@ -9,24 +9,32 @@
     "AGENTS.md",
     "docs/assistant/APP_KNOWLEDGE.md"
   ],
+  "user_guides": [
+    "docs/assistant/features/PLANNER_USER_GUIDE.md",
+    "docs/assistant/features/APP_USER_GUIDE.md"
+  ],
   "workflows": [
     {
       "id": "reader_ui",
       "doc": "docs/assistant/workflows/READER_WORKFLOW.md",
-      "scope": "Verse by Verse and Reading (Mushaf) UI/interaction work.",
+      "scope": "Verse by Verse and Reading (Mushaf) UI/interaction work, including shared Quran word rendering behavior.",
       "primary_files": [
         "lib/screens/reader_screen.dart",
+        "lib/ui/quran/quran_word_wrap.dart",
+        "lib/data/services/quran_wording.dart",
         "lib/ui/tajweed/tajweed_colors.dart",
         "lib/ui/tajweed/tajweed_markup.dart",
         "lib/data/services/surah_metadata_service.dart"
       ],
       "targeted_tests": [
         "test/screens/reader_screen_test.dart",
+        "test/ui/quran/quran_word_wrap_test.dart",
         "test/app/navigation_shell_menu_test.dart"
       ],
       "validation_commands": [
         "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
-        "flutter analyze"
+        "flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart",
+        "flutter analyze --no-fatal-infos --no-fatal-warnings"
       ]
     },
     {
@@ -45,13 +53,13 @@
       "validation_commands": [
         "flutter test -j 1 -r expanded test/data/services/qurancom_api_test.dart",
         "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
-        "flutter analyze"
+        "flutter analyze --no-fatal-infos --no-fatal-warnings"
       ]
     },
     {
       "id": "planner_scheduler",
       "doc": "docs/assistant/workflows/PLANNER_WORKFLOW.md",
-      "scope": "Onboarding plan, daily planning, scheduling, calibration, forecast.",
+      "scope": "Onboarding plan, baseline daily planner/scheduler, calibration, forecast.",
       "primary_files": [
         "lib/screens/plan_screen.dart",
         "lib/screens/today_screen.dart",
@@ -71,7 +79,218 @@
         "flutter test -j 1 -r expanded test/screens/today_screen_test.dart",
         "flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart",
         "flutter test -j 1 -r expanded test/data/services/spaced_repetition_scheduler_test.dart",
-        "flutter analyze"
+        "flutter analyze --no-fatal-infos --no-fatal-warnings"
+      ]
+    },
+    {
+      "id": "scheduling_companion",
+      "doc": "docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md",
+      "scope": "Automatic scheduling preferences, weekly calendar generation, rebalancing, and staged companion ramp with recitation controls and word-hover parity.",
+      "primary_files": [
+        "lib/screens/plan_screen.dart",
+        "lib/screens/today_screen.dart",
+        "lib/screens/companion_chain_screen.dart",
+        "lib/ui/quran/arabic_ayah_text.dart",
+        "lib/ui/quran/quran_word_wrap.dart",
+        "lib/data/services/quran_wording.dart",
+        "lib/data/services/scheduling/planning_projection_engine.dart",
+        "lib/data/services/scheduling/availability_interpreter.dart",
+        "lib/data/services/scheduling/weekly_plan_generator.dart",
+        "lib/data/services/scheduling/daily_content_allocator.dart",
+        "lib/data/services/scheduling/scheduling_preferences_codec.dart",
+        "lib/data/services/companion/progressive_reveal_chain_engine.dart",
+        "lib/data/services/companion/companion_calibration_bridge.dart",
+        "lib/data/repositories/companion_repo.dart",
+        "lib/data/repositories/settings_repo.dart",
+        "lib/data/database/app_database.dart"
+      ],
+      "targeted_tests": [
+        "test/screens/plan_screen_test.dart",
+        "test/screens/today_screen_test.dart",
+        "test/screens/companion_chain_screen_test.dart",
+        "test/ui/quran/quran_word_wrap_test.dart",
+        "test/app/app_preferences_test.dart",
+        "test/data/services/tajweed_tags_service_test.dart",
+        "test/data/services/daily_planner_test.dart",
+        "test/data/services/forecast_simulation_service_test.dart",
+        "test/data/services/scheduling/availability_interpreter_test.dart",
+        "test/data/services/scheduling/daily_content_allocator_test.dart",
+        "test/data/services/scheduling/scheduling_preferences_codec_test.dart",
+        "test/data/services/scheduling/weekly_plan_generator_test.dart",
+        "test/data/services/companion/progressive_reveal_chain_engine_test.dart",
+        "test/data/services/companion/companion_calibration_bridge_test.dart",
+        "test/data/repositories/companion_repo_test.dart",
+        "test/data/repositories/settings_repo_test.dart",
+        "test/data/database/app_database_test.dart"
+      ],
+      "validation_commands": [
+        "flutter analyze --no-fatal-infos --no-fatal-warnings",
+        "flutter test -j 1 -r expanded test/app/app_preferences_test.dart",
+        "flutter test -j 1 -r expanded test/screens/plan_screen_test.dart",
+        "flutter test -j 1 -r expanded test/screens/today_screen_test.dart",
+        "flutter test -j 1 -r expanded test/screens/companion_chain_screen_test.dart",
+        "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
+        "flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/tajweed_tags_service_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/forecast_simulation_service_test.dart",
+        "flutter test -j 1 -r expanded test/data/database/app_database_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/scheduling",
+        "flutter test -j 1 -r expanded test/data/services/companion",
+        "dart run tooling/validate_localization.dart",
+        "dart run tooling/validate_agent_docs.dart"
+      ]
+    },
+    {
+      "id": "localization_i18n",
+      "doc": "docs/assistant/workflows/LOCALIZATION_WORKFLOW.md",
+      "scope": "Localization labels, RTL behavior, and terminology consistency.",
+      "primary_files": [
+        "docs/assistant/LOCALIZATION_GLOSSARY.md",
+        "lib/l10n/app_language.dart",
+        "lib/l10n/app_strings.dart",
+        "lib/main.dart",
+        "lib/screens/reader_screen.dart"
+      ],
+      "targeted_tests": [
+        "test/l10n/app_strings_test.dart",
+        "test/tooling/validate_localization_test.dart",
+        "test/screens/reader_screen_test.dart",
+        "test/app/navigation_shell_menu_test.dart"
+      ],
+      "validation_commands": [
+        "dart run tooling/validate_localization.dart",
+        "flutter test -j 1 -r expanded test/l10n/app_strings_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_localization_test.dart",
+        "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
+        "flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart"
+      ]
+    },
+    {
+      "id": "workspace_performance",
+      "doc": "docs/assistant/workflows/PERFORMANCE_WORKFLOW.md",
+      "scope": "Editor performance, workspace indexing/watchers, and artifact placement hygiene.",
+      "primary_files": [
+        "docs/assistant/workflows/PERFORMANCE_WORKFLOW.md",
+        "docs/assistant/PERFORMANCE_BASELINES.md",
+        ".vscode/settings.json",
+        ".gitignore",
+        "tooling/validate_workspace_hygiene.dart",
+        "test/tooling/validate_workspace_hygiene_test.dart"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_workspace_hygiene_test.dart",
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "dart run tooling/validate_workspace_hygiene.dart",
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_workspace_hygiene_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+      ]
+    },
+    {
+      "id": "reference_discovery",
+      "doc": "docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md",
+      "scope": "External inspiration/parity source discovery for named apps/sites/products.",
+      "primary_files": [
+        "docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md",
+        "docs/assistant/manifest.json",
+        "AGENTS.md",
+        "agent.md"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+      ]
+    },
+    {
+      "id": "worktree_build_identity",
+      "doc": "docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md",
+      "scope": "Latest approved baseline locking, runnable-build identity, and deterministic launch handoff for parallel worktrees.",
+      "primary_files": [
+        "docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md",
+        "tooling/print_build_identity.dart",
+        "agent.md",
+        "APP_KNOWLEDGE.md",
+        "docs/assistant/manifest.json"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "git worktree list",
+        "git status --short --branch",
+        "dart tooling/print_build_identity.dart",
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+      ]
+    },
+    {
+      "id": "ci_repo_ops",
+      "doc": "docs/assistant/workflows/CI_REPO_WORKFLOW.md",
+      "scope": "CI workflow command parity, branch merge hygiene, and repo operations safety.",
+      "primary_files": [
+        ".github/workflows/dart.yml",
+        "agent.md",
+        "docs/assistant/manifest.json",
+        "docs/assistant/INDEX.md",
+        "docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md",
+        "tooling/print_build_identity.dart",
+        "tooling/validate_agent_docs.dart",
+        "tooling/validate_localization.dart",
+        "tooling/validate_workspace_hygiene.dart"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart",
+        "test/tooling/validate_localization_test.dart",
+        "test/tooling/validate_workspace_hygiene_test.dart",
+        "test/l10n/app_strings_test.dart",
+        "test/app/navigation_shell_menu_test.dart",
+        "test/screens/reader_screen_test.dart"
+      ],
+      "validation_commands": [
+        "git fetch --prune origin",
+        "git status --short --branch",
+        "git branch -vv",
+        "flutter analyze --no-fatal-infos --no-fatal-warnings",
+        "dart run tooling/validate_localization.dart",
+        "dart run tooling/validate_workspace_hygiene.dart",
+        "flutter test -j 1 -r expanded test/l10n/app_strings_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_workspace_hygiene_test.dart",
+        "flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart",
+        "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart"
+      ]
+    },
+    {
+      "id": "commit_publish_ops",
+      "doc": "docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md",
+      "scope": "Commit-triggered staging triage, ignore hygiene, push flow, and optional branch cleanup.",
+      "primary_files": [
+        "agent.md",
+        "APP_KNOWLEDGE.md",
+        "docs/assistant/manifest.json",
+        "docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md",
+        "docs/assistant/workflows/CI_REPO_WORKFLOW.md",
+        "docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md",
+        ".gitignore",
+        "tooling/print_build_identity.dart"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "git fetch --prune origin",
+        "git status --short --branch",
+        "git diff --name-only",
+        "git diff --cached --name-only",
+        "git ls-files --others --exclude-standard",
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
       ]
     },
     {
@@ -84,16 +303,36 @@
         "APP_KNOWLEDGE.md",
         "docs/assistant/APP_KNOWLEDGE.md",
         "docs/assistant/INDEX.md",
+        "docs/assistant/ISSUE_MEMORY.md",
+        "docs/assistant/ISSUE_MEMORY.json",
+        "docs/assistant/LOCAL_ENV_PROFILE.example.md",
+        "docs/assistant/LOCAL_CAPABILITIES.md",
+        "docs/assistant/LOCALIZATION_GLOSSARY.md",
+        "docs/assistant/PERFORMANCE_BASELINES.md",
         "docs/assistant/manifest.json",
         "docs/assistant/DB_DRIFT_KNOWLEDGE.md",
-        "tooling/validate_agent_docs.dart"
+        ".github/workflows/dart.yml",
+        "docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md",
+        "docs/assistant/workflows/CI_REPO_WORKFLOW.md",
+        "docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md",
+        "docs/assistant/workflows/LOCALIZATION_WORKFLOW.md",
+        "docs/assistant/workflows/PERFORMANCE_WORKFLOW.md",
+        "tooling/validate_agent_docs.dart",
+        "tooling/validate_localization.dart",
+        "tooling/validate_workspace_hygiene.dart"
       ],
       "targeted_tests": [
-        "test/tooling/validate_agent_docs_test.dart"
+        "test/tooling/validate_agent_docs_test.dart",
+        "test/tooling/validate_localization_test.dart",
+        "test/tooling/validate_workspace_hygiene_test.dart"
       ],
       "validation_commands": [
         "dart run tooling/validate_agent_docs.dart",
-        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+        "dart run tooling/validate_localization.dart",
+        "dart run tooling/validate_workspace_hygiene.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_localization_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_workspace_hygiene_test.dart"
       ]
     }
   ],
@@ -103,7 +342,7 @@
       "rg -n \"symbol_or_keyword\" lib test tooling"
     ],
     "analysis": [
-      "flutter analyze"
+      "flutter analyze --no-fatal-infos --no-fatal-warnings"
     ],
     "tests": [
       "flutter test -j 1 -r expanded"
@@ -112,7 +351,30 @@
   "contracts": {
     "canonical_precedence": "APP_KNOWLEDGE.md is canonical for app-level architecture and status. Source code is final truth on conflicts.",
     "docs_sync_rule": "If bridge docs conflict with canonical docs, canonical wins and bridge docs must be updated.",
-    "windows_test_policy": "Prefer flutter test -j 1 -r expanded for stability on Windows."
+    "windows_test_policy": "Prefer flutter test -j 1 -r expanded for stability on Windows.",
+    "templates_read_policy": "docs/assistant/templates/* are read-on-demand only; open/update only when explicitly requested by the user.",
+    "localization_glossary_source_of_truth": "docs/assistant/LOCALIZATION_GLOSSARY.md is the canonical term source for localized UI labels.",
+    "workspace_performance_source_of_truth": "docs/assistant/PERFORMANCE_BASELINES.md is the canonical source for workspace/editor performance defaults.",
+    "env_artifacts_outside_workspace_default": "Heavyweight environments and generated runtime artifacts should live outside repo root when feasible.",
+    "post_change_docs_sync_prompt_policy": "After significant implementation changes, ask whether to run Assistant Docs Sync and update only relevant assistant docs if approved.",
+    "issue_memory_policy": "docs/assistant/ISSUE_MEMORY.md and docs/assistant/ISSUE_MEMORY.json are the always-on issue registry; Assistant Docs Sync should consult issue memory before widening touched-scope updates.",
+    "local_env_overlay_policy": "Use docs/assistant/LOCAL_ENV_PROFILE.example.md for shared routing format and keep machine-local runtime facts in docs/assistant/LOCAL_ENV_PROFILE.local.md.",
+    "capability_inventory_policy": "Use docs/assistant/LOCAL_CAPABILITIES.md to record only discovered local capabilities that materially affect workflow decisions.",
+    "worktree_build_identity_policy": "Use docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md and tooling/print_build_identity.dart for runnable-build identity, baseline locking, and deterministic launch handoff.",
+    "commit_shorthand_policy": "Bare commit means full pending-tree triage, logical grouped commits, and immediate push suggestion unless the user narrows scope.",
+    "push_shorthand_policy": "Bare push means Push+PR+Merge+Cleanup unless the user narrows scope explicitly.",
+    "inspiration_reference_discovery_policy": "When user names a product/site to emulate, run REFERENCE_DISCOVERY_WORKFLOW.md and prioritize official sources, then high-quality GitHub repos, then Hugging Face only for ML/data/inference scope.",
+    "golden_principles_source_of_truth": "docs/assistant/GOLDEN_PRINCIPLES.md is the canonical source for mechanical agent/human implementation rules.",
+    "execplan_policy": "Major or multi-file work must start with an ExecPlan under docs/assistant/exec_plans/active/ and follow docs/assistant/exec_plans/PLANS.md.",
+    "approval_gates_policy": "AGENTS.md and agent.md must include Approval Gates that require explicit user confirmation for destructive, force-push, publish, risky DB, or non-essential network actions.",
+    "worktree_isolation_policy": "For parallel implementation streams, prefer git worktree isolation and avoid mixing unrelated feature threads in one working tree.",
+    "doc_gardening_policy": "Run docs validators regularly and apply targeted docs maintenance to prevent routing/contract drift.",
+    "user_guides_support_usage_policy": "For support/non-technical explanations, start with docs/assistant/features/APP_USER_GUIDE.md and use docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.",
+    "user_guides_canonical_deference_policy": "Feature guides are explanatory docs; if they conflict with technical docs, APP_KNOWLEDGE.md and source code win.",
+    "user_guides_update_sync_policy": "When user-facing behavior copy/flow changes, update only affected sections in APP_USER_GUIDE.md and/or PLANNER_USER_GUIDE.md.",
+    "non_coder_entrypoint_policy": "Non-coders should start with docs/assistant/features/APP_USER_GUIDE.md (or PLANNER_USER_GUIDE.md for planner topics) before technical docs.",
+    "plain_language_support_response_policy": "Support responses must be plain-language-first with numbered next steps and exact UI labels.",
+    "term_definition_policy": "If a technical term is unavoidable in support replies, define it in one short sentence."
   },
-  "last_updated": "2026-02-22"
+  "last_updated": "2026-03-08"
 }

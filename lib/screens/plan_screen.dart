@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/app_preferences.dart';
 import '../data/providers/database_providers.dart';
 import '../data/services/calibration_service.dart';
 import '../data/services/forecast_simulation_service.dart';
 import '../data/services/onboarding_defaults.dart';
+import '../data/services/scheduling/scheduling_preferences_codec.dart';
+import '../data/services/scheduling/weekly_plan_generator.dart';
+import '../data/time/local_day_time.dart';
+import '../l10n/app_strings.dart';
 
 enum _TimeInputMode { weekly, weekday }
 
@@ -62,6 +67,19 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
   ForecastSimulationResult? _forecastResult;
   String? _forecastError;
 
+  SchedulingPreferencesV1 _schedulingPreferences =
+      SchedulingPreferencesV1.defaults;
+  SchedulingOverridesV1 _schedulingOverrides = SchedulingOverridesV1.empty;
+  WeeklyPlan? _weeklyPlan;
+  bool _isLoadingScheduling = true;
+  bool _isRefreshingWeeklyPlan = false;
+  String? _weeklyPlanError;
+  late final TextEditingController _minutesPerDayController;
+  late final TextEditingController _minutesPerWeekController;
+
+  AppStrings get _strings =>
+      AppStrings.of(ref.read(appPreferencesProvider).language);
+
   @override
   void initState() {
     super.initState();
@@ -72,7 +90,14 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     _avgReviewMinutesController = TextEditingController(
       text: defaults.avgReview.toStringAsFixed(1),
     );
+    _minutesPerDayController = TextEditingController(
+      text: _schedulingPreferences.minutesPerDayDefault.toString(),
+    );
+    _minutesPerWeekController = TextEditingController(
+      text: _schedulingPreferences.minutesPerWeekDefault.toString(),
+    );
     Future<void>.microtask(_refreshCalibrationPreview);
+    Future<void>.microtask(_loadSchedulingState);
   }
 
   @override
@@ -85,6 +110,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     _maxNewUnitsController.dispose();
     _avgNewMinutesController.dispose();
     _avgReviewMinutesController.dispose();
+    _minutesPerDayController.dispose();
+    _minutesPerWeekController.dispose();
 
     _newDurationController.dispose();
     _newAyahCountController.dispose();
@@ -146,7 +173,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         avgReview == null ||
         avgReview <= 0) {
       setState(() {
-        _errorMessage = 'Please enter valid positive values before activating.';
+        _errorMessage = _strings.enterValidPositiveValuesBeforeActivating;
       });
       return;
     }
@@ -158,6 +185,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     try {
       final settingsRepo = ref.read(settingsRepoProvider);
       final progressRepo = ref.read(progressRepoProvider);
+      final projectionEngine = ref.read(planningProjectionEngineProvider);
 
       final weekdayJson = encodeWeekdayMinutesJson(weekdayMinutes);
       final dailyDefault = deriveDailyDefault(weekdayMinutes);
@@ -172,16 +200,21 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         avgNewMinutesPerAyah: avgNew,
         avgReviewMinutesPerAyah: avgReview,
         requirePageMetadata: _requirePageMetadata ? 1 : 0,
+        schedulingPrefsJson:
+            projectionEngine.encodePreferences(_schedulingPreferences),
+        schedulingOverridesJson:
+            projectionEngine.encodeOverrides(_schedulingOverrides),
       );
       await progressRepo.getCursor();
+      await _refreshWeeklyPlan();
 
       if (!mounted) {
         return;
       }
-      _showSnackBar('Plan activated successfully.');
+      _showSnackBar(_strings.planActivatedSuccessfully);
     } catch (_) {
       setState(() {
-        _errorMessage = 'Failed to activate plan. Please try again.';
+        _errorMessage = _strings.failedToActivatePlanTryAgain;
       });
     } finally {
       if (mounted) {
@@ -235,7 +268,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         duration <= 0 ||
         ayahCount == null ||
         ayahCount <= 0) {
-      _showSnackBar('Enter positive duration and ayah count.');
+      _showSnackBar(_strings.enterPositiveDurationAndAyahCount);
       return;
     }
 
@@ -252,9 +285,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       durationController.clear();
       ayahController.clear();
       await _refreshCalibrationPreview();
-      _showSnackBar('Calibration sample added.');
+      _showSnackBar(_strings.calibrationSampleAdded);
     } catch (error) {
-      _showSnackBar('Failed to add sample: $error');
+      _showSnackBar(_strings.failedToAddSample('$error'));
     } finally {
       if (mounted) {
         setState(() {
@@ -284,11 +317,11 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       await _refreshCalibrationPreview();
       _showSnackBar(
         _calibrationTiming == _CalibrationTimingUi.now
-            ? 'Calibration applied immediately.'
-            : 'Calibration queued for tomorrow.',
+            ? _strings.calibrationAppliedImmediately
+            : _strings.calibrationQueuedForTomorrow,
       );
     } catch (error) {
-      _showSnackBar('Calibration apply failed: $error');
+      _showSnackBar(_strings.calibrationApplyFailed('$error'));
     } finally {
       if (mounted) {
         setState(() {
@@ -323,7 +356,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       }
       setState(() {
         _forecastResult = null;
-        _forecastError = 'Forecast failed: $error';
+        _forecastError = _strings.forecastFailed('$error');
       });
     } finally {
       if (mounted) {
@@ -332,6 +365,281 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         });
       }
     }
+  }
+
+  Future<void> _loadSchedulingState() async {
+    setState(() {
+      _isLoadingScheduling = true;
+      _weeklyPlanError = null;
+    });
+    try {
+      final settings = await ref.read(settingsRepoProvider).getSettings();
+      final projectionEngine = ref.read(planningProjectionEngineProvider);
+      final preferences = projectionEngine.preferencesFromSettings(settings);
+      final overrides = projectionEngine.overridesFromSettings(settings);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _schedulingPreferences = preferences;
+        _schedulingOverrides = overrides;
+        _minutesPerDayController.text =
+            preferences.minutesPerDayDefault.toString();
+        _minutesPerWeekController.text =
+            preferences.minutesPerWeekDefault.toString();
+        _isLoadingScheduling = false;
+      });
+      await _refreshWeeklyPlan();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isLoadingScheduling = false;
+        _weeklyPlanError = error.toString();
+      });
+    }
+  }
+
+  Future<void> _refreshWeeklyPlan() async {
+    if (_isRefreshingWeeklyPlan) {
+      return;
+    }
+    setState(() {
+      _isRefreshingWeeklyPlan = true;
+      _weeklyPlanError = null;
+    });
+
+    try {
+      final settings = await ref.read(settingsRepoProvider).getSettings();
+      final projectionEngine = ref.read(planningProjectionEngineProvider);
+      final startDay = localDayIndex(DateTime.now().toLocal());
+      final weeklyPlan = await projectionEngine.generateWeeklyPlan(
+        startDay: startDay,
+        horizonDays: 7,
+        settings: settings,
+        scheduleRepo: ref.read(scheduleRepoProvider),
+        quranRepo: ref.read(quranRepoProvider),
+        preferences: _schedulingPreferences,
+        overrides: _schedulingOverrides,
+      );
+
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _weeklyPlan = weeklyPlan;
+        _isRefreshingWeeklyPlan = false;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isRefreshingWeeklyPlan = false;
+        _weeklyPlanError = error.toString();
+      });
+    }
+  }
+
+  void _updateSchedulingPreferences(SchedulingPreferencesV1 next) {
+    setState(() {
+      _schedulingPreferences = next;
+    });
+    Future<void>.microtask(_refreshWeeklyPlan);
+  }
+
+  void _toggleStudyDay(int weekday) {
+    final next = <int>{..._schedulingPreferences.enabledWeekdays};
+    if (next.contains(weekday)) {
+      next.remove(weekday);
+    } else {
+      next.add(weekday);
+    }
+    if (next.isEmpty) {
+      next.add(weekday);
+    }
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(enabledWeekdays: next),
+    );
+  }
+
+  void _toggleRevisionOnlyDay(int weekday) {
+    final next = <int>{..._schedulingPreferences.revisionOnlyWeekdays};
+    if (next.contains(weekday)) {
+      next.remove(weekday);
+    } else {
+      next.add(weekday);
+    }
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(revisionOnlyWeekdays: next),
+    );
+  }
+
+  Future<void> _pickSessionTime({required bool sessionA}) async {
+    final initialMinute = sessionA
+        ? _schedulingPreferences.sessionATimeMinute ?? 7 * 60
+        : _schedulingPreferences.sessionBTimeMinute ?? 19 * 60;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: initialMinute ~/ 60,
+        minute: initialMinute % 60,
+      ),
+    );
+    if (picked == null) {
+      return;
+    }
+    final minute = (picked.hour * 60) + picked.minute;
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(
+        sessionATimeMinute:
+            sessionA ? minute : _schedulingPreferences.sessionATimeMinute,
+        sessionBTimeMinute:
+            sessionA ? _schedulingPreferences.sessionBTimeMinute : minute,
+      ),
+    );
+  }
+
+  List<TimeWindow> _windowsForWeekday(int weekday) {
+    return List<TimeWindow>.from(
+      _schedulingPreferences.windowsByWeekday[weekday] ?? const <TimeWindow>[],
+    );
+  }
+
+  void _addWindowForWeekday(int weekday) {
+    final windowsByWeekday = Map<int, List<TimeWindow>>.from(
+        _schedulingPreferences.windowsByWeekday);
+    final list = _windowsForWeekday(weekday);
+    list.add(
+      const TimeWindow(
+        startMinute: 6 * 60,
+        endMinute: 7 * 60,
+      ),
+    );
+    windowsByWeekday[weekday] = list;
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(windowsByWeekday: windowsByWeekday),
+    );
+  }
+
+  void _removeWindowForWeekday(int weekday, int index) {
+    final windowsByWeekday = Map<int, List<TimeWindow>>.from(
+        _schedulingPreferences.windowsByWeekday);
+    final list = _windowsForWeekday(weekday);
+    if (index < 0 || index >= list.length) {
+      return;
+    }
+    list.removeAt(index);
+    if (list.isEmpty) {
+      windowsByWeekday.remove(weekday);
+    } else {
+      windowsByWeekday[weekday] = list;
+    }
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(windowsByWeekday: windowsByWeekday),
+    );
+  }
+
+  Future<void> _editWindowForWeekday(int weekday, int index) async {
+    final windows = _windowsForWeekday(weekday);
+    if (index < 0 || index >= windows.length) {
+      return;
+    }
+    final target = windows[index];
+
+    final start = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: target.startMinute ~/ 60,
+        minute: target.startMinute % 60,
+      ),
+    );
+    if (start == null) {
+      return;
+    }
+    if (!mounted) return;
+    final end = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: target.endMinute ~/ 60,
+        minute: target.endMinute % 60,
+      ),
+    );
+    if (end == null) {
+      return;
+    }
+
+    final nextWindow = TimeWindow(
+      startMinute: (start.hour * 60) + start.minute,
+      endMinute: (end.hour * 60) + end.minute,
+    ).normalized();
+    final windowsByWeekday = Map<int, List<TimeWindow>>.from(
+        _schedulingPreferences.windowsByWeekday);
+    final nextList = _windowsForWeekday(weekday);
+    nextList[index] = nextWindow;
+    windowsByWeekday[weekday] = nextList;
+
+    _updateSchedulingPreferences(
+      _schedulingPreferences.copyWith(windowsByWeekday: windowsByWeekday),
+    );
+  }
+
+  void _setDaySkipOverride(int dayIndex, bool skip) {
+    final current = _schedulingOverrides[dayIndex];
+    final next = SchedulingDayOverrideV1(
+      dayIndex: dayIndex,
+      skipDay: skip,
+      revisionOnly: current?.revisionOnly,
+      overrideMinutes: current?.overrideMinutes,
+      sessionATimeMinute: current?.sessionATimeMinute,
+      sessionBTimeMinute: current?.sessionBTimeMinute,
+    );
+
+    setState(() {
+      _schedulingOverrides = _schedulingOverrides.copyWithOverride(next);
+    });
+    Future<void>.microtask(_refreshWeeklyPlan);
+  }
+
+  Future<void> _setDaySessionOverrideTime({
+    required int dayIndex,
+    required bool sessionA,
+  }) async {
+    final current = _schedulingOverrides[dayIndex];
+    final initialMinute = sessionA
+        ? current?.sessionATimeMinute ??
+            _schedulingPreferences.sessionATimeMinute ??
+            7 * 60
+        : current?.sessionBTimeMinute ??
+            _schedulingPreferences.sessionBTimeMinute ??
+            19 * 60;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: initialMinute ~/ 60,
+        minute: initialMinute % 60,
+      ),
+    );
+    if (picked == null) {
+      return;
+    }
+
+    final minute = (picked.hour * 60) + picked.minute;
+    final next = SchedulingDayOverrideV1(
+      dayIndex: dayIndex,
+      skipDay: current?.skipDay,
+      revisionOnly: current?.revisionOnly,
+      overrideMinutes: current?.overrideMinutes,
+      sessionATimeMinute: sessionA ? minute : current?.sessionATimeMinute,
+      sessionBTimeMinute: sessionA ? current?.sessionBTimeMinute : minute,
+    );
+
+    setState(() {
+      _schedulingOverrides = _schedulingOverrides.copyWithOverride(next);
+    });
+    Future<void>.microtask(_refreshWeeklyPlan);
   }
 
   Map<int, int>? _parseGradeDistributionOrNull() {
@@ -347,23 +655,21 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       return null;
     }
     if (raw.values.any((value) => value.isEmpty)) {
-      throw const FormatException(
-        'Enter all q percentages (5,4,3,2,0) or leave all blank.',
-      );
+      throw FormatException(_strings.enterAllQPercentagesOrBlank);
     }
 
     final parsed = <int, int>{};
     for (final entry in raw.entries) {
       final value = int.tryParse(entry.value);
       if (value == null) {
-        throw FormatException('q${entry.key} must be an integer percentage.');
+        throw FormatException(_strings.qMustBeIntegerPercentage(entry.key));
       }
       parsed[entry.key] = value;
     }
 
     final sum = parsed.values.fold<int>(0, (acc, value) => acc + value);
     if (sum != 100) {
-      throw const FormatException('q percentages must sum to 100.');
+      throw FormatException(_strings.qPercentagesMustSum100);
     }
     return parsed;
   }
@@ -377,8 +683,481 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
   }
 
+  Widget _buildSchedulingSection(AppStrings strings) {
+    final twoSessions = _schedulingPreferences.sessionsPerDay == 2;
+    final exactTimes = _schedulingPreferences.exactTimesEnabled;
+    final advancedMode = _schedulingPreferences.advancedModeEnabled;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          strings.automaticSchedulingTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          key: const ValueKey('plan_scheduling_two_sessions'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(strings.twoSessionsPerDay),
+          value: twoSessions,
+          onChanged: (value) {
+            _updateSchedulingPreferences(
+              _schedulingPreferences.copyWith(
+                sessionsPerDay: value ? 2 : 1,
+              ),
+            );
+          },
+        ),
+        SwitchListTile(
+          key: const ValueKey('plan_scheduling_exact_times'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(strings.setExactTimesQuestion),
+          value: exactTimes,
+          onChanged: (value) {
+            _updateSchedulingPreferences(
+              _schedulingPreferences.copyWith(
+                exactTimesEnabled: value,
+                timingStrategy:
+                    value ? TimingStrategy.fixedTimes : TimingStrategy.untimed,
+              ),
+            );
+          },
+        ),
+        if (exactTimes) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton(
+                key: const ValueKey('plan_scheduling_session_a_time'),
+                onPressed: () => _pickSessionTime(sessionA: true),
+                child: Text(
+                  strings.sessionTimeLabel(
+                    'A',
+                    _formatMinuteOfDay(
+                        _schedulingPreferences.sessionATimeMinute),
+                  ),
+                ),
+              ),
+              OutlinedButton(
+                key: const ValueKey('plan_scheduling_session_b_time'),
+                onPressed: () => _pickSessionTime(sessionA: false),
+                child: Text(
+                  strings.sessionTimeLabel(
+                    'B',
+                    _formatMinuteOfDay(
+                        _schedulingPreferences.sessionBTimeMinute),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 12),
+        Text(
+          strings.studyDaysLabel,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final weekday in const [
+              DateTime.monday,
+              DateTime.tuesday,
+              DateTime.wednesday,
+              DateTime.thursday,
+              DateTime.friday,
+              DateTime.saturday,
+              DateTime.sunday,
+            ])
+              FilterChip(
+                key: ValueKey('plan_scheduling_study_day_$weekday'),
+                label: Text(_weekdayLabel(weekday, strings)),
+                selected:
+                    _schedulingPreferences.enabledWeekdays.contains(weekday),
+                onSelected: (_) => _toggleStudyDay(weekday),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile(
+          key: const ValueKey('plan_scheduling_advanced_mode'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(strings.advancedSchedulingMode),
+          value: advancedMode,
+          onChanged: (value) {
+            _updateSchedulingPreferences(
+              _schedulingPreferences.copyWith(
+                advancedModeEnabled: value,
+              ),
+            );
+          },
+        ),
+        if (advancedMode) ...[
+          const SizedBox(height: 8),
+          DropdownButtonFormField<AvailabilityModel>(
+            key: const ValueKey('plan_scheduling_availability_model'),
+            initialValue: _schedulingPreferences.availabilityModel,
+            decoration: InputDecoration(
+              labelText: strings.availabilityModelLabel,
+            ),
+            items: [
+              DropdownMenuItem(
+                value: AvailabilityModel.minutesPerDay,
+                child: Text(strings.availabilityMinutesPerDay),
+              ),
+              DropdownMenuItem(
+                value: AvailabilityModel.minutesPerWeek,
+                child: Text(strings.availabilityMinutesPerWeek),
+              ),
+              DropdownMenuItem(
+                value: AvailabilityModel.specificHours,
+                child: Text(strings.availabilitySpecificHours),
+              ),
+            ],
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(availabilityModel: value),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            key: const ValueKey('plan_scheduling_minutes_per_day'),
+            controller: _minutesPerDayController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: strings.minutesPerDayLabel,
+            ),
+            onChanged: (value) {
+              final parsed = int.tryParse(value);
+              if (parsed == null) {
+                return;
+              }
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(
+                  minutesPerDayDefault: parsed,
+                  minutesByWeekday: {
+                    for (final weekday in const [
+                      DateTime.monday,
+                      DateTime.tuesday,
+                      DateTime.wednesday,
+                      DateTime.thursday,
+                      DateTime.friday,
+                      DateTime.saturday,
+                      DateTime.sunday,
+                    ])
+                      weekday: parsed,
+                  },
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            key: const ValueKey('plan_scheduling_minutes_per_week'),
+            controller: _minutesPerWeekController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: strings.minutesPerWeekLabel,
+            ),
+            onChanged: (value) {
+              final parsed = int.tryParse(value);
+              if (parsed == null) {
+                return;
+              }
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(minutesPerWeekDefault: parsed),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<TimingStrategy>(
+            key: const ValueKey('plan_scheduling_timing_strategy'),
+            initialValue: _schedulingPreferences.timingStrategy,
+            decoration: InputDecoration(
+              labelText: strings.timingStrategyLabel,
+            ),
+            items: [
+              DropdownMenuItem(
+                value: TimingStrategy.untimed,
+                child: Text(strings.timingStrategyUntimed),
+              ),
+              DropdownMenuItem(
+                value: TimingStrategy.fixedTimes,
+                child: Text(strings.timingStrategyFixed),
+              ),
+              DropdownMenuItem(
+                value: TimingStrategy.autoPlacement,
+                child: Text(strings.timingStrategyAuto),
+              ),
+            ],
+            onChanged: (value) {
+              if (value == null) {
+                return;
+              }
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(timingStrategy: value),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            key: const ValueKey('plan_scheduling_flex_windows'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(strings.flexOutsideWindowsLabel),
+            value: _schedulingPreferences.flexOutsideWindows,
+            onChanged: (value) {
+              _updateSchedulingPreferences(
+                _schedulingPreferences.copyWith(flexOutsideWindows: value),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            strings.revisionOnlyDaysLabel,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final weekday in const [
+                DateTime.monday,
+                DateTime.tuesday,
+                DateTime.wednesday,
+                DateTime.thursday,
+                DateTime.friday,
+                DateTime.saturday,
+                DateTime.sunday,
+              ])
+                FilterChip(
+                  key: ValueKey('plan_scheduling_revision_day_$weekday'),
+                  label: Text(_weekdayLabel(weekday, strings)),
+                  selected: _schedulingPreferences.revisionOnlyWeekdays
+                      .contains(weekday),
+                  onSelected: (_) => _toggleRevisionOnlyDay(weekday),
+                ),
+            ],
+          ),
+          if (_schedulingPreferences.availabilityModel ==
+              AvailabilityModel.specificHours) ...[
+            const SizedBox(height: 12),
+            Text(
+              strings.specificHoursWindowsLabel,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            for (final weekday in const [
+              DateTime.monday,
+              DateTime.tuesday,
+              DateTime.wednesday,
+              DateTime.thursday,
+              DateTime.friday,
+              DateTime.saturday,
+              DateTime.sunday,
+            ]) ...[
+              _buildDayWindowsEditor(strings, weekday),
+              const SizedBox(height: 8),
+            ],
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDayWindowsEditor(AppStrings strings, int weekday) {
+    final windows = _windowsForWeekday(weekday);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(_weekdayLabel(weekday, strings))),
+            TextButton(
+              key: ValueKey('plan_scheduling_add_window_$weekday'),
+              onPressed: () => _addWindowForWeekday(weekday),
+              child: Text(strings.addWindowLabel),
+            ),
+          ],
+        ),
+        if (windows.isEmpty)
+          Text(strings.noWindowsConfigured)
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < windows.length; i++)
+                InputChip(
+                  key: ValueKey('plan_scheduling_window_${weekday}_$i'),
+                  label: Text(
+                    '${_formatMinuteOfDay(windows[i].startMinute)}-${_formatMinuteOfDay(windows[i].endMinute)}',
+                  ),
+                  onPressed: () => _editWindowForWeekday(weekday, i),
+                  onDeleted: () => _removeWindowForWeekday(weekday, i),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyCalendarSection(AppStrings strings) {
+    final plan = _weeklyPlan;
+    if (_isRefreshingWeeklyPlan) {
+      return const LinearProgressIndicator();
+    }
+    if (_weeklyPlanError != null) {
+      return Text(
+        _weeklyPlanError!,
+        style: TextStyle(color: Theme.of(context).colorScheme.error),
+      );
+    }
+    if (plan == null || plan.days.isEmpty) {
+      return Text(strings.noWeeklyPlanYet);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          strings.weeklyCalendarTitle,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 10),
+        for (var i = 0; i < plan.days.length; i++)
+          Padding(
+            padding: EdgeInsets.only(bottom: i == plan.days.length - 1 ? 0 : 8),
+            child: _buildWeeklyDayCard(strings, plan.days[i], i),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyDayCard(
+    AppStrings strings,
+    WeeklyPlanDay day,
+    int index,
+  ) {
+    final override = _schedulingOverrides[day.dayIndex];
+    return DecoratedBox(
+      key: ValueKey('plan_weekly_day_$index'),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _dayLabel(day, strings),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 6),
+            if (!day.enabledStudyDay)
+              Text(day.skipDay
+                  ? strings.dayMarkedHoliday
+                  : strings.dayNotEnabled)
+            else if (day.sessions.isEmpty)
+              Text(strings.noSessionsPlanned)
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final session in day.sessions)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        strings.weeklySessionLine(
+                          session.sessionLabel,
+                          session.focus == PlannedSessionFocus.reviewOnly
+                              ? strings.reviewOnlyFocus
+                              : strings.newAndReviewFocus,
+                          session.plannedMinutes,
+                          session.isTimed
+                              ? _formatMinuteOfDay(session.startMinuteOfDay)
+                              : strings.untimedSessionLabel,
+                          _sessionStatusLabel(strings, session.status),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            if (day.recoveryMode) ...[
+              const SizedBox(height: 4),
+              Text(
+                strings.recoveryModeActive,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+            if (_schedulingPreferences.advancedModeEnabled) ...[
+              const SizedBox(height: 8),
+              SwitchListTile(
+                key: ValueKey('plan_weekly_skip_day_${day.dayIndex}'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(strings.skipDayLabel),
+                value: override?.skipDay ?? false,
+                onChanged: (value) => _setDaySkipOverride(day.dayIndex, value),
+              ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton(
+                    key: ValueKey('plan_weekly_override_a_${day.dayIndex}'),
+                    onPressed: () => _setDaySessionOverrideTime(
+                      dayIndex: day.dayIndex,
+                      sessionA: true,
+                    ),
+                    child: Text(strings.overrideSessionTime('A')),
+                  ),
+                  OutlinedButton(
+                    key: ValueKey('plan_weekly_override_b_${day.dayIndex}'),
+                    onPressed: () => _setDaySessionOverrideTime(
+                      dayIndex: day.dayIndex,
+                      sessionA: false,
+                    ),
+                    child: Text(strings.overrideSessionTime('B')),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _sessionStatusLabel(AppStrings strings, PlannedSessionStatus status) {
+    return switch (status) {
+      PlannedSessionStatus.pending => strings.sessionStatusPending,
+      PlannedSessionStatus.completed => strings.sessionStatusCompleted,
+      PlannedSessionStatus.missed => strings.sessionStatusMissed,
+      PlannedSessionStatus.dueSoon => strings.sessionStatusDueSoon,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    final prefs = ref.watch(appPreferencesProvider);
+    final strings = AppStrings.of(prefs.language);
     final weekdayMinutes = _currentWeekdayMinutes();
     final dailyDefault = deriveDailyDefault(weekdayMinutes);
     final preview = _calibrationPreview;
@@ -391,8 +1170,26 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Onboarding Questionnaire ($_maxQuestions questions)',
+              strings.onboardingQuestionnaire(_maxQuestions),
               style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Card(
+              key: const ValueKey('plan_scheduling_section'),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _isLoadingScheduling
+                    ? const LinearProgressIndicator()
+                    : _buildSchedulingSection(strings),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              key: const ValueKey('plan_weekly_calendar_section'),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildWeeklyCalendarSection(strings),
+              ),
             ),
             const SizedBox(height: 16),
             Card(
@@ -403,7 +1200,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Forecast (Deterministic Simulation)',
+                      strings.forecastDeterministicSimulation,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
@@ -411,7 +1208,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                       key: const ValueKey('plan_forecast_run_button'),
                       onPressed: _isRunningForecast ? null : _runForecast,
                       child: Text(
-                        _isRunningForecast ? 'Running...' : 'Run Forecast',
+                        _isRunningForecast
+                            ? strings.running
+                            : strings.runForecast,
                       ),
                     ),
                     if (_isRunningForecast) ...[
@@ -432,13 +1231,15 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                       const SizedBox(height: 12),
                       if (forecast.estimatedCompletionDate != null)
                         Text(
-                          'Estimated completion: ${_formatDate(forecast.estimatedCompletionDate!)}',
+                          strings.estimatedCompletion(
+                            _formatDate(forecast.estimatedCompletionDate!),
+                          ),
                           key: const ValueKey('plan_forecast_completion_date'),
                         )
                       else
                         Text(
                           forecast.incompleteReason ??
-                              'Completion estimate unavailable.',
+                              strings.completionEstimateUnavailable,
                           key:
                               const ValueKey('plan_forecast_incomplete_reason'),
                           style: TextStyle(
@@ -447,15 +1248,21 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                         ),
                       const SizedBox(height: 8),
                       Text(
-                        'Weekly minutes: ${_formatCurve(forecast.weeklyMinutesCurve)}',
+                        strings.weeklyMinutesCurve(
+                          _formatCurve(forecast.weeklyMinutesCurve),
+                        ),
                         key: const ValueKey('plan_forecast_weekly_minutes'),
                       ),
                       Text(
-                        'Revision-only ratio: ${_formatCurve(forecast.revisionOnlyRatioCurve)}',
+                        strings.revisionOnlyRatioCurve(
+                          _formatCurve(forecast.revisionOnlyRatioCurve),
+                        ),
                         key: const ValueKey('plan_forecast_revision_ratio'),
                       ),
                       Text(
-                        'Avg new pages/day: ${_formatCurve(forecast.avgNewPagesPerDayCurve)}',
+                        strings.avgNewPagesPerDayCurve(
+                          _formatCurve(forecast.avgNewPagesPerDayCurve),
+                        ),
                         key: const ValueKey('plan_forecast_new_pages_per_day'),
                       ),
                     ],
@@ -470,15 +1277,15 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTimeQuestion(),
+                    _buildTimeQuestion(strings),
                     const SizedBox(height: 16),
-                    _buildFluencyQuestion(),
+                    _buildFluencyQuestion(strings),
                     const SizedBox(height: 16),
-                    _buildProfileQuestion(),
+                    _buildProfileQuestion(strings),
                     const SizedBox(height: 16),
-                    _buildForceRevisionQuestion(),
+                    _buildForceRevisionQuestion(strings),
                     const SizedBox(height: 16),
-                    _buildCapsQuestion(),
+                    _buildCapsQuestion(strings),
                   ],
                 ),
               ),
@@ -491,11 +1298,11 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Suggested Plan (Editable)',
+                      strings.suggestedPlanEditable,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
-                    const Text('Daily minutes by weekday'),
+                    Text(strings.dailyMinutesByWeekday),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -503,12 +1310,17 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                       children: [
                         for (final key in onboardingWeekdayKeys)
                           Chip(
-                            label: Text('$key: ${weekdayMinutes[key]}'),
+                            label: Text(
+                              strings.weekdayMinutesChip(
+                                key,
+                                weekdayMinutes[key] ?? 0,
+                              ),
+                            ),
                           ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text('Derived daily default: $dailyDefault'),
+                    Text(strings.derivedDailyDefault(dailyDefault)),
                     const SizedBox(height: 16),
                     TextField(
                       key: const ValueKey('plan_avg_new_minutes'),
@@ -526,8 +1338,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                           _avgNewDirty = true;
                         });
                       },
-                      decoration: const InputDecoration(
-                        labelText: 'Avg new minutes per ayah',
+                      decoration: InputDecoration(
+                        labelText: strings.avgNewMinutesPerAyah,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -547,15 +1359,15 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                           _avgReviewDirty = true;
                         });
                       },
-                      decoration: const InputDecoration(
-                        labelText: 'Avg review minutes per ayah',
+                      decoration: InputDecoration(
+                        labelText: strings.avgReviewMinutesPerAyah,
                       ),
                     ),
                     const SizedBox(height: 12),
                     SwitchListTile(
                       key: const ValueKey('plan_require_page_metadata'),
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Require page metadata'),
+                      title: Text(strings.requirePageMetadata),
                       value: _requirePageMetadata,
                       onChanged: (value) {
                         setState(() {
@@ -576,7 +1388,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                     FilledButton(
                       key: const ValueKey('plan_activate_button'),
                       onPressed: _isActivating ? null : _activatePlan,
-                      child: Text(_isActivating ? 'Activating...' : 'Activate'),
+                      child: Text(
+                        _isActivating ? strings.activating : strings.activate,
+                      ),
                     ),
                   ],
                 ),
@@ -590,12 +1404,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Calibration Mode (Optional)',
+                      strings.calibrationModeOptional,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
                     _buildCalibrationLogGroup(
-                      title: 'New memorization sample',
+                      title: strings.newMemorizationSample,
                       durationKey:
                           const ValueKey('plan_calibration_new_duration'),
                       ayahKey:
@@ -603,13 +1417,13 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                       durationController: _newDurationController,
                       ayahController: _newAyahCountController,
                       buttonKey: const ValueKey('plan_calibration_add_new'),
-                      buttonLabel: 'Add new sample',
+                      buttonLabel: strings.addNewSample,
                       onPressed: () => _addCalibrationSample(
                           CalibrationSampleKind.newMemorization),
                     ),
                     const SizedBox(height: 12),
                     _buildCalibrationLogGroup(
-                      title: 'Review sample',
+                      title: strings.reviewSample,
                       durationKey:
                           const ValueKey('plan_calibration_review_duration'),
                       ayahKey:
@@ -617,31 +1431,35 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                       durationController: _reviewDurationController,
                       ayahController: _reviewAyahCountController,
                       buttonKey: const ValueKey('plan_calibration_add_review'),
-                      buttonLabel: 'Add review sample',
+                      buttonLabel: strings.addReviewSample,
                       onPressed: () =>
                           _addCalibrationSample(CalibrationSampleKind.review),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Preview',
+                      strings.preview,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
                     if (_isRefreshingCalibration)
                       const LinearProgressIndicator(),
                     Text(
-                      'New samples: ${preview?.newSampleCount ?? 0}, '
-                      'median: ${_formatMedian(preview?.medianNewMinutesPerAyah)}',
+                      strings.newSamplesPreview(
+                        preview?.newSampleCount ?? 0,
+                        _formatMedian(preview?.medianNewMinutesPerAyah),
+                      ),
                       key: const ValueKey('plan_calibration_preview_new'),
                     ),
                     Text(
-                      'Review samples: ${preview?.reviewSampleCount ?? 0}, '
-                      'median: ${_formatMedian(preview?.medianReviewMinutesPerAyah)}',
+                      strings.reviewSamplesPreview(
+                        preview?.reviewSampleCount ?? 0,
+                        _formatMedian(preview?.medianReviewMinutesPerAyah),
+                      ),
                       key: const ValueKey('plan_calibration_preview_review'),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Typical grade distribution (%)',
+                      strings.typicalGradeDistributionPercent,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
@@ -657,18 +1475,18 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const Text('Apply timing'),
+                    Text(strings.applyTiming),
                     const SizedBox(height: 8),
                     SegmentedButton<_CalibrationTimingUi>(
                       key: const ValueKey('plan_calibration_timing'),
-                      segments: const [
+                      segments: [
                         ButtonSegment<_CalibrationTimingUi>(
                           value: _CalibrationTimingUi.now,
-                          label: Text('Apply now'),
+                          label: Text(strings.applyNow),
                         ),
                         ButtonSegment<_CalibrationTimingUi>(
                           value: _CalibrationTimingUi.tomorrow,
-                          label: Text('Apply from tomorrow'),
+                          label: Text(strings.applyFromTomorrow),
                         ),
                       ],
                       selected: {_calibrationTiming},
@@ -685,8 +1503,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                           _isApplyingCalibration ? null : _applyCalibration,
                       child: Text(
                         _isApplyingCalibration
-                            ? 'Applying...'
-                            : 'Apply Calibration',
+                            ? strings.applying
+                            : strings.applyCalibration,
                       ),
                     ),
                   ],
@@ -699,25 +1517,25 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
   }
 
-  Widget _buildTimeQuestion() {
+  Widget _buildTimeQuestion(AppStrings strings) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '1) Time input',
+          strings.timeInput,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
         SegmentedButton<_TimeInputMode>(
           key: const ValueKey('plan_time_mode'),
-          segments: const [
+          segments: [
             ButtonSegment<_TimeInputMode>(
               value: _TimeInputMode.weekly,
-              label: Text('Weekly total'),
+              label: Text(strings.weeklyTotal),
             ),
             ButtonSegment<_TimeInputMode>(
               value: _TimeInputMode.weekday,
-              label: Text('Per weekday'),
+              label: Text(strings.perWeekday),
             ),
           ],
           selected: {_timeInputMode},
@@ -735,8 +1553,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-              labelText: 'Weekly minutes',
+            decoration: InputDecoration(
+              labelText: strings.weeklyMinutes,
             ),
           )
         else
@@ -764,12 +1582,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
   }
 
-  Widget _buildFluencyQuestion() {
+  Widget _buildFluencyQuestion(AppStrings strings) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '2) Fluency',
+          strings.fluency,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
@@ -779,7 +1597,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             for (final option in OnboardingFluency.values)
               ChoiceChip(
                 key: ValueKey('plan_fluency_${option.name}'),
-                label: Text(option.name),
+                label: Text(_localizedFluencyLabel(option, strings)),
                 selected: _fluency == option,
                 onSelected: (_) => _onFluencyChanged(option),
               ),
@@ -789,22 +1607,29 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
   }
 
-  Widget _buildProfileQuestion() {
+  Widget _buildProfileQuestion(AppStrings strings) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '3) Profile',
+          strings.profile,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           key: const ValueKey('plan_profile'),
-          value: _profile,
-          items: const [
-            DropdownMenuItem(value: 'support', child: Text('support')),
-            DropdownMenuItem(value: 'standard', child: Text('standard')),
-            DropdownMenuItem(value: 'accelerated', child: Text('accelerated')),
+          initialValue: _profile,
+          items: [
+            DropdownMenuItem(
+                value: 'support', child: Text(strings.profileSupport)),
+            DropdownMenuItem(
+              value: 'standard',
+              child: Text(strings.profileStandard),
+            ),
+            DropdownMenuItem(
+              value: 'accelerated',
+              child: Text(strings.profileAccelerated),
+            ),
           ],
           onChanged: (value) {
             if (value == null) return;
@@ -812,19 +1637,19 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               _profile = value;
             });
           },
-          decoration: const InputDecoration(
-            labelText: 'Profile',
+          decoration: InputDecoration(
+            labelText: strings.profile,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildForceRevisionQuestion() {
+  Widget _buildForceRevisionQuestion(AppStrings strings) {
     return SwitchListTile(
       key: const ValueKey('plan_force_revision_only'),
       contentPadding: EdgeInsets.zero,
-      title: const Text('4) Force Revision Only'),
+      title: Text(strings.forceRevisionOnly),
       value: _forceRevisionOnly,
       onChanged: (value) {
         setState(() {
@@ -834,12 +1659,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
   }
 
-  Widget _buildCapsQuestion() {
+  Widget _buildCapsQuestion(AppStrings strings) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '5-6) Daily new-item caps',
+          strings.dailyNewItemCaps,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
@@ -848,8 +1673,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           controller: _maxNewPagesController,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: const InputDecoration(
-            labelText: 'Max new pages per day',
+          decoration: InputDecoration(
+            labelText: strings.maxNewPagesPerDay,
           ),
         ),
         const SizedBox(height: 8),
@@ -858,8 +1683,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           controller: _maxNewUnitsController,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: const InputDecoration(
-            labelText: 'Max new units per day',
+          decoration: InputDecoration(
+            labelText: strings.maxNewUnitsPerDay,
           ),
         ),
       ],
@@ -895,8 +1720,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
-                decoration: const InputDecoration(
-                  labelText: 'Duration (minutes)',
+                decoration: InputDecoration(
+                  labelText: _strings.durationMinutes,
                 ),
               ),
             ),
@@ -907,8 +1732,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 controller: ayahController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
-                  labelText: 'Ayah count',
+                decoration: InputDecoration(
+                  labelText: _strings.ayahCount,
                 ),
               ),
             ),
@@ -937,6 +1762,42 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         ),
       ),
     );
+  }
+
+  String _localizedFluencyLabel(OnboardingFluency fluency, AppStrings strings) {
+    return switch (fluency) {
+      OnboardingFluency.fluent => strings.fluencyFluent,
+      OnboardingFluency.developing => strings.fluencyDeveloping,
+      OnboardingFluency.support => strings.fluencySupport,
+    };
+  }
+
+  String _formatMinuteOfDay(int? minuteOfDay) {
+    if (minuteOfDay == null) {
+      return '--:--';
+    }
+    final normalized = minuteOfDay.clamp(0, 1439);
+    final hour = (normalized ~/ 60).toString().padLeft(2, '0');
+    final minute = (normalized % 60).toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  String _weekdayLabel(int weekday, AppStrings strings) {
+    return switch (weekday) {
+      DateTime.monday => strings.weekdayShortMon,
+      DateTime.tuesday => strings.weekdayShortTue,
+      DateTime.wednesday => strings.weekdayShortWed,
+      DateTime.thursday => strings.weekdayShortThu,
+      DateTime.friday => strings.weekdayShortFri,
+      DateTime.saturday => strings.weekdayShortSat,
+      DateTime.sunday => strings.weekdayShortSun,
+      _ => strings.weekdayShortMon,
+    };
+  }
+
+  String _dayLabel(WeeklyPlanDay day, AppStrings strings) {
+    final date = DateTime(1970, 1, 1).add(Duration(days: day.dayIndex));
+    return '${_weekdayLabel(day.weekday, strings)} • ${_formatDate(date)}';
   }
 
   String _formatMedian(double? value) {

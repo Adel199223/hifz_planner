@@ -1,3 +1,5 @@
+import 'dart:async' show Stream;
+
 import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';

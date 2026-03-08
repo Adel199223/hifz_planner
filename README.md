@@ -2,6 +2,20 @@
 
 A new Flutter project.
 
+## Local developer start
+
+If you are working in this repo locally, start with `README_START_HERE.md`.
+
+Recommended workspace:
+
+```bash
+code /home/fa507/dev/hifz_planner-only.code-workspace
+```
+
+If local tools or WSL routing are unclear:
+- `docs/assistant/LOCAL_CAPABILITIES.md`
+- `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+
 ## Agent onboarding docs
 
 - `AGENTS.md`
@@ -9,7 +23,48 @@ A new Flutter project.
 - `APP_KNOWLEDGE.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
+- `docs/assistant/GOLDEN_PRINCIPLES.md`
+- `docs/assistant/exec_plans/PLANS.md`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
+- `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
+- `docs/assistant/LOCALIZATION_GLOSSARY.md`
+- `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
+- `docs/assistant/PERFORMANCE_BASELINES.md`
+- `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
+
+Canonical source:
+- `APP_KNOWLEDGE.md` is the canonical app-level architecture/status brief.
+
+## User-facing guidance docs
+
+- `docs/assistant/features/APP_USER_GUIDE.md`
+- `docs/assistant/features/PLANNER_USER_GUIDE.md`
+
+## If You Are Not a Developer, Start Here
+
+1. Start with `docs/assistant/features/APP_USER_GUIDE.md` for a plain-language app walkthrough.
+2. If your question is about planning or daily assignments, open `docs/assistant/features/PLANNER_USER_GUIDE.md`.
+3. If you are still unsure where to look, open `docs/assistant/INDEX.md`.
+4. Use `APP_KNOWLEDGE.md` only when you need technical or canonical detail.
+
+CI quality gates:
+- `.github/workflows/dart.yml`
+
+## Reader audio streaming
+
+- Verse-by-verse recitation streams from AlQuran Cloud CDN.
+- Default source: edition `ar.alafasy`, bitrate `128`.
+- Reader includes Quran.com-style playback options menu with:
+  - `Download` (placeholder)
+  - `Manage repeat settings` (functional)
+  - `Experience` (placeholder)
+  - `Speed` (functional)
+  - `Reciter` (functional)
+- Reciter/speed/repeat preferences persist across launches.
+- `Reciters` route is a functional searchable selector backed by AlQuran Cloud editions API with bundled fallback list.
+- Playback is streaming-first; offline download can be added later.
+- Windows backend uses `just_audio_media_kit` (`media_kit_libs_windows_audio`).
+- If audio plugin wiring looks stale on Windows, run a full rebuild/restart (`flutter clean`, `flutter pub get`, then `flutter run -d windows`).
 
 ## Getting Started
 

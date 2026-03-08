@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../app/app_preferences.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
+import '../l10n/app_strings.dart';
 
 class BookmarksScreen extends ConsumerWidget {
   const BookmarksScreen({super.key});
@@ -12,6 +14,8 @@ class BookmarksScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bookmarkRepo = ref.watch(bookmarkRepoProvider);
     final quranRepo = ref.watch(quranRepoProvider);
+    final prefs = ref.watch(appPreferencesProvider);
+    final strings = AppStrings.of(prefs.language);
 
     return SafeArea(
       child: Padding(
@@ -20,7 +24,7 @@ class BookmarksScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bookmarks',
+              strings.bookmarksTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 12),
@@ -33,14 +37,14 @@ class BookmarksScreen extends ConsumerWidget {
                   }
 
                   if (snapshot.hasError) {
-                    return const Center(
-                      child: Text('Failed to load bookmarks.'),
+                    return Center(
+                      child: Text(strings.failedToLoadBookmarks),
                     );
                   }
 
                   final bookmarks = snapshot.data ?? const <BookmarkData>[];
                   if (bookmarks.isEmpty) {
-                    return const Center(child: Text('No bookmarks yet.'));
+                    return Center(child: Text(strings.noBookmarksYet));
                   }
 
                   return ListView.separated(
@@ -62,17 +66,22 @@ class BookmarksScreen extends ConsumerWidget {
                           return ListTile(
                             key: ValueKey('bookmark_row_$ayahKey'),
                             title: Text(
-                              'Surah ${bookmark.surah}, Ayah ${bookmark.ayah}',
+                              strings.surahAyahListLabel(
+                                bookmark.surah,
+                                bookmark.ayah,
+                              ),
                             ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Saved ${_formatDateTime(bookmark.createdAt)}',
+                                  strings.savedLabel(
+                                    _formatDateTime(bookmark.createdAt),
+                                  ),
                                 ),
                                 if (page != null)
                                   Text(
-                                    'Page $page',
+                                    strings.pageLabel(page),
                                     key: ValueKey('bookmark_page_$ayahKey'),
                                   ),
                                 const SizedBox(height: 8),
@@ -100,7 +109,7 @@ class BookmarksScreen extends ConsumerWidget {
                                           ),
                                         );
                                       },
-                                      child: const Text('Go to verse'),
+                                      child: Text(strings.goToVerse),
                                     ),
                                     OutlinedButton(
                                       key:
@@ -116,7 +125,7 @@ class BookmarksScreen extends ConsumerWidget {
                                                 ),
                                               );
                                             },
-                                      child: const Text('Go to page'),
+                                      child: Text(strings.goToPage),
                                     ),
                                   ],
                                 ),

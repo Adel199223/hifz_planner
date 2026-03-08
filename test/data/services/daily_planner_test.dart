@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
+import 'package:hifz_planner/data/repositories/companion_repo.dart';
 import 'package:hifz_planner/data/repositories/mem_unit_repo.dart';
 import 'package:hifz_planner/data/repositories/progress_repo.dart';
 import 'package:hifz_planner/data/repositories/quran_repo.dart';
@@ -9,11 +10,13 @@ import 'package:hifz_planner/data/repositories/schedule_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
 import 'package:hifz_planner/data/services/daily_planner.dart';
 import 'package:hifz_planner/data/services/new_unit_generator.dart';
+import 'package:hifz_planner/data/services/scheduling/planning_projection_engine.dart';
 
 void main() {
   late AppDatabase db;
   late QuranRepo quranRepo;
   late MemUnitRepo memUnitRepo;
+  late CompanionRepo companionRepo;
   late ScheduleRepo scheduleRepo;
   late SettingsRepo settingsRepo;
   late ProgressRepo progressRepo;
@@ -24,6 +27,7 @@ void main() {
     db = AppDatabase(NativeDatabase.memory());
     quranRepo = QuranRepo(db);
     memUnitRepo = MemUnitRepo(db);
+    companionRepo = CompanionRepo(db);
     scheduleRepo = ScheduleRepo(db);
     settingsRepo = SettingsRepo(db);
     progressRepo = ProgressRepo(db);
@@ -34,8 +38,9 @@ void main() {
       progressRepo,
       scheduleRepo,
       quranRepo,
-      memUnitRepo,
+      companionRepo,
       newUnitGenerator,
+      PlanningProjectionEngine(),
     );
 
     await _seedAyahs(db);
@@ -68,8 +73,8 @@ void main() {
 
     final plan = await dailyPlanner.planToday(todayDay: monday);
 
-    expect(plan.plannedReviews.length, 2);
-    expect(plan.minutesPlannedReviews, 2.0);
+    expect(plan.plannedReviews.length, 4);
+    expect(plan.minutesPlannedReviews, 4.0);
   });
 
   test('falls back to daily_minutes_default when weekday json is invalid',
@@ -121,7 +126,7 @@ void main() {
       requirePageMetadata: 0,
     );
     final supportPlan = await dailyPlanner.planToday(todayDay: todayDay);
-    expect(supportPlan.plannedReviews.length, 8);
+    expect(supportPlan.plannedReviews.length, 9);
 
     await _configureSettings(
       settingsRepo,
@@ -135,7 +140,7 @@ void main() {
       requirePageMetadata: 0,
     );
     final standardPlan = await dailyPlanner.planToday(todayDay: todayDay);
-    expect(standardPlan.plannedReviews.length, 7);
+    expect(standardPlan.plannedReviews.length, 8);
 
     await _configureSettings(
       settingsRepo,
@@ -149,7 +154,7 @@ void main() {
       requirePageMetadata: 0,
     );
     final acceleratedPlan = await dailyPlanner.planToday(todayDay: todayDay);
-    expect(acceleratedPlan.plannedReviews.length, 6);
+    expect(acceleratedPlan.plannedReviews.length, 10);
   });
 
   test('sorts due rows by overdue desc, reps asc, lapse_count desc', () async {
@@ -199,7 +204,7 @@ void main() {
     );
   });
 
-  test('plannedReviews uses budgeted subset when due load exceeds budget',
+  test('recovery mode expands review capacity and suspends new when overloaded',
       () async {
     const todayDay = 100;
     await _configureSettings(
@@ -222,8 +227,9 @@ void main() {
 
     final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
-    expect(plan.plannedReviews.length, 2);
-    expect(plan.revisionOnly, isFalse);
+    expect(plan.plannedReviews.length, 4);
+    expect(plan.revisionOnly, isTrue);
+    expect(plan.recoveryMode, isTrue);
   });
 
   test('sets revisionOnly=true and skips new units on forced overload',
@@ -260,7 +266,7 @@ void main() {
       settingsRepo,
       profile: 'standard',
       forceRevisionOnly: 0,
-      dailyMinutesDefault: 4,
+      dailyMinutesDefault: 6,
       maxNewPagesPerDay: 5,
       maxNewUnitsPerDay: 5,
       avgNewMinutesPerAyah: 1.0,
@@ -277,7 +283,7 @@ void main() {
     final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
     expect(plan.revisionOnly, isFalse);
-    expect(plan.plannedReviews.length, 2);
+    expect(plan.plannedReviews.length, 4);
     expect(plan.plannedNewUnits, isNotEmpty);
     expect(plan.minutesPlannedNew, greaterThan(0));
   });
@@ -335,6 +341,54 @@ void main() {
     expect(plan.minutesPlannedNew, 0);
     expect(plan.message, 'Import page metadata first');
   });
+
+  test('mandatory Stage-4 due blocks new generation unless override', () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 30,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 5,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+    final unitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'stage4-due-unit',
+      dueDay: todayDay - 1,
+      reps: 1,
+      lapseCount: 0,
+    );
+
+    await companionRepo.upsertLifecycleState(
+      unitId: unitId,
+      lifecycleTier: const Value('ready'),
+      stage4Status: const Value('pending'),
+      stage4NextDayDueDay: const Value(todayDay),
+      stage4UnresolvedTargetsJson: const Value('[0]'),
+      updatedAtDay: todayDay,
+      updatedAtSeconds: 300,
+    );
+
+    final blockedPlan = await dailyPlanner.planToday(todayDay: todayDay);
+    expect(blockedPlan.stage4BlocksNewByDefault, isTrue);
+    expect(blockedPlan.plannedStage4Due, isNotEmpty);
+    expect(blockedPlan.plannedStage4Due.first.unit.id, unitId);
+    expect(blockedPlan.plannedStage4Due.first.mandatory, isTrue);
+    expect(blockedPlan.plannedNewUnits, isEmpty);
+
+    final overridePlan = await dailyPlanner.planToday(
+      todayDay: todayDay,
+      allowStage4Override: true,
+    );
+    expect(overridePlan.stage4BlocksNewByDefault, isFalse);
+    expect(overridePlan.plannedStage4Due, isNotEmpty);
+    expect(overridePlan.plannedNewUnits, isNotEmpty);
+  });
 }
 
 Future<void> _configureSettings(
@@ -382,7 +436,7 @@ Future<void> _seedDueUnits(
   }
 }
 
-Future<void> _seedDueUnit(
+Future<int> _seedDueUnit(
   MemUnitRepo memUnitRepo,
   AppDatabase db, {
   required String unitKey,
@@ -415,6 +469,7 @@ Future<void> _seedDueUnit(
           lapseCount: lapseCount,
         ),
       );
+  return unitId;
 }
 
 Future<void> _seedAyahs(AppDatabase db) async {

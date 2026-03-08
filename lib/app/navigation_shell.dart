@@ -119,7 +119,7 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
                     ),
                     IconButton(
                       key: const ValueKey('global_menu_close_button'),
-                      tooltip: 'Close',
+                      tooltip: strings.close,
                       onPressed: _closeMenuDrawer,
                       icon: const Icon(Icons.close),
                     ),

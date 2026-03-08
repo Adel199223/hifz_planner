@@ -128,6 +128,35 @@ class QuranRepo {
     return row.read(countExp) ?? 0;
   }
 
+  Future<List<AyahData>> getAyahsInRange({
+    required int startSurah,
+    required int startAyah,
+    required int endSurah,
+    required int endAyah,
+  }) {
+    final startsAfterEnd = (startSurah > endSurah) ||
+        (startSurah == endSurah && startAyah > endAyah);
+    if (startsAfterEnd) {
+      return Future.value(const <AyahData>[]);
+    }
+
+    final query = _db.select(_db.ayah)
+      ..where(
+        (tbl) =>
+            (tbl.surah.isBiggerThanValue(startSurah) |
+                (tbl.surah.equals(startSurah) &
+                    tbl.ayah.isBiggerOrEqualValue(startAyah))) &
+            (tbl.surah.isSmallerThanValue(endSurah) |
+                (tbl.surah.equals(endSurah) &
+                    tbl.ayah.isSmallerOrEqualValue(endAyah))),
+      )
+      ..orderBy([
+        (tbl) => OrderingTerm.asc(tbl.surah),
+        (tbl) => OrderingTerm.asc(tbl.ayah),
+      ]);
+    return query.get();
+  }
+
   Future<AyahData?> getLastAyah() {
     final query = _db.select(_db.ayah)
       ..orderBy([

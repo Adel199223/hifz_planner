@@ -178,6 +178,56 @@ void main() {
     expect(fakeStore.savedLanguageCode, 'fr');
   });
 
+  testWidgets('rail labels update when language changes', (tester) async {
+    final fakeStore = _FakeAppPreferencesStore();
+    final container = _createContainer(fakeStore);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const HifzPlannerApp(),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_screen_root')),
+    );
+
+    expect(find.text('Reader'), findsOneWidget);
+
+    Future<void> ensureMenuOpen() async {
+      if (find.byKey(const ValueKey('global_menu_drawer')).evaluate().isEmpty) {
+        await tester.tap(
+          find.byKey(const ValueKey('global_menu_button')),
+          warnIfMissed: false,
+        );
+        await tester.pumpAndSettle();
+      }
+    }
+
+    await ensureMenuOpen();
+    await tester.tap(find.byKey(const ValueKey('global_menu_language_button')));
+    await tester.pumpAndSettle();
+    await tester
+        .tap(find.byKey(const ValueKey('global_menu_language_option_fr')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Lecteur'), findsOneWidget);
+    expect(find.text('Signets'), findsOneWidget);
+
+    await ensureMenuOpen();
+    await tester.tap(find.byKey(const ValueKey('global_menu_language_button')));
+    await tester.pumpAndSettle();
+    await tester
+        .tap(find.byKey(const ValueKey('global_menu_language_option_ar')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('القارئ'), findsOneWidget);
+    expect(find.text('العلامات'), findsOneWidget);
+  });
+
   testWidgets('theme selector shows sepia and dark and applies dark mode',
       (tester) async {
     final fakeStore = _FakeAppPreferencesStore();
@@ -342,6 +392,7 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   StoredAppPreferences _stored;
   String? savedLanguageCode;
   String? savedThemeCode;
+  bool? savedCompanionAutoReciteEnabled;
 
   @override
   Future<StoredAppPreferences> load() async {
@@ -354,6 +405,7 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
     _stored = StoredAppPreferences(
       languageCode: code,
       themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
     );
   }
 
@@ -363,6 +415,17 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
     _stored = StoredAppPreferences(
       languageCode: _stored.languageCode,
       themeCode: code,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+    );
+  }
+
+  @override
+  Future<void> saveCompanionAutoReciteEnabled(bool value) async {
+    savedCompanionAutoReciteEnabled = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: value,
     );
   }
 }

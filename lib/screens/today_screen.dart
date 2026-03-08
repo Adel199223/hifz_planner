@@ -1,12 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:drift/drift.dart' show Value;
 
+import '../app/app_preferences.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/repositories/schedule_repo.dart';
 import '../data/services/daily_planner.dart';
+import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
+import '../l10n/app_strings.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -16,17 +21,12 @@ class TodayScreen extends ConsumerStatefulWidget {
 }
 
 class _TodayScreenState extends ConsumerState<TodayScreen> {
-  static const List<_GradeOption> _gradeOptions = <_GradeOption>[
-    _GradeOption(label: 'Good', q: 5),
-    _GradeOption(label: 'Medium', q: 4),
-    _GradeOption(label: 'Hard', q: 3),
-    _GradeOption(label: 'Very hard', q: 2),
-    _GradeOption(label: 'Fail', q: 0),
-  ];
-
   bool _isLoading = true;
+  bool _isSeedingDebugUnit = false;
+  bool _allowStage4NewOverride = false;
   String? _errorMessage;
   TodayPlan? _plan;
+  List<Stage4DueItem> _remainingStage4Due = const <Stage4DueItem>[];
   List<DueUnitRow> _remainingReviews = const <DueUnitRow>[];
   List<MemUnitData> _remainingNewUnits = const <MemUnitData>[];
   final Set<int> _busyUnitIds = <int>{};
@@ -38,6 +38,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Future<void> _loadTodayPlan() async {
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -46,13 +48,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     try {
-      final plan =
-          await ref.read(dailyPlannerProvider).planToday(todayDay: todayDay);
+      final plan = await ref.read(dailyPlannerProvider).planToday(
+            todayDay: todayDay,
+            allowStage4Override: _allowStage4NewOverride,
+          );
       if (!mounted) {
         return;
       }
       setState(() {
         _plan = plan;
+        _remainingStage4Due = List<Stage4DueItem>.from(plan.plannedStage4Due);
         _remainingReviews = List<DueUnitRow>.from(plan.plannedReviews);
         _remainingNewUnits = List<MemUnitData>.from(plan.plannedNewUnits);
         _isLoading = false;
@@ -63,8 +68,75 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       }
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Failed to load today plan.';
+        _errorMessage = strings.failedToLoadTodayPlan;
       });
+    }
+  }
+
+  Future<bool> _confirmStage4Override(AppStrings strings) async {
+    final decision = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(strings.stage4OverrideDialogTitle),
+          content: Text(strings.stage4OverrideDialogMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(strings.cancel),
+            ),
+            FilledButton(
+              key: const ValueKey('today_stage4_override_confirm'),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(strings.stage4OverrideDialogConfirm),
+            ),
+          ],
+        );
+      },
+    );
+    return decision == true;
+  }
+
+  Future<void> _handleStage4Override() async {
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+    final confirmed = await _confirmStage4Override(strings);
+    if (!confirmed) {
+      return;
+    }
+
+    final now = DateTime.now().toLocal();
+    final todayDay = localDayIndex(now);
+    final seconds = nowLocalSecondsSinceMidnight(now);
+    final companionRepo = ref.read(companionRepoProvider);
+
+    try {
+      final mandatoryUnitIds = _remainingStage4Due
+          .where((item) => item.mandatory)
+          .map((item) => item.unit.id)
+          .toSet();
+      for (final unitId in mandatoryUnitIds) {
+        await companionRepo.recordNewOverride(
+          unitId: unitId,
+          todayDay: todayDay,
+          updatedAtSeconds: seconds,
+        );
+      }
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _allowStage4NewOverride = true;
+      });
+      await _loadTodayPlan();
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(strings.stage4OverrideApplied);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(strings.stage4OverrideFailed);
     }
   }
 
@@ -73,6 +145,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     required int gradeQ,
     required VoidCallback onSuccessRemove,
   }) async {
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+
     if (_busyUnitIds.contains(unitId)) {
       return;
     }
@@ -117,7 +191,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         onSuccessRemove();
         _busyUnitIds.remove(unitId);
       });
-      _showSnackBar('Grade saved.');
+      _showSnackBar(strings.gradeSaved);
     } catch (_) {
       if (!mounted) {
         return;
@@ -125,7 +199,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       setState(() {
         _busyUnitIds.remove(unitId);
       });
-      _showSnackBar('Failed to save grade.');
+      _showSnackBar(strings.failedToSaveGrade);
     }
   }
 
@@ -154,15 +228,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     return uri.toString();
   }
 
-  String _formatUnitHeader(MemUnitData unit) {
+  String _formatUnitHeader(MemUnitData unit, AppStrings strings) {
     final parts = <String>[unit.kind];
     if (unit.pageMadina != null) {
-      parts.add('Page ${unit.pageMadina}');
+      parts.add(strings.pageLabel(unit.pageMadina!));
     }
     return parts.join(' • ');
   }
 
-  String _formatRange(MemUnitData unit) {
+  String _formatRange(MemUnitData unit, AppStrings strings) {
     final startSurah = unit.startSurah;
     final startAyah = unit.startAyah;
     final endSurah = unit.endSurah;
@@ -172,7 +246,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         startAyah == null ||
         endSurah == null ||
         endAyah == null) {
-      return 'Range unavailable';
+      return strings.rangeUnavailable;
     }
     return '$startSurah:$startAyah - $endSurah:$endAyah';
   }
@@ -188,6 +262,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Widget _buildGradeButtons({
+    required AppStrings strings,
     required int unitId,
     required bool busy,
     required String keyPrefix,
@@ -197,7 +272,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       spacing: 8,
       runSpacing: 8,
       children: [
-        for (final option in _gradeOptions)
+        for (final option in _gradeOptions(strings))
           OutlinedButton(
             key: ValueKey('${keyPrefix}_${unitId}_q${option.q}'),
             onPressed: busy ? null : () => onGrade(option.q),
@@ -207,7 +282,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildReviewSection() {
+  Widget _buildReviewSection(AppStrings strings) {
     return Card(
       key: const ValueKey('today_reviews_section'),
       child: Padding(
@@ -216,17 +291,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Planned Reviews',
+              strings.plannedReviews,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
             if (_remainingReviews.isEmpty)
-              const Text('No planned reviews left.')
+              Text(strings.noPlannedReviewsLeft)
             else
               Column(
                 children: [
                   for (final dueRow in _remainingReviews) ...[
-                    _buildReviewRow(dueRow),
+                    _buildReviewRow(dueRow, strings),
                     const SizedBox(height: 12),
                   ],
                 ],
@@ -237,7 +312,128 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildReviewRow(DueUnitRow dueRow) {
+  String _stage4DueKindLabel(String dueKind, AppStrings strings) {
+    return switch (dueKind) {
+      'next_day_required' => strings.stage4DueKindNextDayRequired,
+      'retry_required' => strings.stage4DueKindRetryRequired,
+      'pre_sleep_optional' => strings.stage4DueKindPreSleepOptional,
+      _ => strings.stage4DueKindNextDayRequired,
+    };
+  }
+
+  String _stage4RouteForItem(Stage4DueItem item) {
+    final needsStrengthening = item.lifecycle.stage4Status == 'failed' ||
+        item.lifecycle.stage4Status == 'needs_reinforcement' ||
+        item.lifecycle.stage4StrengtheningRoute != null;
+    if (needsStrengthening) {
+      return '/companion/chain?unitId=${item.unit.id}&mode=new';
+    }
+    return '/companion/chain?unitId=${item.unit.id}&mode=stage4';
+  }
+
+  Widget _buildStage4DueSection(AppStrings strings) {
+    final plan = _plan;
+    if (plan == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      key: const ValueKey('today_stage4_section'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.stage4DueSectionTitle,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              strings.stage4TierSummary(
+                plan.stage4QualitySnapshot.emergingCount,
+                plan.stage4QualitySnapshot.readyCount,
+                plan.stage4QualitySnapshot.stableCount,
+                plan.stage4QualitySnapshot.maintainedCount,
+              ),
+            ),
+            if (plan.stage4CatchUpMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                plan.stage4CatchUpMessage!,
+                key: const ValueKey('today_stage4_catchup_message'),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+            if (plan.stage4BlocksNewByDefault) ...[
+              const SizedBox(height: 8),
+              OutlinedButton(
+                key: const ValueKey('today_stage4_override_new_button'),
+                onPressed: _handleStage4Override,
+                child: Text(strings.stage4OverrideNewAction),
+              ),
+            ],
+            const SizedBox(height: 10),
+            if (_remainingStage4Due.isEmpty)
+              Text(strings.stage4NoDueItems)
+            else
+              Column(
+                children: [
+                  for (final item in _remainingStage4Due) ...[
+                    DecoratedBox(
+                      key: ValueKey('today_stage4_row_${item.unit.id}'),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _formatUnitHeader(item.unit, strings),
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(_formatRange(item.unit, strings)),
+                            const SizedBox(height: 4),
+                            Text(
+                              strings.stage4DueItemSummary(
+                                _stage4DueKindLabel(item.dueKind, strings),
+                                item.overdueDays,
+                                item.unresolvedTargetsCount,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton(
+                              key: ValueKey(
+                                'today_open_companion_stage4_${item.unit.id}',
+                              ),
+                              onPressed: () {
+                                context.go(_stage4RouteForItem(item));
+                              },
+                              child: Text(strings.stage4OpenAction),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReviewRow(DueUnitRow dueRow, AppStrings strings) {
     final unit = dueRow.unit;
     final unitId = unit.id;
     final busy = _busyUnitIds.contains(unitId);
@@ -256,15 +452,30 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _formatUnitHeader(unit),
+              _formatUnitHeader(unit, strings),
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 4),
-            Text(_formatRange(unit)),
+            Text(_formatRange(unit, strings)),
             const SizedBox(height: 4),
-            Text('Due day ${dueRow.schedule.dueDay}'),
+            Text(strings.dueDayLabel(dueRow.schedule.dueDay)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton(
+                  key: ValueKey('today_open_companion_review_$unitId'),
+                  onPressed: () {
+                    context.go('/companion/chain?unitId=$unitId&mode=review');
+                  },
+                  child: Text(strings.openCompanionChain),
+                ),
+              ],
+            ),
             const SizedBox(height: 10),
             _buildGradeButtons(
+              strings: strings,
               unitId: unitId,
               busy: busy,
               keyPrefix: 'today_review_grade',
@@ -286,7 +497,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildNewMemorizationSection() {
+  Widget _buildNewMemorizationSection(AppStrings strings) {
     return Card(
       key: const ValueKey('today_new_section'),
       child: Padding(
@@ -295,17 +506,30 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'New Memorization',
+              strings.newMemorization,
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            if (kDebugMode) ...[
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                key: const ValueKey('today_debug_seed_new_unit'),
+                onPressed: _isSeedingDebugUnit ? null : _seedDebugNewUnit,
+                icon: const Icon(Icons.bug_report_outlined),
+                label: Text(
+                  _isSeedingDebugUnit
+                      ? 'Debug: Generating...'
+                      : 'Debug: Generate test new unit',
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             if (_remainingNewUnits.isEmpty)
-              const Text('No planned new units left.')
+              Text(strings.noPlannedNewUnitsLeft)
             else
               Column(
                 children: [
                   for (final unit in _remainingNewUnits) ...[
-                    _buildNewUnitRow(unit),
+                    _buildNewUnitRow(unit, strings),
                     const SizedBox(height: 12),
                   ],
                 ],
@@ -316,7 +540,126 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildNewUnitRow(MemUnitData unit) {
+  Future<void> _seedDebugNewUnit() async {
+    if (_isSeedingDebugUnit) {
+      return;
+    }
+
+    setState(() {
+      _isSeedingDebugUnit = true;
+    });
+
+    final now = DateTime.now().toLocal();
+    final todayDay = localDayIndex(now);
+
+    try {
+      final db = ref.read(appDatabaseProvider);
+      final quranRepo = ref.read(quranRepoProvider);
+      final memUnitRepo = ref.read(memUnitRepoProvider);
+      final scheduleRepo = ref.read(scheduleRepoProvider);
+      final progressRepo = ref.read(progressRepoProvider);
+
+      final cursor = await progressRepo.getCursor();
+      final ayahWindow = await quranRepo.getAyahsFromCursor(
+        startSurah: cursor.nextSurah,
+        startAyah: cursor.nextAyah,
+        limit: 8,
+      );
+
+      if (ayahWindow.isEmpty) {
+        _showSnackBar('Debug: No ayahs available from current cursor.');
+        return;
+      }
+
+      final anchor = ayahWindow.first;
+      final unitAyahs = _takeDebugUnitAyahs(ayahWindow, anchor.pageMadina);
+      final start = unitAyahs.first;
+      final end = unitAyahs.last;
+      final page = anchor.pageMadina;
+      final unitKey = 'debug_seed:p${page ?? 0}:s${start.surah}a${start.ayah}'
+          '-s${end.surah}a${end.ayah}:${now.millisecondsSinceEpoch}';
+
+      MemUnitData? seededUnit;
+
+      await db.transaction(() async {
+        final unitId = await memUnitRepo.create(
+          MemUnitCompanion.insert(
+            kind: 'page_segment',
+            pageMadina: page == null ? const Value.absent() : Value(page),
+            startSurah: Value(start.surah),
+            startAyah: Value(start.ayah),
+            endSurah: Value(end.surah),
+            endAyah: Value(end.ayah),
+            unitKey: unitKey,
+            createdAtDay: todayDay,
+            updatedAtDay: todayDay,
+          ),
+        );
+
+        await scheduleRepo.upsertInitialStateForNewUnit(
+          unitId: unitId,
+          dueDay: todayDay,
+          ef: 2.5,
+          reps: 0,
+          intervalDays: 0,
+        );
+        seededUnit = await memUnitRepo.get(unitId);
+
+        final nextAyah = await quranRepo.getAyahsFromCursor(
+          startSurah: end.surah,
+          startAyah: end.ayah + 1,
+          limit: 1,
+        );
+        if (nextAyah.isNotEmpty) {
+          await progressRepo.updateCursor(
+            nextSurah: nextAyah.first.surah,
+            nextAyah: nextAyah.first.ayah,
+            updatedAtDay: todayDay,
+          );
+        }
+      });
+
+      if (seededUnit != null && mounted) {
+        setState(() {
+          _remainingNewUnits = <MemUnitData>[
+            ..._remainingNewUnits,
+            seededUnit!,
+          ];
+        });
+      }
+      _showSnackBar('Debug: Added one test new memorization unit.');
+    } catch (error) {
+      _showSnackBar('Debug: Failed to add test unit ($error).');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSeedingDebugUnit = false;
+        });
+      }
+    }
+  }
+
+  List<AyahData> _takeDebugUnitAyahs(List<AyahData> ayahs, int? pageMadina) {
+    if (ayahs.isEmpty) {
+      return const <AyahData>[];
+    }
+
+    if (pageMadina == null) {
+      final limit = ayahs.length < 4 ? ayahs.length : 4;
+      return ayahs.take(limit).toList(growable: false);
+    }
+
+    final pageAyahs = <AyahData>[];
+    for (final ayah in ayahs) {
+      if (ayah.pageMadina != pageMadina) {
+        break;
+      }
+      pageAyahs.add(ayah);
+    }
+    return pageAyahs.isEmpty ? <AyahData>[ayahs.first] : pageAyahs;
+  }
+
+  Widget _buildNewUnitRow(MemUnitData unit, AppStrings strings) {
     final unitId = unit.id;
     final busy = _busyUnitIds.contains(unitId);
     final canOpenInReader = _canOpenInReader(unit);
@@ -336,11 +679,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _formatUnitHeader(unit),
+              _formatUnitHeader(unit, strings),
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 4),
-            Text(_formatRange(unit)),
+            Text(_formatRange(unit, strings)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
@@ -353,21 +696,29 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                           context.go(_buildReaderRoute(unit));
                         }
                       : null,
-                  child: const Text('Open in Reader'),
+                  child: Text(strings.openInReader),
+                ),
+                OutlinedButton(
+                  key: ValueKey('today_open_companion_new_$unitId'),
+                  onPressed: () {
+                    context.go('/companion/chain?unitId=$unitId&mode=new');
+                  },
+                  child: Text(strings.openCompanionChain),
                 ),
               ],
             ),
             if (pageMissing) ...[
               const SizedBox(height: 6),
-              const Text('Page metadata required to open in Reader.'),
+              Text(strings.pageMetadataRequiredToOpenInReader),
             ],
             const SizedBox(height: 10),
             Text(
-              'Self-check grade',
+              strings.selfCheckGrade,
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
             _buildGradeButtons(
+              strings: strings,
               unitId: unitId,
               busy: busy,
               keyPrefix: 'today_new_grade',
@@ -389,6 +740,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final prefs = ref.watch(appPreferencesProvider);
+    final strings = AppStrings.of(prefs.language);
+
     if (_isLoading) {
       return const SafeArea(
         key: ValueKey('today_screen_root'),
@@ -413,7 +767,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               OutlinedButton(
                 key: const ValueKey('today_retry_button'),
                 onPressed: _loadTodayPlan,
-                child: const Text('Retry'),
+                child: Text(strings.retry),
               ),
             ],
           ),
@@ -431,17 +785,35 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Today',
+              strings.todayTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             if (plan != null) ...[
               Text(
-                'Planned review minutes: ${plan.minutesPlannedReviews.toStringAsFixed(1)}',
+                strings.plannedReviewMinutes(
+                  plan.minutesPlannedReviews.toStringAsFixed(1),
+                ),
               ),
               Text(
-                'Planned new minutes: ${plan.minutesPlannedNew.toStringAsFixed(1)}',
+                strings.plannedNewMinutes(
+                  plan.minutesPlannedNew.toStringAsFixed(1),
+                ),
               ),
+              Text(
+                strings.reviewPressureLabel(
+                  plan.reviewPressure.toStringAsFixed(2),
+                ),
+              ),
+              if (plan.recoveryMode)
+                Text(
+                  strings.recoveryModeActive,
+                  key: const ValueKey('today_recovery_mode_badge'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               if (plan.message != null) ...[
                 const SizedBox(height: 6),
                 Text(
@@ -453,14 +825,116 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 ),
               ],
               const SizedBox(height: 12),
+              _buildSessionSection(strings, plan),
+              const SizedBox(height: 12),
             ],
-            _buildReviewSection(),
+            _buildStage4DueSection(strings),
             const SizedBox(height: 16),
-            _buildNewMemorizationSection(),
+            _buildReviewSection(strings),
+            const SizedBox(height: 16),
+            _buildNewMemorizationSection(strings),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildSessionSection(AppStrings strings, TodayPlan plan) {
+    return Card(
+      key: const ValueKey('today_sessions_section'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.todaySessions,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 10),
+            if (plan.sessions.isEmpty)
+              Text(strings.noSessionsPlanned)
+            else
+              Column(
+                children: [
+                  for (var i = 0; i < plan.sessions.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: i == plan.sessions.length - 1 ? 0 : 8,
+                      ),
+                      child: _buildSessionRow(plan.sessions[i], strings, i),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSessionRow(
+    PlannedSession session,
+    AppStrings strings,
+    int index,
+  ) {
+    final sessionLabel = session.sessionLabel;
+    final focusCode = session.focus.code;
+    final focus = focusCode == 'review_only'
+        ? strings.reviewOnlyFocus
+        : strings.newAndReviewFocus;
+    final statusCode = session.status.code;
+    final status = statusCode == 'due_soon'
+        ? strings.sessionStatusDueSoon
+        : strings.sessionStatusPending;
+    final minutes = session.plannedMinutes;
+    final isTimed = session.isTimed;
+    final minuteOfDay = session.startMinuteOfDay;
+
+    return DecoratedBox(
+      key: ValueKey('today_session_$index'),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$sessionLabel • $focus',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            Text(strings.sessionMinutes(minutes)),
+            const SizedBox(width: 8),
+            Text(isTimed && minuteOfDay != null
+                ? _formatMinuteOfDay(minuteOfDay)
+                : strings.untimedSessionLabel),
+            const SizedBox(width: 8),
+            Text(status),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatMinuteOfDay(int minuteOfDay) {
+    final hour = (minuteOfDay ~/ 60).toString().padLeft(2, '0');
+    final minute = (minuteOfDay % 60).toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  List<_GradeOption> _gradeOptions(AppStrings strings) {
+    return <_GradeOption>[
+      _GradeOption(label: strings.gradeGood, q: 5),
+      _GradeOption(label: strings.gradeMedium, q: 4),
+      _GradeOption(label: strings.gradeHard, q: 3),
+      _GradeOption(label: strings.gradeVeryHard, q: 2),
+      _GradeOption(label: strings.gradeFail, q: 0),
+    ];
   }
 }
 

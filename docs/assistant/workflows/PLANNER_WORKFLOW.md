@@ -4,6 +4,12 @@
 
 Use this workflow for onboarding questionnaire, plan activation, daily planning, review grading, calibration, forecast, and scheduler behavior.
 
+## Expected Outputs
+
+- Planner/today behavior stays transaction-safe and test-covered.
+- Projection logic remains shared where required.
+- Planner-targeted tests pass before handoff.
+
 ## When To Use
 
 Use when changes touch:
@@ -12,9 +18,14 @@ Use when changes touch:
 - spaced repetition scheduler calculations
 - calibration sample/apply behavior
 - planner settings and progress persistence
+- shared planner/forecast projection behavior (`PlanningProjectionEngine`)
+- For deep scheduling availability rules or companion chain work, route to `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`.
 
 ## What Not To Do
 
+- Don't use this workflow when scope is advanced scheduling availability or companion staged runtime behavior. Instead use `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`.
+- Don't use this workflow when the change is DB schema/migration-centric. Instead use `docs/assistant/DB_DRIFT_KNOWLEDGE.md` and corresponding DB-aware workflow path.
+- Don't use this workflow when scope is reader-only UI parity. Instead use `docs/assistant/workflows/READER_WORKFLOW.md`.
 - Do not change DB schema without migration updates.
 - Do not bypass transactional writes for review-log + schedule updates.
 - Do not change planner constants without updating related tests.
@@ -27,6 +38,7 @@ Use when changes touch:
 - `lib/data/services/spaced_repetition_scheduler.dart`
 - `lib/data/services/calibration_service.dart`
 - `lib/data/services/forecast_simulation_service.dart`
+- `lib/data/services/scheduling/planning_projection_engine.dart`
 - `lib/data/repositories/settings_repo.dart`
 - `lib/data/repositories/schedule_repo.dart`
 - `lib/data/repositories/review_log_repo.dart`
@@ -62,6 +74,7 @@ flutter test -j 1 -r expanded test/data/database/app_database_test.dart
    - Verify review-log insert + schedule apply transaction path.
 3. Symptoms: forecast/calibration output unexpected.
    - Re-check defaults and distribution parsing in `plan_screen.dart` and services.
+   - Verify both planner and forecast paths consume `PlanningProjectionEngine`.
 4. Symptoms: planner works on one screen but not another.
    - Trace provider wiring in `database_providers.dart`.
 
@@ -71,3 +84,4 @@ flutter test -j 1 -r expanded test/data/database/app_database_test.dart
 - singleton settings/progress assumptions still hold
 - targeted planner/scheduler tests pass
 - schema-affecting changes include migration updates and DB tests
+- keep `docs/assistant/features/PLANNER_USER_GUIDE.md` aligned when planner UX/logic changes materially

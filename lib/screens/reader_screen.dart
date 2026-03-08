@@ -10,9 +10,15 @@ import '../app/app_preferences.dart';
 import '../app/navigation_providers.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
+import '../data/services/ayah_audio_service.dart';
 import '../data/services/qurancom_api.dart';
+import '../data/services/qurancom_chapters_service.dart';
+import '../data/services/quran_wording.dart';
 import '../l10n/app_language.dart';
+import '../l10n/app_strings.dart';
+import '../ui/audio/reciter_selection_list.dart';
 import '../ui/qcf/qcf_font_manager.dart';
+import '../ui/quran/quran_word_wrap.dart';
 import '../ui/tajweed/tajweed_colors.dart';
 import '../ui/tajweed/tajweed_markup.dart';
 
@@ -37,16 +43,274 @@ const double _mushafUnderlineTabIndicator = 2;
 const double _readerTopRightMenuClearance = 64;
 const double _verseByVerseWordGap = 4;
 const double _verseByVerseWordRunSpacing = 8;
-const String _mushafBasmalaTranslation =
-    'In the Name of Allah - the Most Compassionate, Most Merciful';
 const int _translationResourceEnglish = 85;
 const int _translationResourceFrench = 31;
 const int _translationResourcePortuguese = 43;
+const List<double> _playbackSpeedOptions = <double>[0.75, 1.0, 1.25, 1.5];
+const List<int> _repeatCountOptions = <int>[0, 1, 2, 3];
 const Map<int, String> _translationResourceLabelById = <int, String>{
   _translationResourceEnglish: 'M.A.S. Abdel Haleem',
   _translationResourceFrench: 'Muhammad Hamidullah',
   _translationResourcePortuguese: 'Samir El-Hayek',
 };
+
+const Color _tajweedLegendSilentLetterColor = Color(0xFF9CA3AF);
+const Color _tajweedLegendNormalMaddColor = Color(0xFFC59D22);
+const Color _tajweedLegendSeparatedMaddColor = Color(0xFFE88700);
+const Color _tajweedLegendConnectedMaddColor = Color(0xFFF11717);
+const Color _tajweedLegendNecessaryMaddColor = Color(0xFFB00020);
+const Color _tajweedLegendGhunnaColor = Color(0xFF0AA80A);
+const Color _tajweedLegendQalqalaColor = Color(0xFF10A7D8);
+const Color _tajweedLegendTafkhimColor = Color(0xFF2A61DF);
+
+const List<String> _fallbackSurahNamesEnglish = <String>[
+  "Al-Fatihah",
+  "Al-Baqarah",
+  "Ali 'Imran",
+  "An-Nisa",
+  "Al-Ma'idah",
+  "Al-An'am",
+  "Al-A'raf",
+  "Al-Anfal",
+  "At-Tawbah",
+  "Yunus",
+  "Hud",
+  "Yusuf",
+  "Ar-Ra'd",
+  "Ibrahim",
+  "Al-Hijr",
+  "An-Nahl",
+  "Al-Isra",
+  "Al-Kahf",
+  "Maryam",
+  "Taha",
+  "Al-Anbya",
+  "Al-Hajj",
+  "Al-Mu'minun",
+  "An-Nur",
+  "Al-Furqan",
+  "Ash-Shu'ara",
+  "An-Naml",
+  "Al-Qasas",
+  "Al-'Ankabut",
+  "Ar-Rum",
+  "Luqman",
+  "As-Sajdah",
+  "Al-Ahzab",
+  "Saba",
+  "Fatir",
+  "Ya-Sin",
+  "As-Saffat",
+  "Sad",
+  "Az-Zumar",
+  "Ghafir",
+  "Fussilat",
+  "Ash-Shuraa",
+  "Az-Zukhruf",
+  "Ad-Dukhan",
+  "Al-Jathiyah",
+  "Al-Ahqaf",
+  "Muhammad",
+  "Al-Fath",
+  "Al-Hujurat",
+  "Qaf",
+  "Adh-Dhariyat",
+  "At-Tur",
+  "An-Najm",
+  "Al-Qamar",
+  "Ar-Rahman",
+  "Al-Waqi'ah",
+  "Al-Hadid",
+  "Al-Mujadila",
+  "Al-Hashr",
+  "Al-Mumtahanah",
+  "As-Saf",
+  "Al-Jumu'ah",
+  "Al-Munafiqun",
+  "At-Taghabun",
+  "At-Talaq",
+  "At-Tahrim",
+  "Al-Mulk",
+  "Al-Qalam",
+  "Al-Haqqah",
+  "Al-Ma'arij",
+  "Nuh",
+  "Al-Jinn",
+  "Al-Muzzammil",
+  "Al-Muddaththir",
+  "Al-Qiyamah",
+  "Al-Insan",
+  "Al-Mursalat",
+  "An-Naba",
+  "An-Nazi'at",
+  "'Abasa",
+  "At-Takwir",
+  "Al-Infitar",
+  "Al-Mutaffifin",
+  "Al-Inshiqaq",
+  "Al-Buruj",
+  "At-Tariq",
+  "Al-A'la",
+  "Al-Ghashiyah",
+  "Al-Fajr",
+  "Al-Balad",
+  "Ash-Shams",
+  "Al-Layl",
+  "Ad-Duhaa",
+  "Ash-Sharh",
+  "At-Tin",
+  "Al-'Alaq",
+  "Al-Qadr",
+  "Al-Bayyinah",
+  "Az-Zalzalah",
+  "Al-'Adiyat",
+  "Al-Qari'ah",
+  "At-Takathur",
+  "Al-'Asr",
+  "Al-Humazah",
+  "Al-Fil",
+  "Quraysh",
+  "Al-Ma'un",
+  "Al-Kawthar",
+  "Al-Kafirun",
+  "An-Nasr",
+  "Al-Masad",
+  "Al-Ikhlas",
+  "Al-Falaq",
+  "An-Nas",
+];
+
+const List<String> _fallbackSurahNamesArabic = <String>[
+  "الفاتحة",
+  "البقرة",
+  "آل عمران",
+  "النساء",
+  "المائدة",
+  "الأنعام",
+  "الأعراف",
+  "الأنفال",
+  "التوبة",
+  "يونس",
+  "هود",
+  "يوسف",
+  "الرعد",
+  "ابراهيم",
+  "الحجر",
+  "النحل",
+  "الإسراء",
+  "الكهف",
+  "مريم",
+  "طه",
+  "الأنبياء",
+  "الحج",
+  "المؤمنون",
+  "النور",
+  "الفرقان",
+  "الشعراء",
+  "النمل",
+  "القصص",
+  "العنكبوت",
+  "الروم",
+  "لقمان",
+  "السجدة",
+  "الأحزاب",
+  "سبإ",
+  "فاطر",
+  "يس",
+  "الصافات",
+  "ص",
+  "الزمر",
+  "غافر",
+  "فصلت",
+  "الشورى",
+  "الزخرف",
+  "الدخان",
+  "الجاثية",
+  "الأحقاف",
+  "محمد",
+  "الفتح",
+  "الحجرات",
+  "ق",
+  "الذاريات",
+  "الطور",
+  "النجم",
+  "القمر",
+  "الرحمن",
+  "الواقعة",
+  "الحديد",
+  "المجادلة",
+  "الحشر",
+  "الممتحنة",
+  "الصف",
+  "الجمعة",
+  "المنافقون",
+  "التغابن",
+  "الطلاق",
+  "التحريم",
+  "الملك",
+  "القلم",
+  "الحاقة",
+  "المعارج",
+  "نوح",
+  "الجن",
+  "المزمل",
+  "المدثر",
+  "القيامة",
+  "الانسان",
+  "المرسلات",
+  "النبإ",
+  "النازعات",
+  "عبس",
+  "التكوير",
+  "الإنفطار",
+  "المطففين",
+  "الإنشقاق",
+  "البروج",
+  "الطارق",
+  "الأعلى",
+  "الغاشية",
+  "الفجر",
+  "البلد",
+  "الشمس",
+  "الليل",
+  "الضحى",
+  "الشرح",
+  "التين",
+  "العلق",
+  "القدر",
+  "البينة",
+  "الزلزلة",
+  "العاديات",
+  "القارعة",
+  "التكاثر",
+  "العصر",
+  "الهمزة",
+  "الفيل",
+  "قريش",
+  "الماعون",
+  "الكوثر",
+  "الكافرون",
+  "النصر",
+  "المسد",
+  "الإخلاص",
+  "الفلق",
+  "الناس",
+];
+
+const Map<int, String> _fallbackSurahMeaningsEnglish = <int, String>{
+  1: "The Opener",
+};
+
+Map<int, String> _indexedSurahMap(List<String> names) {
+  return <int, String>{
+    for (var index = 0; index < names.length; index++) index + 1: names[index],
+  };
+}
+
+final Map<int, String> _fallbackSurahNamesEnglishByNumber =
+    _indexedSurahMap(_fallbackSurahNamesEnglish);
+final Map<int, String> _fallbackSurahNamesArabicByNumber =
+    _indexedSurahMap(_fallbackSurahNamesArabic);
 
 const Map<int, Set<int>> _staticCenteredMushafLines = <int, Set<int>>{
   255: <int>{2},
@@ -102,8 +366,25 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   String _mushafVerseSearchQuery = '';
   String _mushafJuzSearchQuery = '';
   String _mushafPageSearchQuery = '';
-  final Map<int, String> _surahNamesEn = <int, String>{};
-  final Map<int, String> _surahNamesAr = <int, String>{};
+  final Map<AppLanguage, Map<int, String>> _surahNamesByLanguage =
+      <AppLanguage, Map<int, String>>{
+    AppLanguage.english:
+        Map<int, String>.from(_fallbackSurahNamesEnglishByNumber),
+    AppLanguage.french:
+        Map<int, String>.from(_fallbackSurahNamesEnglishByNumber),
+    AppLanguage.portuguese:
+        Map<int, String>.from(_fallbackSurahNamesEnglishByNumber),
+    AppLanguage.arabic:
+        Map<int, String>.from(_fallbackSurahNamesArabicByNumber),
+  };
+  final Map<AppLanguage, Map<int, String>> _surahMeaningsByLanguage =
+      <AppLanguage, Map<int, String>>{
+    AppLanguage.english: Map<int, String>.from(_fallbackSurahMeaningsEnglish),
+    for (final language in AppLanguage.values.where(
+      (value) => value != AppLanguage.english,
+    ))
+      language: <int, String>{},
+  };
   int? _selectedPage;
   Future<List<int>>? _availablePagesFuture;
   Future<List<MushafJuzNavEntry>>? _juzIndexFuture;
@@ -137,6 +418,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   String? _lastMushafInteractionWarningKey;
   bool _pendingMushafScrollReset = false;
   Timer? _jumpHighlightTimer;
+
+  AppStrings get _strings =>
+      AppStrings.of(ref.read(appPreferencesProvider).language);
 
   @override
   void initState() {
@@ -322,13 +606,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       final targetPage = targetAyah?.pageMadina;
       if (targetPage == null) {
         if (showMissingTargetMessage) {
-          _showSnackBar('Target ayah has no page metadata yet.');
+          _showSnackBar(_strings.targetAyahNoPageMetadataYet);
         }
         targetForJump = null;
       } else if (!pages.contains(targetPage)) {
         if (showMissingTargetMessage) {
-          _showSnackBar(
-              'Target ayah page is not available in imported metadata.');
+          _showSnackBar(_strings.targetAyahPageUnavailable);
         }
         targetForJump = null;
       } else {
@@ -502,7 +785,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       setState(() {
         _arabicRenderMode = _ArabicRenderMode.plain;
       });
-      _showSnackBar('Tajweed tags unavailable. Showing plain text.');
+      _showSnackBar(_strings.tajweedTagsUnavailableShowingPlain);
     }
   }
 
@@ -560,7 +843,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
     final page = _firstMadinaPage(ayahs);
     if (page == null) {
-      _showSnackBar('No page metadata found for Surah $surah.');
+      _showSnackBar(_strings.noPageMetadataForSurah(surah));
       return;
     }
 
@@ -581,7 +864,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       return;
     }
     if (page == null) {
-      _showSnackBar('No page metadata found for $surah:$ayah.');
+      _showSnackBar(_strings.noPageMetadataForSurahAyah(surah, ayah));
       return;
     }
     setState(() {
@@ -635,37 +918,181 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _loadSurahMetadata() async {
+    final namesByLanguage = <AppLanguage, Map<int, String>>{
+      for (final language in AppLanguage.values)
+        language: Map<int, String>.from(_surahNamesByLanguage[language]!),
+    };
+    final meaningsByLanguage = <AppLanguage, Map<int, String>>{
+      for (final language in AppLanguage.values)
+        language: Map<int, String>.from(_surahMeaningsByLanguage[language]!),
+    };
+
     try {
       final metadata = ref.read(surahMetadataServiceProvider);
       await metadata.ensureLoaded();
+      for (final entry in metadata.getAll()) {
+        namesByLanguage[AppLanguage.english]![entry.number] = entry.en;
+        namesByLanguage[AppLanguage.french]![entry.number] = entry.en;
+        namesByLanguage[AppLanguage.portuguese]![entry.number] = entry.en;
+        namesByLanguage[AppLanguage.arabic]![entry.number] = entry.ar;
+
+        meaningsByLanguage[AppLanguage.french]![entry.number] = entry.fr;
+        meaningsByLanguage[AppLanguage.portuguese]![entry.number] = entry.pt;
+        meaningsByLanguage[AppLanguage.arabic]![entry.number] =
+            'سورة ${entry.ar}';
+      }
+
       if (!mounted) {
         return;
       }
-      final namesEn = <int, String>{};
-      final namesAr = <int, String>{};
-      for (final entry in metadata.getAll()) {
-        namesEn[entry.number] = entry.en;
-        namesAr[entry.number] = entry.ar;
-      }
       setState(() {
-        _surahNamesEn
-          ..clear()
-          ..addAll(namesEn);
-        _surahNamesAr
-          ..clear()
-          ..addAll(namesAr);
+        for (final language in AppLanguage.values) {
+          _surahNamesByLanguage[language]!
+            ..clear()
+            ..addAll(namesByLanguage[language]!);
+          _surahMeaningsByLanguage[language]!
+            ..clear()
+            ..addAll(meaningsByLanguage[language]!);
+        }
       });
+
+      final chaptersService = ref.read(quranComChaptersServiceProvider);
+      if (_isWidgetTestBinding() &&
+          chaptersService.runtimeType == QuranComChaptersService) {
+        return;
+      }
+
+      final chaptersByLanguage = await Future.wait<
+          List<QuranComChapterEntry>>(<Future<List<QuranComChapterEntry>>>[
+        for (final language in AppLanguage.values)
+          chaptersService.getChapters(languageCode: language.code),
+      ]);
+      for (var index = 0; index < AppLanguage.values.length; index++) {
+        final language = AppLanguage.values[index];
+        final entries = chaptersByLanguage[index];
+        for (final entry in entries) {
+          final localizedName = language == AppLanguage.arabic
+              ? _firstNonEmpty(
+                  entry.nameArabic,
+                  entry.translatedName,
+                  entry.nameSimple,
+                )
+              : _firstNonEmpty(entry.nameSimple, entry.nameArabic);
+          if (localizedName.isNotEmpty) {
+            namesByLanguage[language]![entry.id] = localizedName;
+          }
+
+          final translated = _firstNonEmpty(entry.translatedName);
+          if (translated.isNotEmpty) {
+            meaningsByLanguage[language]![entry.id] = translated;
+          }
+        }
+      }
     } catch (_) {
-      // Use "Surah N" fallback labels when metadata fails to load.
+      // Fall back to built-in labels when metadata cannot be loaded.
     }
+
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      for (final language in AppLanguage.values) {
+        final targetNames = _surahNamesByLanguage[language]!;
+        targetNames
+          ..clear()
+          ..addAll(namesByLanguage[language]!);
+
+        final targetMeanings = _surahMeaningsByLanguage[language]!;
+        targetMeanings
+          ..clear()
+          ..addAll(meaningsByLanguage[language]!);
+      }
+    });
+  }
+
+  bool _isWidgetTestBinding() {
+    final bindingName = WidgetsBinding.instance.runtimeType.toString();
+    return bindingName.contains('TestWidgetsFlutterBinding');
+  }
+
+  String _firstNonEmpty(String? first, [String? second, String? third]) {
+    for (final candidate in <String?>[first, second, third]) {
+      final normalized = (candidate ?? '').trim();
+      if (normalized.isNotEmpty) {
+        return normalized;
+      }
+    }
+    return '';
+  }
+
+  String _surahNameFor({
+    required int surahNumber,
+    required AppLanguage language,
+  }) {
+    final localized = _firstNonEmpty(
+      _surahNamesByLanguage[language]?[surahNumber],
+    );
+    if (localized.isNotEmpty) {
+      return localized;
+    }
+    final english = _firstNonEmpty(
+      _surahNamesByLanguage[AppLanguage.english]?[surahNumber],
+    );
+    if (english.isNotEmpty) {
+      return english;
+    }
+    final arabic = _firstNonEmpty(
+      _surahNamesByLanguage[AppLanguage.arabic]?[surahNumber],
+    );
+    if (arabic.isNotEmpty) {
+      return arabic;
+    }
+    return _strings.surahLabel(surahNumber);
+  }
+
+  String _surahMeaningFor({
+    required int surahNumber,
+    required AppLanguage language,
+  }) {
+    final localized = _firstNonEmpty(
+      _surahMeaningsByLanguage[language]?[surahNumber],
+    );
+    if (localized.isNotEmpty) {
+      return localized;
+    }
+    return '';
+  }
+
+  _ChapterHeaderPresentation _chapterHeaderPresentation(int chapter) {
+    final language = ref.read(appPreferencesProvider).language;
+    final surahName = _surahNameFor(
+      surahNumber: chapter,
+      language: language,
+    );
+    final subtitle = _surahMeaningFor(
+      surahNumber: chapter,
+      language: language,
+    );
+    final title = language == AppLanguage.arabic
+        ? '$surahName $chapter'
+        : '$chapter. $surahName';
+    return _ChapterHeaderPresentation(
+      title: title,
+      subtitle: subtitle,
+      isRtl: language == AppLanguage.arabic,
+    );
   }
 
   String _surahLabelFor(int surahNumber) {
-    final enName = _surahNamesEn[surahNumber];
-    if (enName == null || enName.trim().isEmpty) {
-      return '$surahNumber. Surah $surahNumber';
+    final language = ref.read(appPreferencesProvider).language;
+    final surahName = _surahNameFor(
+      surahNumber: surahNumber,
+      language: language,
+    );
+    if (language == AppLanguage.arabic) {
+      return '$surahName $surahNumber';
     }
-    return '$surahNumber. $enName';
+    return '$surahNumber. $surahName';
   }
 
   int _translationResourceIdForLanguage(AppLanguage language) {
@@ -683,7 +1110,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   String _translationResourceLabelForId(int resourceId) {
-    return _translationResourceLabelById[resourceId] ?? 'Translation';
+    return _translationResourceLabelById[resourceId] ?? _strings.translation;
   }
 
   String _ayahKey(AyahData ayah) => '${ayah.surah}:${ayah.ayah}';
@@ -787,10 +1214,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         _pendingJumpTarget = null;
       });
       if (_mode == _ReaderMode.page) {
-        _showSnackBar('Target ayah is not visible on the selected page.');
+        _showSnackBar(_strings.targetAyahNotVisibleOnSelectedPage);
       } else {
         _showSnackBar(
-          'Ayah ${pendingTarget.ayah} was not found in Surah ${pendingTarget.surah}.',
+          _strings.ayahNotFoundInSurah(
+            pendingTarget.ayah,
+            pendingTarget.surah,
+          ),
         );
       }
       return;
@@ -861,7 +1291,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       }
     }
 
-    if (rowContext != null) {
+    if (!mounted) {
+      return;
+    }
+
+    if (rowContext != null && rowContext.mounted) {
       await Scrollable.ensureVisible(
         rowContext,
         duration: const Duration(milliseconds: 300),
@@ -903,20 +1337,20 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ListTile(
                 key: const ValueKey('action_bookmark'),
                 leading: const Icon(Icons.bookmark_add_outlined),
-                title: const Text('Bookmark verse'),
+                title: Text(_strings.bookmarkVerse),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(_AyahAction.bookmark),
               ),
               ListTile(
                 key: const ValueKey('action_note'),
                 leading: const Icon(Icons.note_alt_outlined),
-                title: const Text('Add/Edit note'),
+                title: Text(_strings.addEditNote),
                 onTap: () => Navigator.of(sheetContext).pop(_AyahAction.note),
               ),
               ListTile(
                 key: const ValueKey('action_copy'),
                 leading: const Icon(Icons.copy_outlined),
-                title: const Text('Copy text (Uthmani)'),
+                title: Text(_strings.copyTextUthmani),
                 onTap: () => Navigator.of(sheetContext).pop(_AyahAction.copy),
               ),
             ],
@@ -950,7 +1384,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         ayah: ayah.ayah,
       );
       if (existing != null) {
-        _showSnackBar('Verse already bookmarked.');
+        _showSnackBar(_strings.verseAlreadyBookmarked);
         return;
       }
 
@@ -958,9 +1392,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         surah: ayah.surah,
         ayah: ayah.ayah,
       );
-      _showSnackBar('Bookmark saved.');
+      _showSnackBar(_strings.bookmarkSaved);
     } catch (_) {
-      _showSnackBar('Failed to save bookmark.');
+      _showSnackBar(_strings.failedToSaveBookmark);
     }
   }
 
@@ -985,22 +1419,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           title: draft.title,
           body: draft.body,
         );
-        _showSnackBar('Note added.');
+        _showSnackBar(_strings.noteAdded);
       } else {
         final updated = await noteRepo.updateNote(
           id: existing.id,
           title: draft.title,
           body: draft.body,
         );
-        _showSnackBar(updated ? 'Note updated.' : 'Note update failed.');
+        _showSnackBar(
+            updated ? _strings.noteUpdated : _strings.noteUpdateFailed);
       }
     } catch (_) {
-      _showSnackBar('Failed to save note.');
+      _showSnackBar(_strings.noteSaveFailed);
     }
   }
 
   Future<void> _copyText(AyahData ayah) async {
-    _showSnackBar('Copied verse text.');
+    _showSnackBar(_strings.copiedVerseText);
     unawaited(
       Clipboard.setData(
         ClipboardData(text: ayah.textUthmani),
@@ -1011,10 +1446,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<_NoteDraft?> _showNoteDialog(NoteData? existing) async {
+    final strings = _strings;
     return showDialog<_NoteDraft>(
       context: context,
       builder: (dialogContext) {
-        return _ReaderNoteEditorDialog(existing: existing);
+        return _ReaderNoteEditorDialog(
+          existing: existing,
+          strings: strings,
+        );
       },
     );
   }
@@ -1030,6 +1469,271 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     messenger.showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  String _audioErrorText(Object error) {
+    final raw = error.toString().trim();
+    if (raw.isEmpty) {
+      return _strings.unknown;
+    }
+    if (error is MissingPluginException ||
+        raw.contains('MissingPluginException')) {
+      return _strings.audioPluginUnavailable;
+    }
+    final normalized = raw.toLowerCase();
+    if (normalized.contains('socketexception') ||
+        normalized.contains('failed host lookup') ||
+        normalized.contains('timed out')) {
+      return _strings.audioNetworkError;
+    }
+    return raw;
+  }
+
+  Future<void> _playAyahAudio(AyahData ayah) async {
+    try {
+      await ref.read(ayahAudioServiceProvider).playAyah(ayah.surah, ayah.ayah);
+    } catch (error) {
+      _showSnackBar(_strings.audioLoadFailed(_audioErrorText(error)));
+    }
+  }
+
+  Future<void> _playFromAyahAudio(AyahData ayah) async {
+    try {
+      await ref.read(ayahAudioServiceProvider).playFrom(ayah.surah, ayah.ayah);
+    } catch (error) {
+      _showSnackBar(_strings.audioLoadFailed(_audioErrorText(error)));
+    }
+  }
+
+  Future<void> _playFromCurrentMushafPage() async {
+    final selectedPage = _selectedPage;
+    if (selectedPage == null) {
+      _showSnackBar(_strings.noPagesAvailable);
+      return;
+    }
+    try {
+      final ayahs =
+          await ref.read(quranRepoProvider).getAyahsByPage(selectedPage);
+      if (!mounted) {
+        return;
+      }
+      if (ayahs.isEmpty) {
+        _showSnackBar(_strings.noAyahsForPage(selectedPage));
+        return;
+      }
+      await _playFromAyahAudio(ayahs.first);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(_strings.audioLoadFailed(_audioErrorText(error)));
+    }
+  }
+
+  Future<void> _setPlaybackSpeed(double speed) async {
+    try {
+      await ref.read(ayahAudioServiceProvider).setSpeed(speed);
+      await ref.read(ayahAudioPreferencesProvider.notifier).setSpeed(speed);
+    } catch (error) {
+      _showSnackBar(_strings.audioLoadFailed(_audioErrorText(error)));
+    }
+  }
+
+  Future<void> _setPlaybackRepeatCount(int repeatCount) async {
+    try {
+      await ref.read(ayahAudioServiceProvider).setRepeatCount(repeatCount);
+      await ref
+          .read(ayahAudioPreferencesProvider.notifier)
+          .setRepeatCount(repeatCount);
+    } catch (error) {
+      _showSnackBar(_strings.audioLoadFailed(_audioErrorText(error)));
+    }
+  }
+
+  Future<void> _seekAudioTo(Duration position) async {
+    try {
+      await ref.read(ayahAudioServiceProvider).seekTo(position);
+    } catch (error) {
+      _showSnackBar(_strings.audioLoadFailed(_audioErrorText(error)));
+    }
+  }
+
+  String _repeatLabelForCount(int repeatCount) {
+    return switch (repeatCount) {
+      0 => _strings.repeatOff,
+      1 => _strings.repeat1x,
+      2 => _strings.repeat2x,
+      _ => _strings.repeat3x,
+    };
+  }
+
+  String _formatDuration(Duration? duration) {
+    if (duration == null) {
+      return '--:--';
+    }
+    final totalSeconds = duration.inSeconds;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _openReciterPicker() async {
+    if (ref.read(ayahReciterSwitchInProgressProvider)) {
+      return;
+    }
+    final reciters = await ref.read(ayahReciterCatalogProvider.future);
+    if (!mounted) {
+      return;
+    }
+    if (reciters.isEmpty) {
+      _showSnackBar(_strings.failedToLoadReciters);
+      return;
+    }
+    final selectedEdition = ref.read(selectedReciterProvider).edition;
+    final selected = await showReciterPickerBottomSheet(
+      context: context,
+      strings: _strings,
+      options: reciters,
+      selectedEdition: selectedEdition,
+    );
+    if (selected == null || !mounted) {
+      return;
+    }
+    final result = await ref
+        .read(ayahReciterSwitchCoordinatorProvider)
+        .switchReciter(selected);
+    if (!mounted) {
+      return;
+    }
+
+    switch (result.status) {
+      case ReciterSelectionStatus.applied:
+        if (result.didChangeBitrate && result.resolvedBitrate != null) {
+          _showSnackBar(
+            _strings.reciterAppliedWithBitrate(
+              selected.englishName,
+              result.resolvedBitrate!,
+            ),
+          );
+        }
+        return;
+      case ReciterSelectionStatus.unavailable:
+        _showSnackBar(
+          _strings.reciterNotAvailableForStreaming(selected.englishName),
+        );
+        return;
+      case ReciterSelectionStatus.failed:
+        _showSnackBar(
+          _strings.audioLoadFailed(
+            _audioErrorText(result.error ?? _strings.unknown),
+          ),
+        );
+        return;
+    }
+  }
+
+  Future<void> _openPlaybackSpeedPicker() async {
+    final selected = await showModalBottomSheet<double>(
+      context: context,
+      builder: (sheetContext) {
+        final current = ref.read(ayahAudioStateProvider).asData?.value.speed ??
+            ref.read(ayahAudioPreferencesProvider).speed;
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              ListTile(
+                title: Text(_strings.playbackSpeed),
+              ),
+              RadioGroup<double>(
+                groupValue: current,
+                onChanged: (value) {
+                  Navigator.of(sheetContext).pop(value);
+                },
+                child: Column(
+                  children: [
+                    for (final speed in _playbackSpeedOptions)
+                      RadioListTile<double>(
+                        value: speed,
+                        title: Text('${speed.toStringAsFixed(2)}x'),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected == null) {
+      return;
+    }
+    await _setPlaybackSpeed(selected);
+  }
+
+  Future<void> _openRepeatPicker() async {
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      builder: (sheetContext) {
+        final current =
+            ref.read(ayahAudioStateProvider).asData?.value.repeatCount ??
+                ref.read(ayahAudioPreferencesProvider).repeatCount;
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              ListTile(
+                title: Text(_strings.manageRepeatSettings),
+              ),
+              RadioGroup<int>(
+                groupValue: current,
+                onChanged: (value) {
+                  Navigator.of(sheetContext).pop(value);
+                },
+                child: Column(
+                  children: [
+                    for (final repeatCount in _repeatCountOptions)
+                      RadioListTile<int>(
+                        value: repeatCount,
+                        title: Text(_repeatLabelForCount(repeatCount)),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (selected == null) {
+      return;
+    }
+    await _setPlaybackRepeatCount(selected);
+  }
+
+  Future<void> _handleAudioOptionsAction(
+      _ReaderAudioOptionAction action) async {
+    switch (action) {
+      case _ReaderAudioOptionAction.download:
+        _showSnackBar(_strings.downloadComingSoon);
+        return;
+      case _ReaderAudioOptionAction.repeat:
+        await _openRepeatPicker();
+        return;
+      case _ReaderAudioOptionAction.experience:
+        _showSnackBar(_strings.experienceComingSoon);
+        return;
+      case _ReaderAudioOptionAction.speed:
+        await _openPlaybackSpeedPicker();
+        return;
+      case _ReaderAudioOptionAction.reciter:
+        await _openReciterPicker();
+        return;
+    }
   }
 
   void _setMushafSettingsOpen(bool isOpen) {
@@ -1062,7 +1766,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Future<void> _handleMushafVerseTap(String verseKey) async {
     final ayah = _mushafAyahLookupByVerseKey[verseKey];
     if (ayah == null) {
-      _showSnackBar('Verse actions unavailable for this page data.');
+      _showSnackBar(_strings.verseActionsUnavailable);
       return;
     }
 
@@ -1302,7 +2006,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             verseData,
             translationResourceId: translationResourceId,
           ) ??
-          'Translation unavailable',
+          _strings.translationUnavailable,
     );
   }
 
@@ -1328,16 +2032,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   String _cleanTranslationText(String? rawText) {
-    if (rawText == null) {
-      return '';
-    }
-    var text = rawText.replaceAll(RegExp(r'<[^>]*>'), ' ');
-    text = text
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', '\'');
-    return text.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return cleanTranslationText(rawText);
   }
 
   Widget _buildSimpleQuranComArabicContent({
@@ -1355,99 +2050,35 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           fontSize: 34,
           height: 1.65,
         );
-    final qcfStyle = baseArabicStyle.copyWith(fontFamily: data.qcfFamilyName);
-    final fallbackStyle = baseArabicStyle.copyWith(fontFamily: 'UthmanicHafs');
-    return Wrap(
+    return QuranWordWrap(
       key: ValueKey('ayah_qurancom_text_$ayahKey'),
-      textDirection: TextDirection.rtl,
-      spacing: _verseByVerseWordGap,
-      runSpacing: _verseByVerseWordRunSpacing,
-      alignment: WrapAlignment.start,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        for (var wordIndex = 0; wordIndex < data.words.length; wordIndex++)
-          if (_wordTextForSpan(data.words[wordIndex]).isNotEmpty)
-            _buildVerseByVerseWordWidget(
-              word: data.words[wordIndex],
-              ayahKey: ayahKey,
-              wordIndex: wordIndex,
-              qcfStyle: qcfStyle,
-              fallbackStyle: fallbackStyle,
-            ),
-      ],
-    );
-  }
-
-  Widget _buildVerseByVerseWordWidget({
-    required MushafWord word,
-    required String ayahKey,
-    required int wordIndex,
-    required TextStyle qcfStyle,
-    required TextStyle fallbackStyle,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final verseWordKey = 'verse:$ayahKey:${word.position ?? wordIndex}';
-    final hoveredWord = _hoveredMushafWordKey == verseWordKey;
-    final isQcfWord = (word.codeV2 ?? '').isNotEmpty;
-    final isEndMarker = (word.charTypeName ?? '').trim().toLowerCase() == 'end';
-    final isTajweedV4Qcf =
-        _arabicRenderMode == _ArabicRenderMode.tajweed && isQcfWord;
-    final baseStyle = isQcfWord ? qcfStyle : fallbackStyle;
-    final resolvedStyle = hoveredWord && !isTajweedV4Qcf
-        ? baseStyle.copyWith(color: colorScheme.secondary)
-        : baseStyle;
-    final highlightColor = hoveredWord
-        ? colorScheme.primary.withValues(
-            alpha: isTajweedV4Qcf ? 0.18 : 0.24,
-          )
-        : null;
-
-    Widget child = AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
-      padding: const EdgeInsets.symmetric(horizontal: 1.5, vertical: 1),
-      decoration: highlightColor != null
-          ? BoxDecoration(
-              color: highlightColor,
-              borderRadius: BorderRadius.circular(6),
-            )
-          : null,
-      child: Text(
-        _wordTextForSpan(word),
-        key: ValueKey('reader_verse_word_${ayahKey}_$wordIndex'),
-        textDirection: TextDirection.rtl,
-        maxLines: 1,
-        softWrap: false,
-        textScaler: const TextScaler.linear(1.0),
-        style: resolvedStyle,
-      ),
-    );
-
-    if (!isEndMarker) {
-      child = Tooltip(
-        key: ValueKey('reader_verse_word_tooltip_${ayahKey}_$wordIndex'),
-        message: _mushafWordTooltipMessage(word),
-        waitDuration: Duration.zero,
-        child: child,
-      );
-    }
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => _setHoveredMushafHoverState(
-        verseKey: ayahKey,
-        wordKey: verseWordKey,
-        previewWord: word,
-      ),
-      onExit: (_) {
-        if (_hoveredMushafWordKey == verseWordKey) {
-          _setHoveredMushafHoverState(
-            verseKey: null,
-            wordKey: null,
-            previewWord: null,
-          );
-        }
+      words: data.words,
+      qcfFamilyName: data.qcfFamilyName,
+      baseStyle: baseArabicStyle,
+      showWordHover: true,
+      showTooltips: true,
+      suppressEndMarkers: true,
+      preserveQcfTextColorOnHover:
+          _arabicRenderMode == _ArabicRenderMode.tajweed,
+      wordSpacing: _verseByVerseWordGap,
+      wordRunSpacing: _verseByVerseWordRunSpacing,
+      translationUnavailableText: _strings.translationUnavailable,
+      wordTextKeyBuilder: (wordIndex, _) {
+        return ValueKey('reader_verse_word_${ayahKey}_$wordIndex');
       },
-      child: child,
+      wordTooltipKeyBuilder: (wordIndex, _) {
+        return ValueKey('reader_verse_word_tooltip_${ayahKey}_$wordIndex');
+      },
+      wordIdentityBuilder: (wordIndex, word) {
+        return 'verse:$ayahKey:${word.position ?? wordIndex}';
+      },
+      onHoverWordChanged: (wordIdentity, word) {
+        _setHoveredMushafHoverState(
+          verseKey: wordIdentity == null ? null : ayahKey,
+          wordKey: wordIdentity,
+          previewWord: word,
+        );
+      },
     );
   }
 
@@ -1461,6 +2092,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildVerseByVersePanel() {
     final ayahsFuture = _ayahsFuture;
     final preferences = ref.watch(appPreferencesProvider);
+    final strings = AppStrings.of(preferences.language);
     final translationResourceId =
         _translationResourceIdForLanguage(preferences.language);
     if (ayahsFuture == null) {
@@ -1479,12 +2111,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Failed to load ayahs.'),
+                Text(strings.failedToLoadAyahs),
                 const SizedBox(height: 8),
                 OutlinedButton(
                   key: const ValueKey('reader_retry_button'),
                   onPressed: _refreshCurrentView,
-                  child: const Text('Retry'),
+                  child: Text(strings.retry),
                 ),
               ],
             ),
@@ -1494,17 +2126,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         final ayahs = snapshot.data ?? const <AyahData>[];
         if (ayahs.isEmpty) {
           if (_mode == _ReaderMode.page && _selectedPage == null) {
-            return const Center(
+            return Center(
               child: Text(
-                'No page metadata found. Import Page Metadata in Settings.',
+                strings.noPageMetadataImportInSettings,
               ),
             );
           }
           return Center(
             child: Text(
               _mode == _ReaderMode.surah
-                  ? 'No ayahs found for Surah $_selectedSurah.'
-                  : 'No ayahs found for Page $_selectedPage.',
+                  ? strings.noAyahsForSurah(_selectedSurah)
+                  : strings.noAyahsForPage(_selectedPage),
             ),
           );
         }
@@ -1539,6 +2171,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
               child: _buildVerseByVerseTopActionsRow(
                 translationResourceId: translationResourceId,
+                firstAyah: ayahs.first,
               ),
             ),
             Expanded(
@@ -1562,7 +2195,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       ayah: ayah,
                       ayahKey: ayahKey,
                       renderData: null,
-                      translationText: 'Translation unavailable',
+                      translationText: strings.translationUnavailable,
                     );
                   }
 
@@ -1613,8 +2246,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
 
     final chapter = firstAyah.surah;
-    final transliterated = _surahNamesEn[chapter] ?? 'Surah $chapter';
-    final translated = 'Surah $chapter';
+    final presentation = _chapterHeaderPresentation(chapter);
     final showBasmala = chapter != 1 && chapter != 9;
     final colorScheme = Theme.of(context).colorScheme;
     final headerTitleStyle =
@@ -1635,39 +2267,50 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Directionality(
-              textDirection: TextDirection.rtl,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      chapter.toString().padLeft(3, '0'),
-                      style: const TextStyle(
-                        fontFamily: 'SurahNames',
-                        fontSize: _mushafChapterIconFontSize,
-                        height: 0.9,
-                      ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                key: ValueKey('reader_verse_chapter_header_row_$chapter'),
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                textDirection: TextDirection.ltr,
+                children: [
+                  Text(
+                    chapter.toString().padLeft(3, '0'),
+                    key: ValueKey('reader_verse_chapter_icon_$chapter'),
+                    style: const TextStyle(
+                      fontFamily: 'SurahNames',
+                      fontSize: _mushafChapterIconFontSize,
+                      height: 0.9,
                     ),
-                    const SizedBox(width: 14),
-                    Column(
+                  ),
+                  const SizedBox(width: 14),
+                  Directionality(
+                    textDirection: presentation.isRtl
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: presentation.isRtl
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$chapter. $transliterated',
+                          presentation.title,
+                          key: ValueKey('reader_verse_chapter_title_$chapter'),
                           style: headerTitleStyle,
                         ),
-                        Text(
-                          translated,
-                          style: headerSubtitleStyle,
-                        ),
+                        if (presentation.subtitle.isNotEmpty)
+                          Text(
+                            presentation.subtitle,
+                            key: ValueKey(
+                                'reader_verse_chapter_subtitle_$chapter'),
+                            style: headerSubtitleStyle,
+                          ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             if (showBasmala) ...[
@@ -1680,7 +2323,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                _mushafBasmalaTranslation,
+                _strings.basmalaTranslation,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.7),
@@ -1745,22 +2388,29 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   ayahKey: ayahKey,
                 ),
                 const SizedBox(height: 8),
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: arabicWidget,
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: arabicWidget,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  translationText,
-                  key: ValueKey('reader_verse_translation_$ayahKey'),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w400,
-                          ) ??
-                      const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w400,
-                      ),
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    translationText,
+                    key: ValueKey('reader_verse_translation_$ayahKey'),
+                    textAlign: TextAlign.start,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w400,
+                            ) ??
+                        const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w400,
+                        ),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 _buildVerseByVerseBottomActionRow(ayahKey: ayahKey),
@@ -1793,37 +2443,43 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           IconButton(
             key: ValueKey('reader_verse_action_play_$ayahKey'),
             icon: const Icon(Icons.play_arrow_rounded),
-            tooltip: 'Listen',
-            onPressed: () => _showSnackBar('Audio controls are coming soon.'),
+            tooltip: _strings.listen,
+            onPressed: () => unawaited(_playAyahAudio(ayah)),
+          ),
+          IconButton(
+            key: ValueKey('reader_verse_action_play_from_$ayahKey'),
+            icon: const Icon(Icons.playlist_play_rounded),
+            tooltip: _strings.playFromHere,
+            onPressed: () => unawaited(_playFromAyahAudio(ayah)),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_bookmark_$ayahKey'),
             icon: const Icon(Icons.bookmark_border),
-            tooltip: 'Bookmark',
+            tooltip: _strings.bookmarkVerse,
             onPressed: () => unawaited(_bookmarkAyah(ayah)),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_copy_$ayahKey'),
             icon: const Icon(Icons.copy_outlined),
-            tooltip: 'Copy',
+            tooltip: _strings.copy,
             onPressed: () => unawaited(_copyText(ayah)),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_share_$ayahKey'),
             icon: const Icon(Icons.share_outlined),
-            tooltip: 'Share',
-            onPressed: () => _showSnackBar('Share is coming soon.'),
+            tooltip: _strings.share,
+            onPressed: () => _showSnackBar(_strings.shareComingSoon),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_note_$ayahKey'),
             icon: const Icon(Icons.edit_note_outlined),
-            tooltip: 'Add/Edit note',
+            tooltip: _strings.addEditNote,
             onPressed: () => unawaited(_addOrEditNote(ayah)),
           ),
           IconButton(
             key: ValueKey('reader_verse_action_more_$ayahKey'),
             icon: const Icon(Icons.more_horiz),
-            tooltip: 'More',
+            tooltip: _strings.more,
             onPressed: () => unawaited(_showAyahActions(ayah)),
           ),
         ],
@@ -1847,25 +2503,25 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           _buildVerseByVerseBottomActionChip(
             key: ValueKey('reader_verse_tafsir_$ayahKey'),
             icon: Icons.menu_book_outlined,
-            label: 'Tafsirs',
+            label: _strings.tafsirs,
             style: rowStyle,
-            onTap: () => _showSnackBar('Tafsirs are coming soon.'),
+            onTap: () => _showSnackBar(_strings.tafsirsComingSoon),
           ),
           const SizedBox(width: 16),
           _buildVerseByVerseBottomActionChip(
             key: ValueKey('reader_verse_lessons_$ayahKey'),
             icon: Icons.school_outlined,
-            label: 'Lessons',
+            label: _strings.lessons,
             style: rowStyle,
-            onTap: () => _showSnackBar('Lessons are coming soon.'),
+            onTap: () => _showSnackBar(_strings.lessonsComingSoon),
           ),
           const SizedBox(width: 16),
           _buildVerseByVerseBottomActionChip(
             key: ValueKey('reader_verse_reflections_$ayahKey'),
             icon: Icons.chat_bubble_outline,
-            label: 'Reflections',
+            label: _strings.reflections,
             style: rowStyle,
-            onTap: () => _showSnackBar('Reflections are coming soon.'),
+            onTap: () => _showSnackBar(_strings.reflectionsComingSoon),
           ),
         ],
       ),
@@ -1987,86 +2643,204 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         children: [
           const Icon(Icons.bookmark_border, size: 18),
           const SizedBox(width: 8),
-          Text('Page $pageNumber', key: const ValueKey('reader_page_label')),
+          Text(
+            _strings.pageLabel(pageNumber),
+            key: const ValueKey('reader_page_label'),
+          ),
           if (meta?.juzNumber != null) ...[
             const SizedBox(width: 12),
-            Text('Juz ${meta!.juzNumber}', style: subduedStyle),
+            Text(_strings.juzLabel(meta!.juzNumber!), style: subduedStyle),
           ],
           if (meta?.hizbNumber != null) ...[
             const SizedBox(width: 12),
-            Text('Hizb ${meta!.hizbNumber}', style: subduedStyle),
+            Text(_strings.hizbLabel(meta!.hizbNumber!), style: subduedStyle),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildVerseByVerseTopActionsRow({
-    required int translationResourceId,
+  Widget _buildTajweedLegendSection({
+    required String keyPrefix,
+    required bool showLegend,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final translationLabel =
-        'Translation: ${_translationResourceLabelForId(translationResourceId)}';
-    final topActionsEndInset = _readerTopActionsEndInset();
+    final legendItems = <_TajweedLegendItem>[
+      _TajweedLegendItem(
+        color: _tajweedLegendSilentLetterColor,
+        label: _strings.tajweedLegendSilentLetter,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendNormalMaddColor,
+        label: _strings.tajweedLegendNormalMadd2,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendSeparatedMaddColor,
+        label: _strings.tajweedLegendSeparatedMadd246,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendConnectedMaddColor,
+        label: _strings.tajweedLegendConnectedMadd45,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendNecessaryMaddColor,
+        label: _strings.tajweedLegendNecessaryMadd6,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendGhunnaColor,
+        label: _strings.tajweedLegendGhunnaIkhfa,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendQalqalaColor,
+        label: _strings.tajweedLegendQalqalaEcho,
+      ),
+      _TajweedLegendItem(
+        color: _tajweedLegendTafkhimColor,
+        label: _strings.tajweedLegendTafkhimHeavy,
+      ),
+    ];
 
-    return Padding(
-      padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
-      child: Row(
-        key: const ValueKey('reader_verse_top_actions'),
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              key: const ValueKey('reader_verse_top_actions_scroll'),
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  OutlinedButton.icon(
-                    key: const ValueKey('reader_verse_listen_button'),
-                    onPressed: null,
-                    icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('Listen'),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton(
-                    key: const ValueKey('reader_verse_translation_button'),
-                    onPressed: () {
-                      setState(() {
-                        _setMushafSettingsOpen(true);
-                        _mushafSettingsTab = _MushafSettingsTab.translation;
-                      });
-                    },
-                    child: Text(translationLabel),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Tajweed colors',
-                      key: ValueKey('reader_verse_tajweed_colors'),
-                    ),
-                  ),
-                ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showLegend)
+          DecoratedBox(
+            key: ValueKey('${keyPrefix}_tajweed_legend'),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: SingleChildScrollView(
+                key: ValueKey('${keyPrefix}_tajweed_legend_scroll'),
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var index = 0;
+                        index < legendItems.length;
+                        index++) ...[
+                      if (index > 0) const SizedBox(width: 18),
+                      _buildTajweedLegendChip(item: legendItems[index]),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            key: const ValueKey('reader_verse_settings_button'),
-            icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
-            tooltip: _mushafSettingsOpen ? 'Close settings' : 'Open settings',
-            onPressed: () {
-              setState(() {
-                _setMushafSettingsOpen(!_mushafSettingsOpen);
-              });
-            },
+        if (showLegend) const SizedBox(height: 8),
+        KeyedSubtree(
+          key: ValueKey('${keyPrefix}_tajweed_colors'),
+          child: _ReaderAudioPill(label: _strings.tajweedColors),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTajweedLegendChip({
+    required _TajweedLegendItem item,
+  }) {
+    final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+        );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: item.color,
+            shape: BoxShape.circle,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          item.label,
+          style: textStyle,
+          softWrap: false,
+          maxLines: 1,
+          overflow: TextOverflow.fade,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerseByVerseTopActionsRow({
+    required int translationResourceId,
+    required AyahData? firstAyah,
+  }) {
+    final translationLabel = _strings.translationLabel(
+      _translationResourceLabelForId(translationResourceId),
+    );
+    final topActionsEndInset = _readerTopActionsEndInset();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: Row(
+            key: const ValueKey('reader_verse_top_actions'),
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  key: const ValueKey('reader_verse_top_actions_scroll'),
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      OutlinedButton.icon(
+                        key: const ValueKey('reader_verse_listen_button'),
+                        onPressed: firstAyah == null
+                            ? null
+                            : () => unawaited(_playFromAyahAudio(firstAyah)),
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: Text(_strings.listen),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        key: const ValueKey('reader_verse_translation_button'),
+                        onPressed: () {
+                          setState(() {
+                            _setMushafSettingsOpen(true);
+                            _mushafSettingsTab = _MushafSettingsTab.translation;
+                          });
+                        },
+                        child: Text(translationLabel),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                key: const ValueKey('reader_verse_settings_button'),
+                icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
+                tooltip: _mushafSettingsOpen
+                    ? _strings.closeSettings
+                    : _strings.openSettings,
+                onPressed: () {
+                  setState(() {
+                    _setMushafSettingsOpen(!_mushafSettingsOpen);
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: _buildTajweedLegendSection(
+            keyPrefix: 'reader_verse',
+            showLegend: _arabicRenderMode == _ArabicRenderMode.tajweed,
+          ),
+        ),
+      ],
     );
   }
 
@@ -2088,7 +2862,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Failed to load Mushaf page.'),
+                Text(_strings.failedToLoadMushafPage),
                 const SizedBox(height: 8),
                 OutlinedButton(
                   key: const ValueKey('reader_mushaf_retry_button'),
@@ -2097,7 +2871,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       _invalidateMushafFuture();
                     });
                   },
-                  child: const Text('Retry'),
+                  child: Text(_strings.retry),
                 ),
               ],
             ),
@@ -2106,7 +2880,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
         final data = snapshot.data;
         if (data == null) {
-          return const Center(child: Text('No Mushaf data available.'));
+          return Center(child: Text(_strings.noMushafDataAvailable));
         }
         if (_pendingMushafScrollReset) {
           _resetMushafScrollToTop();
@@ -2123,7 +2897,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         }
         final chapterHeader = _buildMushafExternalChapterHeader(data.pageData);
         if (displayLines.isEmpty) {
-          return const Center(child: Text('No Mushaf text available.'));
+          return Center(child: Text(_strings.noMushafTextAvailable));
         }
 
         return Column(
@@ -2273,14 +3047,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         children: [
           const Icon(Icons.bookmark_border, size: 18),
           const SizedBox(width: 8),
-          Text('Page $pageNumber', key: const ValueKey('reader_page_label')),
+          Text(
+            _strings.pageLabel(pageNumber),
+            key: const ValueKey('reader_page_label'),
+          ),
           if (meta.juzNumber != null) ...[
             const SizedBox(width: 12),
-            Text('Juz ${meta.juzNumber}', style: subduedStyle),
+            Text(_strings.juzLabel(meta.juzNumber!), style: subduedStyle),
           ],
           if (meta.hizbNumber != null) ...[
             const SizedBox(width: 12),
-            Text('Hizb ${meta.hizbNumber}', style: subduedStyle),
+            Text(_strings.hizbLabel(meta.hizbNumber!), style: subduedStyle),
           ],
         ],
       ),
@@ -2288,72 +3065,75 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget _buildMushafTopActionsRow() {
-    final colorScheme = Theme.of(context).colorScheme;
     final topActionsEndInset = _readerTopActionsEndInset();
-    return Padding(
-      padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
-      child: Row(
-        key: const ValueKey('reader_mushaf_top_actions'),
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              key: const ValueKey('reader_mushaf_top_actions_scroll'),
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  OutlinedButton.icon(
-                    key: const ValueKey('reader_mushaf_listen_button'),
-                    onPressed: null,
-                    icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('Listen'),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: Row(
+            key: const ValueKey('reader_mushaf_top_actions'),
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  key: const ValueKey('reader_mushaf_top_actions_scroll'),
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      OutlinedButton.icon(
+                        key: const ValueKey('reader_mushaf_listen_button'),
+                        onPressed: () =>
+                            unawaited(_playFromCurrentMushafPage()),
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: Text(_strings.listen),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton(
+                        key: const ValueKey('reader_mushaf_language_arabic'),
+                        onPressed: () {},
+                        child: Text(_strings.arabic),
+                      ),
+                      const SizedBox(width: 6),
+                      OutlinedButton(
+                        key: const ValueKey(
+                            'reader_mushaf_language_translation'),
+                        onPressed: () {
+                          setState(() {
+                            _setMushafSettingsOpen(true);
+                            _mushafSettingsTab = _MushafSettingsTab.translation;
+                          });
+                        },
+                        child: Text(_strings.translation),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    key: const ValueKey('reader_mushaf_language_arabic'),
-                    onPressed: () {},
-                    child: const Text('Arabic'),
-                  ),
-                  const SizedBox(width: 6),
-                  OutlinedButton(
-                    key: const ValueKey('reader_mushaf_language_translation'),
-                    onPressed: () {
-                      setState(() {
-                        _setMushafSettingsOpen(true);
-                        _mushafSettingsTab = _MushafSettingsTab.translation;
-                      });
-                    },
-                    child: const Text('Translation'),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Tajweed colors',
-                      key: ValueKey('reader_mushaf_tajweed_colors'),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              IconButton(
+                key: const ValueKey('reader_mushaf_settings_button'),
+                icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
+                tooltip: _mushafSettingsOpen
+                    ? _strings.closeSettings
+                    : _strings.openSettings,
+                onPressed: () {
+                  setState(() {
+                    _setMushafSettingsOpen(!_mushafSettingsOpen);
+                  });
+                },
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            key: const ValueKey('reader_mushaf_settings_button'),
-            icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
-            tooltip: _mushafSettingsOpen ? 'Close settings' : 'Open settings',
-            onPressed: () {
-              setState(() {
-                _setMushafSettingsOpen(!_mushafSettingsOpen);
-              });
-            },
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: _buildTajweedLegendSection(
+            keyPrefix: 'reader_mushaf',
+            showLegend: _arabicRenderMode == _ArabicRenderMode.tajweed,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -2422,8 +3202,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       return null;
     }
 
-    final transliterated = _surahNamesEn[chapter] ?? 'Surah $chapter';
-    final translated = 'Surah $chapter';
+    final presentation = _chapterHeaderPresentation(chapter);
     final showBasmala = chapter != 1 && chapter != 9;
     final colorScheme = Theme.of(context).colorScheme;
     final headerTitleStyle =
@@ -2444,40 +3223,50 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Directionality(
-              textDirection: TextDirection.rtl,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      chapter.toString().padLeft(3, '0'),
-                      key: ValueKey('reader_mushaf_chapter_icon_$chapter'),
-                      style: const TextStyle(
-                        fontFamily: 'SurahNames',
-                        fontSize: _mushafChapterIconFontSize,
-                        height: 0.9,
-                      ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                key: ValueKey('reader_mushaf_chapter_header_row_$chapter'),
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                textDirection: TextDirection.ltr,
+                children: [
+                  Text(
+                    chapter.toString().padLeft(3, '0'),
+                    key: ValueKey('reader_mushaf_chapter_icon_$chapter'),
+                    style: const TextStyle(
+                      fontFamily: 'SurahNames',
+                      fontSize: _mushafChapterIconFontSize,
+                      height: 0.9,
                     ),
-                    const SizedBox(width: 14),
-                    Column(
+                  ),
+                  const SizedBox(width: 14),
+                  Directionality(
+                    textDirection: presentation.isRtl
+                        ? TextDirection.rtl
+                        : TextDirection.ltr,
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: presentation.isRtl
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$chapter. $transliterated',
+                          presentation.title,
+                          key: ValueKey('reader_mushaf_chapter_title_$chapter'),
                           style: headerTitleStyle,
                         ),
-                        Text(
-                          translated,
-                          style: headerSubtitleStyle,
-                        ),
+                        if (presentation.subtitle.isNotEmpty)
+                          Text(
+                            presentation.subtitle,
+                            key: ValueKey(
+                                'reader_mushaf_chapter_subtitle_$chapter'),
+                            style: headerSubtitleStyle,
+                          ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             if (showBasmala) ...[
@@ -2490,7 +3279,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                _mushafBasmalaTranslation,
+                _strings.basmalaTranslation,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.7),
@@ -2745,11 +3534,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   String _mushafWordTooltipMessage(MushafWord word) {
-    final translation = (word.translationText ?? '').trim();
-    if (translation.isNotEmpty) {
-      return translation;
-    }
-    return 'Translation unavailable';
+    return wordTooltipMessage(
+      word,
+      fallback: _strings.translationUnavailable,
+    );
   }
 
   Future<void> _showMushafWordPopover({
@@ -2766,7 +3554,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           key: ValueKey('reader_mushaf_word_popover_${lineNumber}_$wordIndex'),
-          title: const Text('Word'),
+          title: Text(_strings.word),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2781,14 +3569,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text('Verse: ${lineWord.verseKey ?? 'Unknown'}'),
+              Text(
+                '${_strings.verse}: ${lineWord.verseKey ?? _strings.unknown}',
+              ),
             ],
           ),
           actions: [
             TextButton(
               key: const ValueKey('reader_mushaf_word_popover_close'),
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Close'),
+              child: Text(_strings.close),
             ),
           ],
         );
@@ -2910,16 +3700,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildMushafViewToggle() {
     return _buildMushafPillSwitch<_ReaderViewMode>(
       key: const ValueKey('reader_view_toggle'),
-      options: const [
+      options: [
         _MushafControlOption<_ReaderViewMode>(
           value: _ReaderViewMode.simple,
-          label: 'Verse by Verse',
-          optionKey: ValueKey('reader_mushaf_view_simple'),
+          label: _strings.verseByVerse,
+          optionKey: const ValueKey('reader_mushaf_view_simple'),
         ),
         _MushafControlOption<_ReaderViewMode>(
           value: _ReaderViewMode.mushaf,
-          label: 'Reading',
-          optionKey: ValueKey('reader_mushaf_view_mushaf'),
+          label: _strings.reading,
+          optionKey: const ValueKey('reader_mushaf_view_mushaf'),
         ),
       ],
       selectedValue: _viewMode,
@@ -2930,26 +3720,26 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildMushafNavTabs() {
     return _buildMushafPillSwitch<_MushafNavTab>(
       key: const ValueKey('reader_mushaf_nav_tabs'),
-      options: const [
+      options: [
         _MushafControlOption<_MushafNavTab>(
           value: _MushafNavTab.surah,
-          label: 'Surah',
-          optionKey: ValueKey('reader_mushaf_nav_tab_surah'),
+          label: _strings.surah,
+          optionKey: const ValueKey('reader_mushaf_nav_tab_surah'),
         ),
         _MushafControlOption<_MushafNavTab>(
           value: _MushafNavTab.verse,
-          label: 'Verse',
-          optionKey: ValueKey('reader_mushaf_nav_tab_verse'),
+          label: _strings.verse,
+          optionKey: const ValueKey('reader_mushaf_nav_tab_verse'),
         ),
         _MushafControlOption<_MushafNavTab>(
           value: _MushafNavTab.juz,
-          label: 'Juz',
-          optionKey: ValueKey('reader_mushaf_nav_tab_juz'),
+          label: _strings.juz,
+          optionKey: const ValueKey('reader_mushaf_nav_tab_juz'),
         ),
         _MushafControlOption<_MushafNavTab>(
           value: _MushafNavTab.page,
-          label: 'Page',
-          optionKey: ValueKey('reader_mushaf_nav_tab_page'),
+          label: _strings.page,
+          optionKey: const ValueKey('reader_mushaf_nav_tab_page'),
         ),
       ],
       selectedValue: _mushafNavTab,
@@ -2975,21 +3765,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildMushafSettingsTabs() {
     return _buildMushafUnderlineTabs<_MushafSettingsTab>(
       key: const ValueKey('reader_mushaf_settings_tabs'),
-      options: const [
+      options: [
         _MushafControlOption<_MushafSettingsTab>(
           value: _MushafSettingsTab.arabic,
-          label: 'Arabic',
-          optionKey: ValueKey('reader_mushaf_settings_tab_arabic'),
+          label: _strings.arabic,
+          optionKey: const ValueKey('reader_mushaf_settings_tab_arabic'),
         ),
         _MushafControlOption<_MushafSettingsTab>(
           value: _MushafSettingsTab.translation,
-          label: 'Translation',
-          optionKey: ValueKey('reader_mushaf_settings_tab_translation'),
+          label: _strings.translation,
+          optionKey: const ValueKey('reader_mushaf_settings_tab_translation'),
         ),
         _MushafControlOption<_MushafSettingsTab>(
           value: _MushafSettingsTab.wordByWord,
-          label: 'Word By Word',
-          optionKey: ValueKey('reader_mushaf_settings_tab_word_by_word'),
+          label: _strings.wordByWord,
+          optionKey: const ValueKey('reader_mushaf_settings_tab_word_by_word'),
         ),
       ],
       selectedValue: _mushafSettingsTab,
@@ -3007,21 +3797,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         : _MushafScriptStyleOption.uthmani;
     return _buildMushafPillSwitch<_MushafScriptStyleOption>(
       key: const ValueKey('reader_mushaf_script_tabs'),
-      options: const [
+      options: [
         _MushafControlOption<_MushafScriptStyleOption>(
           value: _MushafScriptStyleOption.uthmani,
-          label: 'Uthmani',
-          optionKey: ValueKey('reader_mushaf_script_tab_uthmani'),
+          label: _strings.uthmani,
+          optionKey: const ValueKey('reader_mushaf_script_tab_uthmani'),
         ),
         _MushafControlOption<_MushafScriptStyleOption>(
           value: _MushafScriptStyleOption.tajweed,
-          label: 'Tajweed',
-          optionKey: ValueKey('reader_mushaf_script_tab_tajweed'),
+          label: _strings.tajweed,
+          optionKey: const ValueKey('reader_mushaf_script_tab_tajweed'),
         ),
         _MushafControlOption<_MushafScriptStyleOption>(
           value: _MushafScriptStyleOption.indopak,
-          label: 'IndoPak (Soon)',
-          optionKey: ValueKey('reader_mushaf_script_tab_indopak'),
+          label: _strings.indoPakSoon,
+          optionKey: const ValueKey('reader_mushaf_script_tab_indopak'),
           enabled: false,
         ),
       ],
@@ -3255,15 +4045,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   List<int> _filteredMushafSurahNumbers() {
     final query = _mushafSurahSearchQuery.trim().toLowerCase();
+    final language = ref.read(appPreferencesProvider).language;
     final all = List<int>.generate(114, (index) => index + 1);
     if (query.isEmpty) {
       return all;
     }
     return all.where((surah) {
       final numberMatch = surah.toString().contains(query);
-      final enName = (_surahNamesEn[surah] ?? '').toLowerCase();
-      final arName = (_surahNamesAr[surah] ?? '').toLowerCase();
-      return numberMatch || enName.contains(query) || arName.contains(query);
+      final localizedName =
+          (_surahNamesByLanguage[language]?[surah] ?? '').toLowerCase();
+      final enName = (_surahNamesByLanguage[AppLanguage.english]?[surah] ?? '')
+          .toLowerCase();
+      final arName = (_surahNamesByLanguage[AppLanguage.arabic]?[surah] ?? '')
+          .toLowerCase();
+      return numberMatch ||
+          localizedName.contains(query) ||
+          enName.contains(query) ||
+          arName.contains(query);
     }).toList(growable: false);
   }
 
@@ -3302,7 +4100,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant.withValues(alpha: 0.5),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3338,10 +4136,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: TextField(
             key: const ValueKey('reader_mushaf_nav_surah_search'),
-            decoration: const InputDecoration(
-              hintText: 'Search Surah',
+            decoration: InputDecoration(
+              hintText: _strings.searchSurah,
               isDense: true,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
             ),
             onChanged: (value) {
               setState(() {
@@ -3364,7 +4162,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   child: ListTile(
                     key: ValueKey('reader_mushaf_nav_surah_$surah'),
                     selected: selected,
-                    title: Text(_surahLabelFor(surah)),
+                    title: Text(
+                      _surahLabelFor(surah),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     onTap: () {
                       if (_viewMode == _ReaderViewMode.simple) {
                         _selectSurah(surah);
@@ -3392,16 +4194,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: DropdownButtonFormField<int>(
             key: const ValueKey('reader_mushaf_nav_verse_surah'),
-            value: _verseTabSelectedSurah,
-            decoration: const InputDecoration(
-              labelText: 'Surah',
+            isExpanded: true,
+            initialValue: _verseTabSelectedSurah,
+            decoration: InputDecoration(
+              labelText: _strings.surah,
               isDense: true,
             ),
             items: [
               for (var surah = 1; surah <= 114; surah++)
                 DropdownMenuItem<int>(
                   value: surah,
-                  child: Text(_surahLabelFor(surah)),
+                  child: Text(
+                    _surahLabelFor(surah),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
             ],
             onChanged: (value) {
@@ -3416,10 +4223,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
           child: TextField(
             key: const ValueKey('reader_mushaf_nav_verse_search'),
-            decoration: const InputDecoration(
-              hintText: 'Verse number',
+            decoration: InputDecoration(
+              hintText: _strings.verseNumberHint,
               isDense: true,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -3437,14 +4244,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return const Center(
-                  child: Text('Failed to load verses.'),
+                return Center(
+                  child: Text(_strings.failedToLoadVerses),
                 );
               }
               final maxAyah = snapshot.data ?? 0;
               if (maxAyah <= 0) {
-                return const Center(
-                  child: Text('No verses available for selected surah.'),
+                return Center(
+                  child: Text(_strings.noVersesAvailableForSelectedSurah),
                 );
               }
               final filteredAyahs = _filteredVerseNumbers(maxAyah);
@@ -3457,7 +4264,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     key: ValueKey(
                       'reader_mushaf_nav_verse_${_verseTabSelectedSurah}_$ayah',
                     ),
-                    title: Text('Verse $ayah'),
+                    title: Text(_strings.ayahLabel(ayah)),
                     onTap: () {
                       unawaited(
                         _jumpToVerseInMushaf(
@@ -3489,10 +4296,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: TextField(
             key: const ValueKey('reader_mushaf_nav_juz_search'),
-            decoration: const InputDecoration(
-              hintText: 'Search Juz',
+            decoration: InputDecoration(
+              hintText: _strings.searchJuz,
               isDense: true,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -3514,7 +4321,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Failed to load Juz index.'),
+                      Text(_strings.failedToLoadJuzIndex),
                       const SizedBox(height: 8),
                       OutlinedButton(
                         key: const ValueKey('reader_mushaf_nav_juz_retry'),
@@ -3523,7 +4330,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                             _juzIndexFuture = _loadMushafJuzIndex();
                           });
                         },
-                        child: const Text('Retry'),
+                        child: Text(_strings.retry),
                       ),
                     ],
                   ),
@@ -3533,8 +4340,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 snapshot.data ?? const <MushafJuzNavEntry>[],
               );
               if (entries.isEmpty) {
-                return const Center(
-                  child: Text('No Juz entries found.'),
+                return Center(
+                  child: Text(_strings.noJuzEntriesFound),
                 );
               }
               return ListView.builder(
@@ -3544,8 +4351,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   final entry = entries[index];
                   return ListTile(
                     key: ValueKey('reader_mushaf_nav_juz_${entry.juzNumber}'),
-                    title: Text('Juz ${entry.juzNumber}'),
-                    subtitle: Text('Page ${entry.page}'),
+                    title: Text(_strings.juzLabel(entry.juzNumber)),
+                    subtitle: Text(_strings.pageLabel(entry.page)),
                     onTap: () => _jumpToJuzInMushaf(entry),
                   );
                 },
@@ -3570,10 +4377,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
           child: TextField(
             key: const ValueKey('reader_mushaf_nav_page_search'),
-            decoration: const InputDecoration(
-              hintText: 'Search Page',
+            decoration: InputDecoration(
+              hintText: _strings.searchPage,
               isDense: true,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
             ),
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -3595,12 +4402,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Failed to load pages.'),
+                      Text(_strings.failedToLoadPages),
                       const SizedBox(height: 8),
                       OutlinedButton(
                         key: const ValueKey('reader_page_retry_button'),
                         onPressed: _refreshCurrentView,
-                        child: const Text('Retry'),
+                        child: Text(_strings.retry),
                       ),
                     ],
                   ),
@@ -3610,8 +4417,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 snapshot.data ?? const <int>[],
               );
               if (pages.isEmpty) {
-                return const Center(
-                  child: Text('No pages available.'),
+                return Center(
+                  child: Text(_strings.noPagesAvailable),
                 );
               }
               return ListView.builder(
@@ -3622,7 +4429,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   return ListTile(
                     key: ValueKey('reader_page_$page'),
                     selected: page == _selectedPage,
-                    title: Text('Page $page'),
+                    title: Text(_strings.pageLabel(page)),
                     onTap: () => _selectPage(page),
                   );
                 },
@@ -3655,11 +4462,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 _MushafSettingsTab.arabic => _buildMushafArabicSettingsBody(),
                 _MushafSettingsTab.translation =>
                   _buildMushafScaffoldSettingsBody(
-                    'Translation settings are coming soon.',
+                    _strings.translationSettingsComingSoon,
                   ),
                 _MushafSettingsTab.wordByWord =>
                   _buildMushafScaffoldSettingsBody(
-                    'Word by Word settings are coming soon.',
+                    _strings.wordByWordSettingsComingSoon,
                   ),
               },
             ),
@@ -3672,7 +4479,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 TextButton(
                   key: const ValueKey('reader_mushaf_settings_reset'),
                   onPressed: _resetMushafSettings,
-                  child: const Text('Reset'),
+                  child: Text(_strings.reset),
                 ),
                 const Spacer(),
                 FilledButton(
@@ -3682,7 +4489,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       _setMushafSettingsOpen(false);
                     });
                   },
-                  child: const Text('Done'),
+                  child: Text(_strings.done),
                 ),
               ],
             ),
@@ -3695,10 +4502,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Widget _buildMushafArabicSettingsBody() {
     final colorScheme = Theme.of(context).colorScheme;
     final previewWord = _hoveredMushafPreviewWord;
+    final selectedReciter = ref.watch(selectedReciterProvider);
+    final isSwitchingReciter = ref.watch(ayahReciterSwitchInProgressProvider);
     final previewArabic =
-        previewWord?.textQpcHafs ?? previewWord?.codeV2 ?? 'Preview';
+        previewWord?.textQpcHafs ?? previewWord?.codeV2 ?? _strings.preview;
     final previewTranslation = previewWord == null
-        ? 'Translation unavailable'
+        ? _strings.translationUnavailable
         : _mushafWordTooltipMessage(previewWord);
 
     return SingleChildScrollView(
@@ -3707,7 +4516,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Preview:',
+            '${_strings.preview}:',
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 6),
@@ -3741,7 +4550,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Script style',
+            _strings.scriptStyle,
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
@@ -3751,7 +4560,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             key: const ValueKey('reader_mushaf_tajweed_toggle'),
             value: _arabicRenderMode == _ArabicRenderMode.tajweed,
             contentPadding: EdgeInsets.zero,
-            title: const Text('Show Tajweed rules while reading'),
+            title: Text(_strings.showTajweedRulesWhileReading),
             onChanged: (value) {
               _switchArabicRenderMode(
                 value == true
@@ -3764,7 +4573,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           Row(
             children: [
               Text(
-                'Font size',
+                _strings.fontSize,
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const Spacer(),
@@ -3786,24 +4595,33 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          Container(
-            key: const ValueKey('reader_mushaf_reciter_card'),
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHigh,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: const ValueKey('reader_mushaf_reciter_card'),
               borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Selected Reciter'),
-                SizedBox(height: 6),
-                Text(
-                  'Mishari Rashid al-`Afasy',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+              onTap: isSwitchingReciter
+                  ? null
+                  : () => unawaited(_openReciterPicker()),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_strings.selectedReciter),
+                    const SizedBox(height: 6),
+                    Text(
+                      selectedReciter.englishName,
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -3820,7 +4638,213 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
+  Widget _buildAyahMiniPlayer(AyahAudioState state) {
+    final ayah = state.currentAyah;
+    if (ayah == null) {
+      return const SizedBox.shrink();
+    }
+    final colorScheme = Theme.of(context).colorScheme;
+    final isSwitchingReciter = ref.watch(ayahReciterSwitchInProgressProvider);
+    final totalDuration = state.duration ?? Duration.zero;
+    final hasDuration = totalDuration > Duration.zero;
+    final safePosition = state.position < Duration.zero
+        ? Duration.zero
+        : (hasDuration && state.position > totalDuration
+            ? totalDuration
+            : state.position);
+    final sliderMax =
+        hasDuration ? totalDuration.inMilliseconds.toDouble() : 1.0;
+    final sliderValue = hasDuration
+        ? safePosition.inMilliseconds
+            .toDouble()
+            .clamp(0.0, sliderMax)
+            .toDouble()
+        : 0.0;
+    final elapsedLabel = _formatDuration(safePosition);
+    final totalLabel = _formatDuration(state.duration);
+
+    return Container(
+      key: const ValueKey('reader_audio_mini_player'),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border(
+          top: BorderSide(color: colorScheme.outlineVariant),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                _strings.surahAyahLabel(ayah.surah, ayah.ayah),
+                key: const ValueKey('reader_audio_current_ayah'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(width: 8),
+              if (state.isBuffering)
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      colorScheme.primary,
+                    ),
+                  ),
+                ),
+              const Spacer(),
+              PopupMenuButton<_ReaderAudioOptionAction>(
+                key: const ValueKey('reader_audio_options_button'),
+                tooltip: _strings.audioOptions,
+                onSelected: (action) =>
+                    unawaited(_handleAudioOptionsAction(action)),
+                itemBuilder: (context) => [
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_download'),
+                    value: _ReaderAudioOptionAction.download,
+                    child: Text(_strings.download),
+                  ),
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_repeat'),
+                    value: _ReaderAudioOptionAction.repeat,
+                    child: Text(_strings.manageRepeatSettings),
+                  ),
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_experience'),
+                    value: _ReaderAudioOptionAction.experience,
+                    child: Text(_strings.experience),
+                  ),
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_speed'),
+                    value: _ReaderAudioOptionAction.speed,
+                    child: Text(_strings.playbackSpeed),
+                  ),
+                  PopupMenuItem<_ReaderAudioOptionAction>(
+                    key: const ValueKey('reader_audio_option_reciter'),
+                    value: _ReaderAudioOptionAction.reciter,
+                    enabled: !isSwitchingReciter,
+                    child: Text(_strings.selectReciter),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  elapsedLabel,
+                  key: const ValueKey('reader_audio_elapsed_time'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              Expanded(
+                child: Slider(
+                  key: const ValueKey('reader_audio_seek_slider'),
+                  min: 0,
+                  max: sliderMax,
+                  value: sliderValue,
+                  onChanged: hasDuration ? (_) {} : null,
+                  onChangeEnd: hasDuration
+                      ? (value) {
+                          unawaited(
+                            _seekAudioTo(
+                              Duration(milliseconds: value.round()),
+                            ),
+                          );
+                        }
+                      : null,
+                ),
+              ),
+              SizedBox(
+                width: 80,
+                child: Text(
+                  totalLabel,
+                  key: const ValueKey('reader_audio_total_time'),
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              IconButton(
+                key: const ValueKey('reader_audio_prev_button'),
+                onPressed: state.canPrevious
+                    ? () =>
+                        unawaited(ref.read(ayahAudioServiceProvider).previous())
+                    : null,
+                tooltip: _strings.previous,
+                icon: const Icon(Icons.skip_previous_rounded),
+              ),
+              IconButton(
+                key: const ValueKey('reader_audio_play_pause_button'),
+                onPressed: () {
+                  if (state.isPlaying) {
+                    unawaited(ref.read(ayahAudioServiceProvider).pause());
+                  } else {
+                    unawaited(ref.read(ayahAudioServiceProvider).resume());
+                  }
+                },
+                tooltip: state.isPlaying ? _strings.pause : _strings.resume,
+                icon: Icon(
+                  state.isPlaying
+                      ? Icons.pause_circle_filled_rounded
+                      : Icons.play_circle_fill_rounded,
+                ),
+              ),
+              IconButton(
+                key: const ValueKey('reader_audio_next_button'),
+                onPressed: state.canNext
+                    ? () => unawaited(ref.read(ayahAudioServiceProvider).next())
+                    : null,
+                tooltip: _strings.next,
+                icon: const Icon(Icons.skip_next_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              _ReaderAudioPill(
+                label:
+                    '${_strings.playbackSpeed}: ${state.speed.toStringAsFixed(2)}x',
+              ),
+              const SizedBox(width: 8),
+              _ReaderAudioPill(
+                label:
+                    '${_strings.repeat}: ${_repeatLabelForCount(state.repeatCount)}',
+              ),
+            ],
+          ),
+          if (state.bufferedPosition > Duration.zero && hasDuration) ...[
+            const SizedBox(height: 2),
+            Text(
+              _strings.elapsedTimeLabel(
+                _formatDuration(state.bufferedPosition),
+              ),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildMushafLayout(BuildContext context) {
+    final audioState = ref.watch(ayahAudioStateProvider).asData?.value;
     return Row(
       children: [
         SizedBox(
@@ -3828,7 +4852,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           child: _buildMushafLeftPane(context),
         ),
         const VerticalDivider(width: 1),
-        Expanded(child: _buildAyahPanel()),
+        Expanded(
+          child: Column(
+            children: [
+              Expanded(child: _buildAyahPanel()),
+              if (audioState?.hasActiveAyah ?? false)
+                _buildAyahMiniPlayer(audioState!),
+            ],
+          ),
+        ),
         if (_mushafSettingsOpen)
           SizedBox(
             width: _mushafSettingsPaneWidth,
@@ -3840,6 +4872,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<String>>(ayahAudioErrorProvider, (previous, next) {
+      next.whenData((message) {
+        final trimmed = message.trim();
+        if (trimmed.isEmpty) {
+          return;
+        }
+        _showSnackBar(_strings.audioLoadFailed(trimmed));
+      });
+    });
     return SafeArea(
       child: _buildMushafLayout(context),
     );
@@ -3874,6 +4915,14 @@ enum _MushafSettingsTab {
   wordByWord,
 }
 
+enum _ReaderAudioOptionAction {
+  download,
+  repeat,
+  experience,
+  speed,
+  reciter,
+}
+
 enum _MushafScriptStyleOption {
   uthmani,
   tajweed,
@@ -3894,6 +4943,39 @@ class _MushafControlOption<T> {
   final bool enabled;
 }
 
+class _ReaderAudioPill extends StatelessWidget {
+  const _ReaderAudioPill({
+    required this.label,
+  });
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Text(label),
+      ),
+    );
+  }
+}
+
+class _TajweedLegendItem {
+  const _TajweedLegendItem({
+    required this.color,
+    required this.label,
+  });
+
+  final Color color;
+  final String label;
+}
+
 class _VerseByVerseRowRenderData {
   const _VerseByVerseRowRenderData({
     required this.qcfFamilyName,
@@ -3904,6 +4986,18 @@ class _VerseByVerseRowRenderData {
   final String qcfFamilyName;
   final List<MushafWord> words;
   final String translationText;
+}
+
+class _ChapterHeaderPresentation {
+  const _ChapterHeaderPresentation({
+    required this.title,
+    required this.subtitle,
+    required this.isRtl,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool isRtl;
 }
 
 class _MushafRenderData {
@@ -3967,9 +5061,11 @@ class _NoteDraft {
 class _ReaderNoteEditorDialog extends StatefulWidget {
   const _ReaderNoteEditorDialog({
     required this.existing,
+    required this.strings,
   });
 
   final NoteData? existing;
+  final AppStrings strings;
 
   @override
   State<_ReaderNoteEditorDialog> createState() =>
@@ -4009,7 +5105,7 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
     final body = _bodyController.text.trim();
     if (body.isEmpty) {
       setState(() {
-        _errorMessage = 'Body is required.';
+        _errorMessage = widget.strings.bodyRequired;
       });
       return;
     }
@@ -4026,7 +5122,11 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.existing == null ? 'Add note' : 'Edit note'),
+      title: Text(
+        widget.existing == null
+            ? widget.strings.addNote
+            : widget.strings.editNote,
+      ),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: SingleChildScrollView(
@@ -4037,8 +5137,8 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
                 key: const ValueKey('note_title_field'),
                 controller: _titleController,
                 focusNode: _titleFocusNode,
-                decoration: const InputDecoration(
-                  labelText: 'Title (optional)',
+                decoration: InputDecoration(
+                  labelText: widget.strings.noteTitleOptional,
                 ),
               ),
               const SizedBox(height: 12),
@@ -4048,8 +5148,8 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
                 focusNode: _bodyFocusNode,
                 maxLines: 6,
                 minLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Note body',
+                decoration: InputDecoration(
+                  labelText: widget.strings.noteBody,
                   alignLabelWithHint: true,
                 ),
               ),
@@ -4072,12 +5172,12 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
       actions: [
         TextButton(
           onPressed: _close,
-          child: const Text('Cancel'),
+          child: Text(widget.strings.cancel),
         ),
         FilledButton(
           key: const ValueKey('note_save_button'),
           onPressed: _save,
-          child: const Text('Save'),
+          child: Text(widget.strings.save),
         ),
       ],
     );

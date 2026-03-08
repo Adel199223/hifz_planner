@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
+import '../services/scheduling/planning_projection_engine.dart';
+import '../services/scheduling/scheduling_preferences_codec.dart';
 import '../time/local_day_time.dart';
 
 typedef AppSettingsData = AppSetting;
@@ -9,6 +11,7 @@ class SettingsRepo {
   SettingsRepo(this._db);
 
   final AppDatabase _db;
+  final PlanningProjectionEngine _projectionEngine = PlanningProjectionEngine();
 
   Future<AppSettingsData> getSettings({int? todayDayOverride}) async {
     await _db.ensureSingletonRows();
@@ -28,6 +31,8 @@ class SettingsRepo {
     double? avgReviewMinutesPerAyah,
     int? requirePageMetadata,
     String? typicalGradeDistributionJson,
+    String? schedulingPrefsJson,
+    String? schedulingOverridesJson,
     int? updatedAtDay,
   }) async {
     await _db.ensureSingletonRows();
@@ -63,12 +68,44 @@ class SettingsRepo {
         typicalGradeDistributionJson: typicalGradeDistributionJson == null
             ? const Value.absent()
             : Value(typicalGradeDistributionJson),
+        schedulingPrefsJson: schedulingPrefsJson == null
+            ? const Value.absent()
+            : Value(schedulingPrefsJson),
+        schedulingOverridesJson: schedulingOverridesJson == null
+            ? const Value.absent()
+            : Value(schedulingOverridesJson),
         updatedAtDay: Value(
           updatedAtDay ?? localDayIndex(DateTime.now().toLocal()),
         ),
       ),
     );
     return rows > 0;
+  }
+
+  Future<SchedulingPreferencesV1> getSchedulingPreferences({
+    int? todayDayOverride,
+  }) async {
+    final settings = await getSettings(todayDayOverride: todayDayOverride);
+    return _projectionEngine.preferencesFromSettings(settings);
+  }
+
+  Future<SchedulingOverridesV1> getSchedulingOverrides({
+    int? todayDayOverride,
+  }) async {
+    final settings = await getSettings(todayDayOverride: todayDayOverride);
+    return _projectionEngine.overridesFromSettings(settings);
+  }
+
+  Future<bool> saveSchedulingPreferences({
+    required SchedulingPreferencesV1 preferences,
+    SchedulingOverridesV1 overrides = SchedulingOverridesV1.empty,
+    int? updatedAtDay,
+  }) {
+    return updateSettings(
+      schedulingPrefsJson: _projectionEngine.encodePreferences(preferences),
+      schedulingOverridesJson: _projectionEngine.encodeOverrides(overrides),
+      updatedAtDay: updatedAtDay,
+    );
   }
 
   Future<void> upsertPendingCalibrationUpdate({

@@ -32,21 +32,26 @@ class AppPreferencesState {
   const AppPreferencesState({
     this.language = AppLanguage.english,
     this.theme = AppThemeChoice.sepia,
+    this.companionAutoReciteEnabled = false,
     this.hasLoaded = false,
   });
 
   final AppLanguage language;
   final AppThemeChoice theme;
+  final bool companionAutoReciteEnabled;
   final bool hasLoaded;
 
   AppPreferencesState copyWith({
     AppLanguage? language,
     AppThemeChoice? theme,
+    bool? companionAutoReciteEnabled,
     bool? hasLoaded,
   }) {
     return AppPreferencesState(
       language: language ?? this.language,
       theme: theme ?? this.theme,
+      companionAutoReciteEnabled:
+          companionAutoReciteEnabled ?? this.companionAutoReciteEnabled,
       hasLoaded: hasLoaded ?? this.hasLoaded,
     );
   }
@@ -89,15 +94,28 @@ class AppPreferencesNotifier extends Notifier<AppPreferencesState> {
     await ref.read(appPreferencesStoreProvider).saveThemeCode(theme.code);
   }
 
+  Future<void> setCompanionAutoReciteEnabled(bool value) async {
+    if (state.companionAutoReciteEnabled == value) {
+      return;
+    }
+    state = state.copyWith(companionAutoReciteEnabled: value);
+    await ref
+        .read(appPreferencesStoreProvider)
+        .saveCompanionAutoReciteEnabled(value);
+  }
+
   Future<void> _restore() async {
     final stored = await ref.read(appPreferencesStoreProvider).load();
-    final language = AppLanguage.fromCode(stored.languageCode) ??
-        const AppPreferencesState().language;
-    final theme = AppThemeChoice.fromCode(stored.themeCode) ??
-        const AppPreferencesState().theme;
+    const defaults = AppPreferencesState();
+    final language =
+        AppLanguage.fromCode(stored.languageCode) ?? defaults.language;
+    final theme = AppThemeChoice.fromCode(stored.themeCode) ?? defaults.theme;
+    final companionAutoReciteEnabled = stored.companionAutoReciteEnabled ??
+        defaults.companionAutoReciteEnabled;
     state = state.copyWith(
       language: language,
       theme: theme,
+      companionAutoReciteEnabled: companionAutoReciteEnabled,
       hasLoaded: true,
     );
   }

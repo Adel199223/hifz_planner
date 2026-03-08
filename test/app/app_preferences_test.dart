@@ -10,6 +10,7 @@ void main() {
       initial: const StoredAppPreferences(
         languageCode: 'pt',
         themeCode: 'dark',
+        companionAutoReciteEnabled: true,
       ),
     );
     final container = ProviderContainer(
@@ -26,6 +27,7 @@ void main() {
     final state = container.read(appPreferencesProvider);
     expect(state.language, AppLanguage.portuguese);
     expect(state.theme, AppThemeChoice.dark);
+    expect(state.companionAutoReciteEnabled, isTrue);
     expect(state.hasLoaded, isTrue);
   });
 
@@ -47,12 +49,17 @@ void main() {
     await container
         .read(appPreferencesProvider.notifier)
         .setTheme(AppThemeChoice.dark);
+    await container
+        .read(appPreferencesProvider.notifier)
+        .setCompanionAutoReciteEnabled(true);
 
     final state = container.read(appPreferencesProvider);
     expect(state.language, AppLanguage.french);
     expect(state.theme, AppThemeChoice.dark);
+    expect(state.companionAutoReciteEnabled, isTrue);
     expect(store.savedLanguageCode, 'fr');
     expect(store.savedThemeCode, 'dark');
+    expect(store.savedCompanionAutoReciteEnabled, isTrue);
   });
 }
 
@@ -68,6 +75,7 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   StoredAppPreferences _stored;
   String? savedLanguageCode;
   String? savedThemeCode;
+  bool? savedCompanionAutoReciteEnabled;
 
   @override
   Future<StoredAppPreferences> load() async {
@@ -80,6 +88,7 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
     _stored = StoredAppPreferences(
       languageCode: code,
       themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
     );
   }
 
@@ -89,6 +98,17 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
     _stored = StoredAppPreferences(
       languageCode: _stored.languageCode,
       themeCode: code,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+    );
+  }
+
+  @override
+  Future<void> saveCompanionAutoReciteEnabled(bool value) async {
+    savedCompanionAutoReciteEnabled = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: value,
     );
   }
 }

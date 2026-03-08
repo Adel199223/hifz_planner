@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../app/app_preferences.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
+import '../l10n/app_strings.dart';
 
 class NotesScreen extends ConsumerWidget {
   const NotesScreen({super.key});
@@ -12,6 +14,8 @@ class NotesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final noteRepo = ref.watch(noteRepoProvider);
     final quranRepo = ref.watch(quranRepoProvider);
+    final prefs = ref.watch(appPreferencesProvider);
+    final strings = AppStrings.of(prefs.language);
 
     return SafeArea(
       child: Padding(
@@ -20,7 +24,7 @@ class NotesScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Notes',
+              strings.notesTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 12),
@@ -33,14 +37,14 @@ class NotesScreen extends ConsumerWidget {
                   }
 
                   if (snapshot.hasError) {
-                    return const Center(
-                      child: Text('Failed to load notes.'),
+                    return Center(
+                      child: Text(strings.failedToLoadNotes),
                     );
                   }
 
                   final notes = snapshot.data ?? const <NoteData>[];
                   if (notes.isEmpty) {
-                    return const Center(child: Text('No notes yet.'));
+                    return Center(child: Text(strings.noNotesYet));
                   }
 
                   return ListView.separated(
@@ -50,7 +54,8 @@ class NotesScreen extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final note = notes[index];
                       final title = (note.title ?? '').trim();
-                      final displayTitle = title.isEmpty ? 'Untitled' : title;
+                      final displayTitle =
+                          title.isEmpty ? strings.untitled : title;
 
                       return FutureBuilder<AyahData?>(
                         future: quranRepo.getAyah(note.surah, note.ayah),
@@ -72,10 +77,14 @@ class NotesScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                      'Surah ${note.surah}, Ayah ${note.ayah}'),
+                                    strings.surahAyahListLabel(
+                                      note.surah,
+                                      note.ayah,
+                                    ),
+                                  ),
                                   if (page != null)
                                     Text(
-                                      'Page $page',
+                                      strings.pageLabel(page),
                                       key: ValueKey('note_page_${note.id}'),
                                     ),
                                 ],
@@ -89,6 +98,7 @@ class NotesScreen extends ConsumerWidget {
                               context: context,
                               ref: ref,
                               note: note,
+                              strings: strings,
                             ),
                           );
                         },
@@ -108,6 +118,7 @@ class NotesScreen extends ConsumerWidget {
     required BuildContext context,
     required WidgetRef ref,
     required NoteData note,
+    required AppStrings strings,
   }) async {
     final page =
         (await ref.read(quranRepoProvider).getAyah(note.surah, note.ayah))
@@ -122,6 +133,7 @@ class NotesScreen extends ConsumerWidget {
         return _NotesEditorDialog(
           note: note,
           page: page,
+          strings: strings,
         );
       },
     );
@@ -173,7 +185,9 @@ class NotesScreen extends ConsumerWidget {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(updated ? 'Note updated.' : 'Note update failed.'),
+          content: Text(
+            updated ? strings.noteUpdated : strings.noteUpdateFailed,
+          ),
         ),
       );
     } catch (_) {
@@ -181,7 +195,7 @@ class NotesScreen extends ConsumerWidget {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update note.')),
+        SnackBar(content: Text(strings.failedToUpdateNote)),
       );
     }
   }
@@ -229,10 +243,12 @@ class _NotesEditorDialog extends StatefulWidget {
   const _NotesEditorDialog({
     required this.note,
     required this.page,
+    required this.strings,
   });
 
   final NoteData note;
   final int? page;
+  final AppStrings strings;
 
   @override
   State<_NotesEditorDialog> createState() => _NotesEditorDialogState();
@@ -270,7 +286,7 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
     final body = _bodyController.text.trim();
     if (body.isEmpty) {
       setState(() {
-        _errorMessage = 'Body is required.';
+        _errorMessage = widget.strings.bodyRequired;
       });
       return;
     }
@@ -289,7 +305,7 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
     final page = widget.page;
 
     return AlertDialog(
-      title: const Text('Edit note'),
+      title: Text(widget.strings.editNote),
       content: ConstrainedBox(
         constraints: const BoxConstraints(
           maxWidth: 460,
@@ -304,8 +320,8 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
                 key: const ValueKey('notes_editor_title_field'),
                 controller: _titleController,
                 focusNode: _titleFocusNode,
-                decoration: const InputDecoration(
-                  labelText: 'Title (optional)',
+                decoration: InputDecoration(
+                  labelText: widget.strings.noteTitleOptional,
                 ),
               ),
               const SizedBox(height: 12),
@@ -315,8 +331,8 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
                 focusNode: _bodyFocusNode,
                 minLines: 4,
                 maxLines: 8,
-                decoration: const InputDecoration(
-                  labelText: 'Body',
+                decoration: InputDecoration(
+                  labelText: widget.strings.noteBody,
                   alignLabelWithHint: true,
                 ),
               ),
@@ -331,9 +347,11 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
               ],
               const SizedBox(height: 16),
               Text(
-                page == null
-                    ? 'Linked verse: Surah ${widget.note.surah}, Ayah ${widget.note.ayah}'
-                    : 'Linked verse: Surah ${widget.note.surah}, Ayah ${widget.note.ayah} (Page $page)',
+                widget.strings.linkedVerseLabel(
+                  widget.note.surah,
+                  widget.note.ayah,
+                  pageNumber: page,
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -345,7 +363,7 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
                     onPressed: () {
                       _popWithResult(const _NoteEditorResult.goToVerse());
                     },
-                    child: const Text('Go to verse'),
+                    child: Text(widget.strings.goToVerse),
                   ),
                   OutlinedButton(
                     key: const ValueKey('notes_editor_go_page_button'),
@@ -354,7 +372,7 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
                         : () {
                             _popWithResult(const _NoteEditorResult.goToPage());
                           },
-                    child: const Text('Go to page'),
+                    child: Text(widget.strings.goToPage),
                   ),
                 ],
               ),
@@ -365,12 +383,12 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
       actions: [
         TextButton(
           onPressed: _popWithResult,
-          child: const Text('Cancel'),
+          child: Text(widget.strings.cancel),
         ),
         FilledButton(
           key: const ValueKey('notes_editor_save_button'),
           onPressed: _onSave,
-          child: const Text('Save'),
+          child: Text(widget.strings.save),
         ),
       ],
     );

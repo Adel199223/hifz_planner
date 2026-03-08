@@ -6,12 +6,21 @@ The canonical app brief is:
 - `APP_KNOWLEDGE.md` (repo root)
 
 This file is a bridge for tools/agents expecting the old assistant-doc path.
+It is intentionally shorter than the canonical root document.
+
+Why two `APP_KNOWLEDGE.md` files:
+- Root file is canonical architecture/status truth.
+- This file is a bootstrap bridge for path compatibility and quick routing.
 
 Recommended starting points:
 - `AGENTS.md` (compatibility shim)
 - `agent.md` (primary runbook)
 - `docs/assistant/INDEX.md` (human index)
 - `docs/assistant/manifest.json` (machine routing map)
+- `docs/assistant/ISSUE_MEMORY.md` (repeatable issue registry)
+- `docs/assistant/LOCAL_ENV_PROFILE.example.md` (WSL-vs-Windows routing format)
+- `docs/assistant/LOCAL_CAPABILITIES.md` (discovered local tool inventory)
+- `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` (launch/build identity)
 
 ## What This File Is For
 
@@ -43,7 +52,12 @@ Do not use this file as primary truth when there is a conflict.
 - `APP_KNOWLEDGE.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
+- `docs/assistant/ISSUE_MEMORY.md`
+- `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+- `docs/assistant/LOCAL_CAPABILITIES.md`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
+- `docs/assistant/features/APP_USER_GUIDE.md`
+- `docs/assistant/features/PLANNER_USER_GUIDE.md`
 
 ### App shell
 - `lib/main.dart`
@@ -53,13 +67,40 @@ Do not use this file as primary truth when there is a conflict.
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`
 - `lib/data/services/qurancom_api.dart`
+- `lib/data/services/qurancom_chapters_service.dart`
+- `lib/data/services/ayah_audio_source.dart`
+- `lib/data/services/ayah_audio_service.dart`
 - `lib/ui/qcf/qcf_font_manager.dart`
+
+### Localization
+- `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
+- `docs/assistant/LOCALIZATION_GLOSSARY.md`
+- `lib/l10n/app_language.dart`
+- `lib/l10n/app_strings.dart`
+- `test/l10n/app_strings_test.dart`
+
+### Workspace performance
+- `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
+- `docs/assistant/PERFORMANCE_BASELINES.md`
+- `tooling/validate_workspace_hygiene.dart`
+- `test/tooling/validate_workspace_hygiene_test.dart`
+
+### Local environment and launch identity
+- `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+- `docs/assistant/LOCAL_CAPABILITIES.md`
+- `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`
+- `tooling/print_build_identity.dart`
+
+### Inspiration/parity reference discovery
+- `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
 
 ### Planning
 - `lib/screens/plan_screen.dart`
 - `lib/screens/today_screen.dart`
 - `lib/data/services/daily_planner.dart`
 - `lib/data/services/spaced_repetition_scheduler.dart`
+- `docs/assistant/features/PLANNER_USER_GUIDE.md`
+- `docs/assistant/features/APP_USER_GUIDE.md`
 
 ### DB schema
 - `lib/data/database/app_database.dart`
@@ -84,6 +125,11 @@ Do not use this file as primary truth when there is a conflict.
 5. Confirm DB schema version:
    - open `lib/data/database/app_database.dart`
 6. Pick relevant smoke tests for your area before edits
+7. If local tooling or host routing is unclear:
+   - open `docs/assistant/LOCAL_CAPABILITIES.md`
+   - open `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+8. If launch/build identity matters:
+   - run `dart tooling/print_build_identity.dart`
 
 ## Windows Command Baseline
 

@@ -1,17 +1,25 @@
+import 'dart:async';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hifz_planner/app/app_preferences.dart';
+import 'package:hifz_planner/app/app_preferences_store.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/bookmark_repo.dart';
 import 'package:hifz_planner/data/repositories/note_repo.dart';
 import 'package:hifz_planner/data/services/qurancom_api.dart';
+import 'package:hifz_planner/data/services/qurancom_chapters_service.dart';
+import 'package:hifz_planner/data/services/ayah_audio_service.dart';
+import 'package:hifz_planner/data/services/ayah_audio_source.dart';
 import 'package:hifz_planner/data/services/tajweed_tags_service.dart';
+import 'package:hifz_planner/l10n/app_language.dart';
 import 'package:hifz_planner/screens/reader_screen.dart';
 import 'package:hifz_planner/ui/qcf/qcf_font_manager.dart';
 
@@ -35,6 +43,7 @@ void main() {
 
     await _seedAyahs(db);
     await _pumpReader(tester, container);
+    await tester.pumpAndSettle();
 
     final surahList = find.byKey(const ValueKey('reader_surah_list'));
     expect(find.byKey(const ValueKey('surah_tile_1')), findsOneWidget);
@@ -168,6 +177,274 @@ void main() {
     expect(rtlAncestor, findsOneWidget);
   });
 
+  testWidgets('reader labels localize to French terminology', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'fr'),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      locale: const Locale('fr'),
+    );
+
+    expect(find.text('Ayah par Ayah'), findsOneWidget);
+    expect(find.text('Lecture'), findsOneWidget);
+    expect(find.text('Sourate'), findsOneWidget);
+    expect(find.text('Écouter'), findsOneWidget);
+    expect(find.text('Couleurs du Tajwid'), findsOneWidget);
+    expect(find.text('Tafsirs'), findsWidgets);
+    expect(find.text('Leçons'), findsWidgets);
+    expect(find.text('Réflexions'), findsWidgets);
+  });
+
+  testWidgets('reader labels localize to Portuguese terminology',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'pt'),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      locale: const Locale('pt'),
+    );
+
+    expect(find.text('Verso por verso'), findsOneWidget);
+    expect(find.text('Lendo'), findsOneWidget);
+    expect(find.text('Surah'), findsOneWidget);
+    expect(find.text('Versículo'), findsOneWidget);
+    expect(find.text('Página'), findsWidgets);
+    expect(find.text('Ouvir'), findsOneWidget);
+    expect(find.text('Cores de Tajweed'), findsOneWidget);
+    expect(find.text('Lições'), findsWidgets);
+    expect(find.text('Reflexões'), findsWidgets);
+  });
+
+  testWidgets('reader labels localize to Arabic and app direction is RTL', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'ar'),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      locale: const Locale('ar'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('آية بآية'), findsOneWidget);
+    expect(find.text('القراءة'), findsOneWidget);
+    expect(find.text('سورة'), findsOneWidget);
+    expect(find.text('استمع'), findsOneWidget);
+    expect(find.text('ألوان التجويد'), findsOneWidget);
+    expect(find.text('تفاسير'), findsWidgets);
+    expect(find.text('فوائد'), findsWidgets);
+    expect(find.text('تدبرات'), findsWidgets);
+
+    final context =
+        tester.element(find.byKey(const ValueKey('reader_view_toggle')));
+    expect(Directionality.of(context), TextDirection.rtl);
+  });
+
+  testWidgets('verse chapter header uses Quran.com title/subtitle and layout',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'en'),
+          ),
+        ),
+        quranComChaptersServiceProvider.overrideWithValue(
+          _FakeQuranComChaptersService(
+            byLanguageCode: <String, List<QuranComChapterEntry>>{
+              'en': const <QuranComChapterEntry>[
+                QuranComChapterEntry(
+                  id: 1,
+                  nameSimple: 'Al-Fatihah',
+                  nameArabic: 'الفاتحة',
+                  translatedName: 'The Opener',
+                  translatedLanguageName: 'english',
+                ),
+              ],
+            },
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    final iconFinder =
+        find.byKey(const ValueKey('reader_verse_chapter_icon_1'));
+    final titleFinder =
+        find.byKey(const ValueKey('reader_verse_chapter_title_1'));
+    final subtitleFinder =
+        find.byKey(const ValueKey('reader_verse_chapter_subtitle_1'));
+    await pumpUntilFound(tester, titleFinder);
+    expect(iconFinder, findsOneWidget);
+    expect(titleFinder, findsOneWidget);
+    expect(subtitleFinder, findsOneWidget);
+    final titleText = tester.widget<Text>(titleFinder);
+    final subtitleText = tester.widget<Text>(subtitleFinder);
+    expect(titleText.data, startsWith('1.'));
+    expect(titleText.data, contains('Al-Fatihah'));
+    expect(subtitleText.data, contains('Opener'));
+    expect(find.text('Surah 1'), findsNothing);
+    expect(
+      tester.getTopLeft(iconFinder).dx,
+      lessThan(tester.getTopLeft(titleFinder).dx),
+    );
+  });
+
+  testWidgets('tajweed legend appears only in tajweed mode', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+
+    expect(find.byKey(const ValueKey('reader_verse_tajweed_legend')),
+        findsNothing);
+    expect(find.byKey(const ValueKey('reader_verse_tajweed_colors')),
+        findsOneWidget);
+
+    await tester
+        .tap(find.byKey(const ValueKey('reader_verse_settings_button')));
+    await tester.pumpAndSettle();
+    await tester
+        .tap(find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('reader_verse_tajweed_legend')),
+        findsOneWidget);
+    expect(find.text('Silent letter'), findsOneWidget);
+  });
+
+  testWidgets(
+      'arabic locale localizes surah search/list and keeps translation LTR',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(languageCode: 'ar'),
+          ),
+        ),
+        quranComChaptersServiceProvider.overrideWithValue(
+          _FakeQuranComChaptersService(
+            byLanguageCode: <String, List<QuranComChapterEntry>>{
+              'ar': const <QuranComChapterEntry>[
+                QuranComChapterEntry(
+                  id: 1,
+                  nameSimple: 'Al-Fatihah',
+                  nameArabic: 'الفاتحة',
+                  translatedName: 'سورة الفاتحة',
+                  translatedLanguageName: 'arabic',
+                ),
+              ],
+            },
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      locale: const Locale('ar'),
+    );
+    await pumpUntilFound(tester, find.text('ابحث عن سورة'));
+    expect(find.text('ابحث عن سورة'), findsOneWidget);
+    final firstSurahTile =
+        find.byKey(const ValueKey('reader_mushaf_nav_surah_1'));
+    await pumpUntilFound(tester, firstSurahTile);
+    final firstSurahLabel = tester.widget<Text>(
+      find.descendant(of: firstSurahTile, matching: find.byType(Text)).first,
+    );
+    expect(firstSurahLabel.data, contains('الفاتحة'));
+    expect(find.text('سورة 1'), findsNothing);
+
+    final translationDirection = find.ancestor(
+      of: find.byKey(const ValueKey('reader_verse_translation_1:1')),
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is Directionality &&
+            widget.textDirection == TextDirection.ltr,
+      ),
+    );
+    expect(translationDirection, findsOneWidget);
+  });
+
   testWidgets(
       'tajweed toggle from settings falls back to plain when mapping is empty',
       (
@@ -232,6 +509,234 @@ void main() {
     expect(find.text('Bookmark verse'), findsOneWidget);
     expect(find.text('Add/Edit note'), findsOneWidget);
     expect(find.text('Copy text (Uthmani)'), findsOneWidget);
+  });
+
+  testWidgets(
+    'verse row play button calls playAyah with verse coordinates',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeAudio = _FakeAyahAudioService();
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await fakeAudio.dispose();
+      });
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+
+      await tester
+          .tap(find.byKey(const ValueKey('reader_verse_action_play_1:1')));
+      await tester.pump();
+
+      expect(fakeAudio.playAyahCalls.length, 1);
+      expect(fakeAudio.playAyahCalls.single, const AyahRef(surah: 1, ayah: 1));
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
+
+  testWidgets(
+    'verse row play-from-here menu calls playFrom',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeAudio = _FakeAyahAudioService();
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await fakeAudio.dispose();
+      });
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+
+      await tester.tap(
+        find.byKey(const ValueKey('reader_verse_action_play_from_1:1')),
+        warnIfMissed: false,
+      );
+      await tester.pump();
+
+      expect(fakeAudio.playFromCalls.length, 1);
+      expect(fakeAudio.playFromCalls.single, const AyahRef(surah: 1, ayah: 1));
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
+
+  testWidgets(
+    'reader mini-player controls call audio service methods',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeAudio = _FakeAyahAudioService();
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await fakeAudio.dispose();
+      });
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+
+      fakeAudio.emitState(
+        const AyahAudioState(
+          currentAyah: AyahRef(surah: 1, ayah: 1),
+          isPlaying: true,
+          isBuffering: false,
+          speed: 1.0,
+          repeatCount: 0,
+          canNext: true,
+          canPrevious: true,
+          queueLength: 3,
+          position: Duration(seconds: 5),
+          bufferedPosition: Duration(seconds: 8),
+          duration: Duration(seconds: 20),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('reader_audio_mini_player')),
+          findsOneWidget);
+
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_play_pause_button')));
+      await tester.pump();
+      expect(fakeAudio.pauseCalls, 1);
+
+      fakeAudio.emitState(
+        const AyahAudioState(
+          currentAyah: AyahRef(surah: 1, ayah: 1),
+          isPlaying: false,
+          isBuffering: false,
+          speed: 1.0,
+          repeatCount: 0,
+          canNext: true,
+          canPrevious: true,
+          queueLength: 3,
+          position: Duration(seconds: 5),
+          bufferedPosition: Duration(seconds: 8),
+          duration: Duration(seconds: 20),
+        ),
+      );
+      await tester.pump();
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_play_pause_button')));
+      await tester.pump();
+      expect(fakeAudio.resumeCalls, 1);
+
+      await tester.tap(find.byKey(const ValueKey('reader_audio_prev_button')));
+      await tester.pump();
+      expect(fakeAudio.previousCalls, 1);
+
+      await tester.tap(find.byKey(const ValueKey('reader_audio_next_button')));
+      await tester.pump();
+      expect(fakeAudio.nextCalls, 1);
+
+      final seekSlider = tester.widget<Slider>(
+        find.byKey(const ValueKey('reader_audio_seek_slider')),
+      );
+      seekSlider.onChangeEnd?.call(10000);
+      await tester.pump();
+      expect(fakeAudio.seekToCalls, 1);
+      expect(fakeAudio.lastSeekTo, const Duration(seconds: 10));
+
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_options_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('reader_audio_option_speed')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('1.25x').last);
+      await tester.pumpAndSettle();
+      expect(fakeAudio.speedChanges, isNotEmpty);
+      expect(fakeAudio.speedChanges.last, 1.25);
+
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_options_button')));
+      await tester.pumpAndSettle();
+      await tester
+          .tap(find.byKey(const ValueKey('reader_audio_option_repeat')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2x').last);
+      await tester.pumpAndSettle();
+      expect(fakeAudio.repeatChanges, isNotEmpty);
+      expect(fakeAudio.repeatChanges.last, 2);
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
+
+  testWidgets('reader audio reciter menu option disables while switching',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeAudio = _FakeAyahAudioService();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+      ],
+    );
+    addTearDown(() async {
+      container.dispose();
+      await fakeAudio.dispose();
+    });
+    container
+        .read(ayahReciterSwitchInProgressProvider.notifier)
+        .setInProgress(true);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+
+    fakeAudio.emitState(
+      const AyahAudioState(
+        currentAyah: AyahRef(surah: 1, ayah: 1),
+        isPlaying: false,
+        isBuffering: false,
+        speed: 1.0,
+        repeatCount: 0,
+        canNext: true,
+        canPrevious: true,
+        queueLength: 3,
+        position: Duration(seconds: 1),
+        bufferedPosition: Duration(seconds: 2),
+        duration: Duration(seconds: 20),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('reader_audio_options_button')));
+    await tester.pumpAndSettle();
+
+    final reciterItem = tester.widget<PopupMenuItem<dynamic>>(
+      find.byKey(const ValueKey('reader_audio_option_reciter')),
+    );
+    expect(reciterItem.enabled, isFalse);
   });
 
   testWidgets('range highlight marks rows inside inclusive verse range', (
@@ -575,7 +1080,7 @@ void main() {
     );
     expect(
       find.byKey(const ValueKey('reader_verse_word_1:1_0')),
-      findsOneWidget,
+      findsNothing,
     );
     expect(
       find.byKey(const ValueKey('reader_verse_word_1:1_1')),
@@ -690,6 +1195,44 @@ void main() {
     expect(tooltip.message, 'Translation unavailable');
   });
 
+  testWidgets('verse by verse suppresses end-marker circle tokens',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
+    final fakeFonts = _FakeQcfFontManager(
+      familyName: 'qcf_test_family',
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+    );
+
+    expect(
+      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('verse by verse basmala words do not overlap', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi =
@@ -714,18 +1257,18 @@ void main() {
     await _pumpReader(tester, container);
     await pumpUntilFound(
       tester,
-      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+      find.byKey(const ValueKey('reader_verse_word_1:2_0')),
     );
     await pumpUntilFound(
       tester,
-      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+      find.byKey(const ValueKey('reader_verse_word_1:2_1')),
     );
 
     final firstWordRect = tester.getRect(
-      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+      find.byKey(const ValueKey('reader_verse_word_1:2_0')),
     );
     final secondWordRect = tester.getRect(
-      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+      find.byKey(const ValueKey('reader_verse_word_1:2_1')),
     );
     expect(firstWordRect.overlaps(secondWordRect), isFalse);
   });
@@ -2976,6 +3519,106 @@ MushafPageData _buildSpacingMushafDataFixture() {
   );
 }
 
+class _FakeAyahAudioService implements AyahAudioService {
+  final StreamController<AyahAudioState> _stateController =
+      StreamController<AyahAudioState>.broadcast();
+  final StreamController<String> _errorController =
+      StreamController<String>.broadcast();
+
+  AyahAudioState _state = const AyahAudioState.initial();
+  final List<AyahRef> playAyahCalls = <AyahRef>[];
+  final List<AyahRef> playFromCalls = <AyahRef>[];
+  final List<double> speedChanges = <double>[];
+  final List<int> repeatChanges = <int>[];
+  int pauseCalls = 0;
+  int resumeCalls = 0;
+  int nextCalls = 0;
+  int previousCalls = 0;
+  int stopCalls = 0;
+  int seekToCalls = 0;
+  Duration? lastSeekTo;
+
+  @override
+  Stream<AyahAudioState> get stateStream async* {
+    yield _state;
+    yield* _stateController.stream;
+  }
+
+  @override
+  Stream<String> get errorStream => _errorController.stream;
+
+  @override
+  AyahAudioState get currentState => _state;
+
+  @override
+  Future<void> updateSource(
+    AyahAudioSource source, {
+    bool stopPlayback = true,
+  }) async {}
+
+  void emitState(AyahAudioState state) {
+    _state = state;
+    _stateController.add(state);
+  }
+
+  @override
+  Future<void> next() async {
+    nextCalls += 1;
+  }
+
+  @override
+  Future<void> pause() async {
+    pauseCalls += 1;
+  }
+
+  @override
+  Future<void> playAyah(int surah, int ayah) async {
+    playAyahCalls.add(AyahRef(surah: surah, ayah: ayah));
+  }
+
+  @override
+  Future<void> playFrom(int surah, int ayah) async {
+    playFromCalls.add(AyahRef(surah: surah, ayah: ayah));
+  }
+
+  @override
+  Future<void> previous() async {
+    previousCalls += 1;
+  }
+
+  @override
+  Future<void> seekTo(Duration position) async {
+    seekToCalls += 1;
+    lastSeekTo = position;
+  }
+
+  @override
+  Future<void> resume() async {
+    resumeCalls += 1;
+  }
+
+  @override
+  Future<void> setRepeatCount(int repeatCount) async {
+    repeatChanges.add(repeatCount);
+  }
+
+  @override
+  Future<void> setSpeed(double speed) async {
+    speedChanges.add(speed);
+  }
+
+  @override
+  Future<void> stop() async {
+    stopCalls += 1;
+  }
+
+  @override
+  Future<void> dispose() async {
+    await _stateController.close();
+    await _errorController.close();
+  }
+}
+
 class _FakeQuranComApiCall {
   const _FakeQuranComApiCall({
     required this.page,
@@ -3138,6 +3781,36 @@ class _FakeQuranComApi extends QuranComApi {
   }
 }
 
+class _FakeQuranComChaptersService extends QuranComChaptersService {
+  _FakeQuranComChaptersService({
+    required Map<String, List<QuranComChapterEntry>> byLanguageCode,
+  })  : _byLanguageCode = byLanguageCode,
+        super();
+
+  final Map<String, List<QuranComChapterEntry>> _byLanguageCode;
+
+  @override
+  Future<List<QuranComChapterEntry>> getChapters({
+    required String languageCode,
+  }) async {
+    return _byLanguageCode[languageCode] ?? const <QuranComChapterEntry>[];
+  }
+
+  @override
+  Future<QuranComChapterEntry?> getChapter({
+    required int chapterId,
+    required String languageCode,
+  }) async {
+    final chapters = await getChapters(languageCode: languageCode);
+    for (final chapter in chapters) {
+      if (chapter.id == chapterId) {
+        return chapter;
+      }
+    }
+    return null;
+  }
+}
+
 class _FakeQcfFontCall {
   const _FakeQcfFontCall({
     required this.page,
@@ -3170,15 +3843,63 @@ class _FakeQcfFontManager extends QcfFontManager {
   }
 }
 
+class _FakeAppPreferencesStore implements AppPreferencesStore {
+  _FakeAppPreferencesStore({
+    StoredAppPreferences? initial,
+  }) : _stored = initial ?? const StoredAppPreferences();
+
+  StoredAppPreferences _stored;
+
+  @override
+  Future<StoredAppPreferences> load() async => _stored;
+
+  @override
+  Future<void> saveLanguageCode(String code) async {
+    _stored = StoredAppPreferences(
+      languageCode: code,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+    );
+  }
+
+  @override
+  Future<void> saveThemeCode(String code) async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: code,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+    );
+  }
+
+  @override
+  Future<void> saveCompanionAutoReciteEnabled(bool value) async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: value,
+    );
+  }
+}
+
 Future<void> _pumpReader(
   WidgetTester tester,
   ProviderContainer container, {
   ReaderScreen screen = const ReaderScreen(),
+  Locale? locale,
 }) async {
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
+        locale: locale,
+        supportedLocales: AppLanguage.values
+            .map((language) => language.locale)
+            .toList(growable: false),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         home: Scaffold(body: screen),
       ),
     ),

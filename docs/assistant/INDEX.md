@@ -8,6 +8,12 @@ One-page navigation guide for agent-facing documentation.
 2. Read that document first.
 3. Run the listed validator/smoke command before handoff.
 
+## Beginner Quick Path
+
+1. Start with `docs/assistant/features/APP_USER_GUIDE.md`.
+2. For planning or daily-assignment questions, open `docs/assistant/features/PLANNER_USER_GUIDE.md`.
+3. Open `APP_KNOWLEDGE.md` only if you need technical/canonical detail.
+
 ## Agent Doc Map
 
 | Document | Use when... | Do not use for... | Time to value |
@@ -15,12 +21,28 @@ One-page navigation guide for agent-facing documentation.
 | `AGENTS.md` | Your tool auto-opens `AGENTS.md` and needs immediate routing. | Deep architecture details. | 1 min |
 | `agent.md` | You need the operational runbook and quick task routing matrix. | Full DB schema details. | 2 min |
 | `APP_KNOWLEDGE.md` | You need canonical app architecture, feature status, and subsystem map. | Fine-grained per-workflow checklists. | 3 min |
+| `docs/assistant/ISSUE_MEMORY.md` | A workflow/tooling/docs failure has repeated and you need the reusable issue registry. | One-off frustration or full incident narratives. | 1 min |
+| `docs/assistant/GOLDEN_PRINCIPLES.md` | You need enforceable style/invariant rules before implementation. | Feature-specific workflow steps. | 1 min |
+| `docs/assistant/exec_plans/PLANS.md` | Work is major/multi-file and needs a self-contained execution plan format. | Small isolated fixes. | 2 min |
 | `docs/assistant/APP_KNOWLEDGE.md` | Your workflow expects assistant-path docs and needs canonical pointer/bootstrapping. | Canonical truth when conflicts exist. | 1 min |
 | `docs/assistant/manifest.json` | You are an automated agent selecting docs/tests programmatically. | Human narrative context. | <1 min |
+| `docs/assistant/LOCAL_ENV_PROFILE.example.md` | You need to decide WSL-vs-Windows routing or populate the local machine overlay. | Shared canonical project behavior. | 1 min |
+| `docs/assistant/LOCAL_CAPABILITIES.md` | Tool availability or local capability assumptions are unclear. | Private machine secrets or universal rules. | 1 min |
+| `docs/assistant/features/PLANNER_USER_GUIDE.md` | You need a thorough, non-coder explanation of planning/scheduling behavior and user decisions. | Canonical architecture, DB internals, or implementation-level scheduler logic. | 3 min |
+| `docs/assistant/features/APP_USER_GUIDE.md` | You need a non-technical whole-app explainer for user guidance and support conversations. | Canonical architecture truth, schema/migration details, or implementation/runbook constraints. | 2 min |
+| `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` | Task changes labels/locales/RTL/translation-resource mapping. | DB schema or non-localization feature logic. | 2 min |
+| `docs/assistant/LOCALIZATION_GLOSSARY.md` | You need canonical terms across languages without duplication. | Runtime data/cache logic decisions. | 1 min |
+| `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` | Task targets VS Code lag, file watchers, indexing pressure, or workspace artifact placement. | Feature/domain logic implementation details. | 2 min |
+| `docs/assistant/PERFORMANCE_BASELINES.md` | You need canonical watcher/search excludes and environment placement defaults. | CI release logic or runtime architecture decisions. | 1 min |
+| `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | Task requires parity/inspiration from named apps/sites and external reference selection. | Direct implementation details without external-source analysis. | 2 min |
+| `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` | Task needs launch identity, parallel worktree discipline, or deterministic GUI handoff. | Small single-worktree edits with no runnable-build ambiguity. | 2 min |
 | `docs/assistant/DB_DRIFT_KNOWLEDGE.md` | You are changing schema/migrations/repos/planner persistence. | Reader-only UI behavior changes. | 3 min |
-| `docs/assistant/workflows/READER_WORKFLOW.md` | Task targets Verse by Verse / Reading UI and interactions. | Planner internals or DB migrations. | 2 min |
+| `docs/assistant/workflows/READER_WORKFLOW.md` | Task targets Verse by Verse / Reading UI, shared Quran word rendering, and interaction parity. | Planner internals or DB migrations. | 2 min |
 | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | Task targets Quran.com fetch/cache/dedupe/fonts/translations. | Navigation shell changes. | 2 min |
 | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | Task targets onboarding/plan/today/scheduler/calibration. | Quran.com rendering fidelity tasks. | 2 min |
+| `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md` | Task targets automatic scheduling, weekly calendar generation, advanced availability, or companion staged/recitation/word-hover behavior. | Reader-only rendering or Quran.com data ingestion tasks. | 2 min |
+| `docs/assistant/workflows/CI_REPO_WORKFLOW.md` | Task targets CI workflow edits, branch sync/merge hygiene, and release gating commands. | Feature implementation details inside reader/planner logic. | 2 min |
+| `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` | Task starts with "commit": stage triage, ignore checks, commit message, push, and branch cleanup operations. | Feature implementation logic or schema design work. | 2 min |
 | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | Task changes docs structure/contracts/links. | Runtime feature implementation. | 2 min |
 
 ## Validator Command

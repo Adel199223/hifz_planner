@@ -13,5 +13,13 @@ build/
 
 
 .idea/
-.vscode/
-
+.vscode/*
+!.vscode/settings.json
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+playstore_audit_dump.txt
+docs/assistant/LOCAL_ENV_PROFILE.local.md
