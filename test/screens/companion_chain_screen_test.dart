@@ -224,8 +224,8 @@ void main() {
       mode: CompanionLaunchMode.newMemorization,
     );
 
-    expect(stageLabelText(tester), 'Guided visible');
-    expect(stage1ModeLabelText(tester), 'Model + Echo');
+    expect(stageLabelText(tester), 'Listen and follow');
+    expect(stage1ModeLabelText(tester), 'Listen and follow');
     expect(find.byKey(const ValueKey('companion_skip_stage_button')),
         findsOneWidget);
   });
@@ -245,7 +245,7 @@ void main() {
     );
 
     await driveToFirstColdProbe(tester);
-    expect(stage1ModeLabelText(tester), 'Cold Probe');
+    expect(stage1ModeLabelText(tester), 'Try it from memory');
     expect(find.byKey(const ValueKey('companion_stage1_hidden_prompt')),
         findsOneWidget);
   });
@@ -275,7 +275,7 @@ void main() {
     await tester.tap(recordButton);
     await tester.pumpAndSettle();
     expect(
-      find.text('Select an answer for the micro-check first.'),
+      find.text('Choose an answer for the quick check first.'),
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('companion_mark_correct')), findsNothing);
@@ -324,8 +324,8 @@ void main() {
     await tester.tap(incorrectFinder);
     await tester.pumpAndSettle();
 
-    expect(stage1ModeLabelText(tester), 'Correction');
-    expect(find.text('Play Correction'), findsOneWidget);
+    expect(stage1ModeLabelText(tester), 'Listen to the correction');
+    expect(find.text('Hear the correction'), findsOneWidget);
 
     final correctionButton =
         find.byKey(const ValueKey('companion_record_start_button'));
@@ -356,7 +356,7 @@ void main() {
       mode: CompanionLaunchMode.newMemorization,
     );
 
-    expect(stageLabelText(tester), 'Cued recall');
+    expect(stageLabelText(tester), 'Recite with a cue');
     expect(find.byKey(const ValueKey('companion_stage2_mode_card')),
         findsOneWidget);
     expect(
@@ -394,7 +394,7 @@ void main() {
     await tester.tap(recordButton);
     await tester.pumpAndSettle();
     expect(
-      find.text('Select an answer for the micro-check first.'),
+      find.text('Choose an answer for the quick check first.'),
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('companion_mark_correct')), findsNothing);
@@ -439,8 +439,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('companion_mark_incorrect')));
     await tester.pumpAndSettle();
 
-    expect(stage2ModeLabelText(tester), 'Correction');
-    expect(find.text('Play Stage-2 Correction'), findsOneWidget);
+    expect(stage2ModeLabelText(tester), 'Listen to the correction');
+    expect(find.text('Hear the correction'), findsOneWidget);
 
     await tester.ensureVisible(recordButton);
     await tester.tap(recordButton);
@@ -477,7 +477,7 @@ void main() {
         .tap(find.byKey(const ValueKey('companion_skip_stage_confirm')));
     await tester.pumpAndSettle();
 
-    expect(stageLabelText(tester), 'Hidden reveal');
+    expect(stageLabelText(tester), 'Recite from memory');
     expect(find.byKey(const ValueKey('companion_stage3_weak_prelude_banner')),
         findsOneWidget);
   });
@@ -505,7 +505,7 @@ void main() {
       mode: CompanionLaunchMode.newMemorization,
     );
 
-    expect(stageLabelText(tester), 'Hidden reveal');
+    expect(stageLabelText(tester), 'Recite from memory');
     expect(find.byKey(const ValueKey('companion_stage3_mode_card')),
         findsOneWidget);
     expect(
@@ -555,8 +555,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('companion_mark_incorrect')));
     await tester.pumpAndSettle();
 
-    expect(stage3ModeLabelText(tester), 'Correction');
-    expect(find.text('Play Stage-3 Correction'), findsOneWidget);
+    expect(stage3ModeLabelText(tester), 'Listen to the correction');
+    expect(find.text('Hear the correction'), findsOneWidget);
 
     await tester.ensureVisible(recordButton);
     await tester.tap(recordButton);
@@ -582,7 +582,7 @@ void main() {
       mode: CompanionLaunchMode.stage4Consolidation,
     );
 
-    expect(stageLabelText(tester), 'Hidden reveal');
+    expect(stageLabelText(tester), 'Delayed check');
     expect(find.byKey(const ValueKey('companion_stage4_mode_card')),
         findsOneWidget);
     expect(stage4ModeLabelText(tester), isNotEmpty);
@@ -629,8 +629,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('companion_mark_incorrect')));
     await tester.pumpAndSettle();
 
-    expect(stage4ModeLabelText(tester), 'Correction');
-    expect(find.text('Play Stage-4 Correction'), findsOneWidget);
+    expect(stage4ModeLabelText(tester), 'Listen to the correction');
+    expect(find.text('Hear the correction'), findsOneWidget);
 
     await tester.ensureVisible(recordButton);
     await tester.tap(recordButton);
@@ -653,7 +653,7 @@ void main() {
       mode: CompanionLaunchMode.review,
     );
 
-    expect(stageLabelText(tester), 'Hidden reveal');
+    expect(stageLabelText(tester), 'Review from memory');
     expect(find.byKey(const ValueKey('companion_skip_stage_button')),
         findsNothing);
   });

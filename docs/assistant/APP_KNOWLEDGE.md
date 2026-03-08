@@ -113,7 +113,12 @@ Do not use this file as primary truth when there is a conflict.
   - `/companion/chain`
   - `mode=new|review|stage4`
 - Learners no longer need the word `Companion` to start from the top-level entry points
-- The practice screen still uses the existing deterministic engine; Wave 1 only simplified entry naming and launch points
+- The practice screen still uses the existing deterministic engine
+- Wave 2 now makes the visible runtime task-first instead of stage-first:
+  - the screen leads with `What to do now`
+  - learner-facing labels use plain language like `Listen and follow`, `Recite with a cue`, `Recite from memory`, `Review from memory`, and `Delayed check`
+  - correction states now explicitly tell the learner to listen to the correction before retrying
+  - progress is shown as `Practice step X/Y` instead of leading with stage vocabulary
 
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`

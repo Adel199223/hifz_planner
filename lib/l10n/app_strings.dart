@@ -927,13 +927,13 @@ class AppStrings {
   String get companionPracticeTitle =>
       _t('companion_practice_title', 'Practice from Memory');
   String companionCurrentVersePosition(int current, int total) => _fmt(
-    _t('companion_current_verse_position', 'Current verse: {current}/{total}'),
+    _t('companion_current_verse_position', 'Verse {current} of {total}'),
     <String, Object>{'current': current, 'total': total},
   );
   String get companionActiveHintLabel =>
-      _t('companion_active_hint_label', 'Active hint');
+      _t('companion_active_hint_label', 'Current hint');
   String get companionHintLevelH0 =>
-      _t('companion_hint_level_h0', 'No hint requested yet.');
+      _t('companion_hint_level_h0', 'No hint in use.');
   String get companionHintUnavailable =>
       _t('companion_hint_unavailable', 'Hint unavailable');
   String get companionTafsirCuePlaceholder => _t(
@@ -941,177 +941,192 @@ class AppStrings {
     'Meaning cue (Tafsir al-Muyassar placeholder)',
   );
   String get companionPlayCurrentAyah =>
-      _t('companion_play_current_ayah', 'Play current ayah');
+      _t('companion_play_current_ayah', 'Listen to current ayah');
   String get companionAutoplayNextAyah =>
       _t('companion_autoplay_next_ayah', 'Autoplay next ayah');
   String get companionAutoplayOn => _t('companion_autoplay_on', 'Autoplay on');
   String get companionAutoplayOff =>
       _t('companion_autoplay_off', 'Autoplay off');
   String get companionRecordStart =>
-      _t('companion_record_start', 'Record / Start');
+      _t('companion_record_start', 'Start attempt');
+  String get companionWhatToDoNowLabel =>
+      _t('companion_what_to_do_now_label', 'What to do now');
+  String get companionReviewPracticeTitle =>
+      _t('companion_review_practice_title', 'Review from memory');
+  String get companionDelayedCheckTitle =>
+      _t('companion_delayed_check_title', 'Delayed check');
   String get companionStage1ModeLabel =>
-      _t('companion_stage1_mode_label', 'Stage 1 mode');
+      _t('companion_stage1_mode_label', 'What to do now');
   String get companionStage1ModeModelEcho =>
-      _t('companion_stage1_mode_model_echo', 'Model + Echo');
+      _t('companion_stage1_mode_model_echo', 'Listen and follow');
   String get companionStage1ModeColdProbe =>
-      _t('companion_stage1_mode_cold_probe', 'Cold Probe');
+      _t('companion_stage1_mode_cold_probe', 'Try it from memory');
   String get companionStage1ModeCorrection =>
-      _t('companion_stage1_mode_correction', 'Correction');
+      _t('companion_stage1_mode_correction', 'Listen to the correction');
   String get companionStage1ModeSpacedReprobe =>
-      _t('companion_stage1_mode_spaced_reprobe', 'Spaced Re-probe');
+      _t('companion_stage1_mode_spaced_reprobe', 'Try it from memory again');
   String get companionStage1ModeCheckpoint =>
-      _t('companion_stage1_mode_checkpoint', 'Checkpoint');
+      _t('companion_stage1_mode_checkpoint', 'Quick memory check');
   String get companionStage1ModeCumulative =>
-      _t('companion_stage1_mode_cumulative', 'Cumulative Check');
+      _t('companion_stage1_mode_cumulative', 'Put the passage together');
   String get companionStage1ReciteNow =>
-      _t('companion_stage1_recite_now', 'Recite now.');
+      _t('companion_stage1_recite_now', 'Listen first, then try it.');
   String get companionStage1ReciteNowHiddenPrompt => _t(
     'companion_stage1_recite_now_hidden_prompt',
-    'Recite now (text hidden).',
+    'Recite now from memory.',
   );
   String get companionStage1CorrectionRequiredMessage => _t(
     'companion_stage1_correction_required_message',
-    'Correction playback is required before the next cold attempt.',
+    'Listen to the correction before you try again.',
   );
   String get companionStage1CorrectionAction =>
-      _t('companion_stage1_correction_action', 'Play Correction');
+      _t('companion_stage1_correction_action', 'Hear the correction');
   String get companionStage1AutoCheckTitle =>
-      _t('companion_stage1_auto_check_title', 'Micro-check');
+      _t('companion_stage1_auto_check_title', 'Quick check');
   String get companionStage1AutoCheckRequiredSelection => _t(
     'companion_stage1_auto_check_required_selection',
-    'Select an answer for the micro-check first.',
+    'Choose an answer for the quick check first.',
   );
   String get companionStage1HintLockedMessage => _t(
     'companion_stage1_hint_locked_message',
-    'Hints unlock after the first cold attempt.',
+    'Try once from memory before using a hint.',
   );
   String companionStage1WeakVerses(int count) => _fmt(
     _t(
       'companion_stage1_weak_verses',
-      'Weak verses flagged for reinforcement: {count}',
+      'Verses to reinforce before moving on: {count}',
     ),
     <String, Object>{'count': count},
   );
   String get companionStage2ModeLabel =>
-      _t('companion_stage2_mode_label', 'Stage 2 mode');
+      _t('companion_stage2_mode_label', 'What to do now');
   String get companionStage2ModeMinimalCueRecall =>
-      _t('companion_stage2_mode_minimal_cue_recall', 'Minimal-Cue Recall');
+      _t('companion_stage2_mode_minimal_cue_recall', 'Recite with a small cue');
   String get companionStage2ModeDiscrimination =>
-      _t('companion_stage2_mode_discrimination', 'Discrimination');
+      _t(
+        'companion_stage2_mode_discrimination',
+        'Choose the right continuation',
+      );
   String get companionStage2ModeLinking =>
-      _t('companion_stage2_mode_linking', 'Linking (Rabt-lite)');
+      _t('companion_stage2_mode_linking', 'Connect to the next verse');
   String get companionStage2ModeCorrection =>
-      _t('companion_stage2_mode_correction', 'Correction');
+      _t('companion_stage2_mode_correction', 'Listen to the correction');
   String get companionStage2ModeCheckpoint =>
-      _t('companion_stage2_mode_checkpoint', 'Checkpoint');
+      _t('companion_stage2_mode_checkpoint', 'Quick memory check');
   String get companionStage2ModeRemediation =>
-      _t('companion_stage2_mode_remediation', 'Remediation');
+      _t('companion_stage2_mode_remediation', 'Reinforce the weak part');
   String get companionStage2ReciteNow =>
-      _t('companion_stage2_recite_now', 'Recite with minimal cue.');
+      _t('companion_stage2_recite_now', 'Use the cue and keep reciting.');
   String get companionStage2CorrectionRequiredMessage => _t(
     'companion_stage2_correction_required_message',
-    'Correction playback is required before the next Stage-2 attempt.',
+    'Listen to the correction before you try this cue step again.',
   );
   String get companionStage2CorrectionAction =>
-      _t('companion_stage2_correction_action', 'Play Stage-2 Correction');
+      _t('companion_stage2_correction_action', 'Hear the correction');
   String get companionStage3ModeLabel =>
-      _t('companion_stage3_mode_label', 'Stage 3 mode');
+      _t('companion_stage3_mode_label', 'What to do now');
   String get companionStage3ModeWeakPrelude =>
-      _t('companion_stage3_mode_weak_prelude', 'Weak Prelude');
+      _t('companion_stage3_mode_weak_prelude', 'Strengthen the weak verses first');
   String get companionStage3ModeHiddenRecall =>
-      _t('companion_stage3_mode_hidden_recall', 'Hidden Recall');
+      _t('companion_stage3_mode_hidden_recall', 'Recite from memory');
   String get companionStage3ModeLinking =>
-      _t('companion_stage3_mode_linking', 'Linking');
+      _t('companion_stage3_mode_linking', 'Connect the verses');
   String get companionStage3ModeDiscrimination =>
-      _t('companion_stage3_mode_discrimination', 'Discrimination');
+      _t(
+        'companion_stage3_mode_discrimination',
+        'Choose the right continuation',
+      );
   String get companionStage3ModeCorrection =>
-      _t('companion_stage3_mode_correction', 'Correction');
+      _t('companion_stage3_mode_correction', 'Listen to the correction');
   String get companionStage3ModeCheckpoint =>
-      _t('companion_stage3_mode_checkpoint', 'Checkpoint');
+      _t('companion_stage3_mode_checkpoint', 'Quick memory check');
   String get companionStage3ModeRemediation =>
-      _t('companion_stage3_mode_remediation', 'Remediation');
+      _t('companion_stage3_mode_remediation', 'Reinforce the weak part');
   String get companionStage3ReciteNow =>
-      _t('companion_stage3_recite_now', 'Recite from hidden recall.');
+      _t('companion_stage3_recite_now', 'Recite from memory with the text hidden.');
   String get companionStage3CorrectionRequiredMessage => _t(
     'companion_stage3_correction_required_message',
-    'Correction playback is required before the next Stage-3 attempt.',
+    'Listen to the correction before you try again.',
   );
   String get companionStage3CorrectionAction =>
-      _t('companion_stage3_correction_action', 'Play Stage-3 Correction');
+      _t('companion_stage3_correction_action', 'Hear the correction');
   String get companionStage4ModeLabel =>
-      _t('companion_stage4_mode_label', 'Stage 4 mode');
+      _t('companion_stage4_mode_label', 'What to do now');
   String get companionStage4ModeColdStart =>
-      _t('companion_stage4_mode_cold_start', 'Cold Start');
+      _t('companion_stage4_mode_cold_start', 'Start from memory');
   String get companionStage4ModeRandomStart =>
-      _t('companion_stage4_mode_random_start', 'Random Start');
+      _t('companion_stage4_mode_random_start', 'Start from a random point');
   String get companionStage4ModeLinking =>
-      _t('companion_stage4_mode_linking', 'Linking');
+      _t('companion_stage4_mode_linking', 'Connect the verses');
   String get companionStage4ModeDiscrimination =>
-      _t('companion_stage4_mode_discrimination', 'Discrimination');
+      _t(
+        'companion_stage4_mode_discrimination',
+        'Choose the right continuation',
+      );
   String get companionStage4ModeCorrection =>
-      _t('companion_stage4_mode_correction', 'Correction');
+      _t('companion_stage4_mode_correction', 'Listen to the correction');
   String get companionStage4ModeCheckpoint =>
-      _t('companion_stage4_mode_checkpoint', 'Checkpoint');
+      _t('companion_stage4_mode_checkpoint', 'Quick memory check');
   String get companionStage4ModeRemediation =>
-      _t('companion_stage4_mode_remediation', 'Remediation');
+      _t('companion_stage4_mode_remediation', 'Reinforce the weak part');
   String get companionStage4ReciteNow =>
-      _t('companion_stage4_recite_now', 'Recite from delayed hidden recall.');
+      _t('companion_stage4_recite_now', 'Do your delayed check from memory.');
   String get companionStage4CorrectionRequiredMessage => _t(
     'companion_stage4_correction_required_message',
-    'Stage-4 correction exposure is required before retry.',
+    'Listen to the correction before you retry this delayed check.',
   );
   String get companionStage4CorrectionAction =>
-      _t('companion_stage4_correction_action', 'Play Stage-4 Correction');
+      _t('companion_stage4_correction_action', 'Hear the correction');
   String companionStage4DueBanner(String dueKind) => _fmt(
-    _t('companion_stage4_due_banner', 'Stage-4 due type: {dueKind}'),
+    _t('companion_stage4_due_banner', 'Delayed check for today: {dueKind}'),
     <String, Object>{'dueKind': dueKind},
   );
   String companionStage4UnresolvedTargets(int count) => _fmt(
     _t(
       'companion_stage4_unresolved_targets',
-      'Unresolved Stage-4 targets: {count}',
+      'Still needs work on {count} verse(s).',
     ),
     <String, Object>{'count': count},
   );
   String companionStage3WeakPreludeBanner(int count) => _fmt(
     _t(
       'companion_stage3_weak_prelude_banner',
-      'Weak-prelude active: {count} verses must pass before normal hidden flow.',
+      'Strengthen {count} weak verse(s) first, then continue.',
     ),
     <String, Object>{'count': count},
   );
-  String get companionHintButton => _t('companion_hint_button', 'Hint');
-  String get companionRepeatButton => _t('companion_repeat_button', 'Repeat');
-  String get companionNextButton => _t('companion_next_button', 'Next');
+  String get companionHintButton => _t('companion_hint_button', 'Show hint');
+  String get companionRepeatButton => _t('companion_repeat_button', 'Repeat verse');
+  String get companionNextButton => _t('companion_next_button', 'Next verse');
   String companionStageProgress(int current, int total) => _fmt(
-    _t('companion_stage_progress', 'Stage {current}/{total}'),
+    _t('companion_stage_progress', 'Practice step {current}/{total}'),
     <String, Object>{'current': current, 'total': total},
   );
   String get companionStageGuidedVisible =>
-      _t('companion_stage_guided_visible', 'Guided visible');
+      _t('companion_stage_guided_visible', 'Listen and follow');
   String get companionStageCuedRecall =>
-      _t('companion_stage_cued_recall', 'Cued recall');
+      _t('companion_stage_cued_recall', 'Recite with a cue');
   String get companionStageHiddenReveal =>
-      _t('companion_stage_hidden_reveal', 'Hidden reveal');
+      _t('companion_stage_hidden_reveal', 'Recite from memory');
   String get companionSkipStageButton =>
-      _t('companion_skip_stage_button', 'Skip Stage');
+      _t('companion_skip_stage_button', 'Skip this step');
   String get companionSkipStageTitle =>
-      _t('companion_skip_stage_title', 'Skip current stage?');
+      _t('companion_skip_stage_title', 'Skip this practice step?');
   String companionSkipStageBody(String stageLabel) => _fmt(
     _t(
       'companion_skip_stage_body',
-      'Skip {stage} for this run and continue to the next stage.',
+      'Skip {stage} for this session and move to the next step.',
     ),
     <String, Object>{'stage': stageLabel},
   );
   String get companionSkipStageConfirm =>
       _t('companion_skip_stage_confirm', 'Skip');
   String get companionStageSkipped =>
-      _t('companion_stage_skipped', 'Stage skipped.');
+      _t('companion_stage_skipped', 'Practice step skipped.');
   String get companionMarkCorrect =>
-      _t('companion_mark_correct', 'Mark correct');
+      _t('companion_mark_correct', 'I got it right');
   String get companionMarkIncorrect =>
-      _t('companion_mark_incorrect', 'Mark incorrect');
+      _t('companion_mark_incorrect', 'I need correction');
   String companionFailedToSaveAttempt(String error) => _fmt(
     _t(
       'companion_failed_to_save_attempt',
@@ -1121,34 +1136,34 @@ class AppStrings {
   );
   String get companionRepeatPrompt => _t(
     'companion_repeat_prompt',
-    'Repeat the current verse and press Record/Start when ready.',
+    'Repeat the current verse, then start the next attempt when you are ready.',
   );
-  String get companionVersePassed => _t('companion_verse_passed', 'Passed');
+  String get companionVersePassed => _t('companion_verse_passed', 'Done');
   String get companionVerseRevealed =>
-      _t('companion_verse_revealed', 'Revealed');
+      _t('companion_verse_revealed', 'Shown');
   String get companionVerseHidden => _t('companion_verse_hidden', 'Hidden');
   String get companionHiddenPlaceholder =>
       _t('companion_hidden_placeholder', '••••••••••');
   String companionProficiency(String value) => _fmt(
-    _t('companion_proficiency', 'Proficiency: {value}'),
+    _t('companion_proficiency', 'Memory strength: {value}'),
     <String, Object>{'value': value},
   );
   String get companionSessionComplete =>
-      _t('companion_session_complete', 'Session complete');
+      _t('companion_session_complete', 'Practice complete');
   String companionSummaryPassed(int passed, int total) => _fmt(
-    _t('companion_summary_passed', 'Passed: {passed}/{total}'),
+    _t('companion_summary_passed', 'Completed verses: {passed}/{total}'),
     <String, Object>{'passed': passed, 'total': total},
   );
   String companionSummaryHint(String value) => _fmt(
-    _t('companion_summary_hint', 'Average hint level: {value}'),
+    _t('companion_summary_hint', 'Average help used: {value}'),
     <String, Object>{'value': value},
   );
   String companionSummaryStrength(String value) => _fmt(
-    _t('companion_summary_strength', 'Average retrieval strength: {value}'),
+    _t('companion_summary_strength', 'Average memory strength: {value}'),
     <String, Object>{'value': value},
   );
   String get companionNoSessionState =>
-      _t('companion_no_session_state', 'No companion session state.');
+      _t('companion_no_session_state', 'No practice session is available.');
   String get enterAllQPercentagesOrBlank => _t(
     'enter_all_q_percentages_or_blank',
     'Enter all q percentages (5,4,3,2,0) or leave all blank.',

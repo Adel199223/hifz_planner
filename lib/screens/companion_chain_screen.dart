@@ -421,6 +421,16 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     };
   }
 
+  String _stage1HelperText(ChainRunState state, Stage1Runtime runtime) {
+    if (runtime.mode == Stage1Mode.correction) {
+      return _strings.companionStage1CorrectionRequiredMessage;
+    }
+    if (_isHintLockedByStage1(state)) {
+      return _strings.companionStage1HintLockedMessage;
+    }
+    return _strings.companionStage1ReciteNow;
+  }
+
   String _stage2ModeLabel(Stage2Mode mode) {
     return switch (mode) {
       Stage2Mode.minimalCueRecall =>
@@ -431,6 +441,12 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       Stage2Mode.checkpoint => _strings.companionStage2ModeCheckpoint,
       Stage2Mode.remediation => _strings.companionStage2ModeRemediation,
     };
+  }
+
+  String _stage2HelperText(Stage2Runtime runtime) {
+    return runtime.mode == Stage2Mode.correction
+        ? _strings.companionStage2CorrectionRequiredMessage
+        : _strings.companionStage2ReciteNow;
   }
 
   String _stage3ModeLabel(Stage3Mode mode) {
@@ -445,6 +461,12 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     };
   }
 
+  String _stage3HelperText(Stage3Runtime runtime) {
+    return runtime.mode == Stage3Mode.correction
+        ? _strings.companionStage3CorrectionRequiredMessage
+        : _strings.companionStage3ReciteNow;
+  }
+
   String _stage4ModeLabel(Stage4Mode mode) {
     return switch (mode) {
       Stage4Mode.coldStart => _strings.companionStage4ModeColdStart,
@@ -454,6 +476,31 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       Stage4Mode.correction => _strings.companionStage4ModeCorrection,
       Stage4Mode.checkpoint => _strings.companionStage4ModeCheckpoint,
       Stage4Mode.remediation => _strings.companionStage4ModeRemediation,
+    };
+  }
+
+  String _stage4HelperText(Stage4Runtime runtime) {
+    return runtime.mode == Stage4Mode.correction
+        ? _strings.companionStage4CorrectionRequiredMessage
+        : _strings.companionStage4ReciteNow;
+  }
+
+  String _currentStepLabel(ChainRunState state) {
+    if (_isStage4RuntimeActive(state)) {
+      return _strings.companionDelayedCheckTitle;
+    }
+    if (state.isReviewMode) {
+      return _strings.companionReviewPracticeTitle;
+    }
+    return _stageLabel(state.activeStage);
+  }
+
+  String _stage4DueKindLabel(String dueKind) {
+    return switch (dueKind) {
+      'pre_sleep_optional' => _strings.stage4DueKindPreSleepOptional,
+      'next_day_required' => _strings.stage4DueKindNextDayRequired,
+      'retry_required' => _strings.stage4DueKindRetryRequired,
+      _ => dueKind.replaceAll('_', ' '),
     };
   }
 
@@ -845,6 +892,34 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     };
   }
 
+  Widget _buildModeCard({
+    required Key cardKey,
+    required Key modeLabelKey,
+    required Key helperKey,
+    required String modeLabel,
+    required String helperText,
+  }) {
+    return Card(
+      key: cardKey,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _strings.companionWhatToDoNowLabel,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(modeLabel, key: modeLabelKey),
+            const SizedBox(height: 4),
+            Text(helperText, key: helperKey),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _stageStatusText(ChainRunState state, ChainVerseState verse) {
     final isCurrent = identical(verse, state.currentVerse);
     if (_isStage1RuntimeActive(state) && isCurrent) {
@@ -1113,30 +1188,12 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     }
     final runtime = state.stage1!;
     final modeLabel = _stage1ModeLabel(runtime.mode);
-    final helperText = runtime.mode == Stage1Mode.correction
-        ? _strings.companionStage1CorrectionRequiredMessage
-        : _isHintLockedByStage1(state)
-        ? _strings.companionStage1HintLockedMessage
-        : _strings.companionStage1ReciteNow;
-
-    return Card(
-      key: const ValueKey('companion_stage1_mode_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _strings.companionStage1ModeLabel,
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(modeLabel, key: const ValueKey('companion_stage1_mode_label')),
-            const SizedBox(height: 4),
-            Text(helperText, key: const ValueKey('companion_stage1_mode_hint')),
-          ],
-        ),
-      ),
+    return _buildModeCard(
+      cardKey: const ValueKey('companion_stage1_mode_card'),
+      modeLabelKey: const ValueKey('companion_stage1_mode_label'),
+      helperKey: const ValueKey('companion_stage1_mode_hint'),
+      modeLabel: modeLabel,
+      helperText: _stage1HelperText(state, runtime),
     );
   }
 
@@ -1146,28 +1203,12 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     }
     final runtime = state.stage2!;
     final modeLabel = _stage2ModeLabel(runtime.mode);
-    final helperText = runtime.mode == Stage2Mode.correction
-        ? _strings.companionStage2CorrectionRequiredMessage
-        : _strings.companionStage2ReciteNow;
-
-    return Card(
-      key: const ValueKey('companion_stage2_mode_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _strings.companionStage2ModeLabel,
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(modeLabel, key: const ValueKey('companion_stage2_mode_label')),
-            const SizedBox(height: 4),
-            Text(helperText, key: const ValueKey('companion_stage2_mode_hint')),
-          ],
-        ),
-      ),
+    return _buildModeCard(
+      cardKey: const ValueKey('companion_stage2_mode_card'),
+      modeLabelKey: const ValueKey('companion_stage2_mode_label'),
+      helperKey: const ValueKey('companion_stage2_mode_hint'),
+      modeLabel: modeLabel,
+      helperText: _stage2HelperText(runtime),
     );
   }
 
@@ -1177,28 +1218,12 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     }
     final runtime = state.stage3!;
     final modeLabel = _stage3ModeLabel(runtime.mode);
-    final helperText = runtime.mode == Stage3Mode.correction
-        ? _strings.companionStage3CorrectionRequiredMessage
-        : _strings.companionStage3ReciteNow;
-
-    return Card(
-      key: const ValueKey('companion_stage3_mode_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _strings.companionStage3ModeLabel,
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(modeLabel, key: const ValueKey('companion_stage3_mode_label')),
-            const SizedBox(height: 4),
-            Text(helperText, key: const ValueKey('companion_stage3_mode_hint')),
-          ],
-        ),
-      ),
+    return _buildModeCard(
+      cardKey: const ValueKey('companion_stage3_mode_card'),
+      modeLabelKey: const ValueKey('companion_stage3_mode_label'),
+      helperKey: const ValueKey('companion_stage3_mode_hint'),
+      modeLabel: modeLabel,
+      helperText: _stage3HelperText(runtime),
     );
   }
 
@@ -1208,28 +1233,12 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     }
     final runtime = state.stage4!;
     final modeLabel = _stage4ModeLabel(runtime.mode);
-    final helperText = runtime.mode == Stage4Mode.correction
-        ? _strings.companionStage4CorrectionRequiredMessage
-        : _strings.companionStage4ReciteNow;
-
-    return Card(
-      key: const ValueKey('companion_stage4_mode_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _strings.companionStage4ModeLabel,
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(modeLabel, key: const ValueKey('companion_stage4_mode_label')),
-            const SizedBox(height: 4),
-            Text(helperText, key: const ValueKey('companion_stage4_mode_hint')),
-          ],
-        ),
-      ),
+    return _buildModeCard(
+      cardKey: const ValueKey('companion_stage4_mode_card'),
+      modeLabelKey: const ValueKey('companion_stage4_mode_label'),
+      helperKey: const ValueKey('companion_stage4_mode_hint'),
+      modeLabel: modeLabel,
+      helperText: _stage4HelperText(runtime),
     );
   }
 
@@ -1398,7 +1407,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              _stageLabel(state.activeStage),
+              _currentStepLabel(state),
               key: const ValueKey('companion_stage_label'),
             ),
             if (stage1ModeCard != null) ...[
@@ -1434,7 +1443,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
             if (_isStage4RuntimeActive(state) && state.stage4 != null) ...[
               const SizedBox(height: 8),
               Text(
-                _strings.companionStage4DueBanner(state.stage4!.dueKind),
+                _strings.companionStage4DueBanner(
+                  _stage4DueKindLabel(state.stage4!.dueKind),
+                ),
                 key: const ValueKey('companion_stage4_due_banner'),
               ),
               if (state.stage4!.unresolvedTargets.isNotEmpty) ...[

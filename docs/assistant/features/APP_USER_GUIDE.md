@@ -160,21 +160,27 @@ Open `Practice from Memory` from `Today` or `Learn` to run the right kind of ses
 - `Continue review practice`
 - `Do delayed check`
 
-Under the hood, the app still uses the same staged memorization flow. The simpler practice labels are there so you can start the right session without learning internal vocabulary first.
+The screen now focuses on one simple question first:
+- what should I do now?
 
-## Practice Lifecycle in Plain Terms
+What you may see during a session:
+- `Listen and follow`
+- `Recite with a cue`
+- `Recite from memory`
+- `Review from memory`
+- `Delayed check`
+- `Listen to the correction`
 
-The app supports a staged learning progression:
+These labels are intentional. They tell you the task directly instead of teaching internal stage names first.
 
-- Stage 1 (acquisition): listen-repeat plus early retrieval so memory traces start correctly.
-- Stage 2 (bridge): reduce cue support, add discrimination and early linking.
-- Stage 3 (hidden robustness): hidden recall, stronger linking, correction loops.
-- Stage 4 (delayed consolidation): verify stability after delay, especially next day.
-- Stage 5 (maintenance concept): long-term upkeep scheduling after stable delayed checks.
+Helpful screen cues:
+- `Verse X of Y` tells you where you are in the session.
+- `Practice step X/Y` shows progress through the current practice flow.
+- `What to do now` explains the current task.
+- `Show hint`, `Repeat verse`, and `Next verse` are support controls, not the main judgment of your session.
+- if correction is needed, the app tells you clearly before you try again.
 
-Simple rule:
-- earlier stages build access
-- later stages prove stability
+Under the hood, the app still uses the same structured memorization flow. You do not need to learn that internal vocabulary to use the feature well.
 
 ## Why Today Prioritizes Certain Items First
 

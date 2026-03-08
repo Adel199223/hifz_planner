@@ -572,6 +572,16 @@ Current capabilities:
   - list notes + edit dialog + go-to verse/page actions
 - `lib/screens/companion_chain_screen.dart`
   - learner-facing screen title now says `Practice from Memory`
+  - learner-facing runtime is now task-first instead of stage-first:
+    - top status uses plain labels like `Listen and follow`, `Recite with a cue`, `Recite from memory`, `Review from memory`, and `Delayed check`
+    - the main action card now leads with `What to do now`
+    - correction states tell the learner to listen to the correction before retrying
+    - stage progress is shown as `Practice step X/Y`
+  - human-readable session details now include:
+    - `Verse X of Y`
+    - delayed-check due text mapped into plain labels instead of raw due codes
+    - summary text like `Practice complete`, `Completed verses`, `Average help used`, and `Average memory strength`
+  - internal deterministic stage/runtime model remains unchanged under the hood:
   - staged companion flow for new units:
     - Stage 1 `guided_visible` uses internal deterministic sub-modes:
       - `Model+Echo` (talqin exposure, capped loops)

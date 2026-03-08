@@ -56,12 +56,14 @@
 
 ## Progress
 - [x] Start Wave 2 ExecPlan
-- [ ] Audit visible practice-screen jargon
-- [ ] Simplify learner-facing practice screen wording
-- [ ] Run focused validation
+- [x] Audit visible practice-screen jargon
+- [x] Simplify learner-facing practice screen wording
+- [x] Run focused validation
 
 ## Surprises and Adjustments
 - Use this section for any runtime-detail labels that turn out to be required for user orientation and therefore cannot be fully hidden.
+- 2026-03-08: Kept the deterministic runtime, keys, and route contract unchanged while replacing the learner-facing stage/mode language with task-first prompts like `Listen and follow`, `Recite with a cue`, `Recite from memory`, and `Delayed check`.
+- 2026-03-08: Left internal engine concepts available only through the existing runtime behavior and test keys; the default UI no longer leads with `Stage 1/2/3/4`, `guided_visible`, `cued_recall`, or `hidden_reveal`.
 
 ## Handoff
 - Wave 2 should end with:
@@ -70,3 +72,6 @@
   - no route, schema, or engine-contract changes
 - Follow-up risk:
   - the hidden recall runtime itself still waits for Wave 3.
+- Current closeout state:
+  - implementation is complete and validated locally
+  - next closeout action is a narrow Assistant Docs Sync, then PR merge

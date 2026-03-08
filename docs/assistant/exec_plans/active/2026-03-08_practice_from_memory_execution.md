@@ -101,7 +101,7 @@
 |---|---|---|---|---|
 | Previous planner roadmap | merged | historical | removed | Wave 1-7 completed before this roadmap started |
 | Practice Wave 1 | merged | `feat/practice-wave1-entry-language` | removed | Merged to `main` as PR #18; plan archived by PR #19 |
-| Practice Wave 2 | active | `feat/practice-wave2-screen-simplification` | `/home/fa507/dev/hifz_planner_practice_wave2` | Task-first screen wording and reduced jargon in progress |
+| Practice Wave 2 | active | `feat/practice-wave2-screen-simplification` | `/home/fa507/dev/hifz_planner_practice_wave2` | Implemented and validated locally; narrow docs sync and merge still pending |
 | Practice Wave 3 | planned | `feat/practice-wave3-hidden-recall-runtime` | not created | Uses the existing hidden recall design spec |
 | Practice Wave 4 | planned | `feat/practice-wave4-daily-modes` | not created | Daily practice integration and walkthrough polish |
 
@@ -113,5 +113,6 @@
   - 2026-03-08: Wave 1 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, app user guide, and one planner guide reference.
   - 2026-03-08: PR #18 merged Wave 1 to `main`; the next roadmap action returns to Wave 2 after the Wave 1 plan is archived.
   - 2026-03-08: PR #19 archived the completed Wave 1 plan and reset the tracker on `main`, so Wave 2 can now start from a clean baseline.
+  - 2026-03-08: Wave 2 is implemented and validated locally in `/home/fa507/dev/hifz_planner_practice_wave2`; the practice screen now uses task-first learner wording while keeping the deterministic engine, keys, and route contract unchanged.
 - Next recommended action:
-  - Complete Practice Wave 2 on the isolated Wave 2 worktree, then close it before opening Wave 3.
+  - Run a narrow Assistant Docs Sync for Wave 2, then close and merge Practice Wave 2 before opening Wave 3.
