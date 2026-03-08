@@ -55,7 +55,7 @@
 - [x] Start Wave 2
 - [x] Merge Wave 2
 - [x] Start Wave 3
-- [ ] Merge Wave 3
+- [x] Merge Wave 3
 - [ ] Start Wave 4
 - [ ] Merge Wave 4
 - [ ] Close the roadmap
@@ -97,7 +97,7 @@
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
 | Goals Wave 1 | merged | `feat/goals-wave1-daily-wins` | removed after merge | Merged to `main` as PR #25; plan archived in `docs/assistant/exec_plans/completed/` |
 | Goals Wave 2 | merged | `feat/goals-wave2-weekly-progress` | removed after merge | Weekly recent-progress snapshot and trust layer merged to `main` as PR #27; plan archived in `docs/assistant/exec_plans/completed/` |
-| Goals Wave 3 | active | `feat/goals-wave3-coaching-guidance` | `/home/fa507/dev/hifz_planner_goals_wave3` | Advice-only goal coaching and adjustment guidance |
+| Goals Wave 3 | merged | `feat/goals-wave3-coaching-guidance` | removed after merge | Advice-only goal coaching and adjustment guidance merged to `main` as PR #29; plan archived in `docs/assistant/exec_plans/completed/` |
 | Goals Wave 4 | planned | not created | not created | Cross-surface wording alignment and roadmap closeout |
 
 - Current blockers:
@@ -135,5 +135,6 @@
   - `dart tooling/validate_agent_docs.dart`
   - `dart tooling/validate_workspace_hygiene.dart`
 - 2026-03-08: Wave 3 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, user guides, and the repeated issue-memory entry for fresh-worktree lockfile churn.
+- 2026-03-08: PR #29 merged Goals Wave 3 to `main`; the roadmap now resumes at Wave 4 after this archive/update lands.
 - Next recommended action:
-  - Close Wave 3 with docs sync and PR merge.
+  - Wave 4 - Cross-Surface Consistency and Roadmap Closeout

@@ -108,4 +108,4 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
   - possible
 - evidence refs:
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md`
-  - `docs/assistant/exec_plans/active/2026-03-08_goals_wave3_coaching_adjustment_guidance.md`
+  - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave3_coaching_adjustment_guidance.md`
