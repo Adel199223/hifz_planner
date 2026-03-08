@@ -57,8 +57,8 @@
 - [x] Start Wave 3
 - [x] Merge Wave 3
 - [x] Start Wave 4
-- [ ] Merge Wave 4
-- [ ] Close the roadmap
+- [x] Merge Wave 4
+- [x] Close the roadmap
 
 ## Surprises and Adjustments
 - Use this section for sequence changes, blockers, or scope corrections discovered during implementation.
@@ -98,7 +98,7 @@
 | Goals Wave 1 | merged | `feat/goals-wave1-daily-wins` | removed after merge | Merged to `main` as PR #25; plan archived in `docs/assistant/exec_plans/completed/` |
 | Goals Wave 2 | merged | `feat/goals-wave2-weekly-progress` | removed after merge | Weekly recent-progress snapshot and trust layer merged to `main` as PR #27; plan archived in `docs/assistant/exec_plans/completed/` |
 | Goals Wave 3 | merged | `feat/goals-wave3-coaching-guidance` | removed after merge | Advice-only goal coaching and adjustment guidance merged to `main` as PR #29; plan archived in `docs/assistant/exec_plans/completed/` |
-| Goals Wave 4 | active | `feat/goals-wave4-cross-surface-consistency` | `/home/fa507/dev/hifz_planner_goals_wave4` | Cross-surface wording alignment and roadmap closeout |
+| Goals Wave 4 | merged | `feat/goals-wave4-cross-surface-consistency` | removed after merge | Cross-surface wording alignment and roadmap closeout merged to `main` as PR #31; plan archived in `docs/assistant/exec_plans/completed/` |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -148,5 +148,7 @@
   - `dart tooling/validate_workspace_hygiene.dart`
 - 2026-03-08: Fresh-worktree Flutter validation touched `pubspec.lock` again; the file was reverted and the repeated issue remains tracked separately as workflow churn, not product scope.
 - 2026-03-08: Wave 4 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, app user guide, and planner user guide.
+- 2026-03-08: PR #31 merged Goals Wave 4 to `main`.
+- 2026-03-08: This closeout archives the active Wave 4 plan and marks the Goals + Progress roadmap complete.
 - Next recommended action:
-  - close Wave 4 with commit, PR, and merge
+  - define the next backlog or a new roadmap

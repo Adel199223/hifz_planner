@@ -67,7 +67,7 @@
 - 2026-03-08: Narrow Assistant Docs Sync was completed for the canonical app brief, assistant bridge, app user guide, and planner user guide so the new progress-state wording is durable for future restarts.
 
 ## Handoff
-- Wave 4 is active on `feat/goals-wave4-cross-surface-consistency` in `/home/fa507/dev/hifz_planner_goals_wave4`.
+- Wave 4 ran on `feat/goals-wave4-cross-surface-consistency` in `/home/fa507/dev/hifz_planner_goals_wave4`.
 - Wave 4 is now implemented and validated locally:
   - `flutter test -j 1 -r expanded test/data/services/goal_progress_snapshot_service_test.dart`
   - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`
@@ -76,6 +76,6 @@
   - `dart tooling/validate_localization.dart`
   - `dart tooling/validate_agent_docs.dart`
   - `dart tooling/validate_workspace_hygiene.dart`
-- The next branch step is narrow Assistant Docs Sync, then commit/PR closeout.
-- The next branch step is feature commit/PR closeout.
-- Next step: close Wave 4 with commit, PR, and merge
+- Narrow Assistant Docs Sync was completed before publish.
+- Merged to `main` via PR #31.
+- Next step: define the next backlog or a new roadmap
