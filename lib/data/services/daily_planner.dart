@@ -107,14 +107,16 @@ class DailyPlanner {
     bool allowStage4Override = false,
   }) {
     return _db.transaction(() async {
-      final settings =
-          await _settingsRepo.getSettings(todayDayOverride: todayDay);
+      final settings = await _settingsRepo.getSettings(
+        todayDayOverride: todayDay,
+      );
       final cursor = await _progressRepo.getCursor();
       final dueUnits = await _scheduleRepo.getDueUnits(todayDay);
       final stage4DueItems = await _buildStage4DueItems(todayDay: todayDay);
       final stage4QualitySnapshot = await _buildStage4QualitySnapshot();
-      final mandatoryStage4DueExists =
-          stage4DueItems.any((item) => item.mandatory);
+      final mandatoryStage4DueExists = stage4DueItems.any(
+        (item) => item.mandatory,
+      );
       final stage4CatchUpMessage = mandatoryStage4DueExists
           ? 'Delayed stability checks are due. Complete Stage-4 first.'
           : null;
@@ -122,10 +124,12 @@ class DailyPlanner {
       final sortedDueUnits = [...dueUnits]
         ..sort((a, b) => _compareDueRows(a, b, todayDay));
 
-      final schedulingPreferences =
-          _projectionEngine.preferencesFromSettings(settings);
-      final schedulingOverrides =
-          _projectionEngine.overridesFromSettings(settings);
+      final schedulingPreferences = _projectionEngine.preferencesFromSettings(
+        settings,
+      );
+      final schedulingOverrides = _projectionEngine.overridesFromSettings(
+        settings,
+      );
       final weeklyPlan = await _projectionEngine.generateWeeklyPlan(
         startDay: todayDay,
         horizonDays: 1,
@@ -135,16 +139,18 @@ class DailyPlanner {
         preferences: schedulingPreferences,
         overrides: schedulingOverrides,
       );
-      final todaySchedule =
-          weeklyPlan.days.isNotEmpty ? weeklyPlan.days.first : null;
+      final todaySchedule = weeklyPlan.days.isNotEmpty
+          ? weeklyPlan.days.first
+          : null;
 
-      final dailyMinutes = (todaySchedule?.totalPlannedMinutes ??
-              _projectionEngine.resolveMinutesForDay(
-                dayIndex: todayDay,
-                preferences: schedulingPreferences,
-                overrides: schedulingOverrides,
-              ))
-          .toDouble();
+      final dailyMinutes =
+          (todaySchedule?.totalPlannedMinutes ??
+                  _projectionEngine.resolveMinutesForDay(
+                    dayIndex: todayDay,
+                    preferences: schedulingPreferences,
+                    overrides: schedulingOverrides,
+                  ))
+              .toDouble();
 
       if (dailyMinutes <= 0 ||
           (todaySchedule != null && !todaySchedule.enabledStudyDay)) {
@@ -166,20 +172,29 @@ class DailyPlanner {
         );
       }
 
-      final dueReviewMinutes =
-          await _projectionEngine.estimateReviewMinutesForRows(
-        dueRows: sortedDueUnits,
-        quranRepo: _quranRepo,
-        avgReviewMinutesPerAyah: settings.avgReviewMinutesPerAyah,
+      final dueReviewMinutes = await _projectionEngine
+          .estimateReviewMinutesForRows(
+            dueRows: sortedDueUnits,
+            quranRepo: _quranRepo,
+            avgReviewMinutesPerAyah: settings.avgReviewMinutesPerAyah,
+          );
+      final stage4DueMinutes = await _estimateStage4MinutesForItems(
+        stage4DueItems,
+        settings.avgReviewMinutesPerAyah,
       );
       final allocation = _projectionEngine.allocateDailyContent(
         dailyMinutes: dailyMinutes,
         dueReviewMinutes: dueReviewMinutes,
         profile: settings.profile,
-        forceRevisionOnly: settings.forceRevisionOnly == 1 ||
+        forceRevisionOnly:
+            settings.forceRevisionOnly == 1 ||
             (todaySchedule?.revisionOnlyDay ?? false),
+        mandatoryStage4Minutes: stage4DueMinutes,
       );
-      final reviewBudgetMinutes = allocation.reviewCapacityMinutes;
+      final reviewBudgetMinutes = math.max(
+        0.0,
+        allocation.reviewCapacityMinutes - stage4DueMinutes,
+      );
 
       final plannedReviews = <DueUnitRow>[];
       var minutesPlannedReviews = 0.0;
@@ -195,8 +210,7 @@ class DailyPlanner {
         minutesPlannedReviews += estimated;
       }
 
-      final stage4BlocksNew =
-          mandatoryStage4DueExists && !allowStage4Override;
+      final stage4BlocksNew = mandatoryStage4DueExists && !allowStage4Override;
       final revisionOnly =
           (todaySchedule?.revisionOnlyDay ?? false) || allocation.recoveryMode;
       final effectiveRevisionOnly = revisionOnly || stage4BlocksNew;
@@ -230,7 +244,8 @@ class DailyPlanner {
           plannedNewUnits = generation.createdUnits;
           minutesPlannedNew = generation.minutesPlannedNew;
 
-          final cursorMoved = generation.nextSurah != cursor.nextSurah ||
+          final cursorMoved =
+              generation.nextSurah != cursor.nextSurah ||
               generation.nextAyah != cursor.nextAyah;
           if (cursorMoved) {
             await _progressRepo.updateCursor(
@@ -296,11 +311,16 @@ class DailyPlanner {
       return const <Stage4DueItem>[];
     }
 
-    final unitIds = rows.map((row) => row.unitId).toSet().toList(growable: false);
-    final units = await (_db.select(_db.memUnit)
-          ..where((tbl) => tbl.id.isIn(unitIds)))
-        .get();
-    final unitById = <int, MemUnitData>{for (final unit in units) unit.id: unit};
+    final unitIds = rows
+        .map((row) => row.unitId)
+        .toSet()
+        .toList(growable: false);
+    final units = await (_db.select(
+      _db.memUnit,
+    )..where((tbl) => tbl.id.isIn(unitIds))).get();
+    final unitById = <int, MemUnitData>{
+      for (final unit in units) unit.id: unit,
+    };
 
     final dueItems = <Stage4DueItem>[];
     for (final row in rows) {
@@ -320,8 +340,9 @@ class DailyPlanner {
           dueDay: dueResolution.dueDay,
           mandatory: dueResolution.mandatory,
           overdueDays: (todayDay - dueResolution.dueDay).clamp(0, 3650),
-          unresolvedTargetsCount:
-              _countTargetsFromJson(row.stage4UnresolvedTargetsJson),
+          unresolvedTargetsCount: _countTargetsFromJson(
+            row.stage4UnresolvedTargetsJson,
+          ),
         ),
       );
     }
@@ -331,13 +352,15 @@ class DailyPlanner {
       if (overdueCompare != 0) {
         return overdueCompare;
       }
-      final mandatoryCompare =
-          (b.mandatory ? 1 : 0).compareTo(a.mandatory ? 1 : 0);
+      final mandatoryCompare = (b.mandatory ? 1 : 0).compareTo(
+        a.mandatory ? 1 : 0,
+      );
       if (mandatoryCompare != 0) {
         return mandatoryCompare;
       }
-      final unresolvedCompare =
-          b.unresolvedTargetsCount.compareTo(a.unresolvedTargetsCount);
+      final unresolvedCompare = b.unresolvedTargetsCount.compareTo(
+        a.unresolvedTargetsCount,
+      );
       if (unresolvedCompare != 0) {
         return unresolvedCompare;
       }
@@ -449,6 +472,26 @@ class DailyPlanner {
     return ayahCount * avgReviewMinutesPerAyah;
   }
 
+  Future<double> _estimateStage4MinutesForItems(
+    List<Stage4DueItem> items,
+    double avgReviewMinutesPerAyah,
+  ) async {
+    var total = 0.0;
+    for (final item in items) {
+      final baseMinutes = await _estimateReviewMinutesForUnit(
+        item.unit,
+        avgReviewMinutesPerAyah,
+      );
+      final unresolvedFactor = math.min(
+        0.25,
+        item.unresolvedTargetsCount * 0.05,
+      );
+      final multiplier = item.mandatory ? 0.80 + unresolvedFactor : 0.50;
+      total += math.max(avgReviewMinutesPerAyah, baseMinutes * multiplier);
+    }
+    return total;
+  }
+
   Future<int> _estimateAyahCount(MemUnitData unit) async {
     final startSurah = unit.startSurah;
     final startAyah = unit.startAyah;
@@ -462,7 +505,8 @@ class DailyPlanner {
       return 1;
     }
 
-    final startsAfterEnd = (startSurah > endSurah) ||
+    final startsAfterEnd =
+        (startSurah > endSurah) ||
         (startSurah == endSurah && startAyah > endAyah);
     if (startsAfterEnd) {
       return 1;

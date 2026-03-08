@@ -16,21 +16,23 @@ class PlanningProjectionEngine {
         const AvailabilityInterpreter(),
     DailyContentAllocator dailyContentAllocator = const DailyContentAllocator(),
     WeeklyPlanGenerator? weeklyPlanGenerator,
-  })  : _availabilityInterpreter = availabilityInterpreter,
-        _dailyContentAllocator = dailyContentAllocator,
-        _weeklyPlanGenerator = weeklyPlanGenerator ??
-            WeeklyPlanGenerator(
-              availabilityInterpreter: availabilityInterpreter,
-              dailyContentAllocator: dailyContentAllocator,
-            );
+  }) : _availabilityInterpreter = availabilityInterpreter,
+       _dailyContentAllocator = dailyContentAllocator,
+       _weeklyPlanGenerator =
+           weeklyPlanGenerator ??
+           WeeklyPlanGenerator(
+             availabilityInterpreter: availabilityInterpreter,
+             dailyContentAllocator: dailyContentAllocator,
+           );
 
   final AvailabilityInterpreter _availabilityInterpreter;
   final DailyContentAllocator _dailyContentAllocator;
   final WeeklyPlanGenerator _weeklyPlanGenerator;
 
   SchedulingPreferencesV1 preferencesFromSettings(AppSettingsData settings) {
-    final decoded =
-        SchedulingPreferencesV1.decodeOrDefaults(settings.schedulingPrefsJson);
+    final decoded = SchedulingPreferencesV1.decodeOrDefaults(
+      settings.schedulingPrefsJson,
+    );
     if (settings.schedulingPrefsJson != null &&
         settings.schedulingPrefsJson!.trim().isNotEmpty) {
       return decoded;
@@ -69,12 +71,16 @@ class PlanningProjectionEngine {
     required double dueReviewMinutes,
     required String profile,
     required bool forceRevisionOnly,
+    double mandatoryStage4Minutes = 0,
+    double optionalCatchUpMinutes = 0,
   }) {
     return _dailyContentAllocator.allocate(
       dailyMinutes: dailyMinutes,
       dueReviewMinutes: dueReviewMinutes,
       baseReviewRatio: reviewBudgetRatio(profile),
       forceRevisionOnly: forceRevisionOnly,
+      mandatoryStage4Minutes: mandatoryStage4Minutes,
+      optionalCatchUpMinutes: optionalCatchUpMinutes,
     );
   }
 
@@ -145,11 +151,8 @@ class PlanningProjectionEngine {
     for (final due in dueRows) {
       final unitId = due.unit.id;
       final cachedCount = cache[unitId];
-      final ayahCount = cachedCount ??
-          await estimateAyahCountForUnit(
-            due.unit,
-            quranRepo,
-          );
+      final ayahCount =
+          cachedCount ?? await estimateAyahCountForUnit(due.unit, quranRepo);
       cache[unitId] = ayahCount;
       total += ayahCount * avgReviewMinutesPerAyah;
     }
@@ -172,7 +175,8 @@ class PlanningProjectionEngine {
       return 1;
     }
 
-    final startsAfterEnd = (startSurah > endSurah) ||
+    final startsAfterEnd =
+        (startSurah > endSurah) ||
         (startSurah == endSurah && startAyah > endAyah);
     if (startsAfterEnd) {
       return 1;

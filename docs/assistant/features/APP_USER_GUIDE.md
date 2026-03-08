@@ -127,6 +127,7 @@ What is new in `My Plan`:
 - a `Plan health` card
 - simple status labels: `On track`, `Tight`, `Overloaded`
 - plain-language hints when you should use a lighter day, burn down backlog, or switch into recovery
+- a weekly preview and forecast that now follow the same load-protection logic as `Today`
 
 ## 3) Execute Today’s Work
 
@@ -145,6 +146,7 @@ What you will now see first:
 - a health label that shows whether today is `On track`, `Tight`, or `Overloaded`
 - an explanation box that tells you why new work is normal, lighter, or paused
 - a `Recovery assistant` button on heavier days
+- stricter protection against token new work when delayed checks and review already consume the safe part of the day
 
 ## 4) Memorize with Companion Stages
 
@@ -175,6 +177,7 @@ Today prioritization is quality-driven:
 - new memorization is important, but not at the cost of collapsing retention
 
 If delayed checks are due, new memorization can be soft-blocked by default to protect quality.
+Even when that block is overridden, delayed checks still take real planner time before new work is assigned.
 
 Plain-language rule:
 - do the one thing at the top of `Today` first
@@ -217,6 +220,7 @@ If some remote assets fail temporarily:
 - I want to store verse-linked thoughts -> Library -> Notes
 - I need language/theme adjustments -> More -> Settings
 - I want forecast or calibration tools -> My Plan -> Advanced
+- I want to check whether the week and Today are using the same workload logic -> My Plan -> Advanced -> Forecast
 
 ## Common First-Week Path
 
