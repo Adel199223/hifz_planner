@@ -58,7 +58,7 @@
 - [x] Merge Wave 1
 - [x] Start Wave 2
 - [x] Merge Wave 2
-- [ ] Start Wave 3
+- [x] Start Wave 3
 - [ ] Merge Wave 3
 - [ ] Start Wave 4
 - [ ] Merge Wave 4
@@ -102,7 +102,7 @@
 | Previous planner roadmap | merged | historical | removed | Wave 1-7 completed before this roadmap started |
 | Practice Wave 1 | merged | `feat/practice-wave1-entry-language` | removed | Merged to `main` as PR #18; plan archived by PR #19 |
 | Practice Wave 2 | merged | `feat/practice-wave2-screen-simplification` | closeout pending cleanup | Merged to `main` as PR #20; plan archived in `docs/assistant/exec_plans/completed/` |
-| Practice Wave 3 | planned | `feat/practice-wave3-hidden-recall-runtime` | not created | Uses the existing hidden recall design spec |
+| Practice Wave 3 | active | `feat/practice-wave3-hidden-recall-runtime` | `/home/fa507/dev/hifz_planner_practice_wave3` | Startup complete; uses `STAGE3_HIDDEN_RECALL_DESIGN_SPEC.md` as the implementation contract |
 | Practice Wave 4 | planned | `feat/practice-wave4-daily-modes` | not created | Daily practice integration and walkthrough polish |
 
 - Current blockers:
@@ -115,5 +115,6 @@
   - 2026-03-08: PR #19 archived the completed Wave 1 plan and reset the tracker on `main`, so Wave 2 can now start from a clean baseline.
   - 2026-03-08: Wave 2 is implemented and validated locally in `/home/fa507/dev/hifz_planner_practice_wave2`; the practice screen now uses task-first learner wording while keeping the deterministic engine, keys, and route contract unchanged.
   - 2026-03-08: PR #20 merged Wave 2 to `main`; the next roadmap action returns to Wave 3 after the Wave 2 plan is archived and cleanup completes.
+  - 2026-03-08: PR #21 archived the completed Wave 2 plan and reset the tracker on `main`, so Wave 3 can now start from a clean baseline.
 - Next recommended action:
-  - Start Practice Wave 3 on a fresh isolated worktree, using `docs/assistant/research/STAGE3_HIDDEN_RECALL_DESIGN_SPEC.md` as the implementation contract.
+  - Implement Practice Wave 3 on the isolated Wave 3 worktree, using `docs/assistant/research/STAGE3_HIDDEN_RECALL_DESIGN_SPEC.md` as the implementation contract.
