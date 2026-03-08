@@ -78,7 +78,7 @@ Active modules:
   - `docs/assistant/ISSUE_MEMORY.json`
 - Local environment overlay:
   - tracked format: `docs/assistant/LOCAL_ENV_PROFILE.example.md`
-  - machine-local overlay: `docs/assistant/LOCAL_ENV_PROFILE.local.md`
+  - machine-local overlay: keep a same-directory local profile on the machine that actually runs the repo
 - Capability discovery:
   - `docs/assistant/LOCAL_CAPABILITIES.md`
 - Worktree/build identity:

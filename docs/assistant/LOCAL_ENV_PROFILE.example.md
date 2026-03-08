@@ -2,7 +2,7 @@
 
 This tracked file defines the format for the machine-local overlay.
 
-Create or update `docs/assistant/LOCAL_ENV_PROFILE.local.md` on the machine that actually runs the repo.
+Create or update a same-directory machine-local overlay on the machine that actually runs the repo.
 Do not put secrets in either file.
 
 ## Required Fields
