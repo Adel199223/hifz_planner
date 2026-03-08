@@ -52,7 +52,7 @@
 ## Progress
 - [x] Start Wave 1
 - [x] Merge Wave 1
-- [ ] Start Wave 2
+- [x] Start Wave 2
 - [ ] Merge Wave 2
 - [ ] Start Wave 3
 - [ ] Merge Wave 3
@@ -96,7 +96,7 @@
 | Previous planner roadmap | merged | historical | removed | Wave 1-7 completed before this roadmap started |
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
 | Goals Wave 1 | merged | `feat/goals-wave1-daily-wins` | removed after merge | Merged to `main` as PR #25; plan archived in `docs/assistant/exec_plans/completed/` |
-| Goals Wave 2 | planned | not created | not created | Weekly recent-progress snapshot and trust layer |
+| Goals Wave 2 | active | `feat/goals-wave2-weekly-progress` | `/home/fa507/dev/hifz_planner_goals_wave2` | Weekly recent-progress snapshot and trust layer |
 | Goals Wave 3 | planned | not created | not created | Advice-only goal coaching and adjustment guidance |
 | Goals Wave 4 | planned | not created | not created | Cross-surface wording alignment and roadmap closeout |
 
@@ -109,5 +109,7 @@
   - 2026-03-08: Wave 1 validation is green after rerunning Flutter tests sequentially; parallel `flutter test` launches in the same worktree triggered a Flutter plugin-symlink crash, so the clean validation record for this wave is the sequential run.
   - 2026-03-08: Wave 1 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, app user guide, and planner user guide.
   - 2026-03-08: PR #25 merged Goals Wave 1 to `main`; the next roadmap action returns to Wave 2 after this archive/update lands.
+  - 2026-03-08: PR #26 archived the completed Wave 1 plan and reset the tracker on `main`, so Wave 2 can now start from a clean baseline.
+  - 2026-03-08: Wave 2 started in isolated worktree `/home/fa507/dev/hifz_planner_goals_wave2` on branch `feat/goals-wave2-weekly-progress`.
 - Next recommended action:
-  - Start Wave 2 from clean `main`.
+  - Implement Wave 2 weekly progress and trust layer.
