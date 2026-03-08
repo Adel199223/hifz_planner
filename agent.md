@@ -139,3 +139,21 @@ dart tooling/print_build_identity.dart
 - `dart run tooling/validate_workspace_hygiene.dart` passed for performance/workspace changes
 - after significant changes, Assistant Docs Sync prompt was asked and outcome recorded
 - no stale or broken doc paths remain
+
+## Roadmap Return Protocol
+
+Use this whenever work belongs to the staged product-redesign roadmap.
+
+1. After every substantial closeout, explicitly report:
+   - current roadmap status
+   - exact next step by wave or stage name
+2. When Stage 1-5 research is already complete, say exactly:
+   - `All research stages are complete; implementation continues by wave.`
+3. After any detour for bugfixes, tooling, docs, or environment:
+   - update the active wave ExecPlan first
+   - update `docs/assistant/exec_plans/active/2026-03-08_product_redesign_execution.md` second
+   - resume from the tracker unless it records a sequence change
+4. Every roadmap closeout message must end with:
+   - `Next step: Wave X - <name>`
+5. If the next action is a closeout step instead of a new wave, end with:
+   - `Next step: close Wave X with <closeout action>`

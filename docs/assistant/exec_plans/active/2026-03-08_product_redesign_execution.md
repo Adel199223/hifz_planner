@@ -61,6 +61,22 @@
 ## Surprises and Adjustments
 - Use this section for new sequence changes, blockers, or scope corrections discovered during implementation.
 
+## Roadmap Return Protocol
+
+- After every substantial closeout, explicitly report:
+  - current roadmap status
+  - exact next step by wave or stage name
+- When Stage 1-5 research is already complete, say exactly:
+  - `All research stages are complete; implementation continues by wave.`
+- After any detour for bugfixes, tooling, docs, or environment:
+  1. update the active wave ExecPlan first
+  2. update this tracker second
+  3. resume from this tracker unless it records a new sequence
+- Every roadmap closeout message must end with:
+  - `Next step: Wave X - <name>`
+- If the next action is closeout instead of a new wave, end with:
+  - `Next step: close Wave X with <closeout action>`
+
 ## Handoff
 - Current roadmap order and links:
   - Wave 1: Navigation and Copy Simplification
@@ -91,19 +107,21 @@
 | Wave 1 | merged | `feat/ux-wave1-navigation-copy` | `/home/fa507/dev/hifz_planner_wave1` | Merged to `main` as PR #4 |
 | Post-Wave1 critical fixes | merged | `feat/stability-post-wave1-critical-fixes` | `/home/fa507/dev/hifz_planner_stability` | Merged to `main` as PR #5 |
 | Wave 2 | merged | `feat/ux-wave2-today-coaching` | `/home/fa507/dev/hifz_planner_wave2` | Merged to `main` as PR #6 |
-| Wave 3 | planned | `feat/ux-wave3-my-plan-preset-flow` | not created yet | Resume after Wave 2 |
+| Wave 3 | merged-ready | `feat/ux-wave3-my-plan-preset-flow` | `/home/fa507/dev/hifz_planner_wave3` | Guided setup, advanced gate, planner-preview sync, and narrow docs sync are ready for PR |
 | Wave 4 | planned | `feat/planner-wave4-health-explanations` | not created yet | Depends on Wave 3 contract |
 | Wave 5 | planned | `feat/planner-wave5-scheduler-v2` | not created yet | Deterministic allocation replacement |
 | Wave 6 | planned | `feat/planner-wave6-forecast-calibration-refine` | not created yet | Post-scheduler refinement |
 | Wave 7 | planned | `feat/planner-wave7-optional-adaptive-followup` | not created yet | Optional only |
 
 - Current blockers:
-  - No blocker is currently recorded for Wave 3 startup.
+  - No blocker is currently recorded for active Wave 3 work.
 - Detours and plan updates:
   - 2026-03-08: Research/spec work completed before broader implementation. Preserve it before merging app code branches.
   - 2026-03-08: Roadmap publication finished first so the execution tracker exists on `main` before Wave 1 closes.
   - 2026-03-08: Wave 1 merged cleanly after syncing the tracker/research docs from `main`.
   - 2026-03-08: The audit fixes were ported onto a fresh branch instead of merging the dirty audit worktree directly.
   - 2026-03-08: Wave 2 landed on the clean post-stability baseline, so the next recommended stream returns to the planned Wave 3 sequence.
+  - 2026-03-08: Wave 3 started in `/home/fa507/dev/hifz_planner_wave3` with a new wave-specific ExecPlan to preserve the preset-first scope and the planner-preview sync fix.
+  - 2026-03-08: Wave 3 implementation validated locally, then received a narrow planner docs sync and the roadmap-return rule before publish.
 - Next recommended action:
-  - Start `feat/ux-wave3-my-plan-preset-flow` from clean `main`.
+  - Close Wave 3 with commit, PR, and merge, then return to this tracker on `main` before opening Wave 4.

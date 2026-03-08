@@ -34,10 +34,10 @@ If this guide conflicts with technical docs:
 
 ## Quick Start (No Technical Background)
 
-1. Open `My Plan` and set a conservative daily/weekly load you can keep for at least 7 days.
+1. Open `My Plan`, choose `Easy`, `Normal`, or `Intensive`, then enter a realistic weekly or weekday time budget.
 2. Open `Today` and complete tasks in the shown order (delayed checks, review, then new work).
 3. Use Companion stages only from `Today` actions to avoid skipping required sequence.
-4. Re-check your plan after several consistent days before increasing new material.
+4. Open `Advanced` in `My Plan` only if you need to fine-tune scheduling, forecast, or calibration later.
 
 ## Terms in Plain English
 
@@ -93,7 +93,7 @@ Inside `More`:
 
 - Today: execute the day’s work in priority order.
 - Read: open the Reader for focused Quran reading, listening, and verse tools.
-- My Plan: configure memorization workload and scheduling rules.
+- My Plan: start with a guided plan setup, then open `Advanced` only when you need expert controls.
 - Library: open saved material and writing tools in one place.
 - Companion chain: run the memorization stages for specific units.
 - More: open settings, reciters, about, and secondary exploration areas.
@@ -113,12 +113,14 @@ Typical actions:
 ## 2) Plan Your Memorization
 
 Go to `My Plan` when you need to set or revise:
+- your pace preset (`Easy`, `Normal`, `Intensive`)
 - your available time
 - new/review pacing
 - weekly schedule structure
-- calibration and forecast
+- calibration and forecast in `Advanced`
 
 This is where you define your system before execution.
+The default setup path is intentionally simple, and the expert tools are hidden under `Advanced`.
 
 ## 3) Execute Today’s Work
 
@@ -196,21 +198,22 @@ If some remote assets fail temporarily:
 
 ## Where to Go for X (Quick Decision Table)
 
-- I want to set my daily/weekly memorization load -> My Plan
+- I want to set a realistic memorization pace quickly -> My Plan
 - I want to do what is due right now -> Today
 - I need to run a memorization stage -> Companion
 - I want pure Quran reading/listening -> Read
 - I need to revisit saved locations -> Library -> Bookmarks
 - I want to store verse-linked thoughts -> Library -> Notes
 - I need language/theme adjustments -> More -> Settings
+- I want forecast or calibration tools -> My Plan -> Advanced
 
 ## Common First-Week Path
 
-1. Set a conservative plan in `My Plan`.
+1. Set a conservative plan in `My Plan` with `Easy` or `Normal`.
 2. Execute `Today` consistently for several days.
 3. Use Companion for new units and reviews from Today actions.
 4. Respect delayed checks when they appear.
-5. Use calibration/forecast after enough real samples.
+5. Use `Advanced` and then calibration/forecast only after enough real samples.
 6. Increase load only after quality is stable.
 
 ## Common Mistakes to Avoid

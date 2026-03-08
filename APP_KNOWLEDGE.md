@@ -454,17 +454,25 @@ User-facing explainer:
 - `docs/assistant/features/PLANNER_USER_GUIDE.md` (plain-language walkthrough of every planner option and expected outcomes)
 
 Current capabilities:
-- Onboarding-like questionnaire inputs
-- Activate/update settings (`profile`, minutes, caps, etc.)
-- Basic + Advanced scheduling preferences:
-  - default `2 sessions/day`
-  - optional fixed times
-  - enabled study days + revision-only days
-  - availability models: minutes/day, minutes/week, specific windows
-- Weekly calendar (rolling next 7 days) with session focus/minutes/status
-- Per-day override shell (skip/holiday + per-session time override)
-- Calibration sample logging and apply timing
-- Forecast simulation display
+- Preset-first setup flow:
+  - `Easy`, `Normal`, `Intensive`
+  - realistic time question
+  - fluency question
+  - plain-language plan summary before activation
+- Activate/update settings (`profile`, minutes, caps, etc.) without opening advanced controls
+- Guided setup now syncs visible time inputs into scheduling preferences, so the weekly planner preview follows the same time values the user entered
+- `Advanced` gate for expert controls instead of exposing the full simulator-style surface on first load
+- Advanced planning tools remain available behind `Advanced`:
+  - profile, review-protection, caps, and pace assumptions
+  - scheduling preferences:
+    - default `2 sessions/day`
+    - optional fixed times
+    - enabled study days + revision-only days
+    - availability models: minutes/day, minutes/week, specific windows
+  - weekly calendar (rolling next 7 days) with session focus/minutes/status
+  - per-day override shell (skip/holiday + per-session time override)
+  - calibration sample logging and apply timing
+  - forecast simulation display
 
 ### Today screen
 File: `lib/screens/today_screen.dart`

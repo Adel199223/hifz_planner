@@ -86,3 +86,21 @@ Each plan must include these headings:
 - Include exact test/validator commands.
 - Do not rely on unstated context.
 - Keep reasoning and rollback path explicit.
+
+## Roadmap Return Protocol
+
+For roadmap-driven work, every ExecPlan must support returning to the main sequence after detours.
+
+Required rule:
+1. After a detour for bugfixes, tooling, docs, or environment, update the active wave ExecPlan first.
+2. Update `docs/assistant/exec_plans/active/2026-03-08_product_redesign_execution.md` second.
+3. Resume from the tracker unless it explicitly records a new sequence.
+4. Every roadmap closeout must state:
+   - current roadmap status
+   - exact next step by wave or stage name
+5. When research stages are already done, say exactly:
+   - `All research stages are complete; implementation continues by wave.`
+6. Every roadmap closeout message must end with one explicit line in this shape:
+   - `Next step: Wave X - <name>`
+7. If the next action is closeout instead of a new wave, end with:
+   - `Next step: close Wave X with <closeout action>`

@@ -91,3 +91,19 @@ Pause and ask for explicit user confirmation before commands that:
 - For parallel feature or automation threads, prefer `git worktree` isolation.
 - Do not mix unrelated implementation streams in the same working tree.
 - For runnable-build handoff, include worktree path, branch, HEAD SHA, workspace file, and launch command.
+
+## Roadmap Return Protocol
+
+- After every substantial closeout, always tell the user:
+  - current roadmap status
+  - exact next step by wave or stage name
+- When the research stages are already complete, say exactly:
+  - `All research stages are complete; implementation continues by wave.`
+- After any detour for bugfix, tooling, docs, or environment work:
+  1. update the active wave ExecPlan first
+  2. update `docs/assistant/exec_plans/active/2026-03-08_product_redesign_execution.md` second
+  3. resume from the tracker unless that tracker records a new sequence
+- Every roadmap closeout message must end with one explicit line in this shape:
+  - `Next step: Wave X - <name>`
+- If the next action is closeout rather than a new wave, end with:
+  - `Next step: close Wave X with <closeout action>`
