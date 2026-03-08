@@ -14,8 +14,68 @@ import 'package:hifz_planner/data/time/local_day_time.dart';
 import 'package:hifz_planner/screens/plan_screen.dart';
 
 void main() {
-  testWidgets('renders guided setup and keeps advanced tools hidden by default',
-      (tester) async {
+  testWidgets(
+    'renders guided setup and keeps advanced tools hidden by default',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await _pumpPlan(tester, container);
+
+      expect(find.text('Set up My Plan'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('plan_guided_setup_card')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('plan_summary_card')), findsOneWidget);
+      expect(find.byKey(const ValueKey('plan_health_card')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('plan_advanced_toggle')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('plan_time_mode')), findsOneWidget);
+      expect(find.byKey(const ValueKey('plan_preset_easy')), findsOneWidget);
+      expect(find.byKey(const ValueKey('plan_preset_normal')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('plan_preset_intensive')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('plan_fluency_fluent')), findsOneWidget);
+      expect(find.text('Your plan summary'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('plan_scheduling_section')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('plan_weekly_calendar_section')),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('plan_profile')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('plan_force_revision_only')),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('plan_max_new_pages')), findsNothing);
+      expect(find.byKey(const ValueKey('plan_max_new_units')), findsNothing);
+      expect(find.byKey(const ValueKey('plan_forecast_section')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('plan_calibration_new_duration')),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets('plan health card explains current planner posture', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -29,34 +89,14 @@ void main() {
 
     await _pumpPlan(tester, container);
 
-    expect(find.text('Set up My Plan'), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_guided_setup_card')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_summary_card')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_advanced_toggle')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_time_mode')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_preset_easy')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_preset_normal')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_preset_intensive')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_fluency_fluent')), findsOneWidget);
-    expect(find.text('Your plan summary'), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_scheduling_section')), findsNothing);
-    expect(
-      find.byKey(const ValueKey('plan_weekly_calendar_section')),
-      findsNothing,
-    );
-    expect(find.byKey(const ValueKey('plan_profile')), findsNothing);
-    expect(find.byKey(const ValueKey('plan_force_revision_only')), findsNothing);
-    expect(find.byKey(const ValueKey('plan_max_new_pages')), findsNothing);
-    expect(find.byKey(const ValueKey('plan_max_new_units')), findsNothing);
-    expect(find.byKey(const ValueKey('plan_forecast_section')), findsNothing);
-    expect(
-      find.byKey(const ValueKey('plan_calibration_new_duration')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('plan_health_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_health_badge')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_health_summary')), findsOneWidget);
   });
 
-  testWidgets('running forecast on empty quran data shows incomplete reason',
-      (tester) async {
+  testWidgets('running forecast on empty quran data shows incomplete reason', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -81,8 +121,9 @@ void main() {
     );
   });
 
-  testWidgets('running forecast with seeded data shows completion and curves',
-      (tester) async {
+  testWidgets('running forecast with seeded data shows completion and curves', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -95,23 +136,20 @@ void main() {
     addTearDown(container.dispose);
 
     await db.batch((batch) {
-      batch.insertAll(
-        db.ayah,
-        [
-          AyahCompanion.insert(
-            surah: 1,
-            ayah: 1,
-            textUthmani: 'ayah-1',
-            pageMadina: const Value(1),
-          ),
-          AyahCompanion.insert(
-            surah: 114,
-            ayah: 6,
-            textUthmani: 'ayah-114-6',
-            pageMadina: const Value(2),
-          ),
-        ],
-      );
+      batch.insertAll(db.ayah, [
+        AyahCompanion.insert(
+          surah: 1,
+          ayah: 1,
+          textUthmani: 'ayah-1',
+          pageMadina: const Value(1),
+        ),
+        AyahCompanion.insert(
+          surah: 114,
+          ayah: 6,
+          textUthmani: 'ayah-114-6',
+          pageMadina: const Value(2),
+        ),
+      ]);
     });
     await SettingsRepo(db).updateSettings(
       forceRevisionOnly: 0,
@@ -148,8 +186,9 @@ void main() {
     );
   });
 
-  testWidgets('weekly mode computes weekday chips from weekly minutes',
-      (tester) async {
+  testWidgets('weekly mode computes weekday chips from weekly minutes', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -177,8 +216,9 @@ void main() {
     expect(find.text('thu: 1'), findsOneWidget);
   });
 
-  testWidgets('weekly calendar renders day cards with default session rows',
-      (tester) async {
+  testWidgets('weekly calendar renders day cards with default session rows', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -193,10 +233,7 @@ void main() {
     await _pumpPlan(tester, container);
     await _expandAdvanced(tester);
 
-    expect(
-      find.byKey(const ValueKey('plan_weekly_day_0')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('plan_weekly_day_0')), findsOneWidget);
   });
 
   testWidgets('per-weekday mode uses direct entered values', (tester) async {
@@ -256,8 +293,9 @@ void main() {
     expect(find.text('sun: 17'), findsOneWidget);
   });
 
-  testWidgets('fluency selection updates suggested avg defaults',
-      (tester) async {
+  testWidgets('fluency selection updates suggested avg defaults', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -311,8 +349,9 @@ void main() {
     );
   });
 
-  testWidgets('activate persists settings row with expected values',
-      (tester) async {
+  testWidgets('activate persists settings row with expected values', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -341,7 +380,9 @@ void main() {
     await tester.pump();
 
     await _tapVisible(
-        tester, find.byKey(const ValueKey('plan_activate_button')));
+      tester,
+      find.byKey(const ValueKey('plan_activate_button')),
+    );
 
     final settings = await SettingsRepo(db).getSettings();
     final preferences = PlanningProjectionEngine().preferencesFromSettings(
@@ -367,8 +408,9 @@ void main() {
     expect(preferences.minutesByWeekday[DateTime.sunday], 30);
   });
 
-  testWidgets('activate ensures cursor exists and preserves existing cursor',
-      (tester) async {
+  testWidgets('activate ensures cursor exists and preserves existing cursor', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -389,15 +431,18 @@ void main() {
     await _pumpPlan(tester, container);
 
     await _tapVisible(
-        tester, find.byKey(const ValueKey('plan_activate_button')));
+      tester,
+      find.byKey(const ValueKey('plan_activate_button')),
+    );
 
     final cursor = await progressRepo.getCursor();
     expect(cursor.nextSurah, 2);
     expect(cursor.nextAyah, 5);
   });
 
-  testWidgets('force revision toggle defaults ON and persists edited value',
-      (tester) async {
+  testWidgets('force revision toggle defaults ON and persists edited value', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -412,21 +457,21 @@ void main() {
     await _expandAdvanced(tester);
 
     final forceSwitch = find.byKey(const ValueKey('plan_force_revision_only'));
-    expect(
-      (tester.widget<SwitchListTile>(forceSwitch)).value,
-      isTrue,
-    );
+    expect((tester.widget<SwitchListTile>(forceSwitch)).value, isTrue);
 
     await _tapVisible(tester, forceSwitch);
     await _tapVisible(
-        tester, find.byKey(const ValueKey('plan_activate_button')));
+      tester,
+      find.byKey(const ValueKey('plan_activate_button')),
+    );
 
     final settings = await SettingsRepo(db).getSettings();
     expect(settings.forceRevisionOnly, 0);
   });
 
-  testWidgets('require page metadata defaults ON and persists edited value',
-      (tester) async {
+  testWidgets('require page metadata defaults ON and persists edited value', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -440,23 +485,92 @@ void main() {
     await _pumpPlan(tester, container);
     await _expandAdvanced(tester);
 
-    final metadataSwitch =
-        find.byKey(const ValueKey('plan_require_page_metadata'));
-    expect(
-      (tester.widget<SwitchListTile>(metadataSwitch)).value,
-      isTrue,
+    final metadataSwitch = find.byKey(
+      const ValueKey('plan_require_page_metadata'),
     );
+    expect((tester.widget<SwitchListTile>(metadataSwitch)).value, isTrue);
 
     await _tapVisible(tester, metadataSwitch);
     await _tapVisible(
-        tester, find.byKey(const ValueKey('plan_activate_button')));
+      tester,
+      find.byKey(const ValueKey('plan_activate_button')),
+    );
 
     final settings = await SettingsRepo(db).getSettings();
     expect(settings.requirePageMetadata, 0);
   });
 
-  testWidgets('adding calibration samples persists rows and refreshes preview',
-      (tester) async {
+  testWidgets(
+    'adding calibration samples persists rows and refreshes preview',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      await _pumpPlan(tester, container);
+      await _expandAdvanced(tester);
+
+      await _enterTextVisible(
+        tester,
+        find.byKey(const ValueKey('plan_calibration_new_duration')),
+        '2',
+      );
+      await _enterTextVisible(
+        tester,
+        find.byKey(const ValueKey('plan_calibration_new_ayah_count')),
+        '1',
+      );
+      await _tapVisible(
+        tester,
+        find.byKey(const ValueKey('plan_calibration_add_new')),
+      );
+
+      await _enterTextVisible(
+        tester,
+        find.byKey(const ValueKey('plan_calibration_review_duration')),
+        '1',
+      );
+      await _enterTextVisible(
+        tester,
+        find.byKey(const ValueKey('plan_calibration_review_ayah_count')),
+        '2',
+      );
+      await _tapVisible(
+        tester,
+        find.byKey(const ValueKey('plan_calibration_add_review')),
+      );
+
+      final rows = await (db.select(
+        db.calibrationSample,
+      )..orderBy([(tbl) => OrderingTerm.asc(tbl.id)])).get();
+      expect(rows.length, 2);
+      expect(rows.first.sampleKind, 'new_memorization');
+      expect(rows.last.sampleKind, 'review');
+
+      final newPreview = tester
+          .widget<Text>(
+            find.byKey(const ValueKey('plan_calibration_preview_new')),
+          )
+          .data!;
+      final reviewPreview = tester
+          .widget<Text>(
+            find.byKey(const ValueKey('plan_calibration_preview_review')),
+          )
+          .data!;
+      expect(newPreview.contains('New samples: 1'), isTrue);
+      expect(reviewPreview.contains('Review samples: 1'), isTrue);
+    },
+  );
+
+  testWidgets('apply calibration now updates settings and grade distribution', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -484,71 +598,6 @@ void main() {
       tester,
       find.byKey(const ValueKey('plan_calibration_add_new')),
     );
-
-    await _enterTextVisible(
-      tester,
-      find.byKey(const ValueKey('plan_calibration_review_duration')),
-      '1',
-    );
-    await _enterTextVisible(
-      tester,
-      find.byKey(const ValueKey('plan_calibration_review_ayah_count')),
-      '2',
-    );
-    await _tapVisible(
-      tester,
-      find.byKey(const ValueKey('plan_calibration_add_review')),
-    );
-
-    final rows = await (db.select(db.calibrationSample)
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
-        .get();
-    expect(rows.length, 2);
-    expect(rows.first.sampleKind, 'new_memorization');
-    expect(rows.last.sampleKind, 'review');
-
-    final newPreview = tester
-        .widget<Text>(
-            find.byKey(const ValueKey('plan_calibration_preview_new')))
-        .data!;
-    final reviewPreview = tester
-        .widget<Text>(
-          find.byKey(const ValueKey('plan_calibration_preview_review')),
-        )
-        .data!;
-    expect(newPreview.contains('New samples: 1'), isTrue);
-    expect(reviewPreview.contains('Review samples: 1'), isTrue);
-  });
-
-  testWidgets('apply calibration now updates settings and grade distribution',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-      ],
-    );
-    addTearDown(container.dispose);
-    await _pumpPlan(tester, container);
-    await _expandAdvanced(tester);
-
-    await _enterTextVisible(
-      tester,
-      find.byKey(const ValueKey('plan_calibration_new_duration')),
-      '2',
-    );
-    await _enterTextVisible(
-      tester,
-      find.byKey(const ValueKey('plan_calibration_new_ayah_count')),
-      '1',
-    );
-    await _tapVisible(
-      tester,
-      find.byKey(const ValueKey('plan_calibration_add_new')),
-    );
     await _enterTextVisible(
       tester,
       find.byKey(const ValueKey('plan_calibration_review_duration')),
@@ -565,15 +614,30 @@ void main() {
     );
 
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q5')), '40');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q5')),
+      '40',
+    );
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q4')), '30');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q4')),
+      '30',
+    );
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q3')), '20');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q3')),
+      '20',
+    );
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q2')), '8');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q2')),
+      '8',
+    );
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q0')), '2');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q0')),
+      '2',
+    );
 
     await _tapVisible(
       tester,
@@ -593,62 +657,64 @@ void main() {
   });
 
   testWidgets(
-      'apply calibration from tomorrow creates pending update and keeps active settings',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-      ],
-    );
-    addTearDown(container.dispose);
-    final settingsRepo = SettingsRepo(db);
+    'apply calibration from tomorrow creates pending update and keeps active settings',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      final settingsRepo = SettingsRepo(db);
 
-    await settingsRepo.updateSettings(
-      avgNewMinutesPerAyah: 2.2,
-      avgReviewMinutesPerAyah: 0.9,
-      updatedAtDay: 12345,
-    );
-    await _pumpPlan(tester, container);
-    await _expandAdvanced(tester);
+      await settingsRepo.updateSettings(
+        avgNewMinutesPerAyah: 2.2,
+        avgReviewMinutesPerAyah: 0.9,
+        updatedAtDay: 12345,
+      );
+      await _pumpPlan(tester, container);
+      await _expandAdvanced(tester);
 
-    await _enterTextVisible(
-      tester,
-      find.byKey(const ValueKey('plan_calibration_new_duration')),
-      '3',
-    );
-    await _enterTextVisible(
-      tester,
-      find.byKey(const ValueKey('plan_calibration_new_ayah_count')),
-      '1',
-    );
-    await _tapVisible(
-      tester,
-      find.byKey(const ValueKey('plan_calibration_add_new')),
-    );
+      await _enterTextVisible(
+        tester,
+        find.byKey(const ValueKey('plan_calibration_new_duration')),
+        '3',
+      );
+      await _enterTextVisible(
+        tester,
+        find.byKey(const ValueKey('plan_calibration_new_ayah_count')),
+        '1',
+      );
+      await _tapVisible(
+        tester,
+        find.byKey(const ValueKey('plan_calibration_add_new')),
+      );
 
-    await _tapVisible(tester, find.text('Apply from tomorrow'));
-    await _tapVisible(
-      tester,
-      find.byKey(const ValueKey('plan_apply_calibration_button')),
-    );
+      await _tapVisible(tester, find.text('Apply from tomorrow'));
+      await _tapVisible(
+        tester,
+        find.byKey(const ValueKey('plan_apply_calibration_button')),
+      );
 
-    final today = localDayIndex(DateTime.now().toLocal());
-    final settings = await settingsRepo.getSettings(todayDayOverride: today);
-    final pending = await settingsRepo.getPendingCalibrationUpdate();
+      final today = localDayIndex(DateTime.now().toLocal());
+      final settings = await settingsRepo.getSettings(todayDayOverride: today);
+      final pending = await settingsRepo.getPendingCalibrationUpdate();
 
-    expect(settings.avgNewMinutesPerAyah, 2.2);
-    expect(settings.avgReviewMinutesPerAyah, 0.9);
-    expect(pending, isNotNull);
-    expect(pending!.effectiveDay, today + 1);
-    expect(pending.avgNewMinutesPerAyah, 3.0);
-  });
+      expect(settings.avgNewMinutesPerAyah, 2.2);
+      expect(settings.avgReviewMinutesPerAyah, 0.9);
+      expect(pending, isNotNull);
+      expect(pending!.effectiveDay, today + 1);
+      expect(pending.avgNewMinutesPerAyah, 3.0);
+    },
+  );
 
-  testWidgets('invalid grade distribution blocks calibration apply',
-      (tester) async {
+  testWidgets('invalid grade distribution blocks calibration apply', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -679,15 +745,30 @@ void main() {
     );
 
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q5')), '50');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q5')),
+      '50',
+    );
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q4')), '20');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q4')),
+      '20',
+    );
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q3')), '20');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q3')),
+      '20',
+    );
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q2')), '5');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q2')),
+      '5',
+    );
     await _enterTextVisible(
-        tester, find.byKey(const ValueKey('plan_grade_q0')), '1');
+      tester,
+      find.byKey(const ValueKey('plan_grade_q0')),
+      '1',
+    );
     await _tapVisible(
       tester,
       find.byKey(const ValueKey('plan_apply_calibration_button')),
@@ -700,30 +781,24 @@ void main() {
   });
 }
 
-Future<void> _pumpPlan(
-  WidgetTester tester,
-  ProviderContainer container,
-) async {
+Future<void> _pumpPlan(WidgetTester tester, ProviderContainer container) async {
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: const MaterialApp(
-        home: Scaffold(body: PlanScreen()),
-      ),
+      child: const MaterialApp(home: Scaffold(body: PlanScreen())),
     ),
   );
   await tester.pumpAndSettle();
 }
 
 Future<void> _expandAdvanced(WidgetTester tester) async {
-  final schedulingSection = find.byKey(const ValueKey('plan_scheduling_section'));
+  final schedulingSection = find.byKey(
+    const ValueKey('plan_scheduling_section'),
+  );
   if (schedulingSection.evaluate().isNotEmpty) {
     return;
   }
-  await _tapVisible(
-    tester,
-    find.byKey(const ValueKey('plan_advanced_toggle')),
-  );
+  await _tapVisible(tester, find.byKey(const ValueKey('plan_advanced_toggle')));
 }
 
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {

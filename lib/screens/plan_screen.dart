@@ -8,6 +8,7 @@ import '../data/providers/database_providers.dart';
 import '../data/services/calibration_service.dart';
 import '../data/services/forecast_simulation_service.dart';
 import '../data/services/onboarding_defaults.dart';
+import '../data/services/planner_feedback.dart';
 import '../data/services/scheduling/scheduling_preferences_codec.dart';
 import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
@@ -158,19 +159,26 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     SchedulingPreferencesV1 preferences,
   ) {
     return <String, int>{
-      'mon': preferences.minutesByWeekday[DateTime.monday] ??
+      'mon':
+          preferences.minutesByWeekday[DateTime.monday] ??
           preferences.minutesPerDayDefault,
-      'tue': preferences.minutesByWeekday[DateTime.tuesday] ??
+      'tue':
+          preferences.minutesByWeekday[DateTime.tuesday] ??
           preferences.minutesPerDayDefault,
-      'wed': preferences.minutesByWeekday[DateTime.wednesday] ??
+      'wed':
+          preferences.minutesByWeekday[DateTime.wednesday] ??
           preferences.minutesPerDayDefault,
-      'thu': preferences.minutesByWeekday[DateTime.thursday] ??
+      'thu':
+          preferences.minutesByWeekday[DateTime.thursday] ??
           preferences.minutesPerDayDefault,
-      'fri': preferences.minutesByWeekday[DateTime.friday] ??
+      'fri':
+          preferences.minutesByWeekday[DateTime.friday] ??
           preferences.minutesPerDayDefault,
-      'sat': preferences.minutesByWeekday[DateTime.saturday] ??
+      'sat':
+          preferences.minutesByWeekday[DateTime.saturday] ??
           preferences.minutesPerDayDefault,
-      'sun': preferences.minutesByWeekday[DateTime.sunday] ??
+      'sun':
+          preferences.minutesByWeekday[DateTime.sunday] ??
           preferences.minutesPerDayDefault,
     };
   }
@@ -217,7 +225,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     for (final option in OnboardingFluency.values) {
       final defaults = defaultsForFluency(option);
       final distance =
-          (defaults.avgNew - avgNew).abs() + (defaults.avgReview - avgReview).abs();
+          (defaults.avgNew - avgNew).abs() +
+          (defaults.avgReview - avgReview).abs();
       if (distance < bestDistance) {
         best = option;
         bestDistance = distance;
@@ -244,8 +253,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         _avgNewMinutesController.text = defaults.avgNew.toStringAsFixed(1);
       }
       if (!_avgReviewDirty) {
-        _avgReviewMinutesController.text =
-            defaults.avgReview.toStringAsFixed(1);
+        _avgReviewMinutesController.text = defaults.avgReview.toStringAsFixed(
+          1,
+        );
       }
     });
   }
@@ -302,10 +312,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         avgNewMinutesPerAyah: avgNew,
         avgReviewMinutesPerAyah: avgReview,
         requirePageMetadata: _requirePageMetadata ? 1 : 0,
-        schedulingPrefsJson:
-            projectionEngine.encodePreferences(syncedSchedulingPreferences),
-        schedulingOverridesJson:
-            projectionEngine.encodeOverrides(_schedulingOverrides),
+        schedulingPrefsJson: projectionEngine.encodePreferences(
+          syncedSchedulingPreferences,
+        ),
+        schedulingOverridesJson: projectionEngine.encodeOverrides(
+          _schedulingOverrides,
+        ),
       );
       await progressRepo.getCursor();
       await _refreshWeeklyPlan();
@@ -379,7 +391,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     });
 
     try {
-      await ref.read(calibrationServiceProvider).logSample(
+      await ref
+          .read(calibrationServiceProvider)
+          .logSample(
             kind: kind,
             durationMinutes: duration,
             ayahCount: ayahCount,
@@ -410,7 +424,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
 
     try {
       final distribution = _parseGradeDistributionOrNull();
-      await ref.read(calibrationServiceProvider).applyCalibration(
+      await ref
+          .read(calibrationServiceProvider)
+          .applyCalibration(
             timing: _calibrationTiming == _CalibrationTimingUi.now
                 ? CalibrationApplyTiming.immediate
                 : CalibrationApplyTiming.tomorrow,
@@ -444,8 +460,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     });
 
     try {
-      final result =
-          await ref.read(forecastSimulationServiceProvider).simulate();
+      final result = await ref
+          .read(forecastSimulationServiceProvider)
+          .simulate();
       if (!mounted) {
         return;
       }
@@ -501,10 +518,10 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         _forceRevisionOnly = settings.forceRevisionOnly == 1;
         _maxNewPagesController.text = settings.maxNewPagesPerDay.toString();
         _maxNewUnitsController.text = settings.maxNewUnitsPerDay.toString();
-        _avgNewMinutesController.text =
-            settings.avgNewMinutesPerAyah.toStringAsFixed(1);
-        _avgReviewMinutesController.text =
-            settings.avgReviewMinutesPerAyah.toStringAsFixed(1);
+        _avgNewMinutesController.text = settings.avgNewMinutesPerAyah
+            .toStringAsFixed(1);
+        _avgReviewMinutesController.text = settings.avgReviewMinutesPerAyah
+            .toStringAsFixed(1);
         _fluency = inferredFluency;
         _avgNewDirty = !_matchesFluencyDefaults(
           fluency: inferredFluency,
@@ -515,14 +532,15 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         _requirePageMetadata = settings.requirePageMetadata == 1;
         _weeklyMinutesController.text = weeklyTotal.toString();
         for (final key in onboardingWeekdayKeys) {
-          _weekdayControllers[key]!.text = (weekdayMinutes[key] ?? 0).toString();
+          _weekdayControllers[key]!.text = (weekdayMinutes[key] ?? 0)
+              .toString();
         }
         _schedulingPreferences = preferences;
         _schedulingOverrides = overrides;
-        _minutesPerDayController.text =
-            preferences.minutesPerDayDefault.toString();
-        _minutesPerWeekController.text =
-            preferences.minutesPerWeekDefault.toString();
+        _minutesPerDayController.text = preferences.minutesPerDayDefault
+            .toString();
+        _minutesPerWeekController.text = preferences.minutesPerWeekDefault
+            .toString();
         _isLoadingScheduling = false;
       });
       await _refreshWeeklyPlan();
@@ -645,10 +663,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final minute = (picked.hour * 60) + picked.minute;
     _updateSchedulingPreferences(
       _schedulingPreferences.copyWith(
-        sessionATimeMinute:
-            sessionA ? minute : _schedulingPreferences.sessionATimeMinute,
-        sessionBTimeMinute:
-            sessionA ? _schedulingPreferences.sessionBTimeMinute : minute,
+        sessionATimeMinute: sessionA
+            ? minute
+            : _schedulingPreferences.sessionATimeMinute,
+        sessionBTimeMinute: sessionA
+            ? _schedulingPreferences.sessionBTimeMinute
+            : minute,
       ),
     );
   }
@@ -661,14 +681,10 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
 
   void _addWindowForWeekday(int weekday) {
     final windowsByWeekday = Map<int, List<TimeWindow>>.from(
-        _schedulingPreferences.windowsByWeekday);
-    final list = _windowsForWeekday(weekday);
-    list.add(
-      const TimeWindow(
-        startMinute: 6 * 60,
-        endMinute: 7 * 60,
-      ),
+      _schedulingPreferences.windowsByWeekday,
     );
+    final list = _windowsForWeekday(weekday);
+    list.add(const TimeWindow(startMinute: 6 * 60, endMinute: 7 * 60));
     windowsByWeekday[weekday] = list;
     _updateSchedulingPreferences(
       _schedulingPreferences.copyWith(windowsByWeekday: windowsByWeekday),
@@ -677,7 +693,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
 
   void _removeWindowForWeekday(int weekday, int index) {
     final windowsByWeekday = Map<int, List<TimeWindow>>.from(
-        _schedulingPreferences.windowsByWeekday);
+      _schedulingPreferences.windowsByWeekday,
+    );
     final list = _windowsForWeekday(weekday);
     if (index < 0 || index >= list.length) {
       return;
@@ -727,7 +744,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       endMinute: (end.hour * 60) + end.minute,
     ).normalized();
     final windowsByWeekday = Map<int, List<TimeWindow>>.from(
-        _schedulingPreferences.windowsByWeekday);
+      _schedulingPreferences.windowsByWeekday,
+    );
     final nextList = _windowsForWeekday(weekday);
     nextList[index] = nextWindow;
     windowsByWeekday[weekday] = nextList;
@@ -761,11 +779,11 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final current = _schedulingOverrides[dayIndex];
     final initialMinute = sessionA
         ? current?.sessionATimeMinute ??
-            _schedulingPreferences.sessionATimeMinute ??
-            7 * 60
+              _schedulingPreferences.sessionATimeMinute ??
+              7 * 60
         : current?.sessionBTimeMinute ??
-            _schedulingPreferences.sessionBTimeMinute ??
-            19 * 60;
+              _schedulingPreferences.sessionBTimeMinute ??
+              19 * 60;
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(
@@ -829,9 +847,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildGuidedSetupCard(AppStrings strings) {
@@ -909,8 +927,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.all(16),
           alignment: Alignment.centerLeft,
-          backgroundColor:
-              selected ? colorScheme.secondaryContainer : null,
+          backgroundColor: selected ? colorScheme.secondaryContainer : null,
           side: BorderSide(
             color: selected ? colorScheme.primary : colorScheme.outlineVariant,
           ),
@@ -965,10 +982,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             const SizedBox(height: 10),
             _buildSummaryRow(
               label: strings.planSummaryNewLimit,
-              value: strings.planSummaryNewLimitValue(
-                maxNewPages,
-                maxNewUnits,
-              ),
+              value: strings.planSummaryNewLimitValue(maxNewPages, maxNewUnits),
             ),
             const SizedBox(height: 10),
             _buildSummaryRow(
@@ -985,10 +999,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 for (final key in onboardingWeekdayKeys)
                   Chip(
                     label: Text(
-                      strings.weekdayMinutesChip(
-                        key,
-                        weekdayMinutes[key] ?? 0,
-                      ),
+                      strings.weekdayMinutesChip(key, weekdayMinutes[key] ?? 0),
                     ),
                   ),
               ],
@@ -999,9 +1010,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               const SizedBox(height: 8),
               Text(
                 _errorMessage!,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
             const SizedBox(height: 12),
@@ -1026,10 +1035,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelLarge,
-        ),
+        Text(label, style: Theme.of(context).textTheme.labelLarge),
         const SizedBox(height: 2),
         Text(value),
         if (helper != null) ...[
@@ -1085,6 +1091,94 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildPlanHealthCard(AppStrings strings) {
+    final feedback = PlannerFeedbackSnapshot.fromWeeklyPlan(_weeklyPlan);
+    final notes = <String>[
+      _localizedHealthSummary(strings, feedback.health),
+      if (feedback.backlogBurnDownSuggested) strings.planBacklogBurnDownHint,
+      if (feedback.minimumDayRecommended) strings.planMinimumDayHint,
+      if (feedback.recoverySuggested) strings.planRecoverySuggestionHint,
+    ];
+
+    return Card(
+      key: const ValueKey('plan_health_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.planHealthTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            _buildHealthBadge(strings, feedback.health),
+            const SizedBox(height: 12),
+            for (var i = 0; i < notes.length; i++) ...[
+              Text(
+                notes[i],
+                key: i == 0 ? const ValueKey('plan_health_summary') : null,
+              ),
+              if (i != notes.length - 1) const SizedBox(height: 6),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHealthBadge(AppStrings strings, PlannerHealthState health) {
+    final scheme = Theme.of(context).colorScheme;
+    final (background, foreground) = switch (health) {
+      PlannerHealthState.onTrack => (
+        scheme.secondaryContainer,
+        scheme.onSecondaryContainer,
+      ),
+      PlannerHealthState.tight => (
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ),
+      PlannerHealthState.overloaded => (
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+      ),
+    };
+
+    return DecoratedBox(
+      key: const ValueKey('plan_health_badge'),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Text(
+          _localizedHealthLabel(strings, health),
+          style: TextStyle(color: foreground, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+
+  String _localizedHealthLabel(AppStrings strings, PlannerHealthState health) {
+    return switch (health) {
+      PlannerHealthState.onTrack => strings.planHealthOnTrack,
+      PlannerHealthState.tight => strings.planHealthTight,
+      PlannerHealthState.overloaded => strings.planHealthOverloaded,
+    };
+  }
+
+  String _localizedHealthSummary(
+    AppStrings strings,
+    PlannerHealthState health,
+  ) {
+    return switch (health) {
+      PlannerHealthState.onTrack => strings.planHealthOnTrackSummary,
+      PlannerHealthState.tight => strings.planHealthTightSummary,
+      PlannerHealthState.overloaded => strings.planHealthOverloadedSummary,
+    };
   }
 
   Widget _buildAdvancedContent(
@@ -1153,9 +1247,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 decimal: true,
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(r'[0-9.]'),
-                ),
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               onChanged: (_) {
                 setState(() {
@@ -1174,9 +1266,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 decimal: true,
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(r'[0-9.]'),
-                ),
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               onChanged: (_) {
                 setState(() {
@@ -1245,9 +1335,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               Text(
                 _forecastError!,
                 key: const ValueKey('plan_forecast_incomplete_reason'),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
             if (forecast != null) ...[
@@ -1264,9 +1352,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   forecast.incompleteReason ??
                       strings.completionEstimateUnavailable,
                   key: const ValueKey('plan_forecast_incomplete_reason'),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               const SizedBox(height: 8),
               Text(
@@ -1317,9 +1403,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               ayahController: _newAyahCountController,
               buttonKey: const ValueKey('plan_calibration_add_new'),
               buttonLabel: strings.addNewSample,
-              onPressed: () => _addCalibrationSample(
-                CalibrationSampleKind.newMemorization,
-              ),
+              onPressed: () =>
+                  _addCalibrationSample(CalibrationSampleKind.newMemorization),
             ),
             const SizedBox(height: 12),
             _buildCalibrationLogGroup(
@@ -1330,9 +1415,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               ayahController: _reviewAyahCountController,
               buttonKey: const ValueKey('plan_calibration_add_review'),
               buttonLabel: strings.addReviewSample,
-              onPressed: () => _addCalibrationSample(
-                CalibrationSampleKind.review,
-              ),
+              onPressed: () =>
+                  _addCalibrationSample(CalibrationSampleKind.review),
             ),
             const SizedBox(height: 16),
             Text(
@@ -1466,9 +1550,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           value: twoSessions,
           onChanged: (value) {
             _updateSchedulingPreferences(
-              _schedulingPreferences.copyWith(
-                sessionsPerDay: value ? 2 : 1,
-              ),
+              _schedulingPreferences.copyWith(sessionsPerDay: value ? 2 : 1),
             );
           },
         ),
@@ -1481,8 +1563,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             _updateSchedulingPreferences(
               _schedulingPreferences.copyWith(
                 exactTimesEnabled: value,
-                timingStrategy:
-                    value ? TimingStrategy.fixedTimes : TimingStrategy.untimed,
+                timingStrategy: value
+                    ? TimingStrategy.fixedTimes
+                    : TimingStrategy.untimed,
               ),
             );
           },
@@ -1500,7 +1583,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   strings.sessionTimeLabel(
                     'A',
                     _formatMinuteOfDay(
-                        _schedulingPreferences.sessionATimeMinute),
+                      _schedulingPreferences.sessionATimeMinute,
+                    ),
                   ),
                 ),
               ),
@@ -1511,7 +1595,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                   strings.sessionTimeLabel(
                     'B',
                     _formatMinuteOfDay(
-                        _schedulingPreferences.sessionBTimeMinute),
+                      _schedulingPreferences.sessionBTimeMinute,
+                    ),
                   ),
                 ),
               ),
@@ -1540,8 +1625,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               FilterChip(
                 key: ValueKey('plan_scheduling_study_day_$weekday'),
                 label: Text(_weekdayLabel(weekday, strings)),
-                selected:
-                    _schedulingPreferences.enabledWeekdays.contains(weekday),
+                selected: _schedulingPreferences.enabledWeekdays.contains(
+                  weekday,
+                ),
                 onSelected: (_) => _toggleStudyDay(weekday),
               ),
           ],
@@ -1554,9 +1640,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           value: advancedMode,
           onChanged: (value) {
             _updateSchedulingPreferences(
-              _schedulingPreferences.copyWith(
-                advancedModeEnabled: value,
-              ),
+              _schedulingPreferences.copyWith(advancedModeEnabled: value),
             );
           },
         ),
@@ -1597,9 +1681,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             controller: _minutesPerDayController,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: strings.minutesPerDayLabel,
-            ),
+            decoration: InputDecoration(labelText: strings.minutesPerDayLabel),
             onChanged: (value) {
               final parsed = int.tryParse(value);
               if (parsed == null) {
@@ -1630,9 +1712,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             controller: _minutesPerWeekController,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: strings.minutesPerWeekLabel,
-            ),
+            decoration: InputDecoration(labelText: strings.minutesPerWeekLabel),
             onChanged: (value) {
               final parsed = int.tryParse(value);
               if (parsed == null) {
@@ -1647,9 +1727,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           DropdownButtonFormField<TimingStrategy>(
             key: const ValueKey('plan_scheduling_timing_strategy'),
             initialValue: _schedulingPreferences.timingStrategy,
-            decoration: InputDecoration(
-              labelText: strings.timingStrategyLabel,
-            ),
+            decoration: InputDecoration(labelText: strings.timingStrategyLabel),
             items: [
               DropdownMenuItem(
                 value: TimingStrategy.untimed,
@@ -1808,18 +1886,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
   }
 
-  Widget _buildWeeklyDayCard(
-    AppStrings strings,
-    WeeklyPlanDay day,
-    int index,
-  ) {
+  Widget _buildWeeklyDayCard(AppStrings strings, WeeklyPlanDay day, int index) {
     final override = _schedulingOverrides[day.dayIndex];
     return DecoratedBox(
       key: ValueKey('plan_weekly_day_$index'),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -1833,9 +1905,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             ),
             const SizedBox(height: 6),
             if (!day.enabledStudyDay)
-              Text(day.skipDay
-                  ? strings.dayMarkedHoliday
-                  : strings.dayNotEnabled)
+              Text(
+                day.skipDay ? strings.dayMarkedHoliday : strings.dayNotEnabled,
+              )
             else if (day.sessions.isEmpty)
               Text(strings.noSessionsPlanned)
             else
@@ -1865,9 +1937,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               const SizedBox(height: 4),
               Text(
                 strings.recoveryModeActive,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
             if (_schedulingPreferences.advancedModeEnabled) ...[
@@ -1941,6 +2011,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             const SizedBox(height: 16),
             _buildPlanSummaryCard(strings, weekdayMinutes, dailyDefault),
             const SizedBox(height: 16),
+            _buildPlanHealthCard(strings),
+            const SizedBox(height: 16),
             _buildAdvancedGate(strings, weekdayMinutes, dailyDefault),
           ],
         ),
@@ -1952,10 +2024,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          strings.timeInput,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text(strings.timeInput, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         SegmentedButton<_TimeInputMode>(
           key: const ValueKey('plan_time_mode'),
@@ -1985,9 +2054,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             onChanged: (_) => _syncGuidedInputsIntoSchedulingPreferences(),
-            decoration: InputDecoration(
-              labelText: strings.weeklyMinutes,
-            ),
+            decoration: InputDecoration(labelText: strings.weeklyMinutes),
           )
         else
           Wrap(
@@ -2002,10 +2069,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                     controller: _weekdayControllers[key],
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: (_) => _syncGuidedInputsIntoSchedulingPreferences(),
-                    decoration: InputDecoration(
-                      labelText: key.toUpperCase(),
-                    ),
+                    onChanged: (_) =>
+                        _syncGuidedInputsIntoSchedulingPreferences(),
+                    decoration: InputDecoration(labelText: key.toUpperCase()),
                   ),
                 ),
             ],
@@ -2018,10 +2084,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          strings.fluency,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text(strings.fluency, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -2043,17 +2106,16 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          strings.profile,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text(strings.profile, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           key: const ValueKey('plan_profile'),
           initialValue: _profile,
           items: [
             DropdownMenuItem(
-                value: 'support', child: Text(strings.profileSupport)),
+              value: 'support',
+              child: Text(strings.profileSupport),
+            ),
             DropdownMenuItem(
               value: 'standard',
               child: Text(strings.profileStandard),
@@ -2069,9 +2131,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               _profile = value;
             });
           },
-          decoration: InputDecoration(
-            labelText: strings.profile,
-          ),
+          decoration: InputDecoration(labelText: strings.profile),
         ),
       ],
     );
@@ -2105,9 +2165,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           controller: _maxNewPagesController,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            labelText: strings.maxNewPagesPerDay,
-          ),
+          decoration: InputDecoration(labelText: strings.maxNewPagesPerDay),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -2115,9 +2173,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           controller: _maxNewUnitsController,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            labelText: strings.maxNewUnitsPerDay,
-          ),
+          decoration: InputDecoration(labelText: strings.maxNewUnitsPerDay),
         ),
       ],
     );
@@ -2136,10 +2192,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
+        Text(title, style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -2147,8 +2200,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               child: TextField(
                 key: durationKey,
                 controller: durationController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
@@ -2164,9 +2218,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 controller: ayahController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(
-                  labelText: _strings.ayahCount,
-                ),
+                decoration: InputDecoration(labelText: _strings.ayahCount),
               ),
             ),
           ],
@@ -2189,9 +2241,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         controller: controller,
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration: InputDecoration(
-          labelText: 'q$gradeQ',
-        ),
+        decoration: InputDecoration(labelText: 'q$gradeQ'),
       ),
     );
   }

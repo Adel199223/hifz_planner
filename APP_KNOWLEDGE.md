@@ -461,6 +461,14 @@ Current capabilities:
   - plain-language plan summary before activation
 - Activate/update settings (`profile`, minutes, caps, etc.) without opening advanced controls
 - Guided setup now syncs visible time inputs into scheduling preferences, so the weekly planner preview follows the same time values the user entered
+- Plan health card now surfaces the current posture in plain language:
+  - `On track`
+  - `Tight`
+  - `Overloaded`
+- Plan health copy can now explain:
+  - when backlog burn-down is recommended
+  - when a minimum viable day is safer than pushing full load
+  - when repeated missed work should trigger recovery guidance
 - `Advanced` gate for expert controls instead of exposing the full simulator-style surface on first load
 - Advanced planning tools remain available behind `Advanced`:
   - profile, review-protection, caps, and pace assumptions
@@ -487,6 +495,20 @@ Current capabilities:
   - explains why that action matters today
   - gives a short-day fallback
   - exposes a recovery entry point back to `My Plan`
+- Render a health badge and explanation packet so the learner can see whether the day is:
+  - `On track`
+  - `Tight`
+  - `Overloaded`
+- Today explanation packet can now explain:
+  - when new work is paused
+  - when new work is reduced
+  - when backlog burn-down is the safer posture
+- Show a `Do the minimum day` action when current pressure suggests a shorter safe day
+- Show a Recovery assistant entry when the current day looks overloaded or repeated pressure is building
+- Recovery assistant remains advice-first:
+  - it does not silently change planner settings
+  - it recommends the next safest move based on a simple scenario choice
+  - it can route the learner to the minimum day flow or back to `My Plan`
 - Render planned reviews and planned new memorization
 - Render dedicated Stage-4 delayed-consolidation due items with urgency metadata
 - Render completion and empty-state cards when there is no remaining actionable work

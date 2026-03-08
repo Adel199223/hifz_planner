@@ -136,7 +136,31 @@ Important behavior:
 - What it does: saves your plan and starts using it in `Today`.
 - When to use: after the summary looks realistic, not idealized.
 
-## 3) Advanced
+## 3) Plan health
+
+### Plan health card
+- Where: below the summary and above `Advanced`.
+- What it shows:
+  - `On track`
+  - `Tight`
+  - `Overloaded`
+- What it means:
+  - `On track` = your current setup still looks sustainable
+  - `Tight` = review pressure or due-soon pressure is rising, so new work should stay lighter
+  - `Overloaded` = recovery pressure is high enough that protecting review is more important than pushing new material
+
+### Extra hints under plan health
+- You may also see:
+  - minimum-day guidance
+  - backlog burn-down guidance
+  - recovery suggestions
+- These are guidance-only. They do not silently change your plan.
+
+Simple rule:
+- if you see `Tight`, stay conservative
+- if you see `Overloaded`, lighten the next few days before increasing new work again
+
+## 4) Advanced
 
 Location: `Advanced` card below the summary.
 
@@ -183,7 +207,7 @@ Most learners do not need it on first setup.
 - Use this after your base plan is already stable.
 - It is also no longer part of the normal first-run path.
 
-## 6) Today Screen Execution Flow
+## 5) Today Screen Execution Flow
 
 Location: `Today` in the main navigation rail.
 
@@ -195,6 +219,29 @@ Execution order is designed to protect retention quality:
   - why it matters today
   - what to do if you only have a short amount of time
 - if the day feels too heavy, use the recovery entry to jump back to `My Plan`
+
+### Health and explanation layer
+- Today now also shows:
+  - a health label: `On track`, `Tight`, or `Overloaded`
+  - an explanation packet that tells you why today is shaped this way
+- The explanation can tell you:
+  - new work is paused for now
+  - new work is lighter today
+  - backlog burn-down is the safer posture for the next few days
+
+### Minimum day
+- If pressure is high, you may see `Do the minimum day`.
+- This means:
+  - do the top priority check or first review row
+  - then stop without guilt if time is gone
+
+### Recovery assistant
+- If the app thinks you are falling behind, you may see `Recovery assistant`.
+- It asks what happened most recently, then gives one recommended next step.
+- It can guide you to:
+  - take the minimum day first
+  - or open `My Plan` to lighten the setup
+- It does not silently change planner settings for you.
 
 ### Session section
 - shows today session blocks and status
@@ -213,7 +260,7 @@ Execution order is designed to protect retention quality:
   - open in reader
   - open companion chain (new mode)
 
-## 7) Stage-4 Priority and Soft-Block Behavior
+## 6) Stage-4 Priority and Soft-Block Behavior
 
 You may see new memorization blocked by default when mandatory delayed checks are due.
 
@@ -232,7 +279,7 @@ When override is reasonable:
 When not to overuse override:
 - repeated override usually means your weekly load is too aggressive
 
-## 8) How Planner Helps Your Goals
+## 7) How Planner Helps Your Goals
 
 ### Consistency
 - regular sessions and realistic capacity prevent start-stop cycles.
@@ -246,7 +293,7 @@ When not to overuse override:
 ### Delayed durability
 - delayed checks reduce false confidence from same-session fluency.
 
-## 9) Real-Life Usage Playbooks
+## 8) Real-Life Usage Playbooks
 
 ### A) Beginner with limited time
 - choose conservative profile and strict caps
@@ -263,7 +310,7 @@ When not to overuse override:
 - focus on Stage-4 completion quality
 - increase only after several stable days
 
-## 10) Troubleshooting by Symptom
+## 9) Troubleshooting by Symptom
 
 ### Symptom: review pressure is too high
 - reduce new caps
@@ -285,7 +332,17 @@ When not to overuse override:
 - avoid repeated overrides
 - reduce new workload until delayed items stabilize
 
-## 11) Quick Glossary (Plain Language)
+### Symptom: the app says `Tight`
+- use the minimum day more often for a few days
+- keep new work modest
+- watch whether review pressure starts falling again
+
+### Symptom: the app says `Overloaded`
+- use Recovery assistant
+- protect delayed checks and the oldest review first
+- reduce or pause aggressive new work until the backlog shrinks
+
+## 10) Quick Glossary (Plain Language)
 
 - New memorization: newly assigned content for first encoding.
 - Review: previously learned content brought back for recall.
@@ -296,7 +353,7 @@ When not to overuse override:
 - Soft-block: planner discourages/blocks new by default but still allows explicit override.
 - Companion chain: staged memorization flow used to encode, retrieve, and stabilize.
 
-## 12) Related Links
+## 11) Related Links
 
 - Main canonical architecture brief: `APP_KNOWLEDGE.md`
 - Whole-app non-technical guide: `docs/assistant/features/APP_USER_GUIDE.md`

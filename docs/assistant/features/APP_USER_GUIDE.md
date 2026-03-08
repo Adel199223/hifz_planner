@@ -38,6 +38,7 @@ If this guide conflicts with technical docs:
 2. Open `Today` and complete tasks in the shown order (delayed checks, review, then new work).
 3. Use Companion stages only from `Today` actions to avoid skipping required sequence.
 4. Open `Advanced` in `My Plan` only if you need to fine-tune scheduling, forecast, or calibration later.
+5. If the app says the plan is `Tight` or `Overloaded`, use the lighter-day guidance before forcing more new work.
 
 ## Terms in Plain English
 
@@ -122,6 +123,11 @@ Go to `My Plan` when you need to set or revise:
 This is where you define your system before execution.
 The default setup path is intentionally simple, and the expert tools are hidden under `Advanced`.
 
+What is new in `My Plan`:
+- a `Plan health` card
+- simple status labels: `On track`, `Tight`, `Overloaded`
+- plain-language hints when you should use a lighter day, burn down backlog, or switch into recovery
+
 ## 3) Execute Today’s Work
 
 Go to Today to act on:
@@ -136,6 +142,9 @@ What you will now see first:
 - a short explanation of why that action comes first
 - an `If you only have 10 minutes` fallback
 - a recovery entry that sends you back to `My Plan` if the day feels too heavy
+- a health label that shows whether today is `On track`, `Tight`, or `Overloaded`
+- an explanation box that tells you why new work is normal, lighter, or paused
+- a `Recovery assistant` button on heavier days
 
 ## 4) Memorize with Companion Stages
 
@@ -170,6 +179,7 @@ If delayed checks are due, new memorization can be soft-blocked by default to pr
 Plain-language rule:
 - do the one thing at the top of `Today` first
 - if your day is tight, use the short-day suggestion before trying to finish everything
+- if the app marks the day as `Overloaded`, use the `Recovery assistant` or return to `My Plan` before pushing extra new work
 
 ## Personalization and Preferences
 
@@ -200,6 +210,7 @@ If some remote assets fail temporarily:
 
 - I want to set a realistic memorization pace quickly -> My Plan
 - I want to do what is due right now -> Today
+- I missed sessions and need a safe recovery path -> Today -> Recovery assistant
 - I need to run a memorization stage -> Companion
 - I want pure Quran reading/listening -> Read
 - I need to revisit saved locations -> Library -> Bookmarks
@@ -213,8 +224,9 @@ If some remote assets fail temporarily:
 2. Execute `Today` consistently for several days.
 3. Use Companion for new units and reviews from Today actions.
 4. Respect delayed checks when they appear.
-5. Use `Advanced` and then calibration/forecast only after enough real samples.
-6. Increase load only after quality is stable.
+5. If `Today` or `My Plan` starts showing `Tight` or `Overloaded`, use the lighter-day and recovery guidance before increasing load.
+6. Use `Advanced` and then calibration/forecast only after enough real samples.
+7. Increase load only after quality is stable.
 
 ## Common Mistakes to Avoid
 

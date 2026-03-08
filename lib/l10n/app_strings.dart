@@ -280,14 +280,11 @@ class AppStrings {
       _t('import_page_metadata', 'Import Page Metadata');
 
   String get todayTitle => _t('today_title', 'Today');
-  String get todayDoThisNext =>
-      _t('today_do_this_next', 'Do this next');
+  String get todayDoThisNext => _t('today_do_this_next', 'Do this next');
   String get todayWhyItMatters =>
       _t('today_why_it_matters', 'Why it matters today');
-  String get todayShortDayTitle => _t(
-    'today_short_day_title',
-    'If you only have 10 minutes',
-  );
+  String get todayShortDayTitle =>
+      _t('today_short_day_title', 'If you only have 10 minutes');
   String get todayOpenMyPlan => _t('today_open_my_plan', 'Open My Plan');
   String get todayRecoveryEntryHint => _t(
     'today_recovery_entry_hint',
@@ -297,10 +294,54 @@ class AppStrings {
     'today_recovery_mode_hint',
     'Recovery mode is active. Keep today light and protect review before new memorization.',
   );
-  String get todayFocusStage4Title => _t(
-    'today_focus_stage4_title',
-    'Protect yesterday’s memorization first',
+  String get todayMinimumDayAction =>
+      _t('today_minimum_day_action', 'Do the minimum day');
+  String get todayMinimumDayHint => _t(
+    'today_minimum_day_hint',
+    'Minimum viable day: complete the top priority check or first review row, then stop without guilt.',
   );
+  String get todayNewWorkPausedExplanation => _t(
+    'today_new_work_paused_explanation',
+    'New work is paused for now so delayed checks or overdue review can stabilize first.',
+  );
+  String get todayNewWorkReducedExplanation => _t(
+    'today_new_work_reduced_explanation',
+    'New work is lighter today because review pressure is taking more of the available time.',
+  );
+  String get recoveryAssistantTitle =>
+      _t('recovery_assistant_title', 'Recovery assistant');
+  String get recoveryAssistantQuestion =>
+      _t('recovery_assistant_question', 'What happened most recently?');
+  String get recoveryAssistantRecommendationTitle =>
+      _t('recovery_assistant_recommendation_title', 'Recommended next step');
+  String get recoveryScenarioMissedSession =>
+      _t('recovery_scenario_missed_session', 'I missed one session');
+  String get recoveryScenarioMissedDay =>
+      _t('recovery_scenario_missed_day', 'I missed one full day');
+  String get recoveryScenarioSeveralDays =>
+      _t('recovery_scenario_several_days', 'I missed several days');
+  String get recoveryScenarioHeavyBacklog => _t(
+    'recovery_scenario_heavy_backlog',
+    'My review backlog feels too heavy',
+  );
+  String get recoveryRecommendationMissedSession => _t(
+    'recovery_recommendation_missed_session',
+    'Use the minimum day first, finish one high-priority item, then continue only if time still feels realistic.',
+  );
+  String get recoveryRecommendationMissedDay => _t(
+    'recovery_recommendation_missed_day',
+    'Lower today’s expectations, clear delayed checks first, and reopen My Plan only if the next few days still look too heavy.',
+  );
+  String get recoveryRecommendationSeveralDays => _t(
+    'recovery_recommendation_several_days',
+    'Treat the next stretch as recovery: reduce new work, clear the oldest review and delayed checks, and rebuild normal pace gradually.',
+  );
+  String get recoveryRecommendationHeavyBacklog => _t(
+    'recovery_recommendation_heavy_backlog',
+    'Use backlog burn-down mode for a few days: protect review, pause aggressive new work, and let the queue shrink before speeding up again.',
+  );
+  String get todayFocusStage4Title =>
+      _t('today_focus_stage4_title', 'Protect yesterday’s memorization first');
   String get todayFocusStage4Reason => _t(
     'today_focus_stage4_reason',
     'Delayed checks come first because they confirm the newest memorization stayed strong.',
@@ -309,14 +350,10 @@ class AppStrings {
     'today_focus_stage4_short_day',
     'Start the first delayed check. Even one strong check protects the most fragile work.',
   );
-  String get todayFocusStage4Action => _t(
-    'today_focus_stage4_action',
-    'Start delayed check',
-  );
-  String get todayFocusReviewTitle => _t(
-    'today_focus_review_title',
-    'Clear the oldest due review first',
-  );
+  String get todayFocusStage4Action =>
+      _t('today_focus_stage4_action', 'Start delayed check');
+  String get todayFocusReviewTitle =>
+      _t('today_focus_review_title', 'Clear the oldest due review first');
   String get todayFocusReviewReason => _t(
     'today_focus_review_reason',
     'Review comes before new memorization so earlier work stays reliable.',
@@ -325,14 +362,10 @@ class AppStrings {
     'today_focus_review_short_day',
     'Finish the first due review row and leave the rest for later.',
   );
-  String get todayFocusReviewAction => _t(
-    'today_focus_review_action',
-    'Review the first due unit',
-  );
-  String get todayFocusNewTitle => _t(
-    'today_focus_new_title',
-    'Today is clear for new memorization',
-  );
+  String get todayFocusReviewAction =>
+      _t('today_focus_review_action', 'Review the first due unit');
+  String get todayFocusNewTitle =>
+      _t('today_focus_new_title', 'Today is clear for new memorization');
   String get todayFocusNewReason => _t(
     'today_focus_new_reason',
     'Delayed checks and due review are under control, so you can spend today’s energy on one new portion.',
@@ -341,22 +374,16 @@ class AppStrings {
     'today_focus_new_short_day',
     'Open the first new unit, read it once, then do a quick self-check.',
   );
-  String get todayFocusNewAction => _t(
-    'today_focus_new_action',
-    'Start today’s new portion',
-  );
-  String get todayCompletionTitle => _t(
-    'today_completion_title',
-    'You are done for today',
-  );
+  String get todayFocusNewAction =>
+      _t('today_focus_new_action', 'Start today’s new portion');
+  String get todayCompletionTitle =>
+      _t('today_completion_title', 'You are done for today');
   String get todayCompletionMessage => _t(
     'today_completion_message',
     'Today’s planned memorization and review are complete.',
   );
-  String get todayEmptyTitle => _t(
-    'today_empty_title',
-    'Nothing is scheduled yet',
-  );
+  String get todayEmptyTitle =>
+      _t('today_empty_title', 'Nothing is scheduled yet');
   String get todayEmptyMessage => _t(
     'today_empty_message',
     'Open My Plan to set a realistic daily rhythm and see today’s next steps here.',
@@ -492,10 +519,8 @@ class AppStrings {
     'plan_setup_subtitle',
     'Pick a pace, choose realistic time, and activate your plan. You can fine-tune the details later.',
   );
-  String get planPresetQuestion => _t(
-    'plan_preset_question',
-    '1) How ambitious should this plan be?',
-  );
+  String get planPresetQuestion =>
+      _t('plan_preset_question', '1) How ambitious should this plan be?');
   String get planPresetEasy => _t('plan_preset_easy', 'Easy');
   String get planPresetEasyDescription => _t(
     'plan_preset_easy_description',
@@ -520,39 +545,57 @@ class AppStrings {
     'plan_advanced_subtitle',
     'Open this only if you want to fine-tune scheduling, forecast, calibration, or recovery rules.',
   );
-  String get planOpenAdvanced =>
-      _t('plan_open_advanced', 'Show Advanced');
-  String get planHideAdvanced =>
-      _t('plan_hide_advanced', 'Hide Advanced');
+  String get planOpenAdvanced => _t('plan_open_advanced', 'Show Advanced');
+  String get planHideAdvanced => _t('plan_hide_advanced', 'Hide Advanced');
   String get planFineTuneTitle =>
       _t('plan_fine_tune_title', 'Fine-tune this plan');
   String get planSummaryPace => _t('plan_summary_pace', 'Pace');
   String get planSummaryTime => _t('plan_summary_time', 'Time');
   String get planSummaryNewLimit =>
       _t('plan_summary_new_limit', 'New work limit');
-  String get planSummaryReviewPriority => _t(
-    'plan_summary_review_priority',
-    'Review priority',
+  String get planSummaryReviewPriority =>
+      _t('plan_summary_review_priority', 'Review priority');
+  String get planHealthTitle => _t('plan_health_title', 'Plan health');
+  String get planHealthOnTrack => _t('plan_health_on_track', 'On track');
+  String get planHealthTight => _t('plan_health_tight', 'Tight');
+  String get planHealthOverloaded => _t('plan_health_overloaded', 'Overloaded');
+  String get planHealthOnTrackSummary => _t(
+    'plan_health_on_track_summary',
+    'Review pressure is under control and the plan still has room for steady new memorization.',
+  );
+  String get planHealthTightSummary => _t(
+    'plan_health_tight_summary',
+    'Review and delayed checks are taking more of the day, so new work should stay lighter until pressure drops.',
+  );
+  String get planHealthOverloadedSummary => _t(
+    'plan_health_overloaded_summary',
+    'Delayed checks or review pressure are too heavy right now. Stabilize first, then add new work again.',
+  );
+  String get planBacklogBurnDownHint => _t(
+    'plan_backlog_burn_down_hint',
+    'Backlog burn-down: clear delayed checks and the oldest review first for the next few days before increasing new work.',
+  );
+  String get planMinimumDayHint => _t(
+    'plan_minimum_day_hint',
+    'If time collapses, use the minimum viable day in Today instead of abandoning the day completely.',
+  );
+  String get planRecoverySuggestionHint => _t(
+    'plan_recovery_suggestion_hint',
+    'If missed work keeps repeating, open the Recovery assistant from Today and switch to a lighter posture before the backlog grows.',
   );
   String planSummaryTimeValue(int weeklyMinutes, int dailyMinutes) => _fmt(
     _t(
       'plan_summary_time_value',
       '{weekly} minutes per week, about {daily} minutes per day.',
     ),
-    <String, Object>{
-      'weekly': weeklyMinutes,
-      'daily': dailyMinutes,
-    },
+    <String, Object>{'weekly': weeklyMinutes, 'daily': dailyMinutes},
   );
   String planSummaryNewLimitValue(int pages, int units) => _fmt(
     _t(
       'plan_summary_new_limit_value',
       'Up to {pages} new pages or {units} new units on a study day.',
     ),
-    <String, Object>{
-      'pages': pages,
-      'units': units,
-    },
+    <String, Object>{'pages': pages, 'units': units},
   );
   String get planReviewPriorityEasy => _t(
     'plan_review_priority_easy',
@@ -1357,7 +1400,8 @@ class AppStrings {
       'weekly_total': 'Total hebdomadaire',
       'per_weekday': 'Par jour',
       'weekly_minutes': 'Minutes hebdomadaires',
-      'fluency': '3) À quel point êtes-vous à l’aise avec le hifz en ce moment ?',
+      'fluency':
+          '3) À quel point êtes-vous à l’aise avec le hifz en ce moment ?',
       'fluency_fluent': 'fluide',
       'fluency_developing': 'en progression',
       'fluency_support': 'support',
@@ -1928,11 +1972,9 @@ class AppStrings {
       'plan_preset_easy_description':
           'يقدّم المراجعة أولًا ويجعل العمل الجديد خفيفًا.',
       'plan_preset_normal': 'عادي',
-      'plan_preset_normal_description':
-          'حفظ جديد متوازن مع دعم قوي للمراجعة.',
+      'plan_preset_normal_description': 'حفظ جديد متوازن مع دعم قوي للمراجعة.',
       'plan_preset_intensive': 'مكثف',
-      'plan_preset_intensive_description':
-          'تقدّم أسرع إذا كان جدولك مستقرًا.',
+      'plan_preset_intensive_description': 'تقدّم أسرع إذا كان جدولك مستقرًا.',
       'plan_guided_note':
           'إذا كانت ظروفك مشغولة أو كنت تلحق ما فاتك فابدأ بخيار سهل. ويمكنك لاحقًا ضبط وضع المراجعة فقط من الإعدادات المتقدمة.',
       'plan_advanced_title': 'متقدم',

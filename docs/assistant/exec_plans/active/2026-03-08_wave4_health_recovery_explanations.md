@@ -63,21 +63,29 @@
 
 ## Validation
 - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+- `flutter test -j 1 -r expanded test/data/services/planner_feedback_test.dart`
 - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`
 - `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart`
+- `flutter test -j 1 -r expanded test/l10n/app_strings_test.dart`
+- `dart tooling/validate_localization.dart`
 - `dart tooling/validate_agent_docs.dart`
 - `dart tooling/validate_workspace_hygiene.dart`
 
 ## Progress
 - [x] Create the Wave 4 branch/worktree and mark it active in the master tracker
 - [x] Create this Wave 4 ExecPlan
-- [ ] Implement Wave 4 user-facing health/recovery/explanation changes
-- [ ] Validate the branch and prepare the publish path
+- [x] Implement Wave 4 user-facing health/recovery/explanation changes
+- [x] Validate the branch and prepare the publish path
 
 ## Surprises and Adjustments
 - Use this section for Wave 4 detours, especially if the current planner outputs are insufficient and a smaller bridge helper is needed before Wave 5.
+- A small pure helper (`planner_feedback.dart`) was enough to classify health/recovery state without touching persistence or scheduler internals.
+- The recovery wizard stayed UI-only and routes learners toward minimum-day execution or `My Plan` adjustments instead of mutating planner settings automatically.
+- Flutter validation should keep running sequentially in this worktree because parallel Flutter commands previously caused false failures in the same build directory.
 
 ## Handoff
 - Wave 4 is active on `feat/planner-wave4-health-explanations` in `/home/fa507/dev/hifz_planner_wave4`.
-- The next implementation work should stay strictly on user-facing health, recovery, and explanation layers.
-- Next step: Wave 4 - Plan Health, Recovery, and Explanation Layer
+- Wave 4 user-facing health, recovery, minimum-day, and explanation changes are implemented locally, validated, and docs-synced.
+- The next branch step is commit/PR closeout for Wave 4.
+- All research stages are complete; implementation continues by wave.
+- Next step: close Wave 4 with commit, PR, and merge
