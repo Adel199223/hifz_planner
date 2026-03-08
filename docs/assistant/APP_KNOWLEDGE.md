@@ -71,6 +71,12 @@ Do not use this file as primary truth when there is a conflict.
 - Top-right drawer is the `More` surface for `Settings`, `About`, `Reciters`, and the demoted Explore entries
 - Reader top actions are now responsive, with the settings button on its own row to avoid narrow-layout collisions
 
+## Current Stability Notes
+
+- Reader copy success now appears only after a real clipboard write; clipboard failure shows explicit failure feedback
+- SharedPreferences-backed app and audio preferences still fall back safely, but unexpected persistence failures now log non-fatal diagnostics
+- Companion unit-state creation is conflict-safe for parallel reads/writes and has a dedicated concurrency regression test
+
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`
 - `lib/data/services/qurancom_api.dart`

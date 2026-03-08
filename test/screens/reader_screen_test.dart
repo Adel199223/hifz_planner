@@ -6,6 +6,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/app/app_preferences.dart';
@@ -905,6 +906,7 @@ void main() {
 
   testWidgets('copy action copies text and shows feedback', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
+    final clipboardMethods = <String>[];
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -915,6 +917,13 @@ void main() {
     );
     addTearDown(container.dispose);
     _registerPumpCleanup(tester);
+    _mockClipboard(
+      tester,
+      handler: (call) async {
+        clipboardMethods.add(call.method);
+        return null;
+      },
+    );
 
     await _seedAyahs(db);
     await _pumpReader(tester, container);
@@ -923,26 +932,56 @@ void main() {
       find.byKey(const ValueKey('ayah_row_1:1')),
     );
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_action_copy_1:1')));
-    await tester.pump();
-    final copiedFeedback = find.byWidgetPredicate((widget) {
-      if (widget is SnackBar) {
-        return true;
-      }
-      if (widget is Text) {
-        final text = widget.data;
-        return text != null && text.contains('Copied');
-      }
-      return false;
-    });
-    await pumpUntilFound(
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_action_copy_1:1')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(clipboardMethods, contains('Clipboard.setData'));
+    expect(find.text('Copied verse text.'), findsOneWidget);
+  });
+
+  testWidgets('copy action shows failure feedback when clipboard write fails', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+    _mockClipboard(
       tester,
-      copiedFeedback,
-      timeout: const Duration(seconds: 3),
+      handler: (call) async {
+        if (call.method != 'Clipboard.setData') {
+          return null;
+        }
+        throw PlatformException(
+          code: 'clipboard-failed',
+          message: 'Clipboard unavailable',
+        );
+      },
     );
 
-    expect(copiedFeedback, findsWidgets);
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('ayah_row_1:1')),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_action_copy_1:1')),
+    );
+    await tester.pump();
+
+    expect(find.text('Failed to copy verse text.'), findsOneWidget);
+    expect(find.text('Copied verse text.'), findsNothing);
   });
 
   testWidgets(
@@ -2925,6 +2964,22 @@ void main() {
       MainAxisAlignment.spaceBetween,
     );
   });
+}
+
+void _mockClipboard(
+  WidgetTester tester, {
+  required Future<Object?> Function(MethodCall call) handler,
+}) {
+  addTearDown(() {
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      null,
+    );
+  });
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.platform,
+    handler,
+  );
 }
 
 Future<void> _seedAyahs(AppDatabase db) async {

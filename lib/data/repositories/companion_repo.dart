@@ -203,19 +203,18 @@ class CompanionRepo {
     final day = localDayIndex(effectiveNow);
     final seconds = nowLocalSecondsSinceMidnight(effectiveNow);
 
-    try {
-      await _db.into(_db.companionUnitState).insert(
-            CompanionUnitStateCompanion.insert(
-              unitId: Value(unitId),
-              unlockedStage:
-                  companion_models.CompanionStage.guidedVisible.stageNumber,
-              updatedAtDay: day,
-              updatedAtSeconds: seconds,
-            ),
-          );
-    } catch (_) {
-      // A parallel writer may insert before us; re-read below.
-    }
+    await _db.into(_db.companionUnitState).insert(
+          CompanionUnitStateCompanion.insert(
+            unitId: Value(unitId),
+            unlockedStage:
+                companion_models.CompanionStage.guidedVisible.stageNumber,
+            updatedAtDay: day,
+            updatedAtSeconds: seconds,
+          ),
+          onConflict: DoNothing(
+            target: <Column<Object>>[_db.companionUnitState.unitId],
+          ),
+        );
 
     final created = await (_db.select(_db.companionUnitState)
           ..where((tbl) => tbl.unitId.equals(unitId))
