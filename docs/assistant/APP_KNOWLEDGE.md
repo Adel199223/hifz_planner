@@ -77,6 +77,13 @@ Do not use this file as primary truth when there is a conflict.
 - SharedPreferences-backed app and audio preferences still fall back safely, but unexpected persistence failures now log non-fatal diagnostics
 - Companion unit-state creation is conflict-safe for parallel reads/writes and has a dedicated concurrency regression test
 
+## Current Today Home Notes
+
+- `Today` now opens with a coaching card instead of raw planner metrics
+- The coaching card chooses one next action, explains why it matters, and gives a short-day fallback
+- `Today` now has a visible recovery entry back to `My Plan`
+- Empty and completion states are called out explicitly instead of only leaving section-level empty text
+
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`
 - `lib/data/services/qurancom_api.dart`

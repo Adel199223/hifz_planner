@@ -38,6 +38,7 @@ void main() {
     await _pumpToday(tester, container);
 
     expect(find.byKey(const ValueKey('today_screen_root')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_coaching_card')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_reviews_section')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_new_section')), findsOneWidget);
     expect(
@@ -311,6 +312,68 @@ void main() {
     );
   });
 
+  testWidgets('coaching card prioritizes stage-4 work and exposes recovery',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+    await _insertStage4DueLifecycle(
+      db,
+      unitId: dueUnitId,
+      todayDay: todayDay,
+    );
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_coaching_card')),
+    );
+
+    expect(find.text('Protect yesterday’s memorization first'), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_short_day_hint')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('today_stage4_explanation')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('today_recovery_entry')), findsOneWidget);
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('today_coaching_primary_action')),
+    );
+
+    expect(
+      find.text('Companion route unitId=$dueUnitId mode=stage4'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('mandatory stage-4 due blocks new until override is confirmed',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -416,6 +479,86 @@ void main() {
       find.text('Companion route unitId=$unitId mode=new'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('empty today state routes users to My Plan', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 0,
+      maxNewPagesPerDay: 0,
+    );
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_empty_state')),
+    );
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('today_empty_open_plan')),
+    );
+
+    expect(find.text('Plan route'), findsOneWidget);
+  });
+
+  testWidgets('completion card appears after finishing the last new unit',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+      maxNewPagesPerDay: 1,
+    );
+
+    await _pumpToday(tester, container);
+
+    final plannedNewUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
+    expect(plannedNewUnits, isNotEmpty);
+    final unitId = plannedNewUnits.first.id;
+    final gradeButton = find.byKey(ValueKey('today_new_grade_${unitId}_q4'));
+    await pumpUntilFound(tester, gradeButton);
+
+    await _tapVisible(tester, gradeButton);
+
+    expect(find.byKey(const ValueKey('today_completion_card')), findsOneWidget);
   });
 
   testWidgets('open in reader button is disabled when page metadata is missing',
@@ -688,6 +831,14 @@ GoRouter _buildTodayRouter() {
             ),
           );
         },
+      ),
+      GoRoute(
+        path: '/plan',
+        builder: (_, __) => const Scaffold(
+          body: Center(
+            child: Text('Plan route'),
+          ),
+        ),
       ),
     ],
   );

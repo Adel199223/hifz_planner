@@ -247,6 +247,13 @@ Location: `Today` in the main navigation rail.
 
 Execution order is designed to protect retention quality:
 
+### Coaching card
+- the top card tells you:
+  - what to do next
+  - why it matters today
+  - what to do if you only have a short amount of time
+- if the day feels too heavy, use the recovery entry to jump back to `My Plan`
+
 ### Session section
 - shows today session blocks and status
 - helps you anchor when to study

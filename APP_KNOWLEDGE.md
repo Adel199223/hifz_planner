@@ -474,13 +474,20 @@ User-facing explainer:
 
 Current capabilities:
 - Build today plan from scheduler/planner
+- Render a top coaching card that:
+  - chooses one next action in plain language
+  - explains why that action matters today
+  - gives a short-day fallback
+  - exposes a recovery entry point back to `My Plan`
 - Render planned reviews and planned new memorization
 - Render dedicated Stage-4 delayed-consolidation due items with urgency metadata
+- Render completion and empty-state cards when there is no remaining actionable work
 - Render sessionized day blocks (timed or untimed) with recovery signal
 - Save grades (`q=5/4/3/2/0`)
 - "Open in Reader" deep-link with page mode + verse range highlight params
 - "Open Companion Chain" action for review/new rows
 - Soft-block NEW launch when mandatory Stage-4 due exists (explicit override allowed and logged)
+- Stage-4 section now includes a plain-language explanation for why delayed checks are prioritized ahead of new work
 - Companion route launch:
   - review: `/companion/chain?unitId=...&mode=review`
   - new memorization: `/companion/chain?unitId=...&mode=new`

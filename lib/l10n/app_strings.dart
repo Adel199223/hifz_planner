@@ -280,6 +280,87 @@ class AppStrings {
       _t('import_page_metadata', 'Import Page Metadata');
 
   String get todayTitle => _t('today_title', 'Today');
+  String get todayDoThisNext =>
+      _t('today_do_this_next', 'Do this next');
+  String get todayWhyItMatters =>
+      _t('today_why_it_matters', 'Why it matters today');
+  String get todayShortDayTitle => _t(
+    'today_short_day_title',
+    'If you only have 10 minutes',
+  );
+  String get todayOpenMyPlan => _t('today_open_my_plan', 'Open My Plan');
+  String get todayRecoveryEntryHint => _t(
+    'today_recovery_entry_hint',
+    'Need a lighter day? Open My Plan to reduce today’s load or switch into recovery.',
+  );
+  String get todayRecoveryModeHint => _t(
+    'today_recovery_mode_hint',
+    'Recovery mode is active. Keep today light and protect review before new memorization.',
+  );
+  String get todayFocusStage4Title => _t(
+    'today_focus_stage4_title',
+    'Protect yesterday’s memorization first',
+  );
+  String get todayFocusStage4Reason => _t(
+    'today_focus_stage4_reason',
+    'Delayed checks come first because they confirm the newest memorization stayed strong.',
+  );
+  String get todayFocusStage4ShortDay => _t(
+    'today_focus_stage4_short_day',
+    'Start the first delayed check. Even one strong check protects the most fragile work.',
+  );
+  String get todayFocusStage4Action => _t(
+    'today_focus_stage4_action',
+    'Start delayed check',
+  );
+  String get todayFocusReviewTitle => _t(
+    'today_focus_review_title',
+    'Clear the oldest due review first',
+  );
+  String get todayFocusReviewReason => _t(
+    'today_focus_review_reason',
+    'Review comes before new memorization so earlier work stays reliable.',
+  );
+  String get todayFocusReviewShortDay => _t(
+    'today_focus_review_short_day',
+    'Finish the first due review row and leave the rest for later.',
+  );
+  String get todayFocusReviewAction => _t(
+    'today_focus_review_action',
+    'Review the first due unit',
+  );
+  String get todayFocusNewTitle => _t(
+    'today_focus_new_title',
+    'Today is clear for new memorization',
+  );
+  String get todayFocusNewReason => _t(
+    'today_focus_new_reason',
+    'Delayed checks and due review are under control, so you can spend today’s energy on one new portion.',
+  );
+  String get todayFocusNewShortDay => _t(
+    'today_focus_new_short_day',
+    'Open the first new unit, read it once, then do a quick self-check.',
+  );
+  String get todayFocusNewAction => _t(
+    'today_focus_new_action',
+    'Start today’s new portion',
+  );
+  String get todayCompletionTitle => _t(
+    'today_completion_title',
+    'You are done for today',
+  );
+  String get todayCompletionMessage => _t(
+    'today_completion_message',
+    'Today’s planned memorization and review are complete.',
+  );
+  String get todayEmptyTitle => _t(
+    'today_empty_title',
+    'Nothing is scheduled yet',
+  );
+  String get todayEmptyMessage => _t(
+    'today_empty_message',
+    'Open My Plan to set a realistic daily rhythm and see today’s next steps here.',
+  );
   String get plannedReviews => _t('planned_reviews', 'Planned Reviews');
   String get noPlannedReviewsLeft =>
       _t('no_planned_reviews_left', 'No planned reviews left.');
@@ -295,6 +376,10 @@ class AppStrings {
       _t('open_companion_chain', 'Open Companion Chain');
   String get stage4DueSectionTitle =>
       _t('stage4_due_section_title', 'Stage 4 - Delayed Consolidation');
+  String get todayStage4Explanation => _t(
+    'today_stage4_explanation',
+    'Delayed checks come first because they test whether recent memorization stayed strong.',
+  );
   String get stage4NoDueItems =>
       _t('stage4_no_due_items', 'No Stage-4 delayed checks are due.');
   String stage4TierSummary(
