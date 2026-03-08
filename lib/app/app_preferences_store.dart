@@ -11,11 +11,17 @@ class StoredAppPreferences {
     this.languageCode,
     this.themeCode,
     this.companionAutoReciteEnabled,
+    this.readerShowVerseTranslation,
+    this.readerShowWordHelp,
+    this.readerShowTransliteration,
   });
 
   final String? languageCode;
   final String? themeCode;
   final bool? companionAutoReciteEnabled;
+  final bool? readerShowVerseTranslation;
+  final bool? readerShowWordHelp;
+  final bool? readerShowTransliteration;
 }
 
 abstract class AppPreferencesStore {
@@ -26,6 +32,12 @@ abstract class AppPreferencesStore {
   Future<void> saveThemeCode(String code);
 
   Future<void> saveCompanionAutoReciteEnabled(bool value);
+
+  Future<void> saveReaderShowVerseTranslation(bool value);
+
+  Future<void> saveReaderShowWordHelp(bool value);
+
+  Future<void> saveReaderShowTransliteration(bool value);
 }
 
 class SharedPrefsAppPreferencesStore implements AppPreferencesStore {
@@ -39,6 +51,12 @@ class SharedPrefsAppPreferencesStore implements AppPreferencesStore {
   static const String _themeCodeKey = 'app_preferences.theme_code';
   static const String _companionAutoReciteEnabledKey =
       'app_preferences.companion_auto_recite_enabled';
+  static const String _readerShowVerseTranslationKey =
+      'app_preferences.reader_show_verse_translation';
+  static const String _readerShowWordHelpKey =
+      'app_preferences.reader_show_word_help';
+  static const String _readerShowTransliterationKey =
+      'app_preferences.reader_show_transliteration';
 
   final SharedPreferencesLoader _loadPreferences;
   final PreferenceErrorReporter _reportError;
@@ -52,6 +70,11 @@ class SharedPrefsAppPreferencesStore implements AppPreferencesStore {
         themeCode: prefs.getString(_themeCodeKey),
         companionAutoReciteEnabled:
             prefs.getBool(_companionAutoReciteEnabledKey),
+        readerShowVerseTranslation:
+            prefs.getBool(_readerShowVerseTranslationKey),
+        readerShowWordHelp: prefs.getBool(_readerShowWordHelpKey),
+        readerShowTransliteration:
+            prefs.getBool(_readerShowTransliterationKey),
       );
     } catch (error, stackTrace) {
       _reportError('load app preferences', error, stackTrace);
@@ -80,6 +103,30 @@ class SharedPrefsAppPreferencesStore implements AppPreferencesStore {
     await _savePreference(
       operation: 'save companion auto-recite preference',
       action: (prefs) => prefs.setBool(_companionAutoReciteEnabledKey, value),
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowVerseTranslation(bool value) async {
+    await _savePreference(
+      operation: 'save reader verse translation preference',
+      action: (prefs) => prefs.setBool(_readerShowVerseTranslationKey, value),
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowWordHelp(bool value) async {
+    await _savePreference(
+      operation: 'save reader word help preference',
+      action: (prefs) => prefs.setBool(_readerShowWordHelpKey, value),
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowTransliteration(bool value) async {
+    await _savePreference(
+      operation: 'save reader transliteration preference',
+      action: (prefs) => prefs.setBool(_readerShowTransliterationKey, value),
     );
   }
 

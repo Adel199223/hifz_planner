@@ -115,6 +115,10 @@ class AppStrings {
   String get closeSettings => _t('close_settings', 'Close settings');
   String get translationUnavailable =>
       _t('translation_unavailable', 'Translation unavailable');
+  String get meaningUnavailable =>
+      _t('meaning_unavailable', 'Meaning unavailable for this word.');
+  String get meaningAidsOff =>
+      _t('meaning_aids_off', 'Meaning aids are off.');
   String get scriptStyle => _t('script_style', 'Script style');
   String get uthmani => _t('uthmani', 'Uthmani');
   String get tajweed => _t('tajweed', 'Tajweed');
@@ -127,6 +131,20 @@ class AppStrings {
   String get selectedReciter => _t('selected_reciter', 'Selected Reciter');
   String get preview => _t('preview', 'Preview');
   String get word => _t('word', 'Word');
+  String get transliteration => _t('transliteration', 'Transliteration');
+  String get showVerseTranslation =>
+      _t('show_verse_translation', 'Show verse translation');
+  String get showWordHelp => _t('show_word_help', 'Show word help');
+  String get showTransliteration =>
+      _t('show_transliteration', 'Show transliteration');
+  String get wordHelpDescription => _t(
+    'word_help_description',
+    'Word help appears when you hover or tap a word in Reading mode.',
+  );
+  String get hoverWordToPreviewMeaning => _t(
+    'hover_word_to_preview_meaning',
+    'Hover or tap a word to preview meaning.',
+  );
   String get basmalaTranslation => _t(
     'basmala_translation',
     'In the Name of Allah - the Most Compassionate, Most Merciful',
@@ -134,6 +152,13 @@ class AppStrings {
 
   String translationLabel(String label) => _fmt(
     _t('translation_label', 'Translation: {label}'),
+    <String, Object>{'label': label},
+  );
+  String translationFollowsAppLanguage(String label) => _fmt(
+    _t(
+      'translation_follows_app_language',
+      'Translation follows the app language right now: {label}.',
+    ),
     <String, Object>{'label': label},
   );
   String pageLabel(int pageNumber) => _fmt(
@@ -1668,6 +1693,16 @@ class AppStrings {
       'verse_actions_unavailable':
           "Actions de l'ayah indisponibles pour ces données de page.",
       'translation_unavailable': 'Traduction indisponible',
+      'meaning_unavailable': 'Sens indisponible pour ce mot.',
+      'meaning_aids_off': 'Les aides de sens sont désactivées.',
+      'transliteration': 'Translittération',
+      'show_verse_translation': 'Afficher la traduction du verset',
+      'show_word_help': 'Afficher l’aide mot à mot',
+      'show_transliteration': 'Afficher la translittération',
+      'word_help_description':
+          'L’aide mot à mot apparaît quand vous survolez ou touchez un mot en mode Lecture.',
+      'hover_word_to_preview_meaning':
+          'Survolez ou touchez un mot pour prévisualiser son sens.',
       'audio_load_failed': "Échec de la lecture audio : {error}",
       'failed_to_load_reciters': 'Échec du chargement des récitateurs.',
       'download_coming_soon': 'Le téléchargement arrive bientôt.',
@@ -1682,6 +1717,8 @@ class AppStrings {
       'elapsed_time_label': 'Écoulé {value}',
       'total_time_label': 'Total {value}',
       'translation_label': 'Traduction : {label}',
+      'translation_follows_app_language':
+          'La traduction suit actuellement la langue de l’application : {label}.',
       'page_label': 'Page {page}',
       'juz_label': 'Juz {juz}',
       'hizb_label': 'Hizb {hizb}',
@@ -2071,6 +2108,16 @@ class AppStrings {
       'font_size': 'Tamanho da fonte',
       'selected_reciter': 'Recitador selecionado',
       'translation_unavailable': 'Tradução indisponível',
+      'meaning_unavailable': 'Significado indisponível para esta palavra.',
+      'meaning_aids_off': 'As ajudas de significado estão desativadas.',
+      'transliteration': 'Transliteração',
+      'show_verse_translation': 'Mostrar tradução do versículo',
+      'show_word_help': 'Mostrar ajuda palavra por palavra',
+      'show_transliteration': 'Mostrar transliteração',
+      'word_help_description':
+          'A ajuda palavra por palavra aparece quando você passa o cursor ou toca em uma palavra no modo Leitura.',
+      'hover_word_to_preview_meaning':
+          'Passe o cursor ou toque em uma palavra para visualizar o significado.',
       'audio_load_failed': 'Falha na reprodução de áudio: {error}',
       'failed_to_load_reciters': 'Falha ao carregar recitadores.',
       'download_coming_soon': 'Download em breve.',
@@ -2085,6 +2132,8 @@ class AppStrings {
       'elapsed_time_label': 'Decorrido {value}',
       'total_time_label': 'Total {value}',
       'translation_label': 'Tradução: {label}',
+      'translation_follows_app_language':
+          'A tradução segue o idioma do app agora: {label}.',
       'page_label': 'Página {page}',
       'search_surah': 'Pesquisar Surah',
       'learn_title': 'Planos de aprendizado',
@@ -2474,6 +2523,16 @@ class AppStrings {
       'add_edit_note': 'إضافة/تعديل ملاحظة',
       'copy_text_uthmani': 'نسخ النص (عثماني)',
       'translation_unavailable': 'الترجمة غير متاحة',
+      'meaning_unavailable': 'المعنى غير متاح لهذه الكلمة.',
+      'meaning_aids_off': 'وسائل المعنى متوقفة.',
+      'transliteration': 'النقل الصوتي',
+      'show_verse_translation': 'إظهار ترجمة الآية',
+      'show_word_help': 'إظهار مساعدة الكلمة',
+      'show_transliteration': 'إظهار النقل الصوتي',
+      'word_help_description':
+          'تظهر مساعدة الكلمة عند المرور فوق الكلمة أو لمسها في وضع القراءة.',
+      'hover_word_to_preview_meaning':
+          'مرّر فوق كلمة أو المسها لمعاينة المعنى.',
       'audio_load_failed': 'فشل تشغيل الصوت: {error}',
       'failed_to_load_reciters': 'تعذر تحميل قائمة القراء.',
       'download_coming_soon': 'ميزة التنزيل قريبًا.',
@@ -2487,6 +2546,8 @@ class AppStrings {
           'تم اختيار {reciter} ({bitrate} كيلوبت/ث).',
       'elapsed_time_label': 'الوقت المنقضي {value}',
       'total_time_label': 'المدة الكلية {value}',
+      'translation_follows_app_language':
+          'تتبع الترجمة لغة التطبيق حالياً: {label}.',
       'script_style': 'نمط الخط',
       'uthmani': 'عثماني',
       'tajweed': 'تجويد',

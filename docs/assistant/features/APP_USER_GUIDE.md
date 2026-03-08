@@ -109,8 +109,16 @@ Go to `Read` when your goal is comprehension, listening, and context.
 Typical actions:
 - navigate by surah/ayah/page/juz
 - listen to recitation
-- use translation and word interactions
+- turn meaning help on or off from the Reader settings drawer
+- use translation, word help, and transliteration where available
 - add bookmarks/notes from the Reader, then revisit them later in `Library`
+
+What the Reader meaning controls do:
+- `Show verse translation`: show or hide the translation line under each verse
+- `Show word help`: show or hide the existing word-level meaning help
+- `Show transliteration`: show or hide transliteration where the current Reader data already includes it
+- these settings stay saved for later, so you do not need to turn them on every time
+- translation still follows the app language's current default translation source for now
 
 ## 2) Plan Your Memorization
 

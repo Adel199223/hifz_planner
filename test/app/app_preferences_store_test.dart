@@ -19,6 +19,9 @@ void main() {
     expect(stored.languageCode, isNull);
     expect(stored.themeCode, isNull);
     expect(stored.companionAutoReciteEnabled, isNull);
+    expect(stored.readerShowVerseTranslation, isNull);
+    expect(stored.readerShowWordHelp, isNull);
+    expect(stored.readerShowTransliteration, isNull);
     expect(operations, <String>['load app preferences']);
   });
 
@@ -37,11 +40,17 @@ void main() {
     await store.saveThemeCode('dark');
     await store.saveLanguageCode('fr');
     await store.saveCompanionAutoReciteEnabled(true);
+    await store.saveReaderShowVerseTranslation(false);
+    await store.saveReaderShowWordHelp(false);
+    await store.saveReaderShowTransliteration(true);
 
     expect(operations, <String>[
       'save app theme code',
       'save app language code',
       'save companion auto-recite preference',
+      'save reader verse translation preference',
+      'save reader word help preference',
+      'save reader transliteration preference',
     ]);
   });
 }

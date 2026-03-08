@@ -479,6 +479,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   String? savedLanguageCode;
   String? savedThemeCode;
   bool? savedCompanionAutoReciteEnabled;
+  bool? savedReaderShowVerseTranslation;
+  bool? savedReaderShowWordHelp;
+  bool? savedReaderShowTransliteration;
 
   @override
   Future<StoredAppPreferences> load() async {
@@ -492,6 +495,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: code,
       themeCode: _stored.themeCode,
       companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
     );
   }
 
@@ -502,6 +508,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: _stored.languageCode,
       themeCode: code,
       companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
     );
   }
 
@@ -512,6 +521,48 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: _stored.languageCode,
       themeCode: _stored.themeCode,
       companionAutoReciteEnabled: value,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowVerseTranslation(bool value) async {
+    savedReaderShowVerseTranslation = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: value,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowWordHelp(bool value) async {
+    savedReaderShowWordHelp = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: value,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowTransliteration(bool value) async {
+    savedReaderShowTransliteration = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: value,
     );
   }
 }

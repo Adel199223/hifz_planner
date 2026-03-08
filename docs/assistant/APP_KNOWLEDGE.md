@@ -141,6 +141,12 @@ Do not use this file as primary truth when there is a conflict.
   - progress is shown as `Practice step X/Y` instead of leading with stage vocabulary
 
 ### Reader and Quran pipeline
+- Reader meaning controls are now real and persistent:
+  - `Show verse translation`
+  - `Show word help`
+  - `Show transliteration`
+- Verse-by-verse translation and word-help display now follow those local preferences instead of placeholder settings tabs.
+- Mushaf word preview/popover meaning details also follow those toggles and keep calm fallback text when enabled data is unavailable.
 - `lib/screens/reader_screen.dart`
 - `lib/data/services/qurancom_api.dart`
 - `lib/data/services/qurancom_chapters_service.dart`

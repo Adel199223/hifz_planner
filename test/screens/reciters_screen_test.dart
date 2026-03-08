@@ -160,6 +160,15 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
 
   @override
   Future<void> saveCompanionAutoReciteEnabled(bool value) async {}
+
+  @override
+  Future<void> saveReaderShowVerseTranslation(bool value) async {}
+
+  @override
+  Future<void> saveReaderShowWordHelp(bool value) async {}
+
+  @override
+  Future<void> saveReaderShowTransliteration(bool value) async {}
 }
 
 class _FakeAudioPreferencesStore implements AyahAudioPreferencesStore {
