@@ -69,6 +69,7 @@ Do not use this file as primary truth when there is a conflict.
 - Primary rail: `Today`, `Read`, `My Plan`, `Library`
 - `Library` routes users to `Bookmarks` and `Notes`
 - Top-right drawer is the `More` surface for `Settings`, `About`, `Reciters`, and the demoted Explore entries
+- `Learn` now includes a simple `Practice from Memory` hub plus the existing `Hifz Plan` card
 - Reader top actions are now responsive, with the settings button on its own row to avoid narrow-layout collisions
 
 ## Current Stability Notes
@@ -81,6 +82,11 @@ Do not use this file as primary truth when there is a conflict.
 
 - `Today` now opens with a coaching card instead of raw planner metrics
 - The coaching card chooses one next action, explains why it matters, and gives a short-day fallback
+- The learner-facing practice actions now use plain labels:
+  - `Start new practice`
+  - `Continue review practice`
+  - `Do delayed check`
+- When new work is the main focus, the coaching card now opens the practice flow directly instead of sending the learner to Reader first
 - `Today` now has a visible recovery entry back to `My Plan`
 - Empty and completion states are called out explicitly instead of only leaving section-level empty text
 - `Today` now also shows a simple health state (`On track`, `Tight`, `Overloaded`) plus a plain-language explanation packet
@@ -100,6 +106,14 @@ Do not use this file as primary truth when there is a conflict.
 - Calibration is now framed as teaching the planner your real pace, with guidance about when enough samples exist to trust the update
 - Recent calibration and grade-distribution data now slightly influence how cautious the shared planner is about review pressure and new work
 - Recent calibration pace can now also add one bounded pace-trend nudge to the shared planner, and Forecast exposes that in plain language instead of hiding it
+
+## Current Practice Entry Notes
+
+- The internal route contract stays unchanged:
+  - `/companion/chain`
+  - `mode=new|review|stage4`
+- Learners no longer need the word `Companion` to start from the top-level entry points
+- The practice screen still uses the existing deterministic engine; Wave 1 only simplified entry naming and launch points
 
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`

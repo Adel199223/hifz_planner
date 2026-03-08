@@ -339,9 +339,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   String _newRouteForUnit(MemUnitData unit) {
-    if (_canOpenInReader(unit)) {
-      return _buildReaderRoute(unit);
-    }
     return '/companion/chain?unitId=${unit.id}&mode=new';
   }
 
@@ -754,7 +751,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                               onPressed: () {
                                 context.go(_stage4RouteForItem(item));
                               },
-                              child: Text(strings.stage4OpenAction),
+                              child: Text(strings.doDelayedCheck),
                             ),
                           ],
                         ),
@@ -804,7 +801,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   onPressed: () {
                     context.go('/companion/chain?unitId=$unitId&mode=review');
                   },
-                  child: Text(strings.openCompanionChain),
+                  child: Text(strings.continueReviewPractice),
                 ),
               ],
             ),
@@ -1037,7 +1034,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   onPressed: () {
                     context.go('/companion/chain?unitId=$unitId&mode=new');
                   },
-                  child: Text(strings.openCompanionChain),
+                  child: Text(strings.startNewPractice),
                 ),
               ],
             ),

@@ -114,6 +114,9 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
 - A top-right `More` drawer holds secondary tools and destinations:
   - Settings, About, Reciters
   - `Explore` section: Learn, My Quran, Quran Radio
+- `Learn` now includes:
+  - a simple `Practice from Memory` hub
+  - the existing `Hifz Plan` card
 
 ### Routes
 Defined in `lib/app/router.dart`:
@@ -530,20 +533,31 @@ Current capabilities:
 - Render sessionized day blocks (timed or untimed) with recovery signal
 - Save grades (`q=5/4/3/2/0`)
 - "Open in Reader" deep-link with page mode + verse range highlight params
-- "Open Companion Chain" action for review/new rows
+- Practice-first launch actions for daily work:
+  - review rows use `Continue review practice`
+  - new rows use `Start new practice`
+  - delayed checks use `Do delayed check`
 - Soft-block NEW launch when mandatory Stage-4 due exists (explicit override allowed and logged)
 - New work now uses a minimum viable threshold:
   - if only a tiny unsafe remainder is left after retention work, new memorization is paused instead of creating token assignments
 - Stage-4 section now includes a plain-language explanation for why delayed checks are prioritized ahead of new work
 - Companion route launch:
   - review: `/companion/chain?unitId=...&mode=review`
-  - new memorization: `/companion/chain?unitId=...&mode=new`
-  - delayed consolidation: `/companion/chain?unitId=...&mode=stage4`
+  - new practice: `/companion/chain?unitId=...&mode=new`
+  - delayed check: `/companion/chain?unitId=...&mode=stage4`
+- When new work is the top coaching action, `Today` now routes directly into the practice flow instead of sending the learner to Reader first
 
 ## 8) Other Screens
 
 - `lib/screens/learn_screen.dart`
-  - Learn container page; includes Hifz Plan entry card linking to `/plan`
+  - Learn container page
+  - includes a `Practice from Memory` card with direct launch buttons for:
+    - `Start new practice`
+    - `Continue review practice`
+    - `Do delayed check`
+  - uses already-existing direct targets when possible
+  - falls back to `/today` when no direct practice target is ready yet
+  - includes the Hifz Plan entry card linking to `/plan`
 - `lib/screens/my_quran_screen.dart`
   - placeholder scaffold (`coming soon`)
 - `lib/screens/quran_radio_screen.dart`
@@ -557,6 +571,7 @@ Current capabilities:
 - `lib/screens/notes_screen.dart`
   - list notes + edit dialog + go-to verse/page actions
 - `lib/screens/companion_chain_screen.dart`
+  - learner-facing screen title now says `Practice from Memory`
   - staged companion flow for new units:
     - Stage 1 `guided_visible` uses internal deterministic sub-modes:
       - `Model+Echo` (talqin exposure, capped loops)

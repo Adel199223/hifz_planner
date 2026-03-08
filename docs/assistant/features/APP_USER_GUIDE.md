@@ -36,7 +36,7 @@ If this guide conflicts with technical docs:
 
 1. Open `My Plan`, choose `Easy`, `Normal`, or `Intensive`, then enter a realistic weekly or weekday time budget.
 2. Open `Today` and complete tasks in the shown order (delayed checks, review, then new work).
-3. Use Companion stages only from `Today` actions to avoid skipping required sequence.
+3. Use `Practice from Memory` from `Today` or `Learn` so the app opens the right kind of session for you.
 4. Open `Advanced` in `My Plan` only if you need to fine-tune scheduling, forecast, or pace calibration later.
 5. If the app says the plan is `Tight` or `Overloaded`, use the lighter-day guidance before forcing more new work.
 
@@ -96,7 +96,8 @@ Inside `More`:
 - Read: open the Reader for focused Quran reading, listening, and verse tools.
 - My Plan: start with a guided plan setup, then open `Advanced` only when you need expert controls.
 - Library: open saved material and writing tools in one place.
-- Companion chain: run the memorization stages for specific units.
+- Learn: open the simple `Practice from Memory` hub or go to `Hifz Plan`.
+- Practice from Memory: start the right memorization session without needing internal stage names.
 - More: open settings, reciters, about, and secondary exploration areas.
 
 ## Core User Journeys
@@ -152,14 +153,16 @@ What you will now see first:
 - a `Recovery assistant` button on heavier days
 - stricter protection against token new work when delayed checks and review already consume the safe part of the day
 
-## 4) Memorize with Companion Stages
+## 4) Practice from Memory
 
-Open Companion from Today rows to run staged memorization flows:
-- review mode for hidden-first review
-- new mode for staged acquisition to robustness flow
-- delayed mode for Stage-4 consolidation checks
+Open `Practice from Memory` from `Today` or `Learn` to run the right kind of session:
+- `Start new practice`
+- `Continue review practice`
+- `Do delayed check`
 
-## Companion Lifecycle in Plain Terms
+Under the hood, the app still uses the same staged memorization flow. The simpler practice labels are there so you can start the right session without learning internal vocabulary first.
+
+## Practice Lifecycle in Plain Terms
 
 The app supports a staged learning progression:
 
@@ -218,7 +221,7 @@ If some remote assets fail temporarily:
 - I want to set a realistic memorization pace quickly -> My Plan
 - I want to do what is due right now -> Today
 - I missed sessions and need a safe recovery path -> Today -> Recovery assistant
-- I need to run a memorization stage -> Companion
+- I need to start a memorization session -> Practice from Memory
 - I want pure Quran reading/listening -> Read
 - I need to revisit saved locations -> Library -> Bookmarks
 - I want to store verse-linked thoughts -> Library -> Notes
@@ -230,7 +233,7 @@ If some remote assets fail temporarily:
 
 1. Set a conservative plan in `My Plan` with `Easy` or `Normal`.
 2. Execute `Today` consistently for several days.
-3. Use Companion for new units and reviews from Today actions.
+3. Use `Practice from Memory` for new units, reviews, and delayed checks from `Today` or `Learn`.
 4. Respect delayed checks when they appear.
 5. If `Today` or `My Plan` starts showing `Tight` or `Overloaded`, use the lighter-day and recovery guidance before increasing load.
 6. Use `Advanced` and then calibration/forecast only after enough real samples.

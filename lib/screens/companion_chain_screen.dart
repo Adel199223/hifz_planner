@@ -314,10 +314,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       return;
     }
 
-    await _playVerseAudio(
-      currentVerse,
-      markAsAuto: true,
-    );
+    await _playVerseAudio(currentVerse, markAsAuto: true);
   }
 
   bool _isStage1RuntimeActive(ChainRunState state) {
@@ -466,13 +463,17 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       return;
     }
 
-    final isStage1Correction = _isStage1RuntimeActive(state) &&
+    final isStage1Correction =
+        _isStage1RuntimeActive(state) &&
         state.stage1!.mode == Stage1Mode.correction;
-    final isStage2Correction = _isStage2RuntimeActive(state) &&
+    final isStage2Correction =
+        _isStage2RuntimeActive(state) &&
         state.stage2!.mode == Stage2Mode.correction;
-    final isStage3Correction = _isStage3RuntimeActive(state) &&
+    final isStage3Correction =
+        _isStage3RuntimeActive(state) &&
         state.stage3!.mode == Stage3Mode.correction;
-    final isStage4Correction = _isStage4RuntimeActive(state) &&
+    final isStage4Correction =
+        _isStage4RuntimeActive(state) &&
         state.stage4!.mode == Stage4Mode.correction;
     if (isStage1Correction ||
         isStage2Correction ||
@@ -609,9 +610,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       builder: (context) {
         return AlertDialog(
           title: Text(_strings.companionSkipStageTitle),
-          content: Text(
-            _strings.companionSkipStageBody(_stageLabel(stage)),
-          ),
+          content: Text(_strings.companionSkipStageBody(_stageLabel(stage))),
           actions: [
             TextButton(
               key: const ValueKey('companion_skip_stage_cancel'),
@@ -688,9 +687,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
 
     for (var i = 0; i < state.verses.length; i++) {
       if (!state.verses[i].passedForStage(state.activeStage)) {
-        final provisional = state.copyWith(
-          currentVerseIndex: i,
-        );
+        final provisional = state.copyWith(currentVerseIndex: i);
         final nextState = provisional.copyWith(
           currentHintLevel: _dynamicBaselineHint(provisional),
           returnVerseIndex: null,
@@ -863,17 +860,20 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       return _stage4ModeLabel(state.stage4!.mode);
     }
     return switch (state.activeStage) {
-      CompanionStage.guidedVisible => verse.passedGuidedVisible
-          ? _strings.companionVersePassed
-          : _strings.companionStageGuidedVisible,
-      CompanionStage.cuedRecall => verse.passedCuedRecall
-          ? _strings.companionVersePassed
-          : _strings.companionStageCuedRecall,
-      CompanionStage.hiddenReveal => verse.passed
-          ? _strings.companionVersePassed
-          : verse.revealed
-              ? _strings.companionVerseRevealed
-              : _strings.companionVerseHidden,
+      CompanionStage.guidedVisible =>
+        verse.passedGuidedVisible
+            ? _strings.companionVersePassed
+            : _strings.companionStageGuidedVisible,
+      CompanionStage.cuedRecall =>
+        verse.passedCuedRecall
+            ? _strings.companionVersePassed
+            : _strings.companionStageCuedRecall,
+      CompanionStage.hiddenReveal =>
+        verse.passed
+            ? _strings.companionVersePassed
+            : verse.revealed
+            ? _strings.companionVerseRevealed
+            : _strings.companionVerseHidden,
     };
   }
 
@@ -1004,16 +1004,18 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     }
     return switch (state.activeStage) {
       CompanionStage.guidedVisible => verse.verse.text,
-      CompanionStage.cuedRecall => _isStage2RuntimeActive(state)
-          ? _stage2CueText(state, verse)
-          : (verse.passedCuedRecall
-              ? verse.verse.text
-              : _firstWordCue(verse.verse.text)),
-      CompanionStage.hiddenReveal => _isStage3RuntimeActive(state)
-          ? _stage3CueText(state, verse)
-          : _isStage4RuntimeActive(state)
-              ? _stage4CueText(state, verse)
-          : (verse.revealed ? verse.verse.text : null),
+      CompanionStage.cuedRecall =>
+        _isStage2RuntimeActive(state)
+            ? _stage2CueText(state, verse)
+            : (verse.passedCuedRecall
+                  ? verse.verse.text
+                  : _firstWordCue(verse.verse.text)),
+      CompanionStage.hiddenReveal =>
+        _isStage3RuntimeActive(state)
+            ? _stage3CueText(state, verse)
+            : _isStage4RuntimeActive(state)
+            ? _stage4CueText(state, verse)
+            : (verse.revealed ? verse.verse.text : null),
     };
   }
 
@@ -1032,18 +1034,20 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     }
     return switch (state.activeStage) {
       CompanionStage.guidedVisible => true,
-      CompanionStage.cuedRecall => _isStage2RuntimeActive(state)
-          ? (verse.passedCuedRecall ||
-              (identical(verse, state.currentVerse) &&
-                  _effectiveHintLevel(state) == HintLevel.fullText))
-          : verse.passedCuedRecall,
-      CompanionStage.hiddenReveal => _isStage3RuntimeActive(state)
-          ? (identical(verse, state.currentVerse) &&
-              _effectiveHintLevel(state) == HintLevel.fullText)
-          : _isStage4RuntimeActive(state)
-              ? (identical(verse, state.currentVerse) &&
+      CompanionStage.cuedRecall =>
+        _isStage2RuntimeActive(state)
+            ? (verse.passedCuedRecall ||
+                  (identical(verse, state.currentVerse) &&
+                      _effectiveHintLevel(state) == HintLevel.fullText))
+            : verse.passedCuedRecall,
+      CompanionStage.hiddenReveal =>
+        _isStage3RuntimeActive(state)
+            ? (identical(verse, state.currentVerse) &&
                   _effectiveHintLevel(state) == HintLevel.fullText)
-          : verse.revealed,
+            : _isStage4RuntimeActive(state)
+            ? (identical(verse, state.currentVerse) &&
+                  _effectiveHintLevel(state) == HintLevel.fullText)
+            : verse.revealed,
     };
   }
 
@@ -1081,10 +1085,10 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
             return ValueKey('companion_word_tooltip_${verseKey}_$wordIndex');
           },
           baseStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontFamily: 'UthmanicHafs',
-                fontSize: 30,
-                height: 1.6,
-              ),
+            fontFamily: 'UthmanicHafs',
+            fontSize: 30,
+            height: 1.6,
+          ),
         );
       }
 
@@ -1112,8 +1116,8 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     final helperText = runtime.mode == Stage1Mode.correction
         ? _strings.companionStage1CorrectionRequiredMessage
         : _isHintLockedByStage1(state)
-            ? _strings.companionStage1HintLockedMessage
-            : _strings.companionStage1ReciteNow;
+        ? _strings.companionStage1HintLockedMessage
+        : _strings.companionStage1ReciteNow;
 
     return Card(
       key: const ValueKey('companion_stage1_mode_card'),
@@ -1127,15 +1131,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 4),
-            Text(
-              modeLabel,
-              key: const ValueKey('companion_stage1_mode_label'),
-            ),
+            Text(modeLabel, key: const ValueKey('companion_stage1_mode_label')),
             const SizedBox(height: 4),
-            Text(
-              helperText,
-              key: const ValueKey('companion_stage1_mode_hint'),
-            ),
+            Text(helperText, key: const ValueKey('companion_stage1_mode_hint')),
           ],
         ),
       ),
@@ -1164,15 +1162,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 4),
-            Text(
-              modeLabel,
-              key: const ValueKey('companion_stage2_mode_label'),
-            ),
+            Text(modeLabel, key: const ValueKey('companion_stage2_mode_label')),
             const SizedBox(height: 4),
-            Text(
-              helperText,
-              key: const ValueKey('companion_stage2_mode_hint'),
-            ),
+            Text(helperText, key: const ValueKey('companion_stage2_mode_hint')),
           ],
         ),
       ),
@@ -1201,15 +1193,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 4),
-            Text(
-              modeLabel,
-              key: const ValueKey('companion_stage3_mode_label'),
-            ),
+            Text(modeLabel, key: const ValueKey('companion_stage3_mode_label')),
             const SizedBox(height: 4),
-            Text(
-              helperText,
-              key: const ValueKey('companion_stage3_mode_hint'),
-            ),
+            Text(helperText, key: const ValueKey('companion_stage3_mode_hint')),
           ],
         ),
       ),
@@ -1238,15 +1224,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 4),
-            Text(
-              modeLabel,
-              key: const ValueKey('companion_stage4_mode_label'),
-            ),
+            Text(modeLabel, key: const ValueKey('companion_stage4_mode_label')),
             const SizedBox(height: 4),
-            Text(
-              helperText,
-              key: const ValueKey('companion_stage4_mode_hint'),
-            ),
+            Text(helperText, key: const ValueKey('companion_stage4_mode_hint')),
           ],
         ),
       ),
@@ -1261,10 +1241,10 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     final keyPrefix = _isStage2RuntimeActive(state)
         ? 'companion_stage2_auto_check'
         : _isStage3RuntimeActive(state)
-            ? 'companion_stage3_auto_check'
-            : _isStage4RuntimeActive(state)
-                ? 'companion_stage4_auto_check'
-            : 'companion_stage1_auto_check';
+        ? 'companion_stage3_auto_check'
+        : _isStage4RuntimeActive(state)
+        ? 'companion_stage4_auto_check'
+        : 'companion_stage1_auto_check';
 
     return Card(
       key: ValueKey('${keyPrefix}_card'),
@@ -1322,9 +1302,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     if (messenger == null) {
       return;
     }
-    messenger.showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -1345,11 +1323,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     final state = _state;
 
     if (_isLoading) {
-      return const SafeArea(
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const SafeArea(child: Center(child: CircularProgressIndicator()));
     }
 
     if (_error != null) {
@@ -1375,9 +1349,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
 
     if (state == null) {
       return SafeArea(
-        child: Center(
-          child: Text(_strings.companionNoSessionState),
-        ),
+        child: Center(child: Text(_strings.companionNoSessionState)),
       );
     }
 
@@ -1388,13 +1360,17 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     final stage4ModeCard = _buildStage4ModeCard(state);
     final stage1AutoCheckCard = _buildAutoCheckCard(state);
     final hintLocked = _isHintLockedByStage1(state);
-    final isStage1Correction = _isStage1RuntimeActive(state) &&
+    final isStage1Correction =
+        _isStage1RuntimeActive(state) &&
         state.stage1?.mode == Stage1Mode.correction;
-    final isStage2Correction = _isStage2RuntimeActive(state) &&
+    final isStage2Correction =
+        _isStage2RuntimeActive(state) &&
         state.stage2?.mode == Stage2Mode.correction;
-    final isStage3Correction = _isStage3RuntimeActive(state) &&
+    final isStage3Correction =
+        _isStage3RuntimeActive(state) &&
         state.stage3?.mode == Stage3Mode.correction;
-    final isStage4Correction = _isStage4RuntimeActive(state) &&
+    final isStage4Correction =
+        _isStage4RuntimeActive(state) &&
         state.stage4?.mode == Stage4Mode.correction;
 
     return SafeArea(
@@ -1404,7 +1380,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _strings.companionProgressiveRevealTitle,
+              _strings.companionPracticeTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
@@ -1503,8 +1479,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
                         value: autoplayEnabled,
                         onChanged: state.completed
                             ? null
-                            : (value) =>
-                                unawaited(_setCompanionAutoplayEnabled(value)),
+                            : (value) => unawaited(
+                                _setCompanionAutoplayEnabled(value),
+                              ),
                       ),
                     ],
                   ),
@@ -1524,16 +1501,13 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
             ],
             const SizedBox(height: 12),
             for (var i = 0; i < state.verses.length; i++)
-              _buildVerseTile(
-                context: context,
-                state: state,
-                index: i,
-              ),
+              _buildVerseTile(context: context, state: state, index: i),
             if (_isStage1RuntimeActive(state)) ...[
               Builder(
                 builder: (_) {
-                  final weakCount =
-                      state.verses.where((verse) => verse.stage1.weak).length;
+                  final weakCount = state.verses
+                      .where((verse) => verse.stage1.weak)
+                      .length;
                   if (weakCount <= 0) {
                     return const SizedBox.shrink();
                   }
@@ -1574,26 +1548,27 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
                   key: const ValueKey('companion_record_start_button'),
                   onPressed:
                       _isSubmitting || _isChangingStage || state.completed
-                          ? null
-                          : _recordAttempt,
+                      ? null
+                      : _recordAttempt,
                   child: Text(
                     _isSubmitting
                         ? _strings.applying
                         : isStage1Correction
-                            ? _strings.companionStage1CorrectionAction
-                            : isStage2Correction
-                                ? _strings.companionStage2CorrectionAction
-                            : isStage3Correction
-                                ? _strings.companionStage3CorrectionAction
-                                : isStage4Correction
-                                    ? _strings.companionStage4CorrectionAction
-                                    : _strings.companionRecordStart,
+                        ? _strings.companionStage1CorrectionAction
+                        : isStage2Correction
+                        ? _strings.companionStage2CorrectionAction
+                        : isStage3Correction
+                        ? _strings.companionStage3CorrectionAction
+                        : isStage4Correction
+                        ? _strings.companionStage4CorrectionAction
+                        : _strings.companionRecordStart,
                   ),
                 ),
                 OutlinedButton(
                   key: const ValueKey('companion_hint_button'),
-                  onPressed:
-                      state.completed || hintLocked ? null : _requestHint,
+                  onPressed: state.completed || hintLocked
+                      ? null
+                      : _requestHint,
                   child: Text(_strings.companionHintButton),
                 ),
                 OutlinedButton(
@@ -1605,8 +1580,8 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
                   key: const ValueKey('companion_next_button'),
                   onPressed:
                       state.currentVerse.passedForStage(state.activeStage)
-                          ? _manualNext
-                          : null,
+                      ? _manualNext
+                      : null,
                   child: Text(_strings.companionNextButton),
                 ),
               ],
@@ -1652,10 +1627,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
                   Text(statusText),
                 ],
               ),
-              if (body != null) ...[
-                const SizedBox(height: 6),
-                body,
-              ],
+              if (body != null) ...[const SizedBox(height: 6), body],
               if (body == null &&
                   _shouldHideCurrentVerseForStage1(state, verse)) ...[
                 const SizedBox(height: 6),
