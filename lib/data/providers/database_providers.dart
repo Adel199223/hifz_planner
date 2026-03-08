@@ -89,11 +89,7 @@ final newUnitGeneratorProvider = Provider<NewUnitGenerator>((ref) {
   final quranRepo = ref.watch(quranRepoProvider);
   final memUnitRepo = ref.watch(memUnitRepoProvider);
   final scheduleRepo = ref.watch(scheduleRepoProvider);
-  return NewUnitGenerator(
-    quranRepo,
-    memUnitRepo,
-    scheduleRepo,
-  );
+  return NewUnitGenerator(quranRepo, memUnitRepo, scheduleRepo);
 });
 
 final planningProjectionEngineProvider = Provider<PlanningProjectionEngine>((
@@ -104,6 +100,7 @@ final planningProjectionEngineProvider = Provider<PlanningProjectionEngine>((
 
 final dailyPlannerProvider = Provider<DailyPlanner>((ref) {
   final db = ref.watch(appDatabaseProvider);
+  final calibrationRepo = ref.watch(calibrationRepoProvider);
   final settingsRepo = ref.watch(settingsRepoProvider);
   final progressRepo = ref.watch(progressRepoProvider);
   final scheduleRepo = ref.watch(scheduleRepoProvider);
@@ -113,6 +110,7 @@ final dailyPlannerProvider = Provider<DailyPlanner>((ref) {
   final planningProjectionEngine = ref.watch(planningProjectionEngineProvider);
   return DailyPlanner(
     db,
+    calibrationRepo,
     settingsRepo,
     progressRepo,
     scheduleRepo,
@@ -129,33 +127,33 @@ final calibrationServiceProvider = Provider<CalibrationService>((ref) {
   return CalibrationService(calibrationRepo, settingsRepo);
 });
 
-final forecastSimulationServiceProvider = Provider<ForecastSimulationService>(
-  (ref) {
-    final db = ref.watch(appDatabaseProvider);
-    final settingsRepo = ref.watch(settingsRepoProvider);
-    final progressRepo = ref.watch(progressRepoProvider);
-    final scheduleRepo = ref.watch(scheduleRepoProvider);
-    final quranRepo = ref.watch(quranRepoProvider);
-    final planningProjectionEngine =
-        ref.watch(planningProjectionEngineProvider);
-    return ForecastSimulationService(
-      db,
-      settingsRepo,
-      progressRepo,
-      scheduleRepo,
-      quranRepo,
-      planningProjectionEngine,
-    );
-  },
-);
-
-final companionCalibrationBridgeProvider =
-    Provider<CompanionCalibrationBridge>((
+final forecastSimulationServiceProvider = Provider<ForecastSimulationService>((
   ref,
 ) {
+  final db = ref.watch(appDatabaseProvider);
   final calibrationRepo = ref.watch(calibrationRepoProvider);
-  return CompanionCalibrationBridge(calibrationRepo);
+  final settingsRepo = ref.watch(settingsRepoProvider);
+  final progressRepo = ref.watch(progressRepoProvider);
+  final scheduleRepo = ref.watch(scheduleRepoProvider);
+  final quranRepo = ref.watch(quranRepoProvider);
+  final planningProjectionEngine = ref.watch(planningProjectionEngineProvider);
+  return ForecastSimulationService(
+    db,
+    calibrationRepo,
+    settingsRepo,
+    progressRepo,
+    scheduleRepo,
+    quranRepo,
+    planningProjectionEngine,
+  );
 });
+
+final companionCalibrationBridgeProvider = Provider<CompanionCalibrationBridge>(
+  (ref) {
+    final calibrationRepo = ref.watch(calibrationRepoProvider);
+    return CompanionCalibrationBridge(calibrationRepo);
+  },
+);
 
 final manualFallbackVerseEvaluatorProvider = Provider<VerseEvaluator>((ref) {
   return const ManualFallbackVerseEvaluator();
@@ -166,18 +164,16 @@ final stage1AutoCheckEngineProvider = Provider<Stage1AutoCheckEngine>((ref) {
 });
 
 final progressiveRevealChainEngineProvider =
-    Provider<ProgressiveRevealChainEngine>(
-  (ref) {
-    final companionRepo = ref.watch(companionRepoProvider);
-    final calibrationBridge = ref.watch(companionCalibrationBridgeProvider);
-    final autoCheckEngine = ref.watch(stage1AutoCheckEngineProvider);
-    return ProgressiveRevealChainEngine(
-      companionRepo,
-      calibrationBridge,
-      autoCheckEngine: autoCheckEngine,
-    );
-  },
-);
+    Provider<ProgressiveRevealChainEngine>((ref) {
+      final companionRepo = ref.watch(companionRepoProvider);
+      final calibrationBridge = ref.watch(companionCalibrationBridgeProvider);
+      final autoCheckEngine = ref.watch(stage1AutoCheckEngineProvider);
+      return ProgressiveRevealChainEngine(
+        companionRepo,
+        calibrationBridge,
+        autoCheckEngine: autoCheckEngine,
+      );
+    });
 
 final quranTextImporterServiceProvider = Provider<QuranTextImporterService>((
   ref,
@@ -187,12 +183,10 @@ final quranTextImporterServiceProvider = Provider<QuranTextImporterService>((
 });
 
 final pageMetadataImporterServiceProvider =
-    Provider<PageMetadataImporterService>(
-  (ref) {
-    final db = ref.watch(appDatabaseProvider);
-    return PageMetadataImporterService(db);
-  },
-);
+    Provider<PageMetadataImporterService>((ref) {
+      final db = ref.watch(appDatabaseProvider);
+      return PageMetadataImporterService(db);
+    });
 
 final tajweedTagsServiceProvider = Provider<TajweedTagsService>((ref) {
   return TajweedTagsService();

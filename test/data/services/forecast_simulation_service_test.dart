@@ -2,15 +2,18 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
+import 'package:hifz_planner/data/repositories/calibration_repo.dart';
 import 'package:hifz_planner/data/repositories/progress_repo.dart';
 import 'package:hifz_planner/data/repositories/quran_repo.dart';
 import 'package:hifz_planner/data/repositories/schedule_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
 import 'package:hifz_planner/data/services/forecast_simulation_service.dart';
+import 'package:hifz_planner/data/services/scheduling/planner_adaptive_pace_signal.dart';
 import 'package:hifz_planner/data/services/scheduling/planning_projection_engine.dart';
 
 void main() {
   late AppDatabase db;
+  late CalibrationRepo calibrationRepo;
   late SettingsRepo settingsRepo;
   late ProgressRepo progressRepo;
   late ScheduleRepo scheduleRepo;
@@ -19,12 +22,14 @@ void main() {
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
+    calibrationRepo = CalibrationRepo(db);
     settingsRepo = SettingsRepo(db);
     progressRepo = ProgressRepo(db);
     scheduleRepo = ScheduleRepo(db);
     quranRepo = QuranRepo(db);
     service = ForecastSimulationService(
       db,
+      calibrationRepo,
       settingsRepo,
       progressRepo,
       scheduleRepo,
@@ -300,6 +305,7 @@ void main() {
       expect(result.calibrationSampleCount, 6);
       expect(result.confidenceBand, ForecastConfidenceBand.high);
       expect(result.summaryState, ForecastSummaryState.steadyProgress);
+      expect(result.adaptivePaceBand, PlannerAdaptivePaceBand.muchSlower);
     },
   );
 }

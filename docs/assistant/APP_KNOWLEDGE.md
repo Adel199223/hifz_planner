@@ -99,6 +99,7 @@ Do not use this file as primary truth when there is a conflict.
 - Forecast now opens with a plain-language summary and a simple confidence label before the detailed curves
 - Calibration is now framed as teaching the planner your real pace, with guidance about when enough samples exist to trust the update
 - Recent calibration and grade-distribution data now slightly influence how cautious the shared planner is about review pressure and new work
+- Recent calibration pace can now also add one bounded pace-trend nudge to the shared planner, and Forecast exposes that in plain language instead of hiding it
 
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`

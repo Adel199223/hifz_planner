@@ -209,6 +209,10 @@ Most learners do not need it on first setup.
   - if you still need more samples
   - or if you have enough samples for a reasonably useful pace update
 - Applying calibration can update the planner today or starting tomorrow.
+- Recent calibration pace can now also give the shared planner one small adaptive nudge:
+  - if your real pace is clearly slower than the active plan, the planner protects a little more review time
+  - if your real pace is clearly faster, the planner may allow a little more new work
+- This remains bounded and explainable; it does not become a black-box system.
 
 ### Forecast
 - Purpose: run a deterministic workload projection.
@@ -219,6 +223,7 @@ Most learners do not need it on first setup.
   - a plain-language summary
   - a simple confidence label
   - a short hint about why the estimate is strong or weak
+- Forecast can now also show a short pace-trend note when recent calibration is nudging the shared planner a bit slower or faster than your baseline settings.
 - The detailed curves are still there, but they are no longer the first thing a learner has to interpret.
 
 ## 5) Today Screen Execution Flow

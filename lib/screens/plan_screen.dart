@@ -9,6 +9,7 @@ import '../data/services/calibration_service.dart';
 import '../data/services/forecast_simulation_service.dart';
 import '../data/services/onboarding_defaults.dart';
 import '../data/services/planner_feedback.dart';
+import '../data/services/scheduling/planner_adaptive_pace_signal.dart';
 import '../data/services/scheduling/scheduling_preferences_codec.dart';
 import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
@@ -566,6 +567,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
 
     try {
       final settings = await ref.read(settingsRepoProvider).getSettings();
+      final calibrationService = ref.read(calibrationServiceProvider);
       final projectionEngine = ref.read(planningProjectionEngineProvider);
       final startDay = localDayIndex(DateTime.now().toLocal());
       final syncedPreferences = _syncedSchedulingPreferencesFromCurrentInputs();
@@ -583,6 +585,14 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           projectionEngine.encodeOverrides(_schedulingOverrides),
         ),
       );
+      final adaptivePaceSignal = await calibrationService.getAdaptivePaceSignal(
+        activeNewMinutesPerAyah: effectiveSettings.avgNewMinutesPerAyah,
+        activeReviewMinutesPerAyah: effectiveSettings.avgReviewMinutesPerAyah,
+      );
+      final qualitySignal = projectionEngine.mergedQualitySignalFromSettings(
+        effectiveSettings,
+        adaptivePaceSignal: adaptivePaceSignal,
+      );
       final weeklyPlan = await projectionEngine.generateWeeklyPlan(
         startDay: startDay,
         horizonDays: 7,
@@ -591,6 +601,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         quranRepo: ref.read(quranRepoProvider),
         preferences: syncedPreferences,
         overrides: _schedulingOverrides,
+        qualitySignal: qualitySignal,
       );
 
       if (!mounted) {
@@ -1361,6 +1372,14 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 _localizedForecastConfidenceHint(strings, forecast),
                 key: const ValueKey('plan_forecast_confidence_hint'),
               ),
+              if (forecast.adaptivePaceBand !=
+                  PlannerAdaptivePaceBand.unknown) ...[
+                const SizedBox(height: 6),
+                Text(
+                  _localizedAdaptivePaceHint(strings, forecast),
+                  key: const ValueKey('plan_forecast_pace_trend'),
+                ),
+              ],
               const SizedBox(height: 8),
               if (forecast.estimatedCompletionDate != null)
                 Text(
@@ -1596,6 +1615,21 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       return strings.calibrationGuidanceReady(sampleCount);
     }
     return strings.calibrationGuidanceNeedMore(sampleCount);
+  }
+
+  String _localizedAdaptivePaceHint(
+    AppStrings strings,
+    ForecastSimulationResult forecast,
+  ) {
+    return switch (forecast.adaptivePaceBand) {
+      PlannerAdaptivePaceBand.unknown => '',
+      PlannerAdaptivePaceBand.aligned => strings.forecastPaceTrendAligned,
+      PlannerAdaptivePaceBand.slightlySlower =>
+        strings.forecastPaceTrendSlightlySlower,
+      PlannerAdaptivePaceBand.muchSlower => strings.forecastPaceTrendMuchSlower,
+      PlannerAdaptivePaceBand.slightlyFaster =>
+        strings.forecastPaceTrendSlightlyFaster,
+    };
   }
 
   String _reviewPrioritySummary(AppStrings strings) {
