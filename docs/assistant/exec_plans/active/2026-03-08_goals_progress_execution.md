@@ -51,7 +51,7 @@
 
 ## Progress
 - [x] Start Wave 1
-- [ ] Merge Wave 1
+- [x] Merge Wave 1
 - [ ] Start Wave 2
 - [ ] Merge Wave 2
 - [ ] Start Wave 3
@@ -95,7 +95,7 @@
 |---|---|---|---|---|
 | Previous planner roadmap | merged | historical | removed | Wave 1-7 completed before this roadmap started |
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
-| Goals Wave 1 | active | `feat/goals-wave1-daily-wins` | `/home/fa507/dev/hifz_planner_goals_wave1` | Implemented, docs-synced, and validated locally; waiting for publish |
+| Goals Wave 1 | merged | `feat/goals-wave1-daily-wins` | removed after merge | Merged to `main` as PR #25; plan archived in `docs/assistant/exec_plans/completed/` |
 | Goals Wave 2 | planned | not created | not created | Weekly recent-progress snapshot and trust layer |
 | Goals Wave 3 | planned | not created | not created | Advice-only goal coaching and adjustment guidance |
 | Goals Wave 4 | planned | not created | not created | Cross-surface wording alignment and roadmap closeout |
@@ -108,5 +108,6 @@
   - 2026-03-08: Wave 1 added a shared `GoalProgressSnapshotService`, a new roadmap tracker, a Wave 1 ExecPlan, a `Today` daily-win block, and a `My Plan` weekly goal summary tied to existing planner posture.
   - 2026-03-08: Wave 1 validation is green after rerunning Flutter tests sequentially; parallel `flutter test` launches in the same worktree triggered a Flutter plugin-symlink crash, so the clean validation record for this wave is the sequential run.
   - 2026-03-08: Wave 1 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, app user guide, and planner user guide.
+  - 2026-03-08: PR #25 merged Goals Wave 1 to `main`; the next roadmap action returns to Wave 2 after this archive/update lands.
 - Next recommended action:
-  - Publish Wave 1 through PR merge, then archive the plan and start Wave 2 from clean `main`.
+  - Start Wave 2 from clean `main`.
