@@ -68,6 +68,7 @@
 - 2026-03-08: `Today` keeps one primary coaching action, but now exposes secondary practice-mode shortcuts when other valid modes remain, without changing any route or planner contracts.
 - 2026-03-08: Focused validation passed with `today_screen`, `learn_screen`, `navigation_shell_menu`, `flutter analyze`, localization validation, agent docs validation, and workspace hygiene validation.
 - 2026-03-08: Narrow Assistant Docs Sync completed for the canonical app brief, assistant bridge, app user guide, and planner guide. Wave 4 is now ready for commit/PR/merge closeout.
+- 2026-03-08: PR #23 merged the feature work to `main`; this plan is now archived as part of the roadmap closeout.
 
 ## Handoff
 - Wave 4 should end with:
