@@ -379,6 +379,11 @@ void main() {
     expect(find.text('Recovery and stabilize'), findsOneWidget);
     expect(find.byKey(const ValueKey('today_goal_good_day')), findsOneWidget);
     expect(
+      find.byKey(const ValueKey('today_goal_coaching_card')),
+      findsOneWidget,
+    );
+    expect(find.text('Reopen My Plan and lighten the setup'), findsOneWidget);
+    expect(
       find.text(
         'A good day means doing the safest essential work without forcing a full load.',
       ),
@@ -464,6 +469,17 @@ void main() {
     expect(
       find.text(
         'On a short day, the top planned task still counts as a real win.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('today_goal_coaching_card')),
+      findsOneWidget,
+    );
+    expect(find.text('Stay steady'), findsOneWidget);
+    expect(
+      find.text(
+        'Only real completed practice, review, or delayed check work counts. Opening a screen alone does not.',
       ),
       findsOneWidget,
     );

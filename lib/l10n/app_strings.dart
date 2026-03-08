@@ -698,6 +698,48 @@ class AppStrings {
     'plan_goal_summary_recovery',
     'Your safest weekly goal is to stabilize and reduce pressure before pushing harder.',
   );
+  String get goalCoachingTitle =>
+      _t('goal_coaching_title', 'Recommended adjustment');
+  String get goalCoachingProgressRuleLabel =>
+      _t('goal_coaching_progress_rule_label', 'What counts as progress');
+  String get goalCoachingProgressRuleValue => _t(
+    'goal_coaching_progress_rule_value',
+    'Only real completed practice, review, or delayed check work counts. Opening a screen alone does not.',
+  );
+  String get goalCoachingStaySteadyTitle =>
+      _t('goal_coaching_stay_steady_title', 'Stay steady');
+  String get goalCoachingStaySteadyDetail => _t(
+    'goal_coaching_stay_steady_detail',
+    'Recent work looks steady enough that you do not need to tighten or lighten the plan right now.',
+  );
+  String get goalCoachingUseMinimumDayTitle =>
+      _t('goal_coaching_use_minimum_day_title', 'Use the minimum day for now');
+  String get goalCoachingUseMinimumDayDetail => _t(
+    'goal_coaching_use_minimum_day_detail',
+    'If time or energy is tight, finishing one safe essential task is enough to keep the plan alive today.',
+  );
+  String get goalCoachingProtectRetentionTitle => _t(
+    'goal_coaching_protect_retention_title',
+    'Protect retention for a few days',
+  );
+  String get goalCoachingProtectRetentionDetail => _t(
+    'goal_coaching_protect_retention_detail',
+    'Let reviews and delayed checks take the safer share of your time until the backlog and quality feel steadier again.',
+  );
+  String get goalCoachingLightenSetupTodayTitle => _t(
+    'goal_coaching_lighten_setup_today_title',
+    'Reopen My Plan and lighten the setup',
+  );
+  String get goalCoachingLightenSetupTodayDetail => _t(
+    'goal_coaching_lighten_setup_today_detail',
+    'Recent strain suggests the current setup is too heavy. Open My Plan and lower the load before the backlog grows.',
+  );
+  String get goalCoachingLightenSetupPlanTitle =>
+      _t('goal_coaching_lighten_setup_plan_title', 'Lighten the setup here');
+  String get goalCoachingLightenSetupPlanDetail => _t(
+    'goal_coaching_lighten_setup_plan_detail',
+    'Recent strain suggests the current setup is too heavy. Lower the guided load here before pushing harder again.',
+  );
   String get weeklyProgressTitle => _t('weekly_progress_title', 'Last 7 days');
   String get weeklyProgressConsistencyLabel =>
       _t('weekly_progress_consistency_label', 'Consistency');

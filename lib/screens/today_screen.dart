@@ -366,6 +366,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final goalSnapshot =
         _goalSnapshot ??
         ref.read(goalProgressSnapshotServiceProvider).fromTodayPlan(plan);
+    final coachingAdvice = ref
+        .read(goalProgressSnapshotServiceProvider)
+        .coachingFromTodayPlan(plan, snapshot: goalSnapshot);
     final extraModes = _buildOtherPracticeModes(strings, content);
     return Card(
       key: const ValueKey('today_coaching_card'),
@@ -395,6 +398,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             _buildGoalFocusCard(strings, goalSnapshot),
             const SizedBox(height: 12),
             _buildWeeklyProgressCard(strings, goalSnapshot),
+            const SizedBox(height: 12),
+            _buildGoalCoachingGuidanceCard(strings, coachingAdvice),
             if (plan.recoveryMode) ...[
               const SizedBox(height: 10),
               Text(
@@ -486,6 +491,48 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 child: Text(strings.recoveryAssistantTitle),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoalCoachingGuidanceCard(
+    AppStrings strings,
+    GoalCoachingAdvice advice,
+  ) {
+    return DecoratedBox(
+      key: const ValueKey('today_goal_coaching_card'),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.goalCoachingTitle,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _localizedTodayGoalCoachingHeadline(strings, advice),
+              key: const ValueKey('today_goal_coaching_headline'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _localizedTodayGoalCoachingDetail(strings, advice),
+              key: const ValueKey('today_goal_coaching_detail'),
+            ),
+            const SizedBox(height: 10),
+            _buildGoalFocusLine(
+              key: const ValueKey('today_goal_coaching_progress_rule'),
+              label: strings.goalCoachingProgressRuleLabel,
+              value: strings.goalCoachingProgressRuleValue,
+            ),
           ],
         ),
       ),
@@ -692,6 +739,38 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       GoalProgressQualityBand.mixed => strings.weeklyProgressQualityMixed,
       GoalProgressQualityBand.strained => strings.weeklyProgressQualityStrained,
       null => strings.weeklyProgressQualityNotEnoughData,
+    };
+  }
+
+  String _localizedTodayGoalCoachingHeadline(
+    AppStrings strings,
+    GoalCoachingAdvice advice,
+  ) {
+    return switch (advice.recommendation) {
+      GoalCoachingRecommendation.staySteady =>
+        strings.goalCoachingStaySteadyTitle,
+      GoalCoachingRecommendation.useMinimumDay =>
+        strings.goalCoachingUseMinimumDayTitle,
+      GoalCoachingRecommendation.protectRetention =>
+        strings.goalCoachingProtectRetentionTitle,
+      GoalCoachingRecommendation.lightenSetup =>
+        strings.goalCoachingLightenSetupTodayTitle,
+    };
+  }
+
+  String _localizedTodayGoalCoachingDetail(
+    AppStrings strings,
+    GoalCoachingAdvice advice,
+  ) {
+    return switch (advice.recommendation) {
+      GoalCoachingRecommendation.staySteady =>
+        strings.goalCoachingStaySteadyDetail,
+      GoalCoachingRecommendation.useMinimumDay =>
+        strings.goalCoachingUseMinimumDayDetail,
+      GoalCoachingRecommendation.protectRetention =>
+        strings.goalCoachingProtectRetentionDetail,
+      GoalCoachingRecommendation.lightenSetup =>
+        strings.goalCoachingLightenSetupTodayDetail,
     };
   }
 

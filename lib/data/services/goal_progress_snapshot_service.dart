@@ -9,6 +9,13 @@ enum GoalFocus { steadyProgress, protectRetention, recoveryAndStabilize }
 
 enum GoalProgressQualityBand { steady, mixed, strained }
 
+enum GoalCoachingRecommendation {
+  staySteady,
+  useMinimumDay,
+  protectRetention,
+  lightenSetup,
+}
+
 class GoalProgressSnapshot {
   const GoalProgressSnapshot({
     required this.focus,
@@ -36,6 +43,21 @@ class GoalProgressSnapshot {
       (completedNewPracticeLast7 ?? 0) > 0;
 }
 
+class GoalCoachingAdvice {
+  const GoalCoachingAdvice({required this.recommendation});
+
+  final GoalCoachingRecommendation recommendation;
+
+  bool get isStaySteady =>
+      recommendation == GoalCoachingRecommendation.staySteady;
+  bool get isUseMinimumDay =>
+      recommendation == GoalCoachingRecommendation.useMinimumDay;
+  bool get isProtectRetention =>
+      recommendation == GoalCoachingRecommendation.protectRetention;
+  bool get isLightenSetup =>
+      recommendation == GoalCoachingRecommendation.lightenSetup;
+}
+
 class GoalProgressSnapshotService {
   GoalProgressSnapshotService(this._db);
 
@@ -51,6 +73,30 @@ class GoalProgressSnapshotService {
 
   GoalProgressSnapshot fromFeedback(PlannerFeedbackSnapshot feedback) {
     return GoalProgressSnapshot(focus: _deriveFocus(feedback));
+  }
+
+  GoalCoachingAdvice coachingFromTodayPlan(
+    TodayPlan plan, {
+    GoalProgressSnapshot? snapshot,
+  }) {
+    final feedback = PlannerFeedbackSnapshot.fromTodayPlan(plan);
+    final resolvedSnapshot = snapshot ?? fromFeedback(feedback);
+    return _coachingFromFeedback(
+      feedback: feedback,
+      snapshot: resolvedSnapshot,
+    );
+  }
+
+  GoalCoachingAdvice coachingFromWeeklyPlan(
+    WeeklyPlan? plan, {
+    GoalProgressSnapshot? snapshot,
+  }) {
+    final feedback = PlannerFeedbackSnapshot.fromWeeklyPlan(plan);
+    final resolvedSnapshot = snapshot ?? fromFeedback(feedback);
+    return _coachingFromFeedback(
+      feedback: feedback,
+      snapshot: resolvedSnapshot,
+    );
   }
 
   Future<GoalProgressSnapshot> buildTodaySnapshot({
@@ -88,34 +134,32 @@ class GoalProgressSnapshotService {
     required int todayDay,
   }) async {
     final fromDay = todayDay - 6;
-    final reviewLogs = await ((_db.select(
-      _db.reviewLog,
-    )..where(
-            (tbl) =>
-                tbl.tsDay.isBiggerOrEqualValue(fromDay) &
-                tbl.tsDay.isSmallerOrEqualValue(todayDay),
-          ))
-        .get());
-    final completedStage4Sessions =
-        await ((_db.select(_db.companionStage4Session)
-              ..where(
-                (tbl) =>
-                    tbl.endedDay.isNotNull() &
-                    tbl.endedDay.isBiggerOrEqualValue(fromDay) &
-                    tbl.endedDay.isSmallerOrEqualValue(todayDay) &
-                    tbl.outcome.isNotNull() &
-                    tbl.outcome.equals('abandoned').not(),
-              ))
+    final reviewLogs =
+        await ((_db.select(_db.reviewLog)..where(
+              (tbl) =>
+                  tbl.tsDay.isBiggerOrEqualValue(fromDay) &
+                  tbl.tsDay.isSmallerOrEqualValue(todayDay),
+            ))
             .get());
-    final completedChainSessions = await ((_db.select(_db.companionChainSession)
-          ..where(
-            (tbl) =>
-                tbl.updatedAtDay.isBiggerOrEqualValue(fromDay) &
-                tbl.updatedAtDay.isSmallerOrEqualValue(todayDay) &
-                tbl.chainResult.equals('completed') &
-                tbl.endedAtSeconds.isNotNull(),
-          ))
-        .get());
+    final completedStage4Sessions =
+        await ((_db.select(_db.companionStage4Session)..where(
+              (tbl) =>
+                  tbl.endedDay.isNotNull() &
+                  tbl.endedDay.isBiggerOrEqualValue(fromDay) &
+                  tbl.endedDay.isSmallerOrEqualValue(todayDay) &
+                  tbl.outcome.isNotNull() &
+                  tbl.outcome.equals('abandoned').not(),
+            ))
+            .get());
+    final completedChainSessions =
+        await ((_db.select(_db.companionChainSession)..where(
+              (tbl) =>
+                  tbl.updatedAtDay.isBiggerOrEqualValue(fromDay) &
+                  tbl.updatedAtDay.isSmallerOrEqualValue(todayDay) &
+                  tbl.chainResult.equals('completed') &
+                  tbl.endedAtSeconds.isNotNull(),
+            ))
+            .get());
 
     final stage4LinkedChainIds = completedStage4Sessions
         .map((session) => session.chainSessionId)
@@ -143,6 +187,55 @@ class GoalProgressSnapshotService {
       // completion count until a future schema change makes mode explicit.
       completedNewPracticeLast7: practiceSessions.length,
       recentQualityBand: _deriveRecentQualityBand(reviewLogs),
+    );
+  }
+
+  GoalCoachingAdvice _coachingFromFeedback({
+    required PlannerFeedbackSnapshot feedback,
+    required GoalProgressSnapshot snapshot,
+  }) {
+    final activeDays = snapshot.completedPracticeDaysLast7 ?? 0;
+    final delayedChecks = snapshot.completedDelayedChecksLast7 ?? 0;
+    final reviews = snapshot.completedReviewsLast7 ?? 0;
+    final strainedQuality =
+        snapshot.recentQualityBand == GoalProgressQualityBand.strained;
+    final sparseHistory = !snapshot.hasRecentHistory || activeDays <= 1;
+    final retentionHeavy =
+        delayedChecks >= 2 ||
+        reviews >= 4 ||
+        feedback.newWorkPaused ||
+        feedback.newWorkReduced ||
+        feedback.reviewOnlyMode ||
+        strainedQuality;
+
+    if (feedback.isOverloaded) {
+      if (strainedQuality ||
+          feedback.recoveryDayCount > 0 ||
+          delayedChecks >= 2 ||
+          sparseHistory) {
+        return const GoalCoachingAdvice(
+          recommendation: GoalCoachingRecommendation.lightenSetup,
+        );
+      }
+      return const GoalCoachingAdvice(
+        recommendation: GoalCoachingRecommendation.useMinimumDay,
+      );
+    }
+
+    if (feedback.minimumDayRecommended && sparseHistory) {
+      return const GoalCoachingAdvice(
+        recommendation: GoalCoachingRecommendation.useMinimumDay,
+      );
+    }
+
+    if (feedback.isTight || retentionHeavy) {
+      return const GoalCoachingAdvice(
+        recommendation: GoalCoachingRecommendation.protectRetention,
+      );
+    }
+
+    return const GoalCoachingAdvice(
+      recommendation: GoalCoachingRecommendation.staySteady,
     );
   }
 

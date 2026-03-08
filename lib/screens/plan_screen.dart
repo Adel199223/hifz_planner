@@ -1262,6 +1262,54 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     );
   }
 
+  Widget _buildPlanCoachingCard(AppStrings strings) {
+    final snapshot =
+        _goalSnapshot ??
+        ref
+            .read(goalProgressSnapshotServiceProvider)
+            .fromWeeklyPlan(_weeklyPlan);
+    final advice = ref
+        .read(goalProgressSnapshotServiceProvider)
+        .coachingFromWeeklyPlan(_weeklyPlan, snapshot: snapshot);
+
+    return Card(
+      key: const ValueKey('plan_goal_coaching_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.goalCoachingTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _localizedPlanGoalCoachingHeadline(strings, advice),
+              key: const ValueKey('plan_goal_coaching_headline'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _localizedPlanGoalCoachingDetail(strings, advice),
+              key: const ValueKey('plan_goal_coaching_detail'),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              strings.goalCoachingProgressRuleLabel,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              strings.goalCoachingProgressRuleValue,
+              key: const ValueKey('plan_goal_coaching_progress_rule'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildHealthBadge(AppStrings strings, PlannerHealthState health) {
     final scheme = Theme.of(context).colorScheme;
     final (background, foreground) = switch (health) {
@@ -1386,6 +1434,38 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       GoalFocus.steadyProgress => strings.planGoalSummarySteady,
       GoalFocus.protectRetention => strings.planGoalSummaryProtect,
       GoalFocus.recoveryAndStabilize => strings.planGoalSummaryRecovery,
+    };
+  }
+
+  String _localizedPlanGoalCoachingHeadline(
+    AppStrings strings,
+    GoalCoachingAdvice advice,
+  ) {
+    return switch (advice.recommendation) {
+      GoalCoachingRecommendation.staySteady =>
+        strings.goalCoachingStaySteadyTitle,
+      GoalCoachingRecommendation.useMinimumDay =>
+        strings.goalCoachingUseMinimumDayTitle,
+      GoalCoachingRecommendation.protectRetention =>
+        strings.goalCoachingProtectRetentionTitle,
+      GoalCoachingRecommendation.lightenSetup =>
+        strings.goalCoachingLightenSetupPlanTitle,
+    };
+  }
+
+  String _localizedPlanGoalCoachingDetail(
+    AppStrings strings,
+    GoalCoachingAdvice advice,
+  ) {
+    return switch (advice.recommendation) {
+      GoalCoachingRecommendation.staySteady =>
+        strings.goalCoachingStaySteadyDetail,
+      GoalCoachingRecommendation.useMinimumDay =>
+        strings.goalCoachingUseMinimumDayDetail,
+      GoalCoachingRecommendation.protectRetention =>
+        strings.goalCoachingProtectRetentionDetail,
+      GoalCoachingRecommendation.lightenSetup =>
+        strings.goalCoachingLightenSetupPlanDetail,
     };
   }
 
@@ -2325,6 +2405,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             _buildPlanSummaryCard(strings, weekdayMinutes, dailyDefault),
             const SizedBox(height: 16),
             _buildPlanGoalSummaryCard(strings),
+            const SizedBox(height: 16),
+            _buildPlanCoachingCard(strings),
             const SizedBox(height: 16),
             _buildPlanHealthCard(strings),
             const SizedBox(height: 16),
