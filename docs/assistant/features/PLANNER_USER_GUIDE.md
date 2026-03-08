@@ -34,10 +34,10 @@ If this guide conflicts with technical docs:
 
 ## Quick Start (No Technical Background)
 
-1. Open `My Plan` and enter realistic weekly or weekday minutes.
-2. Set conservative caps for new work before enabling advanced options.
-3. Press `Activate Plan`, then open `Today` and execute due tasks consistently.
-4. Use calibration only after collecting real sessions so forecast quality improves.
+1. Open `My Plan` and choose `Easy`, `Normal`, or `Intensive`.
+2. Enter realistic weekly or weekday minutes, then choose the fluency option that best matches you.
+3. Check the summary card and press `Activate`.
+4. Open `Advanced` only if you need to fine-tune scheduling, calibration, or forecast later.
 
 ## Terms in Plain English
 
@@ -84,162 +84,104 @@ Planner tries to optimize for:
 
 Location: open the left navigation rail and select `My Plan`.
 
-Each section below explains:
-- where it appears
-- what it controls
-- when to use it
-- how it changes daily behavior
+The screen now has three layers:
+- guided setup first
+- summary second
+- `Advanced` only when you need expert controls
 
-## 1) Time and Capacity Inputs
+## 1) Guided setup
+
+### Pace preset
+- Where: top of the screen.
+- Options:
+  - `Easy`
+  - `Normal`
+  - `Intensive`
+- What it controls: the starting posture of the planner.
+- Daily impact:
+  - `Easy` protects review more aggressively and keeps new work lighter
+  - `Normal` balances review and new work
+  - `Intensive` allows faster new work if your schedule is stable
 
 ### Weekly minutes or weekday minutes
-- Where: top onboarding questions.
-- What it controls: your baseline available study time.
+- Where: guided setup card.
+- What it controls: your realistic available study time.
 - When to use:
-  - weekly total if your days are flexible
-  - weekday-specific if your week is predictable
-- Daily impact: sets the planner's total budget before splitting between review and new work.
+  - `Weekly total` if your days are flexible
+  - `Per weekday` if your week is predictable
+- Daily impact: drives both the summary and the weekly planner preview.
 
-### Fluency setup
-- Where: onboarding-style questions near the top.
-- What it controls: initial defaults for new/review minutes per ayah.
-- When to use: first setup, or when your current defaults feel unrealistic.
-- Daily impact: shifts how much content can be assigned per day for both new and review.
+### Fluency
+- Where: guided setup card.
+- What it controls: the starting pace assumptions for new and review time.
+- Daily impact: changes how much content the app thinks fits into your time budget.
 
-### Profile mode
-- Where: onboarding-style questions.
-- What it controls: default planning posture (balanced/support/accelerated style behaviors).
-- When to use: choose based on your tolerance for review pressure.
-- Daily impact: influences review/new split and risk handling.
+Important behavior:
+- the weekly planner preview now follows the time values you enter in the guided setup
+- it no longer depends on old hidden advanced defaults
 
-### Force revision-only
-- Where: onboarding questions and advanced controls.
-- What it controls: temporarily pauses new memorization assignment.
-- When to use: backlog is heavy or retention quality has dropped.
-- Daily impact: `Today` focuses on review and stabilization only.
+## 2) Plan summary and activation
 
-### Max new pages per day / max new units per day
-- Where: onboarding/caps area.
-- What it controls: hard ceilings for daily new assignment.
-- When to use: prevent over-ambition even on high-energy days.
-- Daily impact: planner will not exceed these caps even if time budget suggests more.
+### Summary card
+- Where: directly below the guided setup.
+- What it shows:
+  - chosen pace
+  - weekly and daily time summary
+  - new-work limits
+  - review-priority posture
+- Why it matters: this is the plain-language confirmation step before activation.
 
-### Avg new minutes per ayah / avg review minutes per ayah
-- Where: onboarding/caps area.
-- What it controls: pacing assumptions used to convert time into assigned content.
-- When to use: if assigned load consistently feels too light or too heavy.
-- Daily impact: directly changes planned unit size and count.
+### Activate
+- Where: primary button in the summary card.
+- What it does: saves your plan and starts using it in `Today`.
+- When to use: after the summary looks realistic, not idealized.
 
-### Require page metadata
-- Where: options/caps area.
-- What it controls: whether planner can create new units only when page metadata coverage is valid.
-- When to use: keep enabled for stronger mushaf-page consistency.
-- Daily impact: may block new generation until metadata quality is sufficient.
+## 3) Advanced
 
-### Activate Plan
-- Where: primary action in plan setup card.
-- What it controls: saves your planner settings and applies them to scheduling.
-- When to use: after changing setup values.
-- Daily impact: `Today` starts using your updated rules.
+Location: `Advanced` card below the summary.
 
-## 2) Automatic Scheduling Section
+Use `Advanced` only when you need to fine-tune details.
+Most learners do not need it on first setup.
 
-Location: scheduling card on the `My Plan` screen.
+### Fine-tune this plan
+- Includes:
+  - planner profile
+  - review-protection toggle
+  - new-work caps
+  - new/review minutes per ayah
+  - page-metadata requirement
+- Use this when:
+  - the default preset is close, but not quite right
+  - your real pace is clearly lighter or heavier than the summary suggests
 
-### Sessions per day
-- Option: usually `2 sessions/day` toggle.
-- What it controls: number of study sessions planned per day.
-- Daily impact: splits workload into one or two blocks.
+### Automatic scheduling
+- Includes:
+  - sessions per day
+  - exact times
+  - study days
+  - revision-only days
+  - availability model
+  - windows and flex rules
+- Use this when:
+  - you need the plan to match a real weekly structure
+  - you need fixed times or study windows
 
-### Exact times
-- Option: fixed times for Session A / Session B.
-- What it controls: when session windows are targeted.
-- Daily impact: weekly/day cards show timed sessions instead of untimed blocks.
+### Weekly calendar
+- Shows:
+  - next 7 days
+  - session focus, minutes, timing, and status
+  - day-level overrides
+- Use this to spot overload days before they happen.
 
-### Study days
-- Option: weekday chips.
-- What it controls: which weekdays are active study days.
-- Daily impact: disabled days receive no normal assignments.
+### Calibration
+- Purpose: teach the planner your real speed using real sessions.
+- Use this after you have enough actual memorization/review samples.
+- It is no longer part of the normal first-run path.
 
-### Revision-only days
-- Option: weekday chips in revision-only row.
-- What it controls: days dedicated to review without new content.
-- Daily impact: protects retention by inserting predictable consolidation days.
-
-### Advanced scheduling mode
-- Option: advanced mode switch.
-- What it controls: access to richer availability models and constraints.
-- Daily impact: planner becomes more context-aware than simple minutes/day rules.
-
-### Availability model
-- Options:
-  - minutes per day
-  - minutes per week
-  - specific windows
-- What it controls: how your capacity is interpreted.
-- Daily impact:
-  - per-day is stable daily pacing
-  - per-week allows flexible distribution
-  - specific windows ties planning to real clock ranges
-
-### Windows editor and flex outside windows
-- Where: advanced mode, specific windows path.
-- What it controls:
-  - exact day/time windows for study
-  - whether planner can spill outside windows when needed
-- Daily impact: more realistic plans around work/school/family constraints.
-
-## 3) Weekly Calendar Section
-
-Location: weekly calendar card on `My Plan`.
-
-How to read each day card:
-- focus: new + review or revision-only
-- minutes: estimated workload
-- session lines: session label, focus, minutes, time, status
-- status labels: pending/completed/missed/due-soon style indicators
-
-Day-level controls:
-- skip day: mark holiday/paused day
-- session time overrides: set custom A/B time for that day
-
-What this changes:
-- immediate recalculation of the weekly distribution
-- clearer detection of overload days before they happen
-
-## 4) Calibration Section
-
-Location: calibration card on `My Plan`.
-
-Purpose:
-- teach the planner your real pace instead of relying only on defaults.
-
-What you can do:
-- add `new` sample: duration + ayah count
-- add `review` sample: duration + ayah count
-- provide grade distribution percentages (optional but useful for realism)
-- apply calibration:
-  - now
-  - tomorrow
-
-What changes after calibration:
-- new/review pace assumptions become better matched to your actual performance
-- forecast and daily assignment quality improve over time
-
-## 5) Forecast Section
-
-Location: forecast card on `My Plan`.
-
-Purpose:
-- run a deterministic projection of expected planning pressure and output.
-
-How to use:
-- run forecast after changing schedule, caps, or calibration
-- compare projected workload against your real tolerance
-
-How to interpret:
-- if review pressure trend is rising too fast, reduce new load or add revision-only structure
-- if capacity is underused and retention is strong, increase cautiously
+### Forecast
+- Purpose: run a deterministic workload projection.
+- Use this after your base plan is already stable.
+- It is also no longer part of the normal first-run path.
 
 ## 6) Today Screen Execution Flow
 

@@ -6,6 +6,26 @@ enum OnboardingFluency {
   support,
 }
 
+enum GuidedPlanPreset {
+  easy,
+  normal,
+  intensive,
+}
+
+class GuidedPlanPresetDefaults {
+  const GuidedPlanPresetDefaults({
+    required this.profile,
+    required this.forceRevisionOnly,
+    required this.maxNewPagesPerDay,
+    required this.maxNewUnitsPerDay,
+  });
+
+  final String profile;
+  final bool forceRevisionOnly;
+  final int maxNewPagesPerDay;
+  final int maxNewUnitsPerDay;
+}
+
 const List<String> onboardingWeekdayKeys = <String>[
   'mon',
   'tue',
@@ -46,6 +66,49 @@ Map<String, int> splitWeeklyMinutesEvenly(int weeklyMinutes) {
     OnboardingFluency.developing => (avgNew: 2.0, avgReview: 0.8),
     OnboardingFluency.support => (avgNew: 2.4, avgReview: 1.0),
   };
+}
+
+GuidedPlanPresetDefaults defaultsForGuidedPlanPreset(
+  GuidedPlanPreset preset,
+) {
+  return switch (preset) {
+    GuidedPlanPreset.easy => const GuidedPlanPresetDefaults(
+        profile: 'support',
+        forceRevisionOnly: true,
+        maxNewPagesPerDay: 1,
+        maxNewUnitsPerDay: 6,
+      ),
+    GuidedPlanPreset.normal => const GuidedPlanPresetDefaults(
+        profile: 'standard',
+        forceRevisionOnly: true,
+        maxNewPagesPerDay: 1,
+        maxNewUnitsPerDay: 8,
+      ),
+    GuidedPlanPreset.intensive => const GuidedPlanPresetDefaults(
+        profile: 'accelerated',
+        forceRevisionOnly: false,
+        maxNewPagesPerDay: 2,
+        maxNewUnitsPerDay: 12,
+      ),
+  };
+}
+
+GuidedPlanPreset inferGuidedPlanPreset({
+  required String profile,
+  required bool forceRevisionOnly,
+  required int maxNewPagesPerDay,
+  required int maxNewUnitsPerDay,
+}) {
+  if (profile == 'support') {
+    return GuidedPlanPreset.easy;
+  }
+  if (profile == 'accelerated' ||
+      !forceRevisionOnly ||
+      maxNewPagesPerDay >= 2 ||
+      maxNewUnitsPerDay >= 10) {
+    return GuidedPlanPreset.intensive;
+  }
+  return GuidedPlanPreset.normal;
 }
 
 int deriveDailyDefault(Map<String, int> weekdayMinutes) {

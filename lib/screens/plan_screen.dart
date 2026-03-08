@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,9 +25,9 @@ class PlanScreen extends ConsumerStatefulWidget {
 }
 
 class _PlanScreenState extends ConsumerState<PlanScreen> {
-  static const _maxQuestions = 6;
-
   _TimeInputMode _timeInputMode = _TimeInputMode.weekly;
+  GuidedPlanPreset _guidedPreset = GuidedPlanPreset.normal;
+  bool _showAdvanced = false;
   final _weeklyMinutesController = TextEditingController(text: '315');
   late final Map<String, TextEditingController> _weekdayControllers = {
     for (final key in onboardingWeekdayKeys)
@@ -137,6 +138,104 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     };
   }
 
+  int _totalWeeklyMinutes(Map<String, int> weekdayMinutes) {
+    return weekdayMinutes.values.fold<int>(0, (sum, value) => sum + value);
+  }
+
+  Map<int, int> _weekdayMinutesForScheduling(Map<String, int> weekdayMinutes) {
+    return <int, int>{
+      DateTime.monday: weekdayMinutes['mon'] ?? 0,
+      DateTime.tuesday: weekdayMinutes['tue'] ?? 0,
+      DateTime.wednesday: weekdayMinutes['wed'] ?? 0,
+      DateTime.thursday: weekdayMinutes['thu'] ?? 0,
+      DateTime.friday: weekdayMinutes['fri'] ?? 0,
+      DateTime.saturday: weekdayMinutes['sat'] ?? 0,
+      DateTime.sunday: weekdayMinutes['sun'] ?? 0,
+    };
+  }
+
+  Map<String, int> _weekdayMinutesFromScheduling(
+    SchedulingPreferencesV1 preferences,
+  ) {
+    return <String, int>{
+      'mon': preferences.minutesByWeekday[DateTime.monday] ??
+          preferences.minutesPerDayDefault,
+      'tue': preferences.minutesByWeekday[DateTime.tuesday] ??
+          preferences.minutesPerDayDefault,
+      'wed': preferences.minutesByWeekday[DateTime.wednesday] ??
+          preferences.minutesPerDayDefault,
+      'thu': preferences.minutesByWeekday[DateTime.thursday] ??
+          preferences.minutesPerDayDefault,
+      'fri': preferences.minutesByWeekday[DateTime.friday] ??
+          preferences.minutesPerDayDefault,
+      'sat': preferences.minutesByWeekday[DateTime.saturday] ??
+          preferences.minutesPerDayDefault,
+      'sun': preferences.minutesByWeekday[DateTime.sunday] ??
+          preferences.minutesPerDayDefault,
+    };
+  }
+
+  SchedulingPreferencesV1 _syncedSchedulingPreferencesFromCurrentInputs() {
+    final weekdayMinutes = _currentWeekdayMinutes();
+    final dailyDefault = deriveDailyDefault(weekdayMinutes);
+    final weeklyTotal = _totalWeeklyMinutes(weekdayMinutes);
+    return _schedulingPreferences.copyWith(
+      minutesPerDayDefault: dailyDefault,
+      minutesPerWeekDefault: weeklyTotal,
+      minutesByWeekday: _weekdayMinutesForScheduling(weekdayMinutes),
+    );
+  }
+
+  void _syncGuidedInputsIntoSchedulingPreferences() {
+    final synced = _syncedSchedulingPreferencesFromCurrentInputs();
+    setState(() {
+      _schedulingPreferences = synced;
+      _minutesPerDayController.text = synced.minutesPerDayDefault.toString();
+      _minutesPerWeekController.text = synced.minutesPerWeekDefault.toString();
+    });
+    Future<void>.microtask(_refreshWeeklyPlan);
+  }
+
+  void _applyGuidedPreset(GuidedPlanPreset preset) {
+    final defaults = defaultsForGuidedPlanPreset(preset);
+    setState(() {
+      _guidedPreset = preset;
+      _profile = defaults.profile;
+      _forceRevisionOnly = defaults.forceRevisionOnly;
+      _maxNewPagesController.text = defaults.maxNewPagesPerDay.toString();
+      _maxNewUnitsController.text = defaults.maxNewUnitsPerDay.toString();
+    });
+    Future<void>.microtask(_refreshWeeklyPlan);
+  }
+
+  OnboardingFluency _inferFluency({
+    required double avgNew,
+    required double avgReview,
+  }) {
+    var best = OnboardingFluency.developing;
+    var bestDistance = double.infinity;
+    for (final option in OnboardingFluency.values) {
+      final defaults = defaultsForFluency(option);
+      final distance =
+          (defaults.avgNew - avgNew).abs() + (defaults.avgReview - avgReview).abs();
+      if (distance < bestDistance) {
+        best = option;
+        bestDistance = distance;
+      }
+    }
+    return best;
+  }
+
+  bool _matchesFluencyDefaults({
+    required OnboardingFluency fluency,
+    required double avgNew,
+    required double avgReview,
+  }) {
+    final defaults = defaultsForFluency(fluency);
+    return (defaults.avgNew - avgNew).abs() < 0.05 &&
+        (defaults.avgReview - avgReview).abs() < 0.05;
+  }
+
   void _onFluencyChanged(OnboardingFluency value) {
     setState(() {
       _fluency = value;
@@ -157,6 +256,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     });
 
     final weekdayMinutes = _currentWeekdayMinutes();
+    final syncedSchedulingPreferences =
+        _syncedSchedulingPreferencesFromCurrentInputs();
     final validMinutes = weekdayMinutes.values.every((value) => value > 0);
     final maxNewPages = int.tryParse(_maxNewPagesController.text.trim());
     final maxNewUnits = int.tryParse(_maxNewUnitsController.text.trim());
@@ -180,6 +281,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
 
     setState(() {
       _isActivating = true;
+      _schedulingPreferences = syncedSchedulingPreferences;
     });
 
     try {
@@ -201,7 +303,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         avgReviewMinutesPerAyah: avgReview,
         requirePageMetadata: _requirePageMetadata ? 1 : 0,
         schedulingPrefsJson:
-            projectionEngine.encodePreferences(_schedulingPreferences),
+            projectionEngine.encodePreferences(syncedSchedulingPreferences),
         schedulingOverridesJson:
             projectionEngine.encodeOverrides(_schedulingOverrides),
       );
@@ -377,11 +479,44 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       final projectionEngine = ref.read(planningProjectionEngineProvider);
       final preferences = projectionEngine.preferencesFromSettings(settings);
       final overrides = projectionEngine.overridesFromSettings(settings);
+      final weekdayMinutes = _weekdayMinutesFromScheduling(preferences);
+      final weeklyTotal = _totalWeeklyMinutes(weekdayMinutes);
+      final inferredFluency = _inferFluency(
+        avgNew: settings.avgNewMinutesPerAyah,
+        avgReview: settings.avgReviewMinutesPerAyah,
+      );
+      final guidedPreset = inferGuidedPlanPreset(
+        profile: settings.profile,
+        forceRevisionOnly: settings.forceRevisionOnly == 1,
+        maxNewPagesPerDay: settings.maxNewPagesPerDay,
+        maxNewUnitsPerDay: settings.maxNewUnitsPerDay,
+      );
       if (!mounted) {
         return;
       }
 
       setState(() {
+        _guidedPreset = guidedPreset;
+        _profile = settings.profile;
+        _forceRevisionOnly = settings.forceRevisionOnly == 1;
+        _maxNewPagesController.text = settings.maxNewPagesPerDay.toString();
+        _maxNewUnitsController.text = settings.maxNewUnitsPerDay.toString();
+        _avgNewMinutesController.text =
+            settings.avgNewMinutesPerAyah.toStringAsFixed(1);
+        _avgReviewMinutesController.text =
+            settings.avgReviewMinutesPerAyah.toStringAsFixed(1);
+        _fluency = inferredFluency;
+        _avgNewDirty = !_matchesFluencyDefaults(
+          fluency: inferredFluency,
+          avgNew: settings.avgNewMinutesPerAyah,
+          avgReview: settings.avgReviewMinutesPerAyah,
+        );
+        _avgReviewDirty = _avgNewDirty;
+        _requirePageMetadata = settings.requirePageMetadata == 1;
+        _weeklyMinutesController.text = weeklyTotal.toString();
+        for (final key in onboardingWeekdayKeys) {
+          _weekdayControllers[key]!.text = (weekdayMinutes[key] ?? 0).toString();
+        }
         _schedulingPreferences = preferences;
         _schedulingOverrides = overrides;
         _minutesPerDayController.text =
@@ -415,13 +550,28 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       final settings = await ref.read(settingsRepoProvider).getSettings();
       final projectionEngine = ref.read(planningProjectionEngineProvider);
       final startDay = localDayIndex(DateTime.now().toLocal());
+      final syncedPreferences = _syncedSchedulingPreferencesFromCurrentInputs();
+      final effectiveSettings = settings.copyWith(
+        profile: _profile,
+        forceRevisionOnly: _forceRevisionOnly ? 1 : 0,
+        dailyMinutesDefault: syncedPreferences.minutesPerDayDefault,
+        minutesByWeekdayJson: Value(
+          encodeWeekdayMinutesJson(_currentWeekdayMinutes()),
+        ),
+        schedulingPrefsJson: Value(
+          projectionEngine.encodePreferences(syncedPreferences),
+        ),
+        schedulingOverridesJson: Value(
+          projectionEngine.encodeOverrides(_schedulingOverrides),
+        ),
+      );
       final weeklyPlan = await projectionEngine.generateWeeklyPlan(
         startDay: startDay,
         horizonDays: 7,
-        settings: settings,
+        settings: effectiveSettings,
         scheduleRepo: ref.read(scheduleRepoProvider),
         quranRepo: ref.read(quranRepoProvider),
-        preferences: _schedulingPreferences,
+        preferences: syncedPreferences,
         overrides: _schedulingOverrides,
       );
 
@@ -429,6 +579,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
         return;
       }
       setState(() {
+        _schedulingPreferences = syncedPreferences;
         _weeklyPlan = weeklyPlan;
         _isRefreshingWeeklyPlan = false;
       });
@@ -681,6 +832,618 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  Widget _buildGuidedSetupCard(AppStrings strings) {
+    return Card(
+      key: const ValueKey('plan_guided_setup_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildPresetQuestion(strings),
+            const SizedBox(height: 16),
+            _buildTimeQuestion(strings),
+            const SizedBox(height: 16),
+            _buildFluencyQuestion(strings),
+            const SizedBox(height: 12),
+            Text(
+              strings.planGuidedNote,
+              key: const ValueKey('plan_guided_note'),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPresetQuestion(AppStrings strings) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          strings.planPresetQuestion,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _buildPresetOption(
+              strings: strings,
+              preset: GuidedPlanPreset.easy,
+              key: const ValueKey('plan_preset_easy'),
+            ),
+            _buildPresetOption(
+              strings: strings,
+              preset: GuidedPlanPreset.normal,
+              key: const ValueKey('plan_preset_normal'),
+            ),
+            _buildPresetOption(
+              strings: strings,
+              preset: GuidedPlanPreset.intensive,
+              key: const ValueKey('plan_preset_intensive'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPresetOption({
+    required AppStrings strings,
+    required GuidedPlanPreset preset,
+    required Key key,
+  }) {
+    final selected = _guidedPreset == preset;
+    final colorScheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 220,
+      child: OutlinedButton(
+        key: key,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.all(16),
+          alignment: Alignment.centerLeft,
+          backgroundColor:
+              selected ? colorScheme.secondaryContainer : null,
+          side: BorderSide(
+            color: selected ? colorScheme.primary : colorScheme.outlineVariant,
+          ),
+        ),
+        onPressed: () => _applyGuidedPreset(preset),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _localizedGuidedPresetLabel(preset, strings),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 6),
+            Text(_localizedGuidedPresetDescription(preset, strings)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlanSummaryCard(
+    AppStrings strings,
+    Map<String, int> weekdayMinutes,
+    int dailyDefault,
+  ) {
+    final weeklyTotal = _totalWeeklyMinutes(weekdayMinutes);
+    final maxNewPages = int.tryParse(_maxNewPagesController.text.trim()) ?? 0;
+    final maxNewUnits = int.tryParse(_maxNewUnitsController.text.trim()) ?? 0;
+
+    return Card(
+      key: const ValueKey('plan_summary_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.suggestedPlanEditable,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            _buildSummaryRow(
+              label: strings.planSummaryPace,
+              value: _localizedGuidedPresetLabel(_guidedPreset, strings),
+              helper: _localizedGuidedPresetDescription(_guidedPreset, strings),
+            ),
+            const SizedBox(height: 10),
+            _buildSummaryRow(
+              label: strings.planSummaryTime,
+              value: strings.planSummaryTimeValue(weeklyTotal, dailyDefault),
+            ),
+            const SizedBox(height: 10),
+            _buildSummaryRow(
+              label: strings.planSummaryNewLimit,
+              value: strings.planSummaryNewLimitValue(
+                maxNewPages,
+                maxNewUnits,
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildSummaryRow(
+              label: strings.planSummaryReviewPriority,
+              value: _reviewPrioritySummary(strings),
+            ),
+            const SizedBox(height: 16),
+            Text(strings.dailyMinutesByWeekday),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final key in onboardingWeekdayKeys)
+                  Chip(
+                    label: Text(
+                      strings.weekdayMinutesChip(
+                        key,
+                        weekdayMinutes[key] ?? 0,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(strings.derivedDailyDefault(dailyDefault)),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _errorMessage!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            FilledButton(
+              key: const ValueKey('plan_activate_button'),
+              onPressed: _isActivating ? null : _activatePlan,
+              child: Text(
+                _isActivating ? strings.activating : strings.activate,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow({
+    required String label,
+    required String value,
+    String? helper,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 2),
+        Text(value),
+        if (helper != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            helper,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildAdvancedGate(
+    AppStrings strings,
+    Map<String, int> weekdayMinutes,
+    int dailyDefault,
+  ) {
+    return Card(
+      key: const ValueKey('plan_advanced_gate'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.planAdvancedTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(strings.planAdvancedSubtitle),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              key: const ValueKey('plan_advanced_toggle'),
+              onPressed: () {
+                setState(() {
+                  _showAdvanced = !_showAdvanced;
+                });
+              },
+              child: Text(
+                _showAdvanced
+                    ? strings.planHideAdvanced
+                    : strings.planOpenAdvanced,
+              ),
+            ),
+            if (_showAdvanced) ...[
+              const SizedBox(height: 16),
+              _buildAdvancedContent(strings, weekdayMinutes, dailyDefault),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdvancedContent(
+    AppStrings strings,
+    Map<String, int> weekdayMinutes,
+    int dailyDefault,
+  ) {
+    final preview = _calibrationPreview;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFineTuneCard(strings, weekdayMinutes, dailyDefault),
+        const SizedBox(height: 16),
+        Card(
+          key: const ValueKey('plan_scheduling_section'),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: _isLoadingScheduling
+                ? const LinearProgressIndicator()
+                : _buildSchedulingSection(strings),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          key: const ValueKey('plan_weekly_calendar_section'),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: _buildWeeklyCalendarSection(strings),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildForecastCard(strings),
+        const SizedBox(height: 16),
+        _buildCalibrationCard(strings, preview),
+      ],
+    );
+  }
+
+  Widget _buildFineTuneCard(
+    AppStrings strings,
+    Map<String, int> weekdayMinutes,
+    int dailyDefault,
+  ) {
+    return Card(
+      key: const ValueKey('plan_fine_tune_section'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.planFineTuneTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            _buildProfileQuestion(strings),
+            const SizedBox(height: 16),
+            _buildForceRevisionQuestion(strings),
+            const SizedBox(height: 16),
+            _buildCapsQuestion(strings),
+            const SizedBox(height: 16),
+            TextField(
+              key: const ValueKey('plan_avg_new_minutes'),
+              controller: _avgNewMinutesController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                  RegExp(r'[0-9.]'),
+                ),
+              ],
+              onChanged: (_) {
+                setState(() {
+                  _avgNewDirty = true;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: strings.avgNewMinutesPerAyah,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              key: const ValueKey('plan_avg_review_minutes'),
+              controller: _avgReviewMinutesController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                  RegExp(r'[0-9.]'),
+                ),
+              ],
+              onChanged: (_) {
+                setState(() {
+                  _avgReviewDirty = true;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: strings.avgReviewMinutesPerAyah,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              key: const ValueKey('plan_require_page_metadata'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(strings.requirePageMetadata),
+              value: _requirePageMetadata,
+              onChanged: (value) {
+                setState(() {
+                  _requirePageMetadata = value;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            Text(
+              strings.planSummaryTimeValue(
+                _totalWeeklyMinutes(weekdayMinutes),
+                dailyDefault,
+              ),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForecastCard(AppStrings strings) {
+    final forecast = _forecastResult;
+    return Card(
+      key: const ValueKey('plan_forecast_section'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.forecastDeterministicSimulation,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              key: const ValueKey('plan_forecast_run_button'),
+              onPressed: _isRunningForecast ? null : _runForecast,
+              child: Text(
+                _isRunningForecast ? strings.running : strings.runForecast,
+              ),
+            ),
+            if (_isRunningForecast) ...[
+              const SizedBox(height: 12),
+              const LinearProgressIndicator(),
+            ],
+            if (_forecastError != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _forecastError!,
+                key: const ValueKey('plan_forecast_incomplete_reason'),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+            if (forecast != null) ...[
+              const SizedBox(height: 12),
+              if (forecast.estimatedCompletionDate != null)
+                Text(
+                  strings.estimatedCompletion(
+                    _formatDate(forecast.estimatedCompletionDate!),
+                  ),
+                  key: const ValueKey('plan_forecast_completion_date'),
+                )
+              else
+                Text(
+                  forecast.incompleteReason ??
+                      strings.completionEstimateUnavailable,
+                  key: const ValueKey('plan_forecast_incomplete_reason'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              const SizedBox(height: 8),
+              Text(
+                strings.weeklyMinutesCurve(
+                  _formatCurve(forecast.weeklyMinutesCurve),
+                ),
+                key: const ValueKey('plan_forecast_weekly_minutes'),
+              ),
+              Text(
+                strings.revisionOnlyRatioCurve(
+                  _formatCurve(forecast.revisionOnlyRatioCurve),
+                ),
+                key: const ValueKey('plan_forecast_revision_ratio'),
+              ),
+              Text(
+                strings.avgNewPagesPerDayCurve(
+                  _formatCurve(forecast.avgNewPagesPerDayCurve),
+                ),
+                key: const ValueKey('plan_forecast_new_pages_per_day'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalibrationCard(
+    AppStrings strings,
+    CalibrationPreview? preview,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.calibrationModeOptional,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            _buildCalibrationLogGroup(
+              title: strings.newMemorizationSample,
+              durationKey: const ValueKey('plan_calibration_new_duration'),
+              ayahKey: const ValueKey('plan_calibration_new_ayah_count'),
+              durationController: _newDurationController,
+              ayahController: _newAyahCountController,
+              buttonKey: const ValueKey('plan_calibration_add_new'),
+              buttonLabel: strings.addNewSample,
+              onPressed: () => _addCalibrationSample(
+                CalibrationSampleKind.newMemorization,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildCalibrationLogGroup(
+              title: strings.reviewSample,
+              durationKey: const ValueKey('plan_calibration_review_duration'),
+              ayahKey: const ValueKey('plan_calibration_review_ayah_count'),
+              durationController: _reviewDurationController,
+              ayahController: _reviewAyahCountController,
+              buttonKey: const ValueKey('plan_calibration_add_review'),
+              buttonLabel: strings.addReviewSample,
+              onPressed: () => _addCalibrationSample(
+                CalibrationSampleKind.review,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              strings.preview,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            if (_isRefreshingCalibration) const LinearProgressIndicator(),
+            Text(
+              strings.newSamplesPreview(
+                preview?.newSampleCount ?? 0,
+                _formatMedian(preview?.medianNewMinutesPerAyah),
+              ),
+              key: const ValueKey('plan_calibration_preview_new'),
+            ),
+            Text(
+              strings.reviewSamplesPreview(
+                preview?.reviewSampleCount ?? 0,
+                _formatMedian(preview?.medianReviewMinutesPerAyah),
+              ),
+              key: const ValueKey('plan_calibration_preview_review'),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              strings.typicalGradeDistributionPercent,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildGradeInput(5, _gradeQ5Controller),
+                _buildGradeInput(4, _gradeQ4Controller),
+                _buildGradeInput(3, _gradeQ3Controller),
+                _buildGradeInput(2, _gradeQ2Controller),
+                _buildGradeInput(0, _gradeQ0Controller),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(strings.applyTiming),
+            const SizedBox(height: 8),
+            SegmentedButton<_CalibrationTimingUi>(
+              key: const ValueKey('plan_calibration_timing'),
+              segments: [
+                ButtonSegment<_CalibrationTimingUi>(
+                  value: _CalibrationTimingUi.now,
+                  label: Text(strings.applyNow),
+                ),
+                ButtonSegment<_CalibrationTimingUi>(
+                  value: _CalibrationTimingUi.tomorrow,
+                  label: Text(strings.applyFromTomorrow),
+                ),
+              ],
+              selected: {_calibrationTiming},
+              onSelectionChanged: (selection) {
+                setState(() {
+                  _calibrationTiming = selection.first;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              key: const ValueKey('plan_apply_calibration_button'),
+              onPressed: _isApplyingCalibration ? null : _applyCalibration,
+              child: Text(
+                _isApplyingCalibration
+                    ? strings.applying
+                    : strings.applyCalibration,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _localizedGuidedPresetLabel(
+    GuidedPlanPreset preset,
+    AppStrings strings,
+  ) {
+    return switch (preset) {
+      GuidedPlanPreset.easy => strings.planPresetEasy,
+      GuidedPlanPreset.normal => strings.planPresetNormal,
+      GuidedPlanPreset.intensive => strings.planPresetIntensive,
+    };
+  }
+
+  String _localizedGuidedPresetDescription(
+    GuidedPlanPreset preset,
+    AppStrings strings,
+  ) {
+    return switch (preset) {
+      GuidedPlanPreset.easy => strings.planPresetEasyDescription,
+      GuidedPlanPreset.normal => strings.planPresetNormalDescription,
+      GuidedPlanPreset.intensive => strings.planPresetIntensiveDescription,
+    };
+  }
+
+  String _reviewPrioritySummary(AppStrings strings) {
+    final inferredPreset = inferGuidedPlanPreset(
+      profile: _profile,
+      forceRevisionOnly: _forceRevisionOnly,
+      maxNewPagesPerDay: int.tryParse(_maxNewPagesController.text.trim()) ?? 0,
+      maxNewUnitsPerDay: int.tryParse(_maxNewUnitsController.text.trim()) ?? 0,
+    );
+    return switch (inferredPreset) {
+      GuidedPlanPreset.easy => strings.planReviewPriorityEasy,
+      GuidedPlanPreset.normal => strings.planReviewPriorityNormal,
+      GuidedPlanPreset.intensive => strings.planReviewPriorityIntensive,
+    };
   }
 
   Widget _buildSchedulingSection(AppStrings strings) {
@@ -1160,8 +1923,6 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     final strings = AppStrings.of(prefs.language);
     final weekdayMinutes = _currentWeekdayMinutes();
     final dailyDefault = deriveDailyDefault(weekdayMinutes);
-    final preview = _calibrationPreview;
-    final forecast = _forecastResult;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -1170,347 +1931,17 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              strings.onboardingQuestionnaire(_maxQuestions),
+              strings.planSetupTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
+            const SizedBox(height: 8),
+            Text(strings.planSetupSubtitle),
             const SizedBox(height: 16),
-            Card(
-              key: const ValueKey('plan_scheduling_section'),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: _isLoadingScheduling
-                    ? const LinearProgressIndicator()
-                    : _buildSchedulingSection(strings),
-              ),
-            ),
+            _buildGuidedSetupCard(strings),
             const SizedBox(height: 16),
-            Card(
-              key: const ValueKey('plan_weekly_calendar_section'),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: _buildWeeklyCalendarSection(strings),
-              ),
-            ),
+            _buildPlanSummaryCard(strings, weekdayMinutes, dailyDefault),
             const SizedBox(height: 16),
-            Card(
-              key: const ValueKey('plan_forecast_section'),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      strings.forecastDeterministicSimulation,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      key: const ValueKey('plan_forecast_run_button'),
-                      onPressed: _isRunningForecast ? null : _runForecast,
-                      child: Text(
-                        _isRunningForecast
-                            ? strings.running
-                            : strings.runForecast,
-                      ),
-                    ),
-                    if (_isRunningForecast) ...[
-                      const SizedBox(height: 12),
-                      const LinearProgressIndicator(),
-                    ],
-                    if (_forecastError != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        _forecastError!,
-                        key: const ValueKey('plan_forecast_incomplete_reason'),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ],
-                    if (forecast != null) ...[
-                      const SizedBox(height: 12),
-                      if (forecast.estimatedCompletionDate != null)
-                        Text(
-                          strings.estimatedCompletion(
-                            _formatDate(forecast.estimatedCompletionDate!),
-                          ),
-                          key: const ValueKey('plan_forecast_completion_date'),
-                        )
-                      else
-                        Text(
-                          forecast.incompleteReason ??
-                              strings.completionEstimateUnavailable,
-                          key:
-                              const ValueKey('plan_forecast_incomplete_reason'),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      Text(
-                        strings.weeklyMinutesCurve(
-                          _formatCurve(forecast.weeklyMinutesCurve),
-                        ),
-                        key: const ValueKey('plan_forecast_weekly_minutes'),
-                      ),
-                      Text(
-                        strings.revisionOnlyRatioCurve(
-                          _formatCurve(forecast.revisionOnlyRatioCurve),
-                        ),
-                        key: const ValueKey('plan_forecast_revision_ratio'),
-                      ),
-                      Text(
-                        strings.avgNewPagesPerDayCurve(
-                          _formatCurve(forecast.avgNewPagesPerDayCurve),
-                        ),
-                        key: const ValueKey('plan_forecast_new_pages_per_day'),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildTimeQuestion(strings),
-                    const SizedBox(height: 16),
-                    _buildFluencyQuestion(strings),
-                    const SizedBox(height: 16),
-                    _buildProfileQuestion(strings),
-                    const SizedBox(height: 16),
-                    _buildForceRevisionQuestion(strings),
-                    const SizedBox(height: 16),
-                    _buildCapsQuestion(strings),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      strings.suggestedPlanEditable,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(strings.dailyMinutesByWeekday),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final key in onboardingWeekdayKeys)
-                          Chip(
-                            label: Text(
-                              strings.weekdayMinutesChip(
-                                key,
-                                weekdayMinutes[key] ?? 0,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(strings.derivedDailyDefault(dailyDefault)),
-                    const SizedBox(height: 16),
-                    TextField(
-                      key: const ValueKey('plan_avg_new_minutes'),
-                      controller: _avgNewMinutesController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'[0-9.]'),
-                        ),
-                      ],
-                      onChanged: (_) {
-                        setState(() {
-                          _avgNewDirty = true;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        labelText: strings.avgNewMinutesPerAyah,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      key: const ValueKey('plan_avg_review_minutes'),
-                      controller: _avgReviewMinutesController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'[0-9.]'),
-                        ),
-                      ],
-                      onChanged: (_) {
-                        setState(() {
-                          _avgReviewDirty = true;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        labelText: strings.avgReviewMinutesPerAyah,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      key: const ValueKey('plan_require_page_metadata'),
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(strings.requirePageMetadata),
-                      value: _requirePageMetadata,
-                      onChanged: (value) {
-                        setState(() {
-                          _requirePageMetadata = value;
-                        });
-                      },
-                    ),
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        _errorMessage!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      key: const ValueKey('plan_activate_button'),
-                      onPressed: _isActivating ? null : _activatePlan,
-                      child: Text(
-                        _isActivating ? strings.activating : strings.activate,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      strings.calibrationModeOptional,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildCalibrationLogGroup(
-                      title: strings.newMemorizationSample,
-                      durationKey:
-                          const ValueKey('plan_calibration_new_duration'),
-                      ayahKey:
-                          const ValueKey('plan_calibration_new_ayah_count'),
-                      durationController: _newDurationController,
-                      ayahController: _newAyahCountController,
-                      buttonKey: const ValueKey('plan_calibration_add_new'),
-                      buttonLabel: strings.addNewSample,
-                      onPressed: () => _addCalibrationSample(
-                          CalibrationSampleKind.newMemorization),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildCalibrationLogGroup(
-                      title: strings.reviewSample,
-                      durationKey:
-                          const ValueKey('plan_calibration_review_duration'),
-                      ayahKey:
-                          const ValueKey('plan_calibration_review_ayah_count'),
-                      durationController: _reviewDurationController,
-                      ayahController: _reviewAyahCountController,
-                      buttonKey: const ValueKey('plan_calibration_add_review'),
-                      buttonLabel: strings.addReviewSample,
-                      onPressed: () =>
-                          _addCalibrationSample(CalibrationSampleKind.review),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      strings.preview,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    if (_isRefreshingCalibration)
-                      const LinearProgressIndicator(),
-                    Text(
-                      strings.newSamplesPreview(
-                        preview?.newSampleCount ?? 0,
-                        _formatMedian(preview?.medianNewMinutesPerAyah),
-                      ),
-                      key: const ValueKey('plan_calibration_preview_new'),
-                    ),
-                    Text(
-                      strings.reviewSamplesPreview(
-                        preview?.reviewSampleCount ?? 0,
-                        _formatMedian(preview?.medianReviewMinutesPerAyah),
-                      ),
-                      key: const ValueKey('plan_calibration_preview_review'),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      strings.typicalGradeDistributionPercent,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _buildGradeInput(5, _gradeQ5Controller),
-                        _buildGradeInput(4, _gradeQ4Controller),
-                        _buildGradeInput(3, _gradeQ3Controller),
-                        _buildGradeInput(2, _gradeQ2Controller),
-                        _buildGradeInput(0, _gradeQ0Controller),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(strings.applyTiming),
-                    const SizedBox(height: 8),
-                    SegmentedButton<_CalibrationTimingUi>(
-                      key: const ValueKey('plan_calibration_timing'),
-                      segments: [
-                        ButtonSegment<_CalibrationTimingUi>(
-                          value: _CalibrationTimingUi.now,
-                          label: Text(strings.applyNow),
-                        ),
-                        ButtonSegment<_CalibrationTimingUi>(
-                          value: _CalibrationTimingUi.tomorrow,
-                          label: Text(strings.applyFromTomorrow),
-                        ),
-                      ],
-                      selected: {_calibrationTiming},
-                      onSelectionChanged: (selection) {
-                        setState(() {
-                          _calibrationTiming = selection.first;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      key: const ValueKey('plan_apply_calibration_button'),
-                      onPressed:
-                          _isApplyingCalibration ? null : _applyCalibration,
-                      child: Text(
-                        _isApplyingCalibration
-                            ? strings.applying
-                            : strings.applyCalibration,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _buildAdvancedGate(strings, weekdayMinutes, dailyDefault),
           ],
         ),
       ),
@@ -1543,6 +1974,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             setState(() {
               _timeInputMode = selection.first;
             });
+            _syncGuidedInputsIntoSchedulingPreferences();
           },
         ),
         const SizedBox(height: 8),
@@ -1552,7 +1984,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             controller: _weeklyMinutesController,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => _syncGuidedInputsIntoSchedulingPreferences(),
             decoration: InputDecoration(
               labelText: strings.weeklyMinutes,
             ),
@@ -1570,7 +2002,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                     controller: _weekdayControllers[key],
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: (_) => setState(() {}),
+                    onChanged: (_) => _syncGuidedInputsIntoSchedulingPreferences(),
                     decoration: InputDecoration(
                       labelText: key.toUpperCase(),
                     ),

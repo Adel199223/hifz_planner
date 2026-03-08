@@ -84,6 +84,13 @@ Do not use this file as primary truth when there is a conflict.
 - `Today` now has a visible recovery entry back to `My Plan`
 - Empty and completion states are called out explicitly instead of only leaving section-level empty text
 
+## Current My Plan Notes
+
+- `My Plan` now opens with a guided setup flow instead of a full control panel
+- The default path is `Easy`, `Normal`, `Intensive` plus realistic time, fluency, and a plain-language summary
+- Scheduling, forecast, calibration, and other expert controls are still present, but now live behind `Advanced`
+- The weekly planner preview now follows the guided time inputs rather than stale advanced defaults
+
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`
 - `lib/data/services/qurancom_api.dart`

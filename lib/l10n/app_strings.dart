@@ -487,6 +487,86 @@ class AppStrings {
   String get gradeVeryHard => _t('grade_very_hard', 'Very hard');
   String get gradeFail => _t('grade_fail', 'Fail');
 
+  String get planSetupTitle => _t('plan_setup_title', 'Set up My Plan');
+  String get planSetupSubtitle => _t(
+    'plan_setup_subtitle',
+    'Pick a pace, choose realistic time, and activate your plan. You can fine-tune the details later.',
+  );
+  String get planPresetQuestion => _t(
+    'plan_preset_question',
+    '1) How ambitious should this plan be?',
+  );
+  String get planPresetEasy => _t('plan_preset_easy', 'Easy');
+  String get planPresetEasyDescription => _t(
+    'plan_preset_easy_description',
+    'Protect review first and keep new work light.',
+  );
+  String get planPresetNormal => _t('plan_preset_normal', 'Normal');
+  String get planPresetNormalDescription => _t(
+    'plan_preset_normal_description',
+    'Balanced new memorization with strong review support.',
+  );
+  String get planPresetIntensive => _t('plan_preset_intensive', 'Intensive');
+  String get planPresetIntensiveDescription => _t(
+    'plan_preset_intensive_description',
+    'Move faster if your schedule is stable.',
+  );
+  String get planGuidedNote => _t(
+    'plan_guided_note',
+    'If life is busy or you are catching up, start with Easy. You can still fine-tune revision-only behavior in Advanced.',
+  );
+  String get planAdvancedTitle => _t('plan_advanced_title', 'Advanced');
+  String get planAdvancedSubtitle => _t(
+    'plan_advanced_subtitle',
+    'Open this only if you want to fine-tune scheduling, forecast, calibration, or recovery rules.',
+  );
+  String get planOpenAdvanced =>
+      _t('plan_open_advanced', 'Show Advanced');
+  String get planHideAdvanced =>
+      _t('plan_hide_advanced', 'Hide Advanced');
+  String get planFineTuneTitle =>
+      _t('plan_fine_tune_title', 'Fine-tune this plan');
+  String get planSummaryPace => _t('plan_summary_pace', 'Pace');
+  String get planSummaryTime => _t('plan_summary_time', 'Time');
+  String get planSummaryNewLimit =>
+      _t('plan_summary_new_limit', 'New work limit');
+  String get planSummaryReviewPriority => _t(
+    'plan_summary_review_priority',
+    'Review priority',
+  );
+  String planSummaryTimeValue(int weeklyMinutes, int dailyMinutes) => _fmt(
+    _t(
+      'plan_summary_time_value',
+      '{weekly} minutes per week, about {daily} minutes per day.',
+    ),
+    <String, Object>{
+      'weekly': weeklyMinutes,
+      'daily': dailyMinutes,
+    },
+  );
+  String planSummaryNewLimitValue(int pages, int units) => _fmt(
+    _t(
+      'plan_summary_new_limit_value',
+      'Up to {pages} new pages or {units} new units on a study day.',
+    ),
+    <String, Object>{
+      'pages': pages,
+      'units': units,
+    },
+  );
+  String get planReviewPriorityEasy => _t(
+    'plan_review_priority_easy',
+    'Give extra room to review and slow down new work when pressure rises.',
+  );
+  String get planReviewPriorityNormal => _t(
+    'plan_review_priority_normal',
+    'Keep a balanced mix of review protection and steady new memorization.',
+  );
+  String get planReviewPriorityIntensive => _t(
+    'plan_review_priority_intensive',
+    'Push new memorization harder when your schedule can support it.',
+  );
+
   String onboardingQuestionnaire(int questionCount) => _fmt(
     _t(
       'onboarding_questionnaire',
@@ -597,7 +677,7 @@ class AppStrings {
     <String, Object>{'curve': curveText},
   );
   String get suggestedPlanEditable =>
-      _t('suggested_plan_editable', 'Suggested Plan (Editable)');
+      _t('suggested_plan_editable', 'Your plan summary');
   String get dailyMinutesByWeekday =>
       _t('daily_minutes_by_weekday', 'Daily minutes by weekday');
   String derivedDailyDefault(int value) => _fmt(
@@ -641,22 +721,23 @@ class AppStrings {
       _t('apply_from_tomorrow', 'Apply from tomorrow');
   String get applying => _t('applying', 'Applying...');
   String get applyCalibration => _t('apply_calibration', 'Apply Calibration');
-  String get timeInput => _t('time_input', '1) Time input');
+  String get timeInput => _t('time_input', '2) How much time is realistic?');
   String get weeklyTotal => _t('weekly_total', 'Weekly total');
   String get perWeekday => _t('per_weekday', 'Per weekday');
   String get weeklyMinutes => _t('weekly_minutes', 'Weekly minutes');
-  String get fluency => _t('fluency', '2) Fluency');
+  String get fluency =>
+      _t('fluency', '3) How comfortable are you with memorizing right now?');
   String get fluencyFluent => _t('fluency_fluent', 'fluent');
   String get fluencyDeveloping => _t('fluency_developing', 'developing');
   String get fluencySupport => _t('fluency_support', 'support');
-  String get profile => _t('profile', '3) Profile');
+  String get profile => _t('profile', 'Planner profile');
   String get profileSupport => _t('profile_support', 'support');
   String get profileStandard => _t('profile_standard', 'standard');
   String get profileAccelerated => _t('profile_accelerated', 'accelerated');
   String get forceRevisionOnly =>
-      _t('force_revision_only', '4) Force Revision Only');
+      _t('force_revision_only', 'Protect review when overdue');
   String get dailyNewItemCaps =>
-      _t('daily_new_item_caps', '5-6) Daily new-item caps');
+      _t('daily_new_item_caps', 'Daily new-work limits');
   String get maxNewPagesPerDay =>
       _t('max_new_pages_per_day', 'Max new pages per day');
   String get maxNewUnitsPerDay =>
@@ -1223,13 +1304,48 @@ class AppStrings {
       'grade_hard': 'Difficile',
       'grade_very_hard': 'Très difficile',
       'grade_fail': 'Échec',
+      'plan_setup_title': 'Configurer Mon plan',
+      'plan_setup_subtitle':
+          'Choisissez un rythme, un temps réaliste, puis activez votre plan. Vous pourrez affiner les détails plus tard.',
+      'plan_preset_question': '1) Quel niveau d’ambition voulez-vous ?',
+      'plan_preset_easy': 'Facile',
+      'plan_preset_easy_description':
+          'Protège d’abord les révisions et garde le nouveau travail léger.',
+      'plan_preset_normal': 'Normal',
+      'plan_preset_normal_description':
+          'Nouveau hifz équilibré avec un bon soutien des révisions.',
+      'plan_preset_intensive': 'Intensif',
+      'plan_preset_intensive_description':
+          'Avancez plus vite si votre emploi du temps est stable.',
+      'plan_guided_note':
+          'Si votre période est chargée ou si vous rattrapez du retard, commencez par Facile. Vous pourrez encore ajuster le mode révision dans Avancé.',
+      'plan_advanced_title': 'Avancé',
+      'plan_advanced_subtitle':
+          'Ouvrez ceci seulement si vous voulez ajuster la planification, les prévisions, l’étalonnage ou les règles de rattrapage.',
+      'plan_open_advanced': 'Afficher Avancé',
+      'plan_hide_advanced': 'Masquer Avancé',
+      'plan_fine_tune_title': 'Affiner ce plan',
+      'plan_summary_pace': 'Rythme',
+      'plan_summary_time': 'Temps',
+      'plan_summary_new_limit': 'Limite de nouveau travail',
+      'plan_summary_review_priority': 'Priorité des révisions',
+      'plan_summary_time_value':
+          '{weekly} minutes par semaine, environ {daily} minutes par jour.',
+      'plan_summary_new_limit_value':
+          'Jusqu’à {pages} nouvelles pages ou {units} nouvelles unités lors d’un jour d’étude.',
+      'plan_review_priority_easy':
+          'Donnez plus de place aux révisions et ralentissez le nouveau travail quand la pression monte.',
+      'plan_review_priority_normal':
+          'Gardez un mélange équilibré entre protection des révisions et nouveau hifz régulier.',
+      'plan_review_priority_intensive':
+          'Poussez davantage le nouveau hifz quand votre emploi du temps le permet.',
       'no_ayahs_for_surah': 'Aucun ayah trouvé pour la sourate {surah}.',
       'no_ayahs_for_page': 'Aucun ayah trouvé pour la page {page}.',
       'onboarding_questionnaire':
           "Questionnaire d'intégration ({count} questions)",
       'run_forecast': 'Lancer la prévision',
       'running': 'Exécution...',
-      'suggested_plan_editable': 'Plan suggéré (modifiable)',
+      'suggested_plan_editable': 'Résumé de votre plan',
       'daily_minutes_by_weekday': 'Minutes quotidiennes par jour',
       'avg_new_minutes_per_ayah': 'Moyenne minutes nouvelles par ayah',
       'avg_review_minutes_per_ayah': 'Moyenne minutes révision par ayah',
@@ -1237,20 +1353,20 @@ class AppStrings {
       'activate': 'Activer',
       'activating': 'Activation...',
       'calibration_mode_optional': 'Mode calibration (optionnel)',
-      'time_input': '1) Saisie du temps',
+      'time_input': '2) Quel temps est réaliste ?',
       'weekly_total': 'Total hebdomadaire',
       'per_weekday': 'Par jour',
       'weekly_minutes': 'Minutes hebdomadaires',
-      'fluency': '2) Fluidité',
+      'fluency': '3) À quel point êtes-vous à l’aise avec le hifz en ce moment ?',
       'fluency_fluent': 'fluide',
       'fluency_developing': 'en progression',
       'fluency_support': 'support',
-      'profile': '3) Profil',
+      'profile': 'Profil du planificateur',
       'profile_support': 'support',
       'profile_standard': 'standard',
       'profile_accelerated': 'accéléré',
-      'force_revision_only': '4) Forcer révision seulement',
-      'daily_new_item_caps': '5-6) Limites quotidiennes de nouveaux éléments',
+      'force_revision_only': 'Protéger les révisions en cas de surcharge',
+      'daily_new_item_caps': 'Limites quotidiennes du nouveau travail',
       'max_new_pages_per_day': 'Max nouvelles pages par jour',
       'max_new_units_per_day': 'Max nouvelles unités par jour',
       'duration_minutes': 'Durée (minutes)',
@@ -1489,12 +1605,47 @@ class AppStrings {
       'grade_hard': 'Difícil',
       'grade_very_hard': 'Muito difícil',
       'grade_fail': 'Falha',
+      'plan_setup_title': 'Configurar Meu Plano',
+      'plan_setup_subtitle':
+          'Escolha um ritmo, um tempo realista e ative seu plano. Você pode ajustar os detalhes depois.',
+      'plan_preset_question': '1) Quão ambicioso este plano deve ser?',
+      'plan_preset_easy': 'Fácil',
+      'plan_preset_easy_description':
+          'Protege a revisão primeiro e mantém o trabalho novo leve.',
+      'plan_preset_normal': 'Normal',
+      'plan_preset_normal_description':
+          'Memorização nova equilibrada com forte suporte de revisão.',
+      'plan_preset_intensive': 'Intensivo',
+      'plan_preset_intensive_description':
+          'Avance mais rápido se sua rotina for estável.',
+      'plan_guided_note':
+          'Se a vida estiver corrida ou você estiver recuperando atraso, comece em Fácil. Você ainda pode ajustar o modo só revisão em Avançado.',
+      'plan_advanced_title': 'Avançado',
+      'plan_advanced_subtitle':
+          'Abra isto apenas se quiser ajustar agendamento, previsão, calibração ou regras de recuperação.',
+      'plan_open_advanced': 'Mostrar Avançado',
+      'plan_hide_advanced': 'Ocultar Avançado',
+      'plan_fine_tune_title': 'Ajustar este plano',
+      'plan_summary_pace': 'Ritmo',
+      'plan_summary_time': 'Tempo',
+      'plan_summary_new_limit': 'Limite de trabalho novo',
+      'plan_summary_review_priority': 'Prioridade de revisão',
+      'plan_summary_time_value':
+          '{weekly} minutos por semana, cerca de {daily} minutos por dia.',
+      'plan_summary_new_limit_value':
+          'Até {pages} novas páginas ou {units} novas unidades em um dia de estudo.',
+      'plan_review_priority_easy':
+          'Dê mais espaço para revisão e diminua o trabalho novo quando a pressão aumentar.',
+      'plan_review_priority_normal':
+          'Mantenha um equilíbrio entre proteger a revisão e seguir com nova memorização.',
+      'plan_review_priority_intensive':
+          'Acelere a nova memorização quando sua rotina puder sustentar isso.',
       'no_ayahs_for_surah': 'Nenhum ayah encontrado para a Surah {surah}.',
       'no_ayahs_for_page': 'Nenhum ayah encontrado para a Página {page}.',
       'onboarding_questionnaire': 'Questionário inicial ({count} perguntas)',
       'run_forecast': 'Executar previsão',
       'running': 'Executando...',
-      'suggested_plan_editable': 'Plano sugerido (editável)',
+      'suggested_plan_editable': 'Resumo do seu plano',
       'daily_minutes_by_weekday': 'Minutos diários por dia da semana',
       'avg_new_minutes_per_ayah': 'Média de minutos novos por ayah',
       'avg_review_minutes_per_ayah': 'Média de minutos de revisão por ayah',
@@ -1502,20 +1653,20 @@ class AppStrings {
       'activate': 'Ativar',
       'activating': 'Ativando...',
       'calibration_mode_optional': 'Modo de calibração (opcional)',
-      'time_input': '1) Entrada de tempo',
+      'time_input': '2) Quanto tempo é realista?',
       'weekly_total': 'Total semanal',
       'per_weekday': 'Por dia da semana',
       'weekly_minutes': 'Minutos semanais',
-      'fluency': '2) Fluência',
+      'fluency': '3) Quão confortável você está com a memorização agora?',
       'fluency_fluent': 'fluente',
       'fluency_developing': 'em desenvolvimento',
       'fluency_support': 'suporte',
-      'profile': '3) Perfil',
+      'profile': 'Perfil do planejador',
       'profile_support': 'suporte',
       'profile_standard': 'padrão',
       'profile_accelerated': 'acelerado',
-      'force_revision_only': '4) Forçar somente revisão',
-      'daily_new_item_caps': '5-6) Limites diários de novos itens',
+      'force_revision_only': 'Proteger revisão quando houver atraso',
+      'daily_new_item_caps': 'Limites diários de trabalho novo',
       'max_new_pages_per_day': 'Máx. novas páginas por dia',
       'max_new_units_per_day': 'Máx. novas unidades por dia',
       'duration_minutes': 'Duração (minutos)',
@@ -1769,12 +1920,47 @@ class AppStrings {
       'grade_hard': 'صعب',
       'grade_very_hard': 'صعب جدًا',
       'grade_fail': 'رسوب',
+      'plan_setup_title': 'إعداد خطتي',
+      'plan_setup_subtitle':
+          'اختر وتيرة مناسبة ووقتًا واقعيًا ثم فعّل خطتك. يمكنك ضبط التفاصيل لاحقًا.',
+      'plan_preset_question': '1) ما مستوى الطموح الذي تريده لهذه الخطة؟',
+      'plan_preset_easy': 'سهل',
+      'plan_preset_easy_description':
+          'يقدّم المراجعة أولًا ويجعل العمل الجديد خفيفًا.',
+      'plan_preset_normal': 'عادي',
+      'plan_preset_normal_description':
+          'حفظ جديد متوازن مع دعم قوي للمراجعة.',
+      'plan_preset_intensive': 'مكثف',
+      'plan_preset_intensive_description':
+          'تقدّم أسرع إذا كان جدولك مستقرًا.',
+      'plan_guided_note':
+          'إذا كانت ظروفك مشغولة أو كنت تلحق ما فاتك فابدأ بخيار سهل. ويمكنك لاحقًا ضبط وضع المراجعة فقط من الإعدادات المتقدمة.',
+      'plan_advanced_title': 'متقدم',
+      'plan_advanced_subtitle':
+          'افتح هذا فقط إذا أردت ضبط الجدولة أو التوقعات أو المعايرة أو قواعد التعافي.',
+      'plan_open_advanced': 'إظهار المتقدم',
+      'plan_hide_advanced': 'إخفاء المتقدم',
+      'plan_fine_tune_title': 'ضبط هذه الخطة',
+      'plan_summary_pace': 'الوتيرة',
+      'plan_summary_time': 'الوقت',
+      'plan_summary_new_limit': 'حد العمل الجديد',
+      'plan_summary_review_priority': 'أولوية المراجعة',
+      'plan_summary_time_value':
+          '{weekly} دقيقة في الأسبوع، حوالي {daily} دقيقة في اليوم.',
+      'plan_summary_new_limit_value':
+          'حتى {pages} صفحات جديدة أو {units} وحدات جديدة في يوم الدراسة.',
+      'plan_review_priority_easy':
+          'امنح المراجعة مساحة أكبر وخفف العمل الجديد عند ارتفاع الضغط.',
+      'plan_review_priority_normal':
+          'حافظ على توازن بين حماية المراجعة واستمرار الحفظ الجديد.',
+      'plan_review_priority_intensive':
+          'ادفع الحفظ الجديد أكثر عندما يسمح جدولك بذلك.',
       'no_ayahs_for_surah': 'لا توجد آيات للسورة {surah}.',
       'no_ayahs_for_page': 'لا توجد آيات للصفحة {page}.',
       'onboarding_questionnaire': 'استبيان البداية ({count} أسئلة)',
       'run_forecast': 'تشغيل التنبؤ',
       'running': 'جارٍ التشغيل...',
-      'suggested_plan_editable': 'الخطة المقترحة (قابلة للتعديل)',
+      'suggested_plan_editable': 'ملخص خطتك',
       'daily_minutes_by_weekday': 'الدقائق اليومية حسب أيام الأسبوع',
       'avg_new_minutes_per_ayah': 'متوسط دقائق الجديد لكل آية',
       'avg_review_minutes_per_ayah': 'متوسط دقائق المراجعة لكل آية',
@@ -1782,20 +1968,20 @@ class AppStrings {
       'activate': 'تفعيل',
       'activating': 'جارٍ التفعيل...',
       'calibration_mode_optional': 'وضع المعايرة (اختياري)',
-      'time_input': '1) إدخال الوقت',
+      'time_input': '2) ما الوقت الواقعي المتاح؟',
       'weekly_total': 'الإجمالي الأسبوعي',
       'per_weekday': 'لكل يوم',
       'weekly_minutes': 'الدقائق الأسبوعية',
-      'fluency': '2) الطلاقة',
+      'fluency': '3) ما مدى راحتك مع الحفظ الآن؟',
       'fluency_fluent': 'متقن',
       'fluency_developing': 'قيد التطوير',
       'fluency_support': 'دعم',
-      'profile': '3) الملف الشخصي',
+      'profile': 'ملف التخطيط',
       'profile_support': 'دعم',
       'profile_standard': 'قياسي',
       'profile_accelerated': 'متسارع',
-      'force_revision_only': '4) فرض المراجعة فقط',
-      'daily_new_item_caps': '5-6) حدود العناصر الجديدة اليومية',
+      'force_revision_only': 'حماية المراجعة عند تراكم التأخير',
+      'daily_new_item_caps': 'حدود العمل الجديد اليومية',
       'max_new_pages_per_day': 'أقصى صفحات جديدة يوميًا',
       'max_new_units_per_day': 'أقصى وحدات جديدة يوميًا',
       'duration_minutes': 'المدة (دقائق)',

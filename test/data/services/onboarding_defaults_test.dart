@@ -31,6 +31,71 @@ void main() {
     expect((support.avgNew, support.avgReview), (2.4, 1.0));
   });
 
+  test('guided plan presets map to learner-friendly planner defaults', () {
+    final easy = defaultsForGuidedPlanPreset(GuidedPlanPreset.easy);
+    final normal = defaultsForGuidedPlanPreset(GuidedPlanPreset.normal);
+    final intensive =
+        defaultsForGuidedPlanPreset(GuidedPlanPreset.intensive);
+
+    expect(
+      (
+        easy.profile,
+        easy.forceRevisionOnly,
+        easy.maxNewPagesPerDay,
+        easy.maxNewUnitsPerDay,
+      ),
+      ('support', true, 1, 6),
+    );
+    expect(
+      (
+        normal.profile,
+        normal.forceRevisionOnly,
+        normal.maxNewPagesPerDay,
+        normal.maxNewUnitsPerDay,
+      ),
+      ('standard', true, 1, 8),
+    );
+    expect(
+      (
+        intensive.profile,
+        intensive.forceRevisionOnly,
+        intensive.maxNewPagesPerDay,
+        intensive.maxNewUnitsPerDay,
+      ),
+      ('accelerated', false, 2, 12),
+    );
+  });
+
+  test('infer guided preset reconstructs the closest preset mode', () {
+    expect(
+      inferGuidedPlanPreset(
+        profile: 'support',
+        forceRevisionOnly: true,
+        maxNewPagesPerDay: 1,
+        maxNewUnitsPerDay: 6,
+      ),
+      GuidedPlanPreset.easy,
+    );
+    expect(
+      inferGuidedPlanPreset(
+        profile: 'standard',
+        forceRevisionOnly: true,
+        maxNewPagesPerDay: 1,
+        maxNewUnitsPerDay: 8,
+      ),
+      GuidedPlanPreset.normal,
+    );
+    expect(
+      inferGuidedPlanPreset(
+        profile: 'accelerated',
+        forceRevisionOnly: false,
+        maxNewPagesPerDay: 2,
+        maxNewUnitsPerDay: 12,
+      ),
+      GuidedPlanPreset.intensive,
+    );
+  });
+
   test('deriveDailyDefault uses rounded average across weekdays', () {
     final weekday = {
       'mon': 10,

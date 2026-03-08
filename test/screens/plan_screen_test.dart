@@ -9,11 +9,13 @@ import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/progress_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
+import 'package:hifz_planner/data/services/scheduling/planning_projection_engine.dart';
 import 'package:hifz_planner/data/time/local_day_time.dart';
 import 'package:hifz_planner/screens/plan_screen.dart';
 
 void main() {
-  testWidgets('renders questionnaire and suggested plan panel', (tester) async {
+  testWidgets('renders guided setup and keeps advanced tools hidden by default',
+      (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -27,42 +29,29 @@ void main() {
 
     await _pumpPlan(tester, container);
 
-    expect(find.textContaining('Onboarding Questionnaire'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('plan_scheduling_section')),
-      findsOneWidget,
-    );
+    expect(find.text('Set up My Plan'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_guided_setup_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_summary_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_advanced_toggle')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_time_mode')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_preset_easy')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_preset_normal')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_preset_intensive')), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_fluency_fluent')), findsOneWidget);
+    expect(find.text('Your plan summary'), findsOneWidget);
+    expect(find.byKey(const ValueKey('plan_scheduling_section')), findsNothing);
     expect(
       find.byKey(const ValueKey('plan_weekly_calendar_section')),
-      findsOneWidget,
+      findsNothing,
     );
+    expect(find.byKey(const ValueKey('plan_profile')), findsNothing);
+    expect(find.byKey(const ValueKey('plan_force_revision_only')), findsNothing);
+    expect(find.byKey(const ValueKey('plan_max_new_pages')), findsNothing);
+    expect(find.byKey(const ValueKey('plan_max_new_units')), findsNothing);
+    expect(find.byKey(const ValueKey('plan_forecast_section')), findsNothing);
     expect(
-      find.byKey(const ValueKey('plan_scheduling_two_sessions')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('plan_time_mode')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_fluency_fluent')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_profile')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('plan_force_revision_only')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('plan_max_new_pages')), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_max_new_units')), findsOneWidget);
-    expect(find.text('Suggested Plan (Editable)'), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_forecast_section')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('plan_forecast_run_button')),
-      findsOneWidget,
-    );
-    expect(find.text('Calibration Mode (Optional)'), findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_calibration_new_duration')),
-        findsOneWidget);
-    expect(find.byKey(const ValueKey('plan_calibration_review_duration')),
-        findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('plan_apply_calibration_button')),
-      findsOneWidget,
+      find.byKey(const ValueKey('plan_calibration_new_duration')),
+      findsNothing,
     );
   });
 
@@ -80,6 +69,7 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
     await _tapVisible(
       tester,
       find.byKey(const ValueKey('plan_forecast_run_button')),
@@ -134,6 +124,7 @@ void main() {
     );
 
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
     await _tapVisible(
       tester,
       find.byKey(const ValueKey('plan_forecast_run_button')),
@@ -170,6 +161,9 @@ void main() {
     );
     addTearDown(container.dispose);
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
+    await _expandAdvanced(tester);
+    await _expandAdvanced(tester);
 
     await tester.enterText(
       find.byKey(const ValueKey('plan_weekly_minutes')),
@@ -197,6 +191,7 @@ void main() {
     addTearDown(container.dispose);
 
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
 
     expect(
       find.byKey(const ValueKey('plan_weekly_day_0')),
@@ -216,6 +211,8 @@ void main() {
     );
     addTearDown(container.dispose);
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
+    await _expandAdvanced(tester);
 
     await _tapVisible(tester, find.text('Per weekday'));
 
@@ -272,6 +269,7 @@ void main() {
     );
     addTearDown(container.dispose);
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
 
     expect(
       tester
@@ -327,30 +325,18 @@ void main() {
     addTearDown(container.dispose);
     await _pumpPlan(tester, container);
 
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_preset_intensive')),
+    );
     await _enterTextVisible(
       tester,
       find.byKey(const ValueKey('plan_weekly_minutes')),
-      '140',
+      '210',
     );
-    await _enterTextVisible(
+    await _tapVisible(
       tester,
-      find.byKey(const ValueKey('plan_max_new_pages')),
-      '2',
-    );
-    await _enterTextVisible(
-      tester,
-      find.byKey(const ValueKey('plan_max_new_units')),
-      '9',
-    );
-    await _enterTextVisible(
-      tester,
-      find.byKey(const ValueKey('plan_avg_new_minutes')),
-      '2.3',
-    );
-    await _enterTextVisible(
-      tester,
-      find.byKey(const ValueKey('plan_avg_review_minutes')),
-      '0.9',
+      find.byKey(const ValueKey('plan_fluency_fluent')),
     );
     await tester.pump();
 
@@ -358,19 +344,27 @@ void main() {
         tester, find.byKey(const ValueKey('plan_activate_button')));
 
     final settings = await SettingsRepo(db).getSettings();
-    expect(settings.profile, 'standard');
-    expect(settings.forceRevisionOnly, 1);
+    final preferences = PlanningProjectionEngine().preferencesFromSettings(
+      settings,
+    );
+
+    expect(settings.profile, 'accelerated');
+    expect(settings.forceRevisionOnly, 0);
     expect(settings.maxNewPagesPerDay, 2);
-    expect(settings.maxNewUnitsPerDay, 9);
-    expect(settings.avgNewMinutesPerAyah, 2.3);
-    expect(settings.avgReviewMinutesPerAyah, 0.9);
+    expect(settings.maxNewUnitsPerDay, 12);
+    expect(settings.avgNewMinutesPerAyah, 1.6);
+    expect(settings.avgReviewMinutesPerAyah, 0.6);
     expect(settings.requirePageMetadata, 1);
-    expect(settings.dailyMinutesDefault, 20);
+    expect(settings.dailyMinutesDefault, 30);
     expect(settings.minutesByWeekdayJson, isNotNull);
 
     final weekday = jsonDecode(settings.minutesByWeekdayJson!);
-    expect(weekday['mon'], 20);
-    expect(weekday['sun'], 20);
+    expect(weekday['mon'], 30);
+    expect(weekday['sun'], 30);
+    expect(preferences.minutesPerDayDefault, 30);
+    expect(preferences.minutesPerWeekDefault, 210);
+    expect(preferences.minutesByWeekday[DateTime.monday], 30);
+    expect(preferences.minutesByWeekday[DateTime.sunday], 30);
   });
 
   testWidgets('activate ensures cursor exists and preserves existing cursor',
@@ -415,6 +409,7 @@ void main() {
     );
     addTearDown(container.dispose);
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
 
     final forceSwitch = find.byKey(const ValueKey('plan_force_revision_only'));
     expect(
@@ -443,6 +438,7 @@ void main() {
     );
     addTearDown(container.dispose);
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
 
     final metadataSwitch =
         find.byKey(const ValueKey('plan_require_page_metadata'));
@@ -472,6 +468,7 @@ void main() {
     );
     addTearDown(container.dispose);
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
 
     await _enterTextVisible(
       tester,
@@ -536,6 +533,7 @@ void main() {
     );
     addTearDown(container.dispose);
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
 
     await _enterTextVisible(
       tester,
@@ -615,6 +613,7 @@ void main() {
       updatedAtDay: 12345,
     );
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
 
     await _enterTextVisible(
       tester,
@@ -662,6 +661,7 @@ void main() {
     addTearDown(container.dispose);
     final settingsRepo = SettingsRepo(db);
     await _pumpPlan(tester, container);
+    await _expandAdvanced(tester);
 
     await _enterTextVisible(
       tester,
@@ -713,6 +713,17 @@ Future<void> _pumpPlan(
     ),
   );
   await tester.pumpAndSettle();
+}
+
+Future<void> _expandAdvanced(WidgetTester tester) async {
+  final schedulingSection = find.byKey(const ValueKey('plan_scheduling_section'));
+  if (schedulingSection.evaluate().isNotEmpty) {
+    return;
+  }
+  await _tapVisible(
+    tester,
+    find.byKey(const ValueKey('plan_advanced_toggle')),
+  );
 }
 
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
