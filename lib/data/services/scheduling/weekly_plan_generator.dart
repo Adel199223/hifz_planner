@@ -71,10 +71,7 @@ class WeeklyPlanDay {
 }
 
 class WeeklyPlan {
-  const WeeklyPlan({
-    required this.startDay,
-    required this.days,
-  });
+  const WeeklyPlan({required this.startDay, required this.days});
 
   final int startDay;
   final List<WeeklyPlanDay> days;
@@ -85,8 +82,8 @@ class WeeklyPlanGenerator {
     AvailabilityInterpreter availabilityInterpreter =
         const AvailabilityInterpreter(),
     DailyContentAllocator dailyContentAllocator = const DailyContentAllocator(),
-  })  : _availabilityInterpreter = availabilityInterpreter,
-        _dailyContentAllocator = dailyContentAllocator;
+  }) : _availabilityInterpreter = availabilityInterpreter,
+       _dailyContentAllocator = dailyContentAllocator;
 
   final AvailabilityInterpreter _availabilityInterpreter;
   final DailyContentAllocator _dailyContentAllocator;
@@ -100,13 +97,13 @@ class WeeklyPlanGenerator {
     required double reviewBudgetRatio,
     required bool forceRevisionOnly,
   }) {
-    final minutesByDay =
-        _availabilityInterpreter.resolveTargetMinutesForHorizon(
-      startDay: startDay,
-      horizonDays: horizonDays,
-      preferences: preferences,
-      overrides: overrides,
-    );
+    final minutesByDay = _availabilityInterpreter
+        .resolveTargetMinutesForHorizon(
+          startDay: startDay,
+          horizonDays: horizonDays,
+          preferences: preferences,
+          overrides: overrides,
+        );
 
     final days = <WeeklyPlanDay>[];
 
@@ -145,8 +142,9 @@ class WeeklyPlanGenerator {
       );
 
       final desiredSessions = preferences.sessionsPerDay.clamp(1, 2);
-      final effectiveSessions =
-          availability.targetMinutes < 24 ? 1 : desiredSessions;
+      final effectiveSessions = availability.targetMinutes < 24
+          ? 1
+          : desiredSessions;
       final sessionMinutes = _splitSessionMinutes(
         totalMinutes: availability.targetMinutes,
         sessionCount: effectiveSessions,
@@ -167,15 +165,18 @@ class WeeklyPlanGenerator {
         final minutes = sessionMinutes[i];
 
         final reviewRemaining = math.max(
-            0, allocation.reviewCapacityMinutes.round() - consumedReview);
+          0,
+          allocation.reviewCapacityMinutes.round() - consumedReview,
+        );
         final sessionReview = math.min(reviewRemaining, minutes);
         consumedReview += sessionReview;
         final sessionNew = math.max(0, minutes - sessionReview);
 
-        final focus = allocation.recoveryMode || availability.revisionOnlyDay
+        final focus =
+            !allocation.newAssignmentsAllowed || availability.revisionOnlyDay
             ? PlannedSessionFocus.reviewOnly
             : PlannedSessionFocus.newAndReview;
-        final status = allocation.reviewPressure > 1.2
+        final status = allocation.health != DailyAllocationHealth.onTrack
             ? PlannedSessionStatus.dueSoon
             : PlannedSessionStatus.pending;
 
@@ -185,8 +186,9 @@ class WeeklyPlanGenerator {
             focus: focus,
             plannedMinutes: minutes,
             plannedReviewMinutes: sessionReview,
-            plannedNewMinutes:
-                focus == PlannedSessionFocus.reviewOnly ? 0 : sessionNew,
+            plannedNewMinutes: focus == PlannedSessionFocus.reviewOnly
+                ? 0
+                : sessionNew,
             isTimed: timedMinutes[i] != null,
             startMinuteOfDay: timedMinutes[i],
             status: status,
@@ -256,10 +258,7 @@ class WeeklyPlanGenerator {
     required bool flexOutsideWindows,
   }) {
     if (windows.isEmpty) {
-      return List<int?>.generate(
-        sessionCount,
-        (index) => fallbackTimes[index],
-      );
+      return List<int?>.generate(sessionCount, (index) => fallbackTimes[index]);
     }
 
     final orderedWindows = [...windows]
@@ -284,8 +283,11 @@ class WeeklyPlanGenerator {
       flexOutsideWindows: flexOutsideWindows,
     );
 
-    final secondRequested = math.max(
-            firstStart ?? firstWindow.startMinute, firstWindow.startMinute) +
+    final secondRequested =
+        math.max(
+          firstStart ?? firstWindow.startMinute,
+          firstWindow.startMinute,
+        ) +
         90;
     final secondStart = _nearestValidMinute(
       requested: secondRequested,
@@ -302,10 +304,7 @@ class WeeklyPlanGenerator {
       return [firstStart, null];
     }
 
-    return [
-      fallbackTimes[0],
-      fallbackTimes[1],
-    ];
+    return [fallbackTimes[0], fallbackTimes[1]];
   }
 
   List<int?> _clampToWindows({
@@ -316,7 +315,9 @@ class WeeklyPlanGenerator {
   }) {
     if (windows.isEmpty) {
       return List<int?>.generate(
-          sessionCount, (index) => preferredTimes[index]);
+        sessionCount,
+        (index) => preferredTimes[index],
+      );
     }
 
     return List<int?>.generate(sessionCount, (index) {

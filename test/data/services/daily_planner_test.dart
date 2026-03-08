@@ -64,12 +64,7 @@ void main() {
       avgReviewMinutesPerAyah: 1.0,
       requirePageMetadata: 0,
     );
-    await _seedDueUnits(
-      memUnitRepo,
-      db,
-      todayDay: monday,
-      count: 5,
-    );
+    await _seedDueUnits(memUnitRepo, db, todayDay: monday, count: 5);
 
     final plan = await dailyPlanner.planToday(todayDay: monday);
 
@@ -77,85 +72,82 @@ void main() {
     expect(plan.minutesPlannedReviews, 4.0);
   });
 
-  test('falls back to daily_minutes_default when weekday json is invalid',
-      () async {
-    final monday = _findDayForWeekday(DateTime.monday);
-    await _configureSettings(
-      settingsRepo,
-      profile: 'standard',
-      forceRevisionOnly: 0,
-      dailyMinutesDefault: 10,
-      minutesByWeekdayJson: '{bad-json',
-      maxNewPagesPerDay: 5,
-      maxNewUnitsPerDay: 0,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      requirePageMetadata: 0,
-    );
-    await _seedDueUnits(
-      memUnitRepo,
-      db,
-      todayDay: monday,
-      count: 5,
-    );
+  test(
+    'falls back to daily_minutes_default when weekday json is invalid',
+    () async {
+      final monday = _findDayForWeekday(DateTime.monday);
+      await _configureSettings(
+        settingsRepo,
+        profile: 'standard',
+        forceRevisionOnly: 0,
+        dailyMinutesDefault: 10,
+        minutesByWeekdayJson: '{bad-json',
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 0,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 0,
+      );
+      await _seedDueUnits(memUnitRepo, db, todayDay: monday, count: 5);
 
-    final plan = await dailyPlanner.planToday(todayDay: monday);
+      final plan = await dailyPlanner.planToday(todayDay: monday);
 
-    expect(plan.plannedReviews.length, 5);
-  });
+      expect(plan.plannedReviews.length, 5);
+    },
+  );
 
-  test('review budget ratio follows support/standard/accelerated constants',
-      () async {
-    const todayDay = 100;
-    await _seedDueUnits(
-      memUnitRepo,
-      db,
-      todayDay: todayDay,
-      count: 10,
-    );
+  test(
+    'profile changes the resulting weighted stress posture',
+    () async {
+      const todayDay = 100;
+      await _seedDueUnits(memUnitRepo, db, todayDay: todayDay, count: 10);
 
-    await _configureSettings(
-      settingsRepo,
-      profile: 'support',
-      forceRevisionOnly: 0,
-      dailyMinutesDefault: 10,
-      maxNewPagesPerDay: 5,
-      maxNewUnitsPerDay: 0,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      requirePageMetadata: 0,
-    );
-    final supportPlan = await dailyPlanner.planToday(todayDay: todayDay);
-    expect(supportPlan.plannedReviews.length, 9);
+      await _configureSettings(
+        settingsRepo,
+        profile: 'support',
+        forceRevisionOnly: 0,
+        dailyMinutesDefault: 10,
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 0,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 0,
+      );
+      final supportPlan = await dailyPlanner.planToday(todayDay: todayDay);
 
-    await _configureSettings(
-      settingsRepo,
-      profile: 'standard',
-      forceRevisionOnly: 0,
-      dailyMinutesDefault: 10,
-      maxNewPagesPerDay: 5,
-      maxNewUnitsPerDay: 0,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      requirePageMetadata: 0,
-    );
-    final standardPlan = await dailyPlanner.planToday(todayDay: todayDay);
-    expect(standardPlan.plannedReviews.length, 8);
+      await _configureSettings(
+        settingsRepo,
+        profile: 'standard',
+        forceRevisionOnly: 0,
+        dailyMinutesDefault: 10,
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 0,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 0,
+      );
+      final standardPlan = await dailyPlanner.planToday(todayDay: todayDay);
 
-    await _configureSettings(
-      settingsRepo,
-      profile: 'accelerated',
-      forceRevisionOnly: 0,
-      dailyMinutesDefault: 10,
-      maxNewPagesPerDay: 5,
-      maxNewUnitsPerDay: 0,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      requirePageMetadata: 0,
-    );
-    final acceleratedPlan = await dailyPlanner.planToday(todayDay: todayDay);
-    expect(acceleratedPlan.plannedReviews.length, 10);
-  });
+      await _configureSettings(
+        settingsRepo,
+        profile: 'accelerated',
+        forceRevisionOnly: 0,
+        dailyMinutesDefault: 10,
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 0,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 0,
+      );
+      final acceleratedPlan = await dailyPlanner.planToday(todayDay: todayDay);
+
+      expect(supportPlan.reviewPressure, lessThan(standardPlan.reviewPressure));
+      expect(
+        standardPlan.reviewPressure,
+        lessThan(acceleratedPlan.reviewPressure),
+      );
+    },
+  );
 
   test('sorts due rows by overdue desc, reps asc, lapse_count desc', () async {
     const todayDay = 10;
@@ -198,149 +190,146 @@ void main() {
 
     final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
-    expect(
-      plan.plannedReviews.map((row) => row.unit.unitKey).toList(),
-      ['u-a', 'u-c', 'u-b'],
-    );
+    expect(plan.plannedReviews.map((row) => row.unit.unitKey).toList(), [
+      'u-a',
+      'u-c',
+      'u-b',
+    ]);
   });
 
-  test('recovery mode expands review capacity and suspends new when overloaded',
-      () async {
-    const todayDay = 100;
-    await _configureSettings(
-      settingsRepo,
-      profile: 'standard',
-      forceRevisionOnly: 0,
-      dailyMinutesDefault: 4,
-      maxNewPagesPerDay: 5,
-      maxNewUnitsPerDay: 0,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      requirePageMetadata: 0,
-    );
-    await _seedDueUnits(
-      memUnitRepo,
-      db,
-      todayDay: todayDay,
-      count: 5,
-    );
+  test(
+    'recovery mode expands review capacity and suspends new when overloaded',
+    () async {
+      const todayDay = 100;
+      await _configureSettings(
+        settingsRepo,
+        profile: 'standard',
+        forceRevisionOnly: 0,
+        dailyMinutesDefault: 4,
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 0,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 0,
+      );
+      await _seedDueUnits(memUnitRepo, db, todayDay: todayDay, count: 5);
 
-    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+      final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
-    expect(plan.plannedReviews.length, 4);
-    expect(plan.revisionOnly, isTrue);
-    expect(plan.recoveryMode, isTrue);
-  });
+      expect(plan.plannedReviews.length, 4);
+      expect(plan.revisionOnly, isTrue);
+      expect(plan.recoveryMode, isTrue);
+    },
+  );
 
-  test('sets revisionOnly=true and skips new units on forced overload',
-      () async {
-    const todayDay = 100;
-    await _configureSettings(
-      settingsRepo,
-      profile: 'standard',
-      forceRevisionOnly: 1,
-      dailyMinutesDefault: 4,
-      maxNewPagesPerDay: 5,
-      maxNewUnitsPerDay: 5,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      requirePageMetadata: 0,
-    );
-    await _seedDueUnits(
-      memUnitRepo,
-      db,
-      todayDay: todayDay,
-      count: 5,
-    );
+  test(
+    'sets revisionOnly=true and skips new units on forced overload',
+    () async {
+      const todayDay = 100;
+      await _configureSettings(
+        settingsRepo,
+        profile: 'standard',
+        forceRevisionOnly: 1,
+        dailyMinutesDefault: 4,
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 5,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 0,
+      );
+      await _seedDueUnits(memUnitRepo, db, todayDay: todayDay, count: 5);
 
-    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+      final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
-    expect(plan.revisionOnly, isTrue);
-    expect(plan.plannedNewUnits, isEmpty);
-    expect(plan.minutesPlannedNew, 0);
-  });
+      expect(plan.revisionOnly, isTrue);
+      expect(plan.plannedNewUnits, isEmpty);
+      expect(plan.minutesPlannedNew, 0);
+    },
+  );
 
-  test('when not forced, overload still allows new-unit generation', () async {
-    const todayDay = 100;
-    await _configureSettings(
-      settingsRepo,
-      profile: 'standard',
-      forceRevisionOnly: 0,
-      dailyMinutesDefault: 6,
-      maxNewPagesPerDay: 5,
-      maxNewUnitsPerDay: 5,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      requirePageMetadata: 0,
-    );
-    await _seedDueUnits(
-      memUnitRepo,
-      db,
-      todayDay: todayDay,
-      count: 5,
-    );
+  test(
+    'when weighted stress is overloaded, new-unit generation is paused',
+    () async {
+      const todayDay = 100;
+      await _configureSettings(
+        settingsRepo,
+        profile: 'standard',
+        forceRevisionOnly: 0,
+        dailyMinutesDefault: 6,
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 5,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 0,
+      );
+      await _seedDueUnits(memUnitRepo, db, todayDay: todayDay, count: 5);
 
-    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+      final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
-    expect(plan.revisionOnly, isFalse);
-    expect(plan.plannedReviews.length, 4);
-    expect(plan.plannedNewUnits, isNotEmpty);
-    expect(plan.minutesPlannedNew, greaterThan(0));
-  });
+      expect(plan.revisionOnly, isTrue);
+      expect(plan.plannedReviews.length, 5);
+      expect(plan.plannedNewUnits, isEmpty);
+      expect(plan.minutesPlannedNew, 0);
+    },
+  );
 
-  test('metadata guard blocks new units when cursor ayah page metadata missing',
-      () async {
-    const todayDay = 100;
-    await _configureSettings(
-      settingsRepo,
-      profile: 'standard',
-      forceRevisionOnly: 0,
-      dailyMinutesDefault: 30,
-      maxNewPagesPerDay: 5,
-      maxNewUnitsPerDay: 5,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      requirePageMetadata: 1,
-    );
+  test(
+    'metadata guard blocks new units when cursor ayah page metadata missing',
+    () async {
+      const todayDay = 100;
+      await _configureSettings(
+        settingsRepo,
+        profile: 'standard',
+        forceRevisionOnly: 0,
+        dailyMinutesDefault: 30,
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 5,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 1,
+      );
 
-    await (db.update(db.ayah)
-          ..where((tbl) => tbl.surah.equals(1) & tbl.ayah.equals(1)))
-        .write(const AyahCompanion(pageMadina: Value(null)));
-
-    final plan = await dailyPlanner.planToday(todayDay: todayDay);
-
-    expect(plan.plannedNewUnits, isEmpty);
-    expect(plan.minutesPlannedNew, 0);
-    expect(plan.message, 'Import page metadata first');
-  });
-
-  test('metadata guard blocks when next-20 page coverage is below 90%',
-      () async {
-    const todayDay = 100;
-    await _configureSettings(
-      settingsRepo,
-      profile: 'standard',
-      forceRevisionOnly: 0,
-      dailyMinutesDefault: 30,
-      maxNewPagesPerDay: 5,
-      maxNewUnitsPerDay: 5,
-      avgNewMinutesPerAyah: 1.0,
-      avgReviewMinutesPerAyah: 1.0,
-      requirePageMetadata: 1,
-    );
-
-    for (final ayah in [2, 3, 4]) {
       await (db.update(db.ayah)
-            ..where((tbl) => tbl.surah.equals(1) & tbl.ayah.equals(ayah)))
+            ..where((tbl) => tbl.surah.equals(1) & tbl.ayah.equals(1)))
           .write(const AyahCompanion(pageMadina: Value(null)));
-    }
 
-    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+      final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
-    expect(plan.plannedNewUnits, isEmpty);
-    expect(plan.minutesPlannedNew, 0);
-    expect(plan.message, 'Import page metadata first');
-  });
+      expect(plan.plannedNewUnits, isEmpty);
+      expect(plan.minutesPlannedNew, 0);
+      expect(plan.message, 'Import page metadata first');
+    },
+  );
+
+  test(
+    'metadata guard blocks when next-20 page coverage is below 90%',
+    () async {
+      const todayDay = 100;
+      await _configureSettings(
+        settingsRepo,
+        profile: 'standard',
+        forceRevisionOnly: 0,
+        dailyMinutesDefault: 30,
+        maxNewPagesPerDay: 5,
+        maxNewUnitsPerDay: 5,
+        avgNewMinutesPerAyah: 1.0,
+        avgReviewMinutesPerAyah: 1.0,
+        requirePageMetadata: 1,
+      );
+
+      for (final ayah in [2, 3, 4]) {
+        await (db.update(db.ayah)
+              ..where((tbl) => tbl.surah.equals(1) & tbl.ayah.equals(ayah)))
+            .write(const AyahCompanion(pageMadina: Value(null)));
+      }
+
+      final plan = await dailyPlanner.planToday(todayDay: todayDay);
+
+      expect(plan.plannedNewUnits, isEmpty);
+      expect(plan.minutesPlannedNew, 0);
+      expect(plan.message, 'Import page metadata first');
+    },
+  );
 
   test('mandatory Stage-4 due blocks new generation unless override', () async {
     const todayDay = 100;
@@ -388,6 +377,66 @@ void main() {
     expect(overridePlan.stage4BlocksNewByDefault, isFalse);
     expect(overridePlan.plannedStage4Due, isNotEmpty);
     expect(overridePlan.plannedNewUnits, isNotEmpty);
+  });
+
+  test('stage-4 override still reserves review time before new work', () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 30,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 5,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+    final reviewUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'review-unit',
+      dueDay: todayDay - 1,
+      reps: 1,
+      lapseCount: 0,
+    );
+    final stage4UnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'stage4-unit',
+      dueDay: todayDay - 1,
+      reps: 1,
+      lapseCount: 0,
+    );
+
+    await companionRepo.upsertLifecycleState(
+      unitId: stage4UnitId,
+      lifecycleTier: const Value('ready'),
+      stage4Status: const Value('pending'),
+      stage4NextDayDueDay: const Value(todayDay),
+      stage4UnresolvedTargetsJson: const Value('[0,1,2,3]'),
+      updatedAtDay: todayDay,
+      updatedAtSeconds: 300,
+    );
+
+    final plan = await dailyPlanner.planToday(
+      todayDay: todayDay,
+      allowStage4Override: true,
+    );
+
+    expect(plan.stage4BlocksNewByDefault, isFalse);
+    expect(
+      plan.plannedStage4Due.map((item) => item.unit.id),
+      contains(stage4UnitId),
+    );
+    expect(
+      plan.plannedReviews.map((row) => row.unit.id),
+      contains(reviewUnitId),
+    );
+    expect(
+      plan.minutesPlannedReviews + plan.minutesPlannedNew,
+      lessThanOrEqualTo(30),
+    );
   });
 }
 

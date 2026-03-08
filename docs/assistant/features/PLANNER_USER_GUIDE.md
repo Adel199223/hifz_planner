@@ -155,6 +155,7 @@ Important behavior:
   - backlog burn-down guidance
   - recovery suggestions
 - These are guidance-only. They do not silently change your plan.
+- These hints now come from the same deterministic stress logic used by `Today`, the weekly calendar, and Forecast.
 
 Simple rule:
 - if you see `Tight`, stay conservative
@@ -196,6 +197,9 @@ Most learners do not need it on first setup.
   - session focus, minutes, timing, and status
   - day-level overrides
 - Use this to spot overload days before they happen.
+- The calendar now follows the same load-protection logic as `Today`:
+  - tighter days can show `due soon`
+  - overloaded days can switch sessions to review-only focus
 
 ### Calibration
 - Purpose: teach the planner your real speed using real sessions.
@@ -206,6 +210,7 @@ Most learners do not need it on first setup.
 - Purpose: run a deterministic workload projection.
 - Use this after your base plan is already stable.
 - It is also no longer part of the normal first-run path.
+- Forecast now shares the same allocation policy as `Today`, so it should feel more consistent with the real day view.
 
 ## 5) Today Screen Execution Flow
 
@@ -234,6 +239,8 @@ Execution order is designed to protect retention quality:
 - This means:
   - do the top priority check or first review row
   - then stop without guilt if time is gone
+- This is now enforced more honestly:
+  - if the safe time left for new work is too small, the app pauses new assignments instead of creating tiny token tasks
 
 ### Recovery assistant
 - If the app thinks you are falling behind, you may see `Recovery assistant`.
@@ -250,6 +257,7 @@ Execution order is designed to protect retention quality:
 ### Stage-4 delayed checks section
 - shows delayed consolidation items (especially mandatory next-day checks)
 - these are high priority because they verify durability after delay
+- mandatory Stage-4 due now also reserves real planner minutes before new work is considered
 
 ### Planned reviews section
 - review rows with grading actions
@@ -275,6 +283,7 @@ Override behavior:
 When override is reasonable:
 - rare exceptional days
 - you commit to catch-up shortly after
+- even with override, delayed checks still consume planner time first
 
 When not to overuse override:
 - repeated override usually means your weekly load is too aggressive
@@ -331,6 +340,11 @@ When not to overuse override:
 - treat Stage-4 due items first in Today
 - avoid repeated overrides
 - reduce new workload until delayed items stabilize
+
+### Symptom: new work disappeared even though I still have some time
+- the planner may have decided the remaining safe time is too small for meaningful new memorization
+- finish the top priority check or review first
+- use the minimum day or recovery guidance instead of forcing token new work
 
 ### Symptom: the app says `Tight`
 - use the minimum day more often for a few days

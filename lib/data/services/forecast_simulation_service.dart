@@ -10,10 +10,7 @@ import '../time/local_day_time.dart';
 import 'scheduling/planning_projection_engine.dart';
 import 'spaced_repetition_scheduler.dart';
 
-enum ForecastGradeStrategy {
-  distributionCycle,
-  defaultFallback,
-}
+enum ForecastGradeStrategy { distributionCycle, defaultFallback }
 
 class ForecastWeekPoint {
   const ForecastWeekPoint({
@@ -97,12 +94,15 @@ class ForecastSimulationService {
     final startDay = startDayOverride ?? localDayIndex(effectiveNow);
     await _db.ensureSingletonRows();
 
-    final settings =
-        await _settingsRepo.getSettings(todayDayOverride: startDay);
-    final schedulingPreferences =
-        _projectionEngine.preferencesFromSettings(settings);
-    final schedulingOverrides =
-        _projectionEngine.overridesFromSettings(settings);
+    final settings = await _settingsRepo.getSettings(
+      todayDayOverride: startDay,
+    );
+    final schedulingPreferences = _projectionEngine.preferencesFromSettings(
+      settings,
+    );
+    final schedulingOverrides = _projectionEngine.overridesFromSettings(
+      settings,
+    );
     final minutesByDay = _projectionEngine.resolveMinutesForHorizon(
       startDay: startDay,
       horizonDays: maxSimulationDays,
@@ -137,11 +137,8 @@ class ForecastSimulationService {
           _SimScheduleState.fromScheduleState(dueRow.schedule);
     }
 
-    var nextUnitId = unitStates.keys.fold<int>(
-          0,
-          (maxId, id) => math.max(maxId, id),
-        ) +
-        1;
+    var nextUnitId =
+        unitStates.keys.fold<int>(0, (maxId, id) => math.max(maxId, id)) + 1;
     if (nextUnitId < 1) {
       nextUnitId = 1;
     }
@@ -170,17 +167,20 @@ class ForecastSimulationService {
       completionDay = startDay;
     }
 
-    for (var dayOffset = 0;
-        completionDay == null && dayOffset < maxSimulationDays;
-        dayOffset++) {
+    for (
+      var dayOffset = 0;
+      completionDay == null && dayOffset < maxSimulationDays;
+      dayOffset++
+    ) {
       final day = startDay + dayOffset;
-      final dailyMinutes =
-          (minutesByDay[day] ?? settings.dailyMinutesDefault).toDouble();
+      final dailyMinutes = (minutesByDay[day] ?? settings.dailyMinutesDefault)
+          .toDouble();
 
-      final dueSchedules = scheduleStates.values
-          .where((state) => state.dueDay <= day)
-          .toList(growable: false)
-        ..sort((a, b) => _compareDueRows(a, b, day));
+      final dueSchedules =
+          scheduleStates.values
+              .where((state) => state.dueDay <= day)
+              .toList(growable: false)
+            ..sort((a, b) => _compareDueRows(a, b, day));
 
       var dueReviewMinutes = 0.0;
       for (final state in dueSchedules) {
@@ -217,7 +217,7 @@ class ForecastSimulationService {
         minutesPlannedReviews += estimatedMinutes;
       }
 
-      final revisionOnly = allocation.recoveryMode;
+      final revisionOnly = !allocation.newAssignmentsAllowed;
 
       for (final state in plannedReviews) {
         final reviewQ = gradeSource.nextReviewQ();
@@ -298,8 +298,9 @@ class ForecastSimulationService {
             startDay: weekStartDay,
             endDay: day,
             weeklyMinutes: weekMinutes,
-            revisionOnlyRatio:
-                weekDays == 0 ? 0.0 : weekRevisionOnlyDays / weekDays,
+            revisionOnlyRatio: weekDays == 0
+                ? 0.0
+                : weekRevisionOnlyDays / weekDays,
             avgNewPagesPerDay: weekDays == 0 ? 0.0 : weekNewPages / weekDays,
           ),
         );
@@ -401,8 +402,9 @@ class ForecastSimulationService {
       return true;
     }
 
-    final withPage =
-        coverageWindow.where((ayah) => ayah.pageMadina != null).length;
+    final withPage = coverageWindow
+        .where((ayah) => ayah.pageMadina != null)
+        .length;
     final coverage = withPage / coverageWindow.length;
     final blocked = coverage < 0.90;
     cache[cacheKey] = blocked;
@@ -444,8 +446,8 @@ class ForecastSimulationService {
 
     while (createdUnits < settings.maxNewUnitsPerDay) {
       final minutesLeft = remainingMinutes - minutesPlanned;
-      final maxAyahsByTime =
-          (minutesLeft / settings.avgNewMinutesPerAyah).floor();
+      final maxAyahsByTime = (minutesLeft / settings.avgNewMinutesPerAyah)
+          .floor();
       if (maxAyahsByTime < 1) {
         break;
       }
@@ -572,7 +574,8 @@ class ForecastSimulationService {
       return 1;
     }
 
-    final startsAfterEnd = (startSurah > endSurah) ||
+    final startsAfterEnd =
+        (startSurah > endSurah) ||
         (startSurah == endSurah && startAyah > endAyah);
     if (startsAfterEnd) {
       return 1;
@@ -619,10 +622,7 @@ class ForecastSimulationService {
 }
 
 class _GradeSource {
-  _GradeSource._({
-    required this.strategy,
-    required this.cycle,
-  });
+  _GradeSource._({required this.strategy, required this.cycle});
 
   factory _GradeSource.fromJson(String? rawJson) {
     if (rawJson == null || rawJson.trim().isEmpty) {

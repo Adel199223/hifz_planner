@@ -60,6 +60,7 @@
 ## Decision Log
 - 2026-03-08: Wave 5 starts only after Wave 4 so the algorithm can target a fixed user-facing contract.
 - 2026-03-08: Prefer deterministic shared policy outputs over deeper architecture reshaping in the first pass.
+- 2026-03-08: Keep the Wave 5 replacement inside the existing allocator/projection pipeline first, so Today and Forecast can share one policy path without forcing schema changes.
 
 ## Validation
 - `flutter analyze --no-fatal-infos --no-fatal-warnings`
@@ -71,15 +72,27 @@
 ## Progress
 - [x] Create the Wave 5 branch/worktree and mark it active in the master tracker
 - [x] Create this Wave 5 ExecPlan
-- [ ] Audit the current scheduler/allocation pipeline against the Stage 4 spec
-- [ ] Implement the deterministic allocation replacement
-- [ ] Validate the branch and prepare the publish path
+- [x] Audit the current scheduler/allocation pipeline against the Stage 4 spec
+- [x] Implement the deterministic allocation replacement
+- [x] Validate the branch and prepare the publish path
 
 ## Surprises and Adjustments
 - Use this section for any mismatch between the current data model and the Stage 4 scheduler contract.
+- Stage-4 due items were already visible in Today, but they were not reserving planner minutes when new work was overridden. Wave 5 now reserves that time inside the shared allocation path.
+- A clean-worktree docs-validator failure was exposed by the fresh Wave 5 branch because two tracked docs referenced a machine-local overlay path as if it were guaranteed to exist. That wording was corrected in this branch.
 
 ## Handoff
 - Wave 5 is active on `feat/planner-wave5-scheduler-v2` in `/home/fa507/dev/hifz_planner_wave5`.
-- No runtime implementation has landed yet on this branch; this startup commit exists to preserve the exact next stream and validation targets.
+- Wave 5 deterministic allocation is implemented locally in the shared planner pipeline used by Today, Forecast, and weekly plan generation.
+- Wave 5 received a narrow Assistant Docs Sync limited to canonical and non-technical planner/today behavior docs.
+- Validation passed for the touched scope:
+  - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+  - `flutter test -j 1 -r expanded test/data/services/scheduling/daily_content_allocator_test.dart`
+  - `flutter test -j 1 -r expanded test/data/services/scheduling/weekly_plan_generator_test.dart`
+  - `flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart`
+  - `flutter test -j 1 -r expanded test/data/services/forecast_simulation_service_test.dart`
+  - `flutter test -j 1 -r expanded test/data/services/spaced_repetition_scheduler_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`
+  - `dart tooling/validate_agent_docs.dart`
 - All research stages are complete; implementation continues by wave.
-- Next step: Wave 5 - Scheduler and Daily Allocation V2
+- Next step: close Wave 5 with commit, PR, and merge

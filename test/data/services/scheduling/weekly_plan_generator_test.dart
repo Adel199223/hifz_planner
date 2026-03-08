@@ -105,4 +105,78 @@ void main() {
     expect(sessions.first.startMinuteOfDay, 8 * 60);
     expect(sessions.last.startMinuteOfDay, anyOf(8 * 60, (10 * 60) - 1));
   });
+
+  test('tight days are marked dueSoon and can keep a reduced new session', () {
+    final prefs = SchedulingPreferencesV1.defaults.copyWith(
+      sessionsPerDay: 2,
+      minutesPerDayDefault: 60,
+      minutesByWeekday: const <int, int>{
+        DateTime.monday: 60,
+        DateTime.tuesday: 60,
+        DateTime.wednesday: 60,
+        DateTime.thursday: 60,
+        DateTime.friday: 60,
+        DateTime.saturday: 60,
+        DateTime.sunday: 60,
+      },
+    );
+
+    final plan = generator.generate(
+      startDay: 4,
+      horizonDays: 1,
+      preferences: prefs,
+      overrides: SchedulingOverridesV1.empty,
+      dueReviewMinutesByDay: const <int, double>{4: 45},
+      reviewBudgetRatio: 0.7,
+      forceRevisionOnly: false,
+    );
+
+    expect(plan.days.single.reviewPressure, greaterThanOrEqualTo(0.9));
+    expect(
+      plan.days.single.sessions.every(
+        (session) => session.status == PlannedSessionStatus.dueSoon,
+      ),
+      isTrue,
+    );
+    expect(
+      plan.days.single.sessions.any(
+        (session) => session.focus == PlannedSessionFocus.newAndReview,
+      ),
+      isTrue,
+    );
+  });
+
+  test('overloaded days switch sessions to review-only focus', () {
+    final prefs = SchedulingPreferencesV1.defaults.copyWith(
+      sessionsPerDay: 2,
+      minutesPerDayDefault: 60,
+      minutesByWeekday: const <int, int>{
+        DateTime.monday: 60,
+        DateTime.tuesday: 60,
+        DateTime.wednesday: 60,
+        DateTime.thursday: 60,
+        DateTime.friday: 60,
+        DateTime.saturday: 60,
+        DateTime.sunday: 60,
+      },
+    );
+
+    final plan = generator.generate(
+      startDay: 4,
+      horizonDays: 1,
+      preferences: prefs,
+      overrides: SchedulingOverridesV1.empty,
+      dueReviewMinutesByDay: const <int, double>{4: 55},
+      reviewBudgetRatio: 0.7,
+      forceRevisionOnly: false,
+    );
+
+    expect(plan.days.single.recoveryMode, isTrue);
+    expect(
+      plan.days.single.sessions.every(
+        (session) => session.focus == PlannedSessionFocus.reviewOnly,
+      ),
+      isTrue,
+    );
+  });
 }

@@ -469,6 +469,9 @@ Current capabilities:
   - when backlog burn-down is recommended
   - when a minimum viable day is safer than pushing full load
   - when repeated missed work should trigger recovery guidance
+- Weekly planner status now follows the same deterministic stress policy used by `Today`:
+  - tighter days can surface `due soon`
+  - overloaded days can flip session focus to review-only
 - `Advanced` gate for expert controls instead of exposing the full simulator-style surface on first load
 - Advanced planning tools remain available behind `Advanced`:
   - profile, review-protection, caps, and pace assumptions
@@ -481,6 +484,7 @@ Current capabilities:
   - per-day override shell (skip/holiday + per-session time override)
   - calibration sample logging and apply timing
   - forecast simulation display
+- Forecast and weekly planning now use the same shared allocation policy as `Today`, so planner pressure is more consistent across surfaces
 
 ### Today screen
 File: `lib/screens/today_screen.dart`
@@ -489,7 +493,7 @@ User-facing explainer:
 - `docs/assistant/features/PLANNER_USER_GUIDE.md` (execution flow, Stage-4 due handling, grading, and override guidance)
 
 Current capabilities:
-- Build today plan from scheduler/planner
+- Build today plan from a shared deterministic scheduler path that is also used by Forecast and weekly planning
 - Render a top coaching card that:
   - chooses one next action in plain language
   - explains why that action matters today
@@ -511,12 +515,15 @@ Current capabilities:
   - it can route the learner to the minimum day flow or back to `My Plan`
 - Render planned reviews and planned new memorization
 - Render dedicated Stage-4 delayed-consolidation due items with urgency metadata
+- Mandatory Stage-4 due now reserves planner minutes before new memorization is assigned, even when the learner explicitly overrides the default block
 - Render completion and empty-state cards when there is no remaining actionable work
 - Render sessionized day blocks (timed or untimed) with recovery signal
 - Save grades (`q=5/4/3/2/0`)
 - "Open in Reader" deep-link with page mode + verse range highlight params
 - "Open Companion Chain" action for review/new rows
 - Soft-block NEW launch when mandatory Stage-4 due exists (explicit override allowed and logged)
+- New work now uses a minimum viable threshold:
+  - if only a tiny unsafe remainder is left after retention work, new memorization is paused instead of creating token assignments
 - Stage-4 section now includes a plain-language explanation for why delayed checks are prioritized ahead of new work
 - Companion route launch:
   - review: `/companion/chain?unitId=...&mode=review`
