@@ -56,7 +56,7 @@
 ## Progress
 - [x] Start Wave 1
 - [x] Merge Wave 1
-- [ ] Start Wave 2
+- [x] Start Wave 2
 - [ ] Merge Wave 2
 - [ ] Start Wave 3
 - [ ] Merge Wave 3
@@ -100,8 +100,8 @@
 | Stream | Status | Branch | Worktree | Notes |
 |---|---|---|---|---|
 | Previous planner roadmap | merged | historical | removed | Wave 1-7 completed before this roadmap started |
-| Practice Wave 1 | merged | `feat/practice-wave1-entry-language` | `/home/fa507/dev/hifz_planner_practice_wave1` | Merged to `main` as PR #18 |
-| Practice Wave 2 | planned | `feat/practice-wave2-screen-simplification` | not created | Task-first screen wording and reduced jargon |
+| Practice Wave 1 | merged | `feat/practice-wave1-entry-language` | removed | Merged to `main` as PR #18; plan archived by PR #19 |
+| Practice Wave 2 | active | `feat/practice-wave2-screen-simplification` | `/home/fa507/dev/hifz_planner_practice_wave2` | Task-first screen wording and reduced jargon in progress |
 | Practice Wave 3 | planned | `feat/practice-wave3-hidden-recall-runtime` | not created | Uses the existing hidden recall design spec |
 | Practice Wave 4 | planned | `feat/practice-wave4-daily-modes` | not created | Daily practice integration and walkthrough polish |
 
@@ -112,5 +112,6 @@
   - 2026-03-08: Wave 1 is implemented and validated locally in `/home/fa507/dev/hifz_planner_practice_wave1`; `Today` now launches new work into practice-first flow, `Learn` exposes a practice hub, and the practice screen title no longer leads with `Progressive Reveal Chain`.
   - 2026-03-08: Wave 1 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, app user guide, and one planner guide reference.
   - 2026-03-08: PR #18 merged Wave 1 to `main`; the next roadmap action returns to Wave 2 after the Wave 1 plan is archived.
+  - 2026-03-08: PR #19 archived the completed Wave 1 plan and reset the tracker on `main`, so Wave 2 can now start from a clean baseline.
 - Next recommended action:
-  - Start Practice Wave 2 on a fresh isolated worktree after archiving the finished Wave 1 plan.
+  - Complete Practice Wave 2 on the isolated Wave 2 worktree, then close it before opening Wave 3.
