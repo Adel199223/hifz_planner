@@ -61,8 +61,8 @@
 - [x] Start Wave 3
 - [x] Merge Wave 3
 - [x] Start Wave 4
-- [ ] Merge Wave 4
-- [ ] Close the roadmap
+- [x] Merge Wave 4
+- [x] Close the roadmap
 
 ## Surprises and Adjustments
 - Use this section for new sequence changes, blockers, or scope corrections discovered during implementation.
@@ -103,7 +103,7 @@
 | Practice Wave 1 | merged | `feat/practice-wave1-entry-language` | removed | Merged to `main` as PR #18; plan archived by PR #19 |
 | Practice Wave 2 | merged | `feat/practice-wave2-screen-simplification` | removed | Merged to `main` as PR #20; plan archived in `docs/assistant/exec_plans/completed/` |
 | Practice Wave 3 | merged | `feat/practice-wave3-hidden-recall-runtime` | removed | Merged to `main` as PR #22 after verification-only closeout; plan archived in `docs/assistant/exec_plans/completed/` |
-| Practice Wave 4 | active | `feat/practice-wave4-daily-modes` | `/home/fa507/dev/hifz_planner_practice_wave4` | Implemented, validated, and docs-synced locally; ready for publish closeout |
+| Practice Wave 4 | merged | `feat/practice-wave4-daily-modes` | removed | Merged to `main` as PR #23; plan archived in `docs/assistant/exec_plans/completed/` |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -120,5 +120,7 @@
   - 2026-03-08: PR #22 archived the completed Wave 3 plan and confirmed that the next roadmap action is Wave 4 from a clean baseline.
   - 2026-03-08: Wave 4 is implemented and validated locally in `/home/fa507/dev/hifz_planner_practice_wave4`; `Learn` now teaches the best daily order and readiness state for each practice path, while `Today` now exposes secondary practice-mode shortcuts when multiple valid modes remain.
   - 2026-03-08: Wave 4 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, app user guide, and planner guide.
+  - 2026-03-08: PR #23 merged Practice Wave 4 to `main`.
+  - 2026-03-08: The focused 4-wave Practice from Memory roadmap is complete and should now hand off to a new backlog instead of silently opening another wave.
 - Next recommended action:
-  - Close Practice Wave 4 with commit, PR, merge, cleanup, and roadmap closeout.
+  - Define the next backlog before opening another roadmap.
