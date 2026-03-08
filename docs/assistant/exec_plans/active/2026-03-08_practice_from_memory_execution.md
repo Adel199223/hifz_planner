@@ -60,7 +60,7 @@
 - [x] Merge Wave 2
 - [x] Start Wave 3
 - [x] Merge Wave 3
-- [ ] Start Wave 4
+- [x] Start Wave 4
 - [ ] Merge Wave 4
 - [ ] Close the roadmap
 
@@ -101,9 +101,9 @@
 |---|---|---|---|---|
 | Previous planner roadmap | merged | historical | removed | Wave 1-7 completed before this roadmap started |
 | Practice Wave 1 | merged | `feat/practice-wave1-entry-language` | removed | Merged to `main` as PR #18; plan archived by PR #19 |
-| Practice Wave 2 | merged | `feat/practice-wave2-screen-simplification` | closeout pending cleanup | Merged to `main` as PR #20; plan archived in `docs/assistant/exec_plans/completed/` |
-| Practice Wave 3 | merged-ready | `feat/practice-wave3-hidden-recall-runtime` | `/home/fa507/dev/hifz_planner_practice_wave3` | Verification complete: current engine already satisfies the Stage 3 hidden-recall contract |
-| Practice Wave 4 | planned | `feat/practice-wave4-daily-modes` | not created | Daily practice integration and walkthrough polish |
+| Practice Wave 2 | merged | `feat/practice-wave2-screen-simplification` | removed | Merged to `main` as PR #20; plan archived in `docs/assistant/exec_plans/completed/` |
+| Practice Wave 3 | merged | `feat/practice-wave3-hidden-recall-runtime` | removed | Merged to `main` as PR #22 after verification-only closeout; plan archived in `docs/assistant/exec_plans/completed/` |
+| Practice Wave 4 | active | `feat/practice-wave4-daily-modes` | `/home/fa507/dev/hifz_planner_practice_wave4` | Startup complete; daily practice integration and walkthrough polish in progress |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -117,5 +117,6 @@
   - 2026-03-08: PR #20 merged Wave 2 to `main`; the next roadmap action returns to Wave 3 after the Wave 2 plan is archived and cleanup completes.
   - 2026-03-08: PR #21 archived the completed Wave 2 plan and reset the tracker on `main`, so Wave 3 can now start from a clean baseline.
   - 2026-03-08: Wave 3 validation confirmed that the current hidden-recall runtime already matches `STAGE3_HIDDEN_RECALL_DESIGN_SPEC.md`; this wave needs closeout only, not a new engine patch.
+  - 2026-03-08: PR #22 archived the completed Wave 3 plan and confirmed that the next roadmap action is Wave 4 from a clean baseline.
 - Next recommended action:
-  - Close and archive Practice Wave 3, then start Practice Wave 4 on a fresh isolated worktree.
+  - Implement Practice Wave 4 on the isolated Wave 4 worktree, focusing on daily practice mode framing and integration from `Today` and `Learn`.
