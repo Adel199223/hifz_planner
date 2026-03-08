@@ -29,6 +29,7 @@
 3. Port and merge post-Wave1 critical fixes.
 4. Start and complete Wave 2.
 5. Resume the roadmap from Wave 3.
+6. Merge Wave 4 and return the roadmap to Wave 5.
 
 ## Detailed Steps
 1. Publish the research docs from `feat/stage1-product-audit`.
@@ -57,6 +58,8 @@
 - [x] Start Wave 2
 - [x] Merge Wave 2
 - [x] Resume roadmap from Wave 3
+- [x] Merge Wave 4
+- [ ] Start Wave 5
 
 ## Surprises and Adjustments
 - Use this section for new sequence changes, blockers, or scope corrections discovered during implementation.
@@ -108,13 +111,13 @@
 | Post-Wave1 critical fixes | merged | `feat/stability-post-wave1-critical-fixes` | `/home/fa507/dev/hifz_planner_stability` | Merged to `main` as PR #5 |
 | Wave 2 | merged | `feat/ux-wave2-today-coaching` | `/home/fa507/dev/hifz_planner_wave2` | Merged to `main` as PR #6 |
 | Wave 3 | merged | `feat/ux-wave3-my-plan-preset-flow` | removed | Merged to `main` as PR #8; closeout follow-up fixed the stale navigation-shell assertion and archived the plan |
-| Wave 4 | merged-ready | `feat/planner-wave4-health-explanations` | `/home/fa507/dev/hifz_planner_wave4` | Health, recovery, minimum-day, and explanation UX are implemented locally, validated, and docs-synced; publish is next |
+| Wave 4 | merged | `feat/planner-wave4-health-explanations` | removed | Merged to `main` as PR #10; finished plan archived to `completed/` |
 | Wave 5 | planned | `feat/planner-wave5-scheduler-v2` | not created yet | Deterministic allocation replacement |
 | Wave 6 | planned | `feat/planner-wave6-forecast-calibration-refine` | not created yet | Post-scheduler refinement |
 | Wave 7 | planned | `feat/planner-wave7-optional-adaptive-followup` | not created yet | Optional only |
 
 - Current blockers:
-  - No blocker is currently recorded for the active Wave 4 branch.
+  - No blocker is currently recorded for the next Wave 5 startup.
 - Detours and plan updates:
   - 2026-03-08: Research/spec work completed before broader implementation. Preserve it before merging app code branches.
   - 2026-03-08: Roadmap publication finished first so the execution tracker exists on `main` before Wave 1 closes.
@@ -128,5 +131,6 @@
   - 2026-03-08: Wave 4 used a lightweight planner-feedback helper and a UI-only recovery wizard so health/recovery behavior could land without changing scheduler contracts or persistence.
   - 2026-03-08: Wave 4 validation passed locally, including new helper tests, updated Today/Plan screen tests, localization validation, and agent/workspace validators.
   - 2026-03-08: Wave 4 received a narrow Assistant Docs Sync limited to canonical planner/today behavior docs after implementation and validation were already green.
+  - 2026-03-08: PR #10 merged Wave 4, so the roadmap now returns to the planned Wave 5 scheduler stream.
 - Next recommended action:
-  - Commit the Wave 4 branch, push it, open the PR, and merge it once checks are green.
+  - Create `feat/planner-wave5-scheduler-v2` from clean `main`, add the Wave 5 ExecPlan, and start the deterministic allocation implementation.
