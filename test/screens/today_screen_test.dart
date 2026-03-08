@@ -371,6 +371,19 @@ void main() {
       find.byKey(const ValueKey('today_explanation_packet')),
       findsOneWidget,
     );
+    expect(find.byKey(const ValueKey('today_goal_focus_card')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('today_goal_focus_badge')),
+      findsOneWidget,
+    );
+    expect(find.text('Recovery and stabilize'), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_goal_good_day')), findsOneWidget);
+    expect(
+      find.text(
+        'A good day means doing the safest essential work without forcing a full load.',
+      ),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('today_short_day_hint')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('today_minimum_day_button')),
@@ -402,6 +415,46 @@ void main() {
 
     expect(
       find.text('Companion route unitId=$dueUnitId mode=stage4'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('coaching card shows steady-progress daily wins on a light day', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(find.byKey(const ValueKey('today_goal_focus_card')), findsOneWidget);
+    expect(find.text('Steady progress'), findsOneWidget);
+    expect(
+      find.text(
+        'A good day means finishing the main task and, if time allows, the rest of today\'s planned work.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'On a short day, the top planned task still counts as a real win.',
+      ),
       findsOneWidget,
     );
   });

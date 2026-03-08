@@ -117,6 +117,9 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
 - `Learn` now includes:
   - a simple `Practice from Memory` hub
   - the existing `Hifz Plan` card
+- Goals and progress remain integrated into existing surfaces:
+  - `Today` and `My Plan` now share one internal goal-focus layer
+  - there is still no separate goals tab or progress dashboard
 
 ### Routes
 Defined in `lib/app/router.dart`:
@@ -432,6 +435,7 @@ Important repos/services:
   - `quran_text_importer_service.dart`
   - `page_metadata_importer_service.dart`
   - `daily_planner.dart`
+  - `goal_progress_snapshot_service.dart`
   - `spaced_repetition_scheduler.dart`
   - `calibration_service.dart`
   - `forecast_simulation_service.dart`
@@ -468,6 +472,13 @@ Current capabilities:
   - `On track`
   - `Tight`
   - `Overloaded`
+- Weekly goal summary now sits above `Plan health` and derives one supportive focus from current planner posture:
+  - `Steady progress`
+  - `Protect retention`
+  - `Recovery and stabilize`
+- The weekly goal summary is read-only:
+  - it is not a separate goal wizard
+  - it changes automatically with current plan pressure
 - Plan health copy can now explain:
   - when backlog burn-down is recommended
   - when a minimum viable day is safer than pushing full load
@@ -513,6 +524,11 @@ Current capabilities:
   - gives a short-day fallback
   - exposes a recovery entry point back to `My Plan`
   - can show secondary practice-mode shortcuts when other valid modes still remain after the main priority item
+- Render a supportive goal-focus block inside the coaching card that explains:
+  - this week's current goal
+  - what counts as a good day today
+  - how the main task supports that goal
+  - what still counts on a short day
 - Render a health badge and explanation packet so the learner can see whether the day is:
   - `On track`
   - `Tight`
@@ -541,6 +557,10 @@ Current capabilities:
 - Soft-block NEW launch when mandatory Stage-4 due exists (explicit override allowed and logged)
 - New work now uses a minimum viable threshold:
   - if only a tiny unsafe remainder is left after retention work, new memorization is paused instead of creating token assignments
+- Goal framing is intentionally supportive, not gamified:
+  - no badges
+  - no streak pressure
+  - no punishment language for missed days
 - Stage-4 section now includes a plain-language explanation for why delayed checks are prioritized ahead of new work
 - Companion route launch:
   - review: `/companion/chain?unitId=...&mode=review`
