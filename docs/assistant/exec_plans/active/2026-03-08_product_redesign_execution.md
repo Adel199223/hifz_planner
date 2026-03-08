@@ -55,8 +55,8 @@
 - [x] Merge Wave 1
 - [x] Merge post-Wave1 critical fixes
 - [x] Start Wave 2
-- [ ] Merge Wave 2
-- [ ] Resume roadmap from Wave 3
+- [x] Merge Wave 2
+- [x] Resume roadmap from Wave 3
 
 ## Surprises and Adjustments
 - Use this section for new sequence changes, blockers, or scope corrections discovered during implementation.
@@ -87,10 +87,10 @@
 
 | Stream | Status | Branch | Worktree | Notes |
 |---|---|---|---|---|
-| Stage 1-5 roadmap publication | merged | `feat/stage1-product-audit` | `/home/fa507/dev/hifz_planner_stage1` | Merged to `main` as PR #3 |
+| Stage 1-5 roadmap publication | merged | `feat/stage1-product-audit` | removed | Merged to `main` as PR #3 |
 | Wave 1 | merged | `feat/ux-wave1-navigation-copy` | `/home/fa507/dev/hifz_planner_wave1` | Merged to `main` as PR #4 |
 | Post-Wave1 critical fixes | merged | `feat/stability-post-wave1-critical-fixes` | `/home/fa507/dev/hifz_planner_stability` | Merged to `main` as PR #5 |
-| Wave 2 | active | `feat/ux-wave2-today-coaching` | `/home/fa507/dev/hifz_planner_wave2` | Today becomes the coaching home without planner contract changes |
+| Wave 2 | merged | `feat/ux-wave2-today-coaching` | `/home/fa507/dev/hifz_planner_wave2` | Merged to `main` as PR #6 |
 | Wave 3 | planned | `feat/ux-wave3-my-plan-preset-flow` | not created yet | Resume after Wave 2 |
 | Wave 4 | planned | `feat/planner-wave4-health-explanations` | not created yet | Depends on Wave 3 contract |
 | Wave 5 | planned | `feat/planner-wave5-scheduler-v2` | not created yet | Deterministic allocation replacement |
@@ -98,12 +98,12 @@
 | Wave 7 | planned | `feat/planner-wave7-optional-adaptive-followup` | not created yet | Optional only |
 
 - Current blockers:
-  - Wave 1 and the dirty audit branch overlap in Reader and docs files; they must not be merged together.
-  - The critical fixes need a clean post-Wave1 branch so only the approved runtime/test changes move forward.
+  - No blocker is currently recorded for Wave 3 startup.
 - Detours and plan updates:
   - 2026-03-08: Research/spec work completed before broader implementation. Preserve it before merging app code branches.
   - 2026-03-08: Roadmap publication finished first so the execution tracker exists on `main` before Wave 1 closes.
   - 2026-03-08: Wave 1 merged cleanly after syncing the tracker/research docs from `main`.
   - 2026-03-08: The audit fixes were ported onto a fresh branch instead of merging the dirty audit worktree directly.
+  - 2026-03-08: Wave 2 landed on the clean post-stability baseline, so the next recommended stream returns to the planned Wave 3 sequence.
 - Next recommended action:
-  - Finish Wave 2 on top of the clean post-stability baseline, then resume the roadmap with Wave 3.
+  - Start `feat/ux-wave3-my-plan-preset-flow` from clean `main`.
