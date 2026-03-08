@@ -74,15 +74,29 @@
 ## Progress
 - [x] Create the Wave 6 branch/worktree and mark it active in the master tracker
 - [x] Create this Wave 6 ExecPlan
-- [ ] Audit the current forecast/calibration path against the Wave 6 spec
-- [ ] Implement the Wave 6 forecast and calibration refinements
-- [ ] Validate the branch and prepare the publish path
+- [x] Audit the current forecast/calibration path against the Wave 6 spec
+- [x] Implement the Wave 6 forecast and calibration refinements
+- [x] Validate the branch and prepare the publish path
 
 ## Surprises and Adjustments
 - Use this section for any mismatch between the current forecast/calibration plumbing and the deterministic Wave 5 planner contract.
+- The existing planner already had one shared allocation path from Wave 5, so the safest Wave 6 change was to add a small calibration-quality signal into that shared allocator instead of creating a second forecast-only rule layer.
+- `PlanScreen` had one test coupled to the old calibration timing label text, so the test now follows the new plain-language wording instead of the previous label.
 
 ## Handoff
 - Wave 6 is active on `feat/planner-wave6-forecast-calibration-refine` in `/home/fa507/dev/hifz_planner_wave6`.
-- The next implementation pass should start by auditing the current forecast, calibration, and plan-summary path before changing user-facing wording or forecast outputs.
+- Wave 6 is implemented locally with:
+  - a shared calibration-quality signal that adjusts planner stress and new-work budget
+  - plain-language forecast summary and confidence output
+  - cleaner calibration wording and guidance in `My Plan`
+- Validation passed for the touched scope:
+  - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+  - `flutter test -j 1 -r expanded test/data/services/scheduling/daily_content_allocator_test.dart`
+  - `flutter test -j 1 -r expanded test/data/services/forecast_simulation_service_test.dart`
+  - `flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/today_screen_test.dart`
+  - `dart tooling/validate_localization.dart`
+  - `dart tooling/validate_agent_docs.dart`
 - All research stages are complete; implementation continues by wave.
-- Next step: Wave 6 - Forecast and Calibration Refinement
+- Next step: close Wave 6 with docs sync and PR merge

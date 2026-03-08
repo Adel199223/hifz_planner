@@ -7,6 +7,7 @@ import '../../repositories/settings_repo.dart';
 import '../onboarding_defaults.dart';
 import 'availability_interpreter.dart';
 import 'daily_content_allocator.dart';
+import 'planner_quality_signal.dart';
 import 'scheduling_preferences_codec.dart';
 import 'weekly_plan_generator.dart';
 
@@ -66,6 +67,12 @@ class PlanningProjectionEngine {
     };
   }
 
+  PlannerQualitySignal qualitySignalFromSettings(AppSettingsData settings) {
+    return plannerQualitySignalFromGradeDistributionJson(
+      settings.typicalGradeDistributionJson,
+    );
+  }
+
   DailyContentAllocation allocateDailyContent({
     required double dailyMinutes,
     required double dueReviewMinutes,
@@ -73,6 +80,7 @@ class PlanningProjectionEngine {
     required bool forceRevisionOnly,
     double mandatoryStage4Minutes = 0,
     double optionalCatchUpMinutes = 0,
+    PlannerQualitySignal qualitySignal = const PlannerQualitySignal.neutral(),
   }) {
     return _dailyContentAllocator.allocate(
       dailyMinutes: dailyMinutes,
@@ -81,6 +89,7 @@ class PlanningProjectionEngine {
       forceRevisionOnly: forceRevisionOnly,
       mandatoryStage4Minutes: mandatoryStage4Minutes,
       optionalCatchUpMinutes: optionalCatchUpMinutes,
+      qualitySignal: qualitySignal,
     );
   }
 
@@ -96,6 +105,7 @@ class PlanningProjectionEngine {
     final effectivePreferences =
         preferences ?? preferencesFromSettings(settings);
     final effectiveOverrides = overrides ?? overridesFromSettings(settings);
+    final qualitySignal = qualitySignalFromSettings(settings);
     final dueReviewMinutesByDay = await estimateDueReviewMinutesForHorizon(
       startDay: startDay,
       horizonDays: horizonDays,
@@ -112,6 +122,7 @@ class PlanningProjectionEngine {
       dueReviewMinutesByDay: dueReviewMinutesByDay,
       reviewBudgetRatio: reviewBudgetRatio(settings.profile),
       forceRevisionOnly: settings.forceRevisionOnly == 1,
+      qualitySignal: qualitySignal,
     );
   }
 

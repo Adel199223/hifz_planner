@@ -482,9 +482,17 @@ Current capabilities:
     - availability models: minutes/day, minutes/week, specific windows
   - weekly calendar (rolling next 7 days) with session focus/minutes/status
   - per-day override shell (skip/holiday + per-session time override)
-  - calibration sample logging and apply timing
-  - forecast simulation display
+  - calibration sample logging, guidance, and apply timing
+  - forecast summary, confidence, and detailed curves
 - Forecast and weekly planning now use the same shared allocation policy as `Today`, so planner pressure is more consistent across surfaces
+- Forecast now starts with:
+  - a plain-language summary
+  - a simple confidence label
+  - a short explanation of why that confidence is high, medium, or low
+- Calibration now behaves more like `teach the planner your pace` than a raw tuning panel:
+  - it encourages a few real samples first
+  - it can apply now or starting tomorrow
+  - its sample data and grade distribution now slightly influence how cautiously the shared planner treats review pressure and new-work budget
 
 ### Today screen
 File: `lib/screens/today_screen.dart`

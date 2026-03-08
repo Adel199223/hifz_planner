@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:drift/drift.dart' show OrderingTerm;
+
 import '../database/app_database.dart';
 import '../repositories/progress_repo.dart';
 import '../repositories/quran_repo.dart';
@@ -8,9 +10,19 @@ import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
 import '../time/local_day_time.dart';
 import 'scheduling/planning_projection_engine.dart';
+import 'scheduling/planner_quality_signal.dart';
 import 'spaced_repetition_scheduler.dart';
 
 enum ForecastGradeStrategy { distributionCycle, defaultFallback }
+
+enum ForecastConfidenceBand { low, medium, high }
+
+enum ForecastSummaryState {
+  steadyProgress,
+  watchLoad,
+  protectReview,
+  insufficientData,
+}
 
 class ForecastWeekPoint {
   const ForecastWeekPoint({
@@ -39,6 +51,11 @@ class ForecastSimulationResult {
     required this.revisionOnlyRatioCurve,
     required this.avgNewPagesPerDayCurve,
     required this.gradeStrategyUsed,
+    required this.confidenceBand,
+    required this.summaryState,
+    required this.calibrationSampleCount,
+    required this.avgRevisionOnlyRatio,
+    required this.qualitySignalBand,
   });
 
   final DateTime? estimatedCompletionDate;
@@ -48,6 +65,11 @@ class ForecastSimulationResult {
   final List<double> revisionOnlyRatioCurve;
   final List<double> avgNewPagesPerDayCurve;
   final ForecastGradeStrategy gradeStrategyUsed;
+  final ForecastConfidenceBand confidenceBand;
+  final ForecastSummaryState summaryState;
+  final int calibrationSampleCount;
+  final double avgRevisionOnlyRatio;
+  final PlannerQualitySignalBand qualitySignalBand;
 }
 
 class ForecastSimulationService {
@@ -103,6 +125,7 @@ class ForecastSimulationService {
     final schedulingOverrides = _projectionEngine.overridesFromSettings(
       settings,
     );
+    final qualitySignal = _projectionEngine.qualitySignalFromSettings(settings);
     final minutesByDay = _projectionEngine.resolveMinutesForHorizon(
       startDay: startDay,
       horizonDays: maxSimulationDays,
@@ -114,6 +137,7 @@ class ForecastSimulationService {
     final gradeSource = _GradeSource.fromJson(
       settings.typicalGradeDistributionJson,
     );
+    final calibrationSampleCount = await _countCalibrationSamples();
 
     if (lastAyah == null) {
       return _buildResult(
@@ -121,6 +145,8 @@ class ForecastSimulationService {
         incompleteReason: 'No ayah data available for forecast simulation.',
         weeklyPoints: const <ForecastWeekPoint>[],
         gradeStrategyUsed: gradeSource.strategy,
+        calibrationSampleCount: calibrationSampleCount,
+        qualitySignalBand: qualitySignal.band,
       );
     }
 
@@ -196,6 +222,7 @@ class ForecastSimulationService {
         dueReviewMinutes: dueReviewMinutes,
         profile: settings.profile,
         forceRevisionOnly: settings.forceRevisionOnly == 1,
+        qualitySignal: qualitySignal,
       );
 
       final plannedReviews = <_SimScheduleState>[];
@@ -322,6 +349,8 @@ class ForecastSimulationService {
       incompleteReason: incompleteReason,
       weeklyPoints: weeklyPoints,
       gradeStrategyUsed: gradeSource.strategy,
+      calibrationSampleCount: calibrationSampleCount,
+      qualitySignalBand: qualitySignal.band,
     );
   }
 
@@ -330,10 +359,32 @@ class ForecastSimulationService {
     required String? incompleteReason,
     required List<ForecastWeekPoint> weeklyPoints,
     required ForecastGradeStrategy gradeStrategyUsed,
+    required int calibrationSampleCount,
+    required PlannerQualitySignalBand qualitySignalBand,
   }) {
     final estimatedCompletionDate = completionDay == null
         ? null
         : _localEpochStart.add(Duration(days: completionDay));
+    final avgRevisionOnlyRatio = weeklyPoints.isEmpty
+        ? 0.0
+        : weeklyPoints
+                  .map((point) => point.revisionOnlyRatio)
+                  .fold<double>(0.0, (sum, value) => sum + value) /
+              weeklyPoints.length;
+    final confidenceBand = _deriveConfidenceBand(
+      completionDay: completionDay,
+      calibrationSampleCount: calibrationSampleCount,
+      weeklyPoints: weeklyPoints,
+      gradeStrategyUsed: gradeStrategyUsed,
+      qualitySignalBand: qualitySignalBand,
+    );
+    final summaryState = _deriveSummaryState(
+      completionDay: completionDay,
+      weeklyPoints: weeklyPoints,
+      avgRevisionOnlyRatio: avgRevisionOnlyRatio,
+      confidenceBand: confidenceBand,
+      qualitySignalBand: qualitySignalBand,
+    );
 
     return ForecastSimulationResult(
       estimatedCompletionDate: estimatedCompletionDate,
@@ -349,7 +400,83 @@ class ForecastSimulationService {
         weeklyPoints.map((point) => point.avgNewPagesPerDay),
       ),
       gradeStrategyUsed: gradeStrategyUsed,
+      confidenceBand: confidenceBand,
+      summaryState: summaryState,
+      calibrationSampleCount: calibrationSampleCount,
+      avgRevisionOnlyRatio: avgRevisionOnlyRatio,
+      qualitySignalBand: qualitySignalBand,
     );
+  }
+
+  ForecastConfidenceBand _deriveConfidenceBand({
+    required int? completionDay,
+    required int calibrationSampleCount,
+    required List<ForecastWeekPoint> weeklyPoints,
+    required ForecastGradeStrategy gradeStrategyUsed,
+    required PlannerQualitySignalBand qualitySignalBand,
+  }) {
+    if (weeklyPoints.isEmpty) {
+      return ForecastConfidenceBand.low;
+    }
+
+    final usesCalibrationSignal =
+        gradeStrategyUsed == ForecastGradeStrategy.distributionCycle &&
+        qualitySignalBand != PlannerQualitySignalBand.unknown;
+    final hasCompletion = completionDay != null;
+
+    if (hasCompletion && calibrationSampleCount >= 6 && usesCalibrationSignal) {
+      return ForecastConfidenceBand.high;
+    }
+
+    if ((hasCompletion && calibrationSampleCount >= 2) ||
+        usesCalibrationSignal ||
+        weeklyPoints.length >= 2) {
+      return ForecastConfidenceBand.medium;
+    }
+
+    return ForecastConfidenceBand.low;
+  }
+
+  ForecastSummaryState _deriveSummaryState({
+    required int? completionDay,
+    required List<ForecastWeekPoint> weeklyPoints,
+    required double avgRevisionOnlyRatio,
+    required ForecastConfidenceBand confidenceBand,
+    required PlannerQualitySignalBand qualitySignalBand,
+  }) {
+    if (weeklyPoints.isEmpty) {
+      return ForecastSummaryState.insufficientData;
+    }
+
+    if (completionDay == null ||
+        avgRevisionOnlyRatio >= 0.70 ||
+        qualitySignalBand == PlannerQualitySignalBand.fragile) {
+      return ForecastSummaryState.protectReview;
+    }
+
+    if (confidenceBand == ForecastConfidenceBand.low ||
+        avgRevisionOnlyRatio >= 0.35 ||
+        qualitySignalBand == PlannerQualitySignalBand.cautious) {
+      return ForecastSummaryState.watchLoad;
+    }
+
+    return ForecastSummaryState.steadyProgress;
+  }
+
+  Future<int> _countCalibrationSamples({int limitPerType = 30}) async {
+    final newSamples =
+        await (_db.select(_db.calibrationSample)
+              ..where((tbl) => tbl.sampleKind.equals('new_memorization'))
+              ..orderBy([(tbl) => OrderingTerm.desc(tbl.id)])
+              ..limit(limitPerType))
+            .get();
+    final reviewSamples =
+        await (_db.select(_db.calibrationSample)
+              ..where((tbl) => tbl.sampleKind.equals('review'))
+              ..orderBy([(tbl) => OrderingTerm.desc(tbl.id)])
+              ..limit(limitPerType))
+            .get();
+    return newSamples.length + reviewSamples.length;
   }
 
   Future<bool> _isCompletionReached({

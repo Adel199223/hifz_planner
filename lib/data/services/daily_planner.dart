@@ -130,6 +130,9 @@ class DailyPlanner {
       final schedulingOverrides = _projectionEngine.overridesFromSettings(
         settings,
       );
+      final qualitySignal = _projectionEngine.qualitySignalFromSettings(
+        settings,
+      );
       final weeklyPlan = await _projectionEngine.generateWeeklyPlan(
         startDay: todayDay,
         horizonDays: 1,
@@ -190,6 +193,7 @@ class DailyPlanner {
             settings.forceRevisionOnly == 1 ||
             (todaySchedule?.revisionOnlyDay ?? false),
         mandatoryStage4Minutes: stage4DueMinutes,
+        qualitySignal: qualitySignal,
       );
       final reviewBudgetMinutes = math.max(
         0.0,

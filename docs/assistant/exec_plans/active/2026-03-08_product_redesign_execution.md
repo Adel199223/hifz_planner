@@ -121,7 +121,7 @@
 | Wave 7 | planned | `feat/planner-wave7-optional-adaptive-followup` | not created yet | Optional only |
 
 - Current blockers:
-  - No blocker is currently recorded for the next Wave 6 startup.
+  - No blocker is currently recorded for Wave 6 closeout.
 - Detours and plan updates:
   - 2026-03-08: Research/spec work completed before broader implementation. Preserve it before merging app code branches.
   - 2026-03-08: Roadmap publication finished first so the execution tracker exists on `main` before Wave 1 closes.
@@ -142,5 +142,7 @@
   - 2026-03-08: Wave 5 received a narrow Assistant Docs Sync limited to canonical planner/today docs and the non-technical guides that describe daily load and forecast behavior.
   - 2026-03-08: PR #12 merged Wave 5, so the roadmap now returns to the planned Wave 6 forecast and calibration refinement stream.
   - 2026-03-08: Wave 5 cleanup completed, the stale Wave 5 worktree/branch was removed, and Wave 6 started from clean `main` in `/home/fa507/dev/hifz_planner_wave6` with a new wave-specific ExecPlan.
+  - 2026-03-08: Wave 6 refined the existing shared planner instead of inventing a forecast-only rule path by adding a small calibration-quality signal into the shared allocator used by Today, Forecast, and weekly planning.
+  - 2026-03-08: Wave 6 validation passed locally, including forecast, plan screen, daily planner, Today screen, localization, and agent-doc checks, so the next action is publish-oriented rather than more implementation.
 - Next recommended action:
-  - Audit the current forecast, calibration, and plan-summary path in the active Wave 6 worktree, then implement the learner-facing forecast and calibration refinements.
+  - Run a narrow Assistant Docs Sync for the Wave 6 forecast/calibration behavior changes, then close Wave 6 with commit, PR, and merge.

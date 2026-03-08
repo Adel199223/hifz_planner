@@ -1318,6 +1318,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               strings.forecastDeterministicSimulation,
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            const SizedBox(height: 8),
+            Text(strings.forecastSummaryIntro),
             const SizedBox(height: 12),
             FilledButton(
               key: const ValueKey('plan_forecast_run_button'),
@@ -1340,6 +1342,26 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             ],
             if (forecast != null) ...[
               const SizedBox(height: 12),
+              Text(
+                _localizedForecastSummary(strings, forecast),
+                key: const ValueKey('plan_forecast_summary'),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                strings.forecastConfidenceLine(
+                  _localizedForecastConfidence(
+                    strings,
+                    forecast.confidenceBand,
+                  ),
+                ),
+                key: const ValueKey('plan_forecast_confidence'),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _localizedForecastConfidenceHint(strings, forecast),
+                key: const ValueKey('plan_forecast_confidence_hint'),
+              ),
+              const SizedBox(height: 8),
               if (forecast.estimatedCompletionDate != null)
                 Text(
                   strings.estimatedCompletion(
@@ -1394,6 +1416,8 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
               strings.calibrationModeOptional,
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            const SizedBox(height: 8),
+            Text(strings.calibrationIntro),
             const SizedBox(height: 12),
             _buildCalibrationLogGroup(
               title: strings.newMemorizationSample,
@@ -1438,6 +1462,11 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                 _formatMedian(preview?.medianReviewMinutesPerAyah),
               ),
               key: const ValueKey('plan_calibration_preview_review'),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _localizedCalibrationGuidance(strings, preview),
+              key: const ValueKey('plan_calibration_guidance'),
             ),
             const SizedBox(height: 16),
             Text(
@@ -1514,6 +1543,59 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       GuidedPlanPreset.normal => strings.planPresetNormalDescription,
       GuidedPlanPreset.intensive => strings.planPresetIntensiveDescription,
     };
+  }
+
+  String _localizedForecastSummary(
+    AppStrings strings,
+    ForecastSimulationResult forecast,
+  ) {
+    return switch (forecast.summaryState) {
+      ForecastSummaryState.steadyProgress =>
+        strings.forecastSummarySteadyProgress,
+      ForecastSummaryState.watchLoad => strings.forecastSummaryWatchLoad,
+      ForecastSummaryState.protectReview =>
+        strings.forecastSummaryProtectReview,
+      ForecastSummaryState.insufficientData =>
+        strings.forecastSummaryInsufficientData,
+    };
+  }
+
+  String _localizedForecastConfidence(
+    AppStrings strings,
+    ForecastConfidenceBand confidence,
+  ) {
+    return switch (confidence) {
+      ForecastConfidenceBand.high => strings.forecastConfidenceHigh,
+      ForecastConfidenceBand.medium => strings.forecastConfidenceMedium,
+      ForecastConfidenceBand.low => strings.forecastConfidenceLow,
+    };
+  }
+
+  String _localizedForecastConfidenceHint(
+    AppStrings strings,
+    ForecastSimulationResult forecast,
+  ) {
+    return switch (forecast.confidenceBand) {
+      ForecastConfidenceBand.high => strings.forecastConfidenceHighHint,
+      ForecastConfidenceBand.medium => strings.forecastConfidenceMediumHint(
+        forecast.calibrationSampleCount,
+      ),
+      ForecastConfidenceBand.low => strings.forecastConfidenceLowHint(
+        forecast.calibrationSampleCount,
+      ),
+    };
+  }
+
+  String _localizedCalibrationGuidance(
+    AppStrings strings,
+    CalibrationPreview? preview,
+  ) {
+    final sampleCount =
+        (preview?.newSampleCount ?? 0) + (preview?.reviewSampleCount ?? 0);
+    if (sampleCount >= 6) {
+      return strings.calibrationGuidanceReady(sampleCount);
+    }
+    return strings.calibrationGuidanceNeedMore(sampleCount);
   }
 
   String _reviewPrioritySummary(AppStrings strings) {

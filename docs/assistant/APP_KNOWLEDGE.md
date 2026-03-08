@@ -96,6 +96,9 @@ Do not use this file as primary truth when there is a conflict.
 - The weekly planner preview now follows the guided time inputs rather than stale advanced defaults
 - `My Plan` now also shows a plain-language `Plan health` card with backlog burn-down, minimum-day, and recovery hints when needed
 - The weekly planner preview and Forecast now follow the same stress/new-work rules as `Today`
+- Forecast now opens with a plain-language summary and a simple confidence label before the detailed curves
+- Calibration is now framed as teaching the planner your real pace, with guidance about when enough samples exist to trust the update
+- Recent calibration and grade-distribution data now slightly influence how cautious the shared planner is about review pressure and new work
 
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`
