@@ -78,7 +78,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
   - required
 - evidence refs:
   - `docs/assistant/exec_plans/active/2026-03-08_goals_progress_execution.md`
-  - `docs/assistant/exec_plans/active/2026-03-08_goals_wave2_weekly_progress.md`
+  - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md`
 
 ### `fresh_worktree_flutter_validation_lockfile_churn`
 
@@ -106,4 +106,4 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 - docs sync relevance:
   - possible
 - evidence refs:
-  - `docs/assistant/exec_plans/active/2026-03-08_goals_wave2_weekly_progress.md`
+  - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md`

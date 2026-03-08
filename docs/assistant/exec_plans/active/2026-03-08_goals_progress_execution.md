@@ -53,7 +53,7 @@
 - [x] Start Wave 1
 - [x] Merge Wave 1
 - [x] Start Wave 2
-- [ ] Merge Wave 2
+- [x] Merge Wave 2
 - [ ] Start Wave 3
 - [ ] Merge Wave 3
 - [ ] Start Wave 4
@@ -96,7 +96,7 @@
 | Previous planner roadmap | merged | historical | removed | Wave 1-7 completed before this roadmap started |
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
 | Goals Wave 1 | merged | `feat/goals-wave1-daily-wins` | removed after merge | Merged to `main` as PR #25; plan archived in `docs/assistant/exec_plans/completed/` |
-| Goals Wave 2 | active | `feat/goals-wave2-weekly-progress` | `/home/fa507/dev/hifz_planner_goals_wave2` | Weekly recent-progress snapshot and trust layer |
+| Goals Wave 2 | merged | `feat/goals-wave2-weekly-progress` | removed after merge | Weekly recent-progress snapshot and trust layer merged to `main` as PR #27; plan archived in `docs/assistant/exec_plans/completed/` |
 | Goals Wave 3 | planned | not created | not created | Advice-only goal coaching and adjustment guidance |
 | Goals Wave 4 | planned | not created | not created | Cross-surface wording alignment and roadmap closeout |
 
@@ -123,5 +123,6 @@
 - 2026-03-08: Wave 2 pre-closeout docs sync also refreshed issue memory with the repeatable local validation issues from this stream:
   - parallel Flutter test plugin-symlink races inside one worktree
   - incidental `pubspec.lock` churn on first Flutter validation in a fresh worktree
+- 2026-03-08: PR #27 merged Goals Wave 2 to `main`; the closeout step is now archive/tracker bookkeeping only, and the roadmap resumes at Wave 3 after cleanup.
 - Next recommended action:
-  - Close Wave 2 with commit, PR, and merge.
+  - Wave 3 - Goal Coaching and Adjustment Guidance
