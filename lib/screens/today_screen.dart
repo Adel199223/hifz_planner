@@ -356,6 +356,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   Widget _buildCoachingCard(AppStrings strings, TodayPlan plan) {
     final content = _resolveCoachingContent(strings);
     final feedback = PlannerFeedbackSnapshot.fromTodayPlan(plan);
+    final extraModes = _buildOtherPracticeModes(strings, content);
     return Card(
       key: const ValueKey('today_coaching_card'),
       child: Padding(
@@ -416,6 +417,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               },
               child: Text(content.primaryActionLabel),
             ),
+            if (extraModes != null) ...[
+              const SizedBox(height: 14),
+              extraModes,
+            ],
             const SizedBox(height: 14),
             DecoratedBox(
               key: const ValueKey('today_short_day_hint'),
@@ -470,6 +475,85 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 child: Text(strings.recoveryAssistantTitle),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget? _buildOtherPracticeModes(
+    AppStrings strings,
+    _TodayCoachingContent content,
+  ) {
+    final shortcuts = <_TodayPracticeShortcut>[];
+
+    if (content.primaryMode != _TodayPracticeMode.delayedCheck &&
+        _remainingStage4Due.isNotEmpty) {
+      shortcuts.add(
+        _TodayPracticeShortcut(
+          key: const ValueKey('today_other_practice_mode_stage4'),
+          label: strings.doDelayedCheck,
+          route: _stage4RouteForItem(_remainingStage4Due.first),
+        ),
+      );
+    }
+    if (content.primaryMode != _TodayPracticeMode.review &&
+        _remainingReviews.isNotEmpty) {
+      shortcuts.add(
+        _TodayPracticeShortcut(
+          key: const ValueKey('today_other_practice_mode_review'),
+          label: strings.continueReviewPractice,
+          route: _reviewRouteForUnit(_remainingReviews.first.unit.id),
+        ),
+      );
+    }
+    if (content.primaryMode != _TodayPracticeMode.newPractice &&
+        _remainingNewUnits.isNotEmpty) {
+      shortcuts.add(
+        _TodayPracticeShortcut(
+          key: const ValueKey('today_other_practice_mode_new'),
+          label: strings.startNewPractice,
+          route: _newRouteForUnit(_remainingNewUnits.first),
+        ),
+      );
+    }
+
+    if (shortcuts.isEmpty) {
+      return null;
+    }
+
+    return DecoratedBox(
+      key: const ValueKey('today_other_practice_modes'),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.todayOtherPracticeModesTitle,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 4),
+            Text(strings.todayOtherPracticeModesHint),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final shortcut in shortcuts)
+                  OutlinedButton(
+                    key: shortcut.key,
+                    onPressed: () {
+                      context.go(shortcut.route);
+                    },
+                    child: Text(shortcut.label),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -592,6 +676,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         shortDayHint: strings.todayFocusStage4ShortDay,
         primaryActionLabel: strings.todayFocusStage4Action,
         primaryRoute: _stage4RouteForItem(firstStage4),
+        primaryMode: _TodayPracticeMode.delayedCheck,
       );
     }
     if (_remainingReviews.isNotEmpty) {
@@ -602,6 +687,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         shortDayHint: strings.todayFocusReviewShortDay,
         primaryActionLabel: strings.todayFocusReviewAction,
         primaryRoute: _reviewRouteForUnit(firstReview.unit.id),
+        primaryMode: _TodayPracticeMode.review,
       );
     }
     final firstNew = _remainingNewUnits.first;
@@ -611,6 +697,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       shortDayHint: strings.todayFocusNewShortDay,
       primaryActionLabel: strings.todayFocusNewAction,
       primaryRoute: _newRouteForUnit(firstNew),
+      primaryMode: _TodayPracticeMode.newPractice,
     );
   }
 
@@ -1251,6 +1338,7 @@ class _TodayCoachingContent {
     required this.shortDayHint,
     required this.primaryActionLabel,
     required this.primaryRoute,
+    required this.primaryMode,
   });
 
   final String title;
@@ -1258,4 +1346,19 @@ class _TodayCoachingContent {
   final String shortDayHint;
   final String primaryActionLabel;
   final String primaryRoute;
+  final _TodayPracticeMode primaryMode;
+}
+
+enum _TodayPracticeMode { newPractice, review, delayedCheck }
+
+class _TodayPracticeShortcut {
+  const _TodayPracticeShortcut({
+    required this.key,
+    required this.label,
+    required this.route,
+  });
+
+  final Key key;
+  final String label;
+  final String route;
 }

@@ -113,9 +113,12 @@ class _LearnScreenState extends ConsumerState<LearnScreen> {
 
   Widget _buildPracticeEntry({
     required BuildContext context,
+    required Key containerKey,
     required Key key,
+    required Key statusKey,
     required String title,
     required String subtitle,
+    required String statusText,
     required String buttonLabel,
     required String route,
     required bool primary,
@@ -137,6 +140,7 @@ class _LearnScreenState extends ConsumerState<LearnScreen> {
           );
 
     return DecoratedBox(
+      key: containerKey,
       decoration: BoxDecoration(
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(12),
@@ -149,8 +153,54 @@ class _LearnScreenState extends ConsumerState<LearnScreen> {
             Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 6),
             Text(subtitle),
+            const SizedBox(height: 8),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                child: Text(
+                  statusText,
+                  key: statusKey,
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
             button,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPracticeOrderCard(AppStrings strings) {
+    return DecoratedBox(
+      key: const ValueKey('learn_practice_order_card'),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.learnPracticeOrderTitle,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(strings.learnPracticeOrderFirst),
+            const SizedBox(height: 6),
+            Text(strings.learnPracticeOrderSecond),
+            const SizedBox(height: 6),
+            Text(strings.learnPracticeOrderThird),
           ],
         ),
       ),
@@ -208,11 +258,20 @@ class _LearnScreenState extends ConsumerState<LearnScreen> {
                         const SizedBox(height: 8),
                         Text(strings.learnPracticeFromMemorySubtitle),
                         const SizedBox(height: 16),
+                        _buildPracticeOrderCard(strings),
+                        const SizedBox(height: 16),
                         _buildPracticeEntry(
                           context: context,
+                          containerKey: const ValueKey(
+                            'learn_practice_new_entry',
+                          ),
                           key: const ValueKey('learn_practice_new_button'),
+                          statusKey: const ValueKey('learn_practice_new_status'),
                           title: strings.startNewPractice,
                           subtitle: strings.learnPracticeNewSubtitle,
+                          statusText: practiceTargets.newPracticeDirect
+                              ? strings.learnPracticeDirectStatus
+                              : strings.learnPracticeFallbackStatus,
                           buttonLabel: strings.startNewPractice,
                           route: practiceTargets.newPracticeRoute,
                           primary: true,
@@ -220,9 +279,18 @@ class _LearnScreenState extends ConsumerState<LearnScreen> {
                         const SizedBox(height: 12),
                         _buildPracticeEntry(
                           context: context,
+                          containerKey: const ValueKey(
+                            'learn_practice_review_entry',
+                          ),
                           key: const ValueKey('learn_practice_review_button'),
+                          statusKey: const ValueKey(
+                            'learn_practice_review_status',
+                          ),
                           title: strings.continueReviewPractice,
                           subtitle: strings.learnPracticeReviewSubtitle,
+                          statusText: practiceTargets.reviewPracticeDirect
+                              ? strings.learnPracticeDirectStatus
+                              : strings.learnPracticeFallbackStatus,
                           buttonLabel: strings.continueReviewPractice,
                           route: practiceTargets.reviewPracticeRoute,
                           primary: false,
@@ -230,9 +298,18 @@ class _LearnScreenState extends ConsumerState<LearnScreen> {
                         const SizedBox(height: 12),
                         _buildPracticeEntry(
                           context: context,
+                          containerKey: const ValueKey(
+                            'learn_practice_stage4_entry',
+                          ),
                           key: const ValueKey('learn_practice_stage4_button'),
+                          statusKey: const ValueKey(
+                            'learn_practice_stage4_status',
+                          ),
                           title: strings.doDelayedCheck,
                           subtitle: strings.learnPracticeDelayedCheckSubtitle,
+                          statusText: practiceTargets.delayedCheckDirect
+                              ? strings.learnPracticeDirectStatus
+                              : strings.learnPracticeFallbackStatus,
                           buttonLabel: strings.doDelayedCheck,
                           route: practiceTargets.delayedCheckRoute,
                           primary: false,
@@ -240,7 +317,7 @@ class _LearnScreenState extends ConsumerState<LearnScreen> {
                         if (usesFallback) ...[
                           const SizedBox(height: 12),
                           Text(
-                            strings.learnPracticeFromMemorySubtitle,
+                            strings.learnPracticeFallbackNote,
                             key: const ValueKey('learn_practice_fallback_note'),
                           ),
                         ],

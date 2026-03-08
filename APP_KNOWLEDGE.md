@@ -512,6 +512,7 @@ Current capabilities:
   - explains why that action matters today
   - gives a short-day fallback
   - exposes a recovery entry point back to `My Plan`
+  - can show secondary practice-mode shortcuts when other valid modes still remain after the main priority item
 - Render a health badge and explanation packet so the learner can see whether the day is:
   - `On track`
   - `Tight`
@@ -555,7 +556,14 @@ Current capabilities:
     - `Start new practice`
     - `Continue review practice`
     - `Do delayed check`
+  - teaches a simple best-order rule:
+    - delayed check first
+    - review next
+    - new practice after retention work feels stable
   - uses already-existing direct targets when possible
+  - each practice entry now shows whether it is:
+    - `Ready now`
+    - or `Opens Today for guidance`
   - falls back to `/today` when no direct practice target is ready yet
   - includes the Hifz Plan entry card linking to `/plan`
 - `lib/screens/my_quran_screen.dart`

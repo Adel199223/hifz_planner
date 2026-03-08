@@ -385,6 +385,14 @@ void main() {
       find.byKey(const ValueKey('today_recovery_wizard_button')),
       findsOneWidget,
     );
+    expect(
+      find.byKey(const ValueKey('today_other_practice_modes')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('today_other_practice_mode_review')),
+      findsOneWidget,
+    );
     expect(find.text('Do delayed check'), findsWidgets);
 
     await _tapVisible(
@@ -397,6 +405,57 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'coaching card exposes other practice modes when review is primary',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerTestCleanup(tester);
+      final todayDay = localDayIndex(DateTime.now().toLocal());
+
+      await _seedAyahs(db, withPageMetadata: true);
+      await _configurePlannerSettings(
+        db,
+        requirePageMetadata: false,
+        maxNewUnitsPerDay: 2,
+      );
+      await _insertDueReviewUnit(db, todayDay: todayDay);
+
+      final router = _buildTodayRouter();
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pump();
+      await pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('today_coaching_card')),
+      );
+
+      expect(
+        find.byKey(const ValueKey('today_other_practice_modes')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('today_other_practice_mode_new')),
+        findsOneWidget,
+      );
+      expect(find.text('Start new practice'), findsWidgets);
+    },
+  );
 
   testWidgets('recovery wizard opens from Today and can route to My Plan', (
     tester,

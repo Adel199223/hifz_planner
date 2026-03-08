@@ -58,12 +58,16 @@
 
 ## Progress
 - [x] Start Wave 4 ExecPlan
-- [ ] Audit daily practice integration points
-- [ ] Improve daily practice mode framing
-- [ ] Run focused validation
+- [x] Audit daily practice integration points
+- [x] Improve daily practice mode framing
+- [x] Run focused validation
 
 ## Surprises and Adjustments
 - Use this section for any scope corrections if a daily integration gap turns out to depend on deeper engine or planner changes.
+- 2026-03-08: Wave 4 stayed narrow. `Learn` now teaches the best daily practice order and shows whether each entry is ready now or will route through `Today` for guidance.
+- 2026-03-08: `Today` keeps one primary coaching action, but now exposes secondary practice-mode shortcuts when other valid modes remain, without changing any route or planner contracts.
+- 2026-03-08: Focused validation passed with `today_screen`, `learn_screen`, `navigation_shell_menu`, `flutter analyze`, localization validation, agent docs validation, and workspace hygiene validation.
+- 2026-03-08: Narrow Assistant Docs Sync completed for the canonical app brief, assistant bridge, app user guide, and planner guide. Wave 4 is now ready for commit/PR/merge closeout.
 
 ## Handoff
 - Wave 4 should end with:

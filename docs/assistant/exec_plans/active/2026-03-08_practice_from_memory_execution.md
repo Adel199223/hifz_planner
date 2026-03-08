@@ -103,7 +103,7 @@
 | Practice Wave 1 | merged | `feat/practice-wave1-entry-language` | removed | Merged to `main` as PR #18; plan archived by PR #19 |
 | Practice Wave 2 | merged | `feat/practice-wave2-screen-simplification` | removed | Merged to `main` as PR #20; plan archived in `docs/assistant/exec_plans/completed/` |
 | Practice Wave 3 | merged | `feat/practice-wave3-hidden-recall-runtime` | removed | Merged to `main` as PR #22 after verification-only closeout; plan archived in `docs/assistant/exec_plans/completed/` |
-| Practice Wave 4 | active | `feat/practice-wave4-daily-modes` | `/home/fa507/dev/hifz_planner_practice_wave4` | Startup complete; daily practice integration and walkthrough polish in progress |
+| Practice Wave 4 | active | `feat/practice-wave4-daily-modes` | `/home/fa507/dev/hifz_planner_practice_wave4` | Implemented, validated, and docs-synced locally; ready for publish closeout |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -118,5 +118,7 @@
   - 2026-03-08: PR #21 archived the completed Wave 2 plan and reset the tracker on `main`, so Wave 3 can now start from a clean baseline.
   - 2026-03-08: Wave 3 validation confirmed that the current hidden-recall runtime already matches `STAGE3_HIDDEN_RECALL_DESIGN_SPEC.md`; this wave needs closeout only, not a new engine patch.
   - 2026-03-08: PR #22 archived the completed Wave 3 plan and confirmed that the next roadmap action is Wave 4 from a clean baseline.
+  - 2026-03-08: Wave 4 is implemented and validated locally in `/home/fa507/dev/hifz_planner_practice_wave4`; `Learn` now teaches the best daily order and readiness state for each practice path, while `Today` now exposes secondary practice-mode shortcuts when multiple valid modes remain.
+  - 2026-03-08: Wave 4 received a narrow Assistant Docs Sync limited to the canonical app brief, assistant bridge, app user guide, and planner guide.
 - Next recommended action:
-  - Implement Practice Wave 4 on the isolated Wave 4 worktree, focusing on daily practice mode framing and integration from `Today` and `Learn`.
+  - Close Practice Wave 4 with commit, PR, merge, cleanup, and roadmap closeout.

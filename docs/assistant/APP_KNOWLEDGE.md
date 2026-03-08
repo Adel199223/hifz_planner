@@ -86,6 +86,7 @@ Do not use this file as primary truth when there is a conflict.
   - `Start new practice`
   - `Continue review practice`
   - `Do delayed check`
+- When more than one valid practice mode remains, `Today` can now show secondary practice shortcuts under the main coaching action
 - When new work is the main focus, the coaching card now opens the practice flow directly instead of sending the learner to Reader first
 - `Today` now has a visible recovery entry back to `My Plan`
 - Empty and completion states are called out explicitly instead of only leaving section-level empty text
@@ -118,6 +119,9 @@ Do not use this file as primary truth when there is a conflict.
   - the screen leads with `What to do now`
   - learner-facing labels use plain language like `Listen and follow`, `Recite with a cue`, `Recite from memory`, `Review from memory`, and `Delayed check`
   - correction states now explicitly tell the learner to listen to the correction before retrying
+- Wave 4 now makes the daily entry path clearer before the learner even opens the runtime:
+  - `Learn` teaches the recommended order: delayed check, then review, then new practice
+  - each practice entry shows either `Ready now` or `Opens Today for guidance`
   - progress is shown as `Practice step X/Y` instead of leading with stage vocabulary
 
 ### Reader and Quran pipeline

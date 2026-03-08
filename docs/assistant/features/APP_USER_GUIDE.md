@@ -147,6 +147,7 @@ What you will now see first:
 - a `Do this next` card at the top
 - a short explanation of why that action comes first
 - an `If you only have 10 minutes` fallback
+- sometimes a small `Other practice modes today` section if more than one valid practice path is ready
 - a recovery entry that sends you back to `My Plan` if the day feels too heavy
 - a health label that shows whether today is `On track`, `Tight`, or `Overloaded`
 - an explanation box that tells you why new work is normal, lighter, or paused
@@ -159,6 +160,15 @@ Open `Practice from Memory` from `Today` or `Learn` to run the right kind of ses
 - `Start new practice`
 - `Continue review practice`
 - `Do delayed check`
+
+If you open it from `Learn`, the app now also teaches the safest default order:
+- delayed check first
+- review next
+- new practice after that
+
+Each entry also tells you whether it is:
+- `Ready now`
+- or `Opens Today for guidance`
 
 The screen now focuses on one simple question first:
 - what should I do now?
