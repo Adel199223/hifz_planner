@@ -9,9 +9,11 @@ import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/repositories/schedule_repo.dart';
 import '../data/services/daily_planner.dart';
+import '../data/services/planner_feedback.dart';
 import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
 import '../l10n/app_strings.dart';
+import '../ui/planner/recovery_wizard_dialog.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -48,7 +50,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     try {
-      final plan = await ref.read(dailyPlannerProvider).planToday(
+      final plan = await ref
+          .read(dailyPlannerProvider)
+          .planToday(
             todayDay: todayDay,
             allowStage4Override: _allowStage4NewOverride,
           );
@@ -256,9 +260,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     if (messenger == null) {
       return;
     }
-    messenger.showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildGradeButtons({
@@ -322,7 +324,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   String _stage4RouteForItem(Stage4DueItem item) {
-    final needsStrengthening = item.lifecycle.stage4Status == 'failed' ||
+    final needsStrengthening =
+        item.lifecycle.stage4Status == 'failed' ||
         item.lifecycle.stage4Status == 'needs_reinforcement' ||
         item.lifecycle.stage4StrengtheningRoute != null;
     if (needsStrengthening) {
@@ -355,6 +358,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   Widget _buildCoachingCard(AppStrings strings, TodayPlan plan) {
     final content = _resolveCoachingContent(strings);
+    final feedback = PlannerFeedbackSnapshot.fromTodayPlan(plan);
     return Card(
       key: const ValueKey('today_coaching_card'),
       child: Padding(
@@ -371,6 +375,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               content.title,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
+            const SizedBox(height: 10),
+            _buildHealthBadge(
+              key: const ValueKey('today_plan_health_badge'),
+              strings: strings,
+              health: feedback.health,
+            ),
+            const SizedBox(height: 12),
+            _buildTodayExplanationPacket(strings, feedback),
             if (plan.recoveryMode) ...[
               const SizedBox(height: 10),
               Text(
@@ -389,9 +401,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               Text(
                 plan.message!,
                 key: const ValueKey('today_coaching_plan_note'),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
             const SizedBox(height: 14),
@@ -427,6 +437,18 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(content.shortDayHint),
+                    if (feedback.minimumDayRecommended) ...[
+                      const SizedBox(height: 8),
+                      Text(strings.todayMinimumDayHint),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        key: const ValueKey('today_minimum_day_button'),
+                        onPressed: () {
+                          context.go(content.primaryRoute);
+                        },
+                        child: Text(strings.todayMinimumDayAction),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -441,10 +463,127 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               },
               child: Text(strings.todayOpenMyPlan),
             ),
+            if (feedback.recoverySuggested) ...[
+              const SizedBox(height: 8),
+              TextButton(
+                key: const ValueKey('today_recovery_wizard_button'),
+                onPressed: () {
+                  _openRecoveryWizard(strings, content);
+                },
+                child: Text(strings.recoveryAssistantTitle),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  void _openRecoveryWizard(AppStrings strings, _TodayCoachingContent content) {
+    showPlannerRecoveryWizard(
+      context: context,
+      strings: strings,
+      onOpenMyPlan: () {
+        context.go('/plan');
+      },
+      onMinimumDay: () {
+        context.go(content.primaryRoute);
+      },
+    );
+  }
+
+  Widget _buildTodayExplanationPacket(
+    AppStrings strings,
+    PlannerFeedbackSnapshot feedback,
+  ) {
+    final lines = <String>[
+      _localizedHealthSummary(strings, feedback.health),
+      if (feedback.newWorkPaused) strings.todayNewWorkPausedExplanation,
+      if (!feedback.newWorkPaused && feedback.newWorkReduced)
+        strings.todayNewWorkReducedExplanation,
+      if (feedback.backlogBurnDownSuggested) strings.planBacklogBurnDownHint,
+    ];
+
+    return DecoratedBox(
+      key: const ValueKey('today_explanation_packet'),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.planHealthTitle,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 6),
+            for (var i = 0; i < lines.length; i++) ...[
+              Text(lines[i]),
+              if (i != lines.length - 1) const SizedBox(height: 6),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHealthBadge({
+    required Key key,
+    required AppStrings strings,
+    required PlannerHealthState health,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final (background, foreground) = switch (health) {
+      PlannerHealthState.onTrack => (
+        scheme.secondaryContainer,
+        scheme.onSecondaryContainer,
+      ),
+      PlannerHealthState.tight => (
+        scheme.tertiaryContainer,
+        scheme.onTertiaryContainer,
+      ),
+      PlannerHealthState.overloaded => (
+        scheme.errorContainer,
+        scheme.onErrorContainer,
+      ),
+    };
+
+    return DecoratedBox(
+      key: key,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Text(
+          '${strings.planHealthTitle}: ${_localizedHealthLabel(strings, health)}',
+          style: TextStyle(color: foreground, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+
+  String _localizedHealthLabel(AppStrings strings, PlannerHealthState health) {
+    return switch (health) {
+      PlannerHealthState.onTrack => strings.planHealthOnTrack,
+      PlannerHealthState.tight => strings.planHealthTight,
+      PlannerHealthState.overloaded => strings.planHealthOverloaded,
+    };
+  }
+
+  String _localizedHealthSummary(
+    AppStrings strings,
+    PlannerHealthState health,
+  ) {
+    return switch (health) {
+      PlannerHealthState.onTrack => strings.planHealthOnTrackSummary,
+      PlannerHealthState.tight => strings.planHealthTightSummary,
+      PlannerHealthState.overloaded => strings.planHealthOverloadedSummary,
+    };
   }
 
   _TodayCoachingContent _resolveCoachingContent(AppStrings strings) {
@@ -562,9 +701,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               Text(
                 plan.stage4CatchUpMessage!,
                 key: const ValueKey('today_stage4_catchup_message'),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
             if (plan.stage4BlocksNewByDefault) ...[
@@ -641,9 +778,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     return DecoratedBox(
       key: ValueKey('today_review_row_$unitId'),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -776,7 +911,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       final start = unitAyahs.first;
       final end = unitAyahs.last;
       final page = anchor.pageMadina;
-      final unitKey = 'debug_seed:p${page ?? 0}:s${start.surah}a${start.ayah}'
+      final unitKey =
+          'debug_seed:p${page ?? 0}:s${start.surah}a${start.ayah}'
           '-s${end.surah}a${end.ayah}:${now.millisecondsSinceEpoch}';
 
       MemUnitData? seededUnit;
@@ -868,9 +1004,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     return DecoratedBox(
       key: ValueKey('today_new_row_$unitId'),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -947,9 +1081,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       return const SafeArea(
         key: ValueKey('today_screen_root'),
         child: Center(
-          child: CircularProgressIndicator(
-            key: ValueKey('today_loading'),
-          ),
+          child: CircularProgressIndicator(key: ValueKey('today_loading')),
         ),
       );
     }
@@ -1063,9 +1195,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     return DecoratedBox(
       key: ValueKey('today_session_$index'),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -1080,9 +1210,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             ),
             Text(strings.sessionMinutes(minutes)),
             const SizedBox(width: 8),
-            Text(isTimed && minuteOfDay != null
-                ? _formatMinuteOfDay(minuteOfDay)
-                : strings.untimedSessionLabel),
+            Text(
+              isTimed && minuteOfDay != null
+                  ? _formatMinuteOfDay(minuteOfDay)
+                  : strings.untimedSessionLabel,
+            ),
             const SizedBox(width: 8),
             Text(status),
           ],
@@ -1109,10 +1241,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 }
 
 class _GradeOption {
-  const _GradeOption({
-    required this.label,
-    required this.q,
-  });
+  const _GradeOption({required this.label, required this.q});
 
   final String label;
   final int q;

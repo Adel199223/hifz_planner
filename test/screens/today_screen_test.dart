@@ -42,7 +42,9 @@ void main() {
     expect(find.byKey(const ValueKey('today_reviews_section')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_new_section')), findsOneWidget);
     expect(
-        find.byKey(const ValueKey('today_sessions_section')), findsOneWidget);
+      find.byKey(const ValueKey('today_sessions_section')),
+      findsOneWidget,
+    );
     expect(find.byKey(ValueKey('today_review_row_$dueUnitId')), findsOneWidget);
     expect(
       find.byKey(ValueKey('today_open_companion_review_$dueUnitId')),
@@ -51,8 +53,9 @@ void main() {
     expect(find.textContaining('page_segment'), findsWidgets);
   });
 
-  testWidgets('grading planned review writes review_log and updates schedule',
-      (tester) async {
+  testWidgets('grading planned review writes review_log and updates schedule', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -93,8 +96,9 @@ void main() {
     expect(logs.single.durationSeconds, isNull);
     expect(logs.single.mistakesCount, isNull);
 
-    final schedule = await (db.select(db.scheduleState)
-          ..where((tbl) => tbl.unitId.equals(dueUnitId)))
+    final schedule = await (db.select(
+      db.scheduleState,
+    )..where((tbl) => tbl.unitId.equals(dueUnitId)))
         .getSingle();
     expect(schedule.lastGradeQ, 5);
     expect(schedule.lastReviewDay, todayDay);
@@ -103,8 +107,9 @@ void main() {
     expect(find.byKey(ValueKey('today_review_row_$dueUnitId')), findsNothing);
   });
 
-  testWidgets('self-check grade for new unit writes review_log and schedules',
-      (tester) async {
+  testWidgets('self-check grade for new unit writes review_log and schedules', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -146,8 +151,9 @@ void main() {
     expect(logs.single.durationSeconds, isNull);
     expect(logs.single.mistakesCount, isNull);
 
-    final schedule = await (db.select(db.scheduleState)
-          ..where((tbl) => tbl.unitId.equals(unitId)))
+    final schedule = await (db.select(
+      db.scheduleState,
+    )..where((tbl) => tbl.unitId.equals(unitId)))
         .getSingle();
     expect(schedule.lastGradeQ, 4);
     expect(schedule.lastReviewDay, todayDay);
@@ -156,8 +162,9 @@ void main() {
     expect(find.byKey(ValueKey('today_new_row_$unitId')), findsNothing);
   });
 
-  testWidgets('open in reader navigates with page mode and highlight range',
-      (tester) async {
+  testWidgets('open in reader navigates with page mode and highlight range', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -209,8 +216,9 @@ void main() {
     expect(find.text(expectedRouteText), findsOneWidget);
   });
 
-  testWidgets('open companion review action navigates with mode=review',
-      (tester) async {
+  testWidgets('open companion review action navigates with mode=review', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -247,8 +255,9 @@ void main() {
       find.byKey(const ValueKey('today_reviews_section')),
     );
 
-    final companionButton =
-        find.byKey(ValueKey('today_open_companion_review_$dueUnitId'));
+    final companionButton = find.byKey(
+      ValueKey('today_open_companion_review_$dueUnitId'),
+    );
     await pumpUntilFound(tester, companionButton);
     await _tapVisible(tester, companionButton);
 
@@ -258,8 +267,9 @@ void main() {
     );
   });
 
-  testWidgets('stage-4 due item opens companion with mode=stage4',
-      (tester) async {
+  testWidgets('stage-4 due item opens companion with mode=stage4', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -280,11 +290,7 @@ void main() {
       maxNewUnitsPerDay: 1,
     );
     final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
-    await _insertStage4DueLifecycle(
-      db,
-      unitId: dueUnitId,
-      todayDay: todayDay,
-    );
+    await _insertStage4DueLifecycle(db, unitId: dueUnitId, todayDay: todayDay);
 
     final router = _buildTodayRouter();
     addTearDown(router.dispose);
@@ -301,8 +307,9 @@ void main() {
       find.byKey(const ValueKey('today_stage4_section')),
     );
 
-    final stage4Button =
-        find.byKey(ValueKey('today_open_companion_stage4_$dueUnitId'));
+    final stage4Button = find.byKey(
+      ValueKey('today_open_companion_stage4_$dueUnitId'),
+    );
     await pumpUntilFound(tester, stage4Button);
     await _tapVisible(tester, stage4Button);
 
@@ -312,8 +319,9 @@ void main() {
     );
   });
 
-  testWidgets('coaching card prioritizes stage-4 work and exposes recovery',
-      (tester) async {
+  testWidgets('coaching card prioritizes stage-4 work and exposes recovery', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -334,11 +342,7 @@ void main() {
       maxNewUnitsPerDay: 1,
     );
     final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
-    await _insertStage4DueLifecycle(
-      db,
-      unitId: dueUnitId,
-      todayDay: todayDay,
-    );
+    await _insertStage4DueLifecycle(db, unitId: dueUnitId, todayDay: todayDay);
 
     final router = _buildTodayRouter();
     addTearDown(router.dispose);
@@ -356,12 +360,28 @@ void main() {
     );
 
     expect(find.text('Protect yesterday’s memorization first'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('today_plan_health_badge')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('today_explanation_packet')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('today_short_day_hint')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('today_minimum_day_button')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const ValueKey('today_stage4_explanation')),
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('today_recovery_entry')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('today_recovery_wizard_button')),
+      findsOneWidget,
+    );
 
     await _tapVisible(
       tester,
@@ -374,8 +394,67 @@ void main() {
     );
   });
 
-  testWidgets('mandatory stage-4 due blocks new until override is confirmed',
-      (tester) async {
+  testWidgets('recovery wizard opens from Today and can route to My Plan', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+    await _insertStage4DueLifecycle(db, unitId: dueUnitId, todayDay: todayDay);
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_recovery_wizard_button')),
+    );
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('today_recovery_wizard_button')),
+    );
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('recovery_wizard_recommendation')),
+      findsOneWidget,
+    );
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('recovery_wizard_open_plan')),
+    );
+
+    expect(find.text('Plan route'), findsOneWidget);
+  });
+
+  testWidgets('mandatory stage-4 due blocks new until override is confirmed', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -397,16 +476,14 @@ void main() {
       maxNewPagesPerDay: 1,
     );
     final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
-    await _insertStage4DueLifecycle(
-      db,
-      unitId: dueUnitId,
-      todayDay: todayDay,
-    );
+    await _insertStage4DueLifecycle(db, unitId: dueUnitId, todayDay: todayDay);
 
     await _pumpToday(tester, container);
     expect(find.byKey(const ValueKey('today_stage4_section')), findsOneWidget);
-    expect(find.byKey(const ValueKey('today_stage4_override_new_button')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('today_stage4_override_new_button')),
+      findsOneWidget,
+    );
 
     final beforeNewUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
     expect(beforeNewUnits, isEmpty);
@@ -420,8 +497,9 @@ void main() {
       find.byKey(const ValueKey('today_stage4_override_confirm')),
     );
 
-    final lifecycle = await (db.select(db.companionLifecycleState)
-          ..where((tbl) => tbl.unitId.equals(dueUnitId)))
+    final lifecycle = await (db.select(
+      db.companionLifecycleState,
+    )..where((tbl) => tbl.unitId.equals(dueUnitId)))
         .getSingle();
     expect(lifecycle.lastNewOverrideDay, todayDay);
     expect(lifecycle.newOverrideCount, 1);
@@ -430,8 +508,9 @@ void main() {
     expect(afterNewUnits, isNotEmpty);
   });
 
-  testWidgets('open companion new action navigates with mode=new',
-      (tester) async {
+  testWidgets('open companion new action navigates with mode=new', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -471,7 +550,9 @@ void main() {
     expect(plannedNewUnits, isNotEmpty);
 
     final unitId = plannedNewUnits.first.id;
-    final companionButton = find.byKey(ValueKey('today_open_companion_new_$unitId'));
+    final companionButton = find.byKey(
+      ValueKey('today_open_companion_new_$unitId'),
+    );
     await pumpUntilFound(tester, companionButton);
     await _tapVisible(tester, companionButton);
 
@@ -525,8 +606,9 @@ void main() {
     expect(find.text('Plan route'), findsOneWidget);
   });
 
-  testWidgets('completion card appears after finishing the last new unit',
-      (tester) async {
+  testWidgets('completion card appears after finishing the last new unit', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -561,47 +643,54 @@ void main() {
     expect(find.byKey(const ValueKey('today_completion_card')), findsOneWidget);
   });
 
-  testWidgets('open in reader button is disabled when page metadata is missing',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerTestCleanup(tester);
-    final todayDay = localDayIndex(DateTime.now().toLocal());
+  testWidgets(
+    'open in reader button is disabled when page metadata is missing',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerTestCleanup(tester);
+      final todayDay = localDayIndex(DateTime.now().toLocal());
 
-    await _seedAyahs(db, withPageMetadata: false);
-    await _configurePlannerSettings(
-      db,
-      requirePageMetadata: false,
-      maxNewUnitsPerDay: 1,
-      maxNewPagesPerDay: 1,
-    );
+      await _seedAyahs(db, withPageMetadata: false);
+      await _configurePlannerSettings(
+        db,
+        requirePageMetadata: false,
+        maxNewUnitsPerDay: 1,
+        maxNewPagesPerDay: 1,
+      );
 
-    await _pumpToday(tester, container);
+      await _pumpToday(tester, container);
 
-    final plannedNewUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
-    final unit = plannedNewUnits.firstWhere((row) => row.pageMadina == null);
-    final openButtonFinder =
-        find.byKey(ValueKey('today_open_reader_${unit.id}'));
-    await pumpUntilFound(tester, openButtonFinder);
+      final plannedNewUnits = await _fetchPlannedNewUnits(
+        db,
+        todayDay: todayDay,
+      );
+      final unit = plannedNewUnits.firstWhere((row) => row.pageMadina == null);
+      final openButtonFinder = find.byKey(
+        ValueKey('today_open_reader_${unit.id}'),
+      );
+      await pumpUntilFound(tester, openButtonFinder);
 
-    final openButton = tester.widget<OutlinedButton>(openButtonFinder);
-    expect(openButton.onPressed, isNull);
-    expect(
-      find.text('Page metadata required to open in Reader.'),
-      findsWidgets,
-    );
-  });
+      final openButton = tester.widget<OutlinedButton>(openButtonFinder);
+      expect(openButton.onPressed, isNull);
+      expect(
+        find.text('Page metadata required to open in Reader.'),
+        findsWidgets,
+      );
+    },
+  );
 
-  testWidgets('debug seed button generates one new memorization unit',
-      (tester) async {
+  testWidgets('debug seed button generates one new memorization unit', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -643,7 +732,9 @@ void main() {
 
     final seededUnit = seededUnits.first;
     expect(
-        find.byKey(ValueKey('today_new_row_${seededUnit.id}')), findsOneWidget);
+      find.byKey(ValueKey('today_new_row_${seededUnit.id}')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(ValueKey('today_open_companion_new_${seededUnit.id}')),
       findsOneWidget,
@@ -768,9 +859,7 @@ Future<void> _pumpToday(
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: const MaterialApp(
-        home: Scaffold(body: TodayScreen()),
-      ),
+      child: const MaterialApp(home: Scaffold(body: TodayScreen())),
     ),
   );
   await tester.pump();
@@ -834,11 +923,8 @@ GoRouter _buildTodayRouter() {
       ),
       GoRoute(
         path: '/plan',
-        builder: (_, __) => const Scaffold(
-          body: Center(
-            child: Text('Plan route'),
-          ),
-        ),
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Plan route'))),
       ),
     ],
   );

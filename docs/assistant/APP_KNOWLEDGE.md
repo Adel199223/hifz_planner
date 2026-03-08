@@ -83,6 +83,8 @@ Do not use this file as primary truth when there is a conflict.
 - The coaching card chooses one next action, explains why it matters, and gives a short-day fallback
 - `Today` now has a visible recovery entry back to `My Plan`
 - Empty and completion states are called out explicitly instead of only leaving section-level empty text
+- `Today` now also shows a simple health state (`On track`, `Tight`, `Overloaded`) plus a plain-language explanation packet
+- When pressure is high, `Today` can expose `Do the minimum day` and the `Recovery assistant`
 
 ## Current My Plan Notes
 
@@ -90,6 +92,7 @@ Do not use this file as primary truth when there is a conflict.
 - The default path is `Easy`, `Normal`, `Intensive` plus realistic time, fluency, and a plain-language summary
 - Scheduling, forecast, calibration, and other expert controls are still present, but now live behind `Advanced`
 - The weekly planner preview now follows the guided time inputs rather than stale advanced defaults
+- `My Plan` now also shows a plain-language `Plan health` card with backlog burn-down, minimum-day, and recovery hints when needed
 
 ### Reader and Quran pipeline
 - `lib/screens/reader_screen.dart`

@@ -108,13 +108,13 @@
 | Post-Wave1 critical fixes | merged | `feat/stability-post-wave1-critical-fixes` | `/home/fa507/dev/hifz_planner_stability` | Merged to `main` as PR #5 |
 | Wave 2 | merged | `feat/ux-wave2-today-coaching` | `/home/fa507/dev/hifz_planner_wave2` | Merged to `main` as PR #6 |
 | Wave 3 | merged | `feat/ux-wave3-my-plan-preset-flow` | removed | Merged to `main` as PR #8; closeout follow-up fixed the stale navigation-shell assertion and archived the plan |
-| Wave 4 | planned | `feat/planner-wave4-health-explanations` | not created yet | Depends on Wave 3 contract |
+| Wave 4 | merged-ready | `feat/planner-wave4-health-explanations` | `/home/fa507/dev/hifz_planner_wave4` | Health, recovery, minimum-day, and explanation UX are implemented locally, validated, and docs-synced; publish is next |
 | Wave 5 | planned | `feat/planner-wave5-scheduler-v2` | not created yet | Deterministic allocation replacement |
 | Wave 6 | planned | `feat/planner-wave6-forecast-calibration-refine` | not created yet | Post-scheduler refinement |
 | Wave 7 | planned | `feat/planner-wave7-optional-adaptive-followup` | not created yet | Optional only |
 
 - Current blockers:
-  - No blocker is currently recorded for starting Wave 4 from clean `main`.
+  - No blocker is currently recorded for the active Wave 4 branch.
 - Detours and plan updates:
   - 2026-03-08: Research/spec work completed before broader implementation. Preserve it before merging app code branches.
   - 2026-03-08: Roadmap publication finished first so the execution tracker exists on `main` before Wave 1 closes.
@@ -124,5 +124,9 @@
   - 2026-03-08: Wave 3 started in `/home/fa507/dev/hifz_planner_wave3` with a new wave-specific ExecPlan to preserve the preset-first scope and the planner-preview sync fix.
   - 2026-03-08: Wave 3 implementation validated locally, then received a narrow planner docs sync and the roadmap-return rule before publish.
   - 2026-03-08: PR #8 merged the Wave 3 feature before the final CI-fix commit landed, so a small closeout branch ported the stale navigation-shell assertion fix and completed the tracker/archive cleanup on top of `main`.
+  - 2026-03-08: Wave 4 started from clean `main` in `/home/fa507/dev/hifz_planner_wave4` after the Wave 3 closeout merge restored the canonical tracker and archived the finished Wave 3 plan.
+  - 2026-03-08: Wave 4 used a lightweight planner-feedback helper and a UI-only recovery wizard so health/recovery behavior could land without changing scheduler contracts or persistence.
+  - 2026-03-08: Wave 4 validation passed locally, including new helper tests, updated Today/Plan screen tests, localization validation, and agent/workspace validators.
+  - 2026-03-08: Wave 4 received a narrow Assistant Docs Sync limited to canonical planner/today behavior docs after implementation and validation were already green.
 - Next recommended action:
-  - Start `feat/planner-wave4-health-explanations` from clean `main` and create the Wave 4 ExecPlan before coding.
+  - Commit the Wave 4 branch, push it, open the PR, and merge it once checks are green.
