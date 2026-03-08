@@ -307,10 +307,12 @@ Map<int, String> _indexedSurahMap(List<String> names) {
   };
 }
 
-final Map<int, String> _fallbackSurahNamesEnglishByNumber =
-    _indexedSurahMap(_fallbackSurahNamesEnglish);
-final Map<int, String> _fallbackSurahNamesArabicByNumber =
-    _indexedSurahMap(_fallbackSurahNamesArabic);
+final Map<int, String> _fallbackSurahNamesEnglishByNumber = _indexedSurahMap(
+  _fallbackSurahNamesEnglish,
+);
+final Map<int, String> _fallbackSurahNamesArabicByNumber = _indexedSurahMap(
+  _fallbackSurahNamesArabic,
+);
 
 const Map<int, Set<int>> _staticCenteredMushafLines = <int, Set<int>>{
   255: <int>{2},
@@ -368,23 +370,29 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   String _mushafPageSearchQuery = '';
   final Map<AppLanguage, Map<int, String>> _surahNamesByLanguage =
       <AppLanguage, Map<int, String>>{
-    AppLanguage.english:
-        Map<int, String>.from(_fallbackSurahNamesEnglishByNumber),
-    AppLanguage.french:
-        Map<int, String>.from(_fallbackSurahNamesEnglishByNumber),
-    AppLanguage.portuguese:
-        Map<int, String>.from(_fallbackSurahNamesEnglishByNumber),
-    AppLanguage.arabic:
-        Map<int, String>.from(_fallbackSurahNamesArabicByNumber),
-  };
+        AppLanguage.english: Map<int, String>.from(
+          _fallbackSurahNamesEnglishByNumber,
+        ),
+        AppLanguage.french: Map<int, String>.from(
+          _fallbackSurahNamesEnglishByNumber,
+        ),
+        AppLanguage.portuguese: Map<int, String>.from(
+          _fallbackSurahNamesEnglishByNumber,
+        ),
+        AppLanguage.arabic: Map<int, String>.from(
+          _fallbackSurahNamesArabicByNumber,
+        ),
+      };
   final Map<AppLanguage, Map<int, String>> _surahMeaningsByLanguage =
       <AppLanguage, Map<int, String>>{
-    AppLanguage.english: Map<int, String>.from(_fallbackSurahMeaningsEnglish),
-    for (final language in AppLanguage.values.where(
-      (value) => value != AppLanguage.english,
-    ))
-      language: <int, String>{},
-  };
+        AppLanguage.english: Map<int, String>.from(
+          _fallbackSurahMeaningsEnglish,
+        ),
+        for (final language in AppLanguage.values.where(
+          (value) => value != AppLanguage.english,
+        ))
+          language: <int, String>{},
+      };
   int? _selectedPage;
   Future<List<int>>? _availablePagesFuture;
   Future<List<MushafJuzNavEntry>>? _juzIndexFuture;
@@ -409,7 +417,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   final ScrollController _mushafScrollController = ScrollController();
   final Map<String, GlobalKey> _ayahRowKeys = <String, GlobalKey>{};
   final Map<String, Future<_VerseByVerseRowRenderData>>
-      _simpleQuranComRowFutureCache =
+  _simpleQuranComRowFutureCache =
       <String, Future<_VerseByVerseRowRenderData>>{};
   final Set<String> _simpleQuranComPrefetchKeys = <String>{};
   final Map<String, Future<MushafPageMeta>> _verseContextMetaFutureCache =
@@ -468,10 +476,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   void _applyWidgetInputs() {
-    var resolvedMode = _resolveMode(
-      mode: widget.mode,
-      page: widget.page,
-    );
+    var resolvedMode = _resolveMode(mode: widget.mode, page: widget.page);
     final target = _normalizeTarget(
       surah: widget.targetSurah,
       ayah: widget.targetAyah,
@@ -482,8 +487,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
     _mode = resolvedMode;
     if (_viewMode == _ReaderViewMode.simple) {
-      _mushafNavTab =
-          _mode == _ReaderMode.surah ? _MushafNavTab.surah : _MushafNavTab.page;
+      _mushafNavTab = _mode == _ReaderMode.surah
+          ? _MushafNavTab.surah
+          : _MushafNavTab.page;
     }
     _rangeHighlight = _normalizeRange();
     _pendingJumpTarget = target;
@@ -524,10 +530,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  _ReaderMode _resolveMode({
-    required String? mode,
-    required int? page,
-  }) {
+  _ReaderMode _resolveMode({required String? mode, required int? page}) {
     final normalized = mode?.toLowerCase().trim();
     if (normalized == 'page') {
       return _ReaderMode.page;
@@ -558,9 +561,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<List<MushafJuzNavEntry>> _loadMushafJuzIndex() {
-    return ref.read(quranComApiProvider).getJuzIndex(
-          mushafId: _activeMushafId(),
-        );
+    return ref
+        .read(quranComApiProvider)
+        .getJuzIndex(mushafId: _activeMushafId());
   }
 
   Future<void> _resolvePageSelection({
@@ -592,10 +595,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     int? pageToSelect;
 
     if (target != null) {
-      final targetAyah = await ref.read(quranRepoProvider).getAyah(
-            target.surah,
-            target.ayah,
-          );
+      final targetAyah = await ref
+          .read(quranRepoProvider)
+          .getAyah(target.surah, target.ayah);
 
       if (!mounted ||
           generation != _pageLoadGeneration ||
@@ -962,11 +964,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         return;
       }
 
-      final chaptersByLanguage = await Future.wait<
-          List<QuranComChapterEntry>>(<Future<List<QuranComChapterEntry>>>[
-        for (final language in AppLanguage.values)
-          chaptersService.getChapters(languageCode: language.code),
-      ]);
+      final chaptersByLanguage = await Future.wait<List<QuranComChapterEntry>>(
+        <Future<List<QuranComChapterEntry>>>[
+          for (final language in AppLanguage.values)
+            chaptersService.getChapters(languageCode: language.code),
+        ],
+      );
       for (var index = 0; index < AppLanguage.values.length; index++) {
         final language = AppLanguage.values[index];
         final entries = chaptersByLanguage[index];
@@ -1065,14 +1068,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   _ChapterHeaderPresentation _chapterHeaderPresentation(int chapter) {
     final language = ref.read(appPreferencesProvider).language;
-    final surahName = _surahNameFor(
-      surahNumber: chapter,
-      language: language,
-    );
-    final subtitle = _surahMeaningFor(
-      surahNumber: chapter,
-      language: language,
-    );
+    final surahName = _surahNameFor(surahNumber: chapter, language: language);
+    final subtitle = _surahMeaningFor(surahNumber: chapter, language: language);
     final title = language == AppLanguage.arabic
         ? '$surahName $chapter'
         : '$chapter. $surahName';
@@ -1156,14 +1153,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       return null;
     }
 
-    var start = _VersePosition(
-      surah: startSurah,
-      ayah: startAyah,
-    );
-    var end = _VersePosition(
-      surah: endSurah,
-      ayah: endAyah,
-    );
+    var start = _VersePosition(surah: startSurah, ayah: startAyah);
+    var end = _VersePosition(surah: endSurah, ayah: endAyah);
 
     if (start.compareTo(end) > 0) {
       final temp = start;
@@ -1179,10 +1170,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (range == null) {
       return false;
     }
-    final position = _VersePosition(
-      surah: ayah.surah,
-      ayah: ayah.ayah,
-    );
+    final position = _VersePosition(surah: ayah.surah, ayah: ayah.ayah);
     return position.compareTo(range.start) >= 0 &&
         position.compareTo(range.end) <= 0;
   }
@@ -1217,10 +1205,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         _showSnackBar(_strings.targetAyahNotVisibleOnSelectedPage);
       } else {
         _showSnackBar(
-          _strings.ayahNotFoundInSurah(
-            pendingTarget.ayah,
-            pendingTarget.surah,
-          ),
+          _strings.ayahNotFoundInSurah(pendingTarget.ayah, pendingTarget.surah),
         );
       }
       return;
@@ -1249,7 +1234,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       final position = _ayahScrollController.position;
       final maxExtent = position.maxScrollExtent;
       final viewport = position.viewportDimension;
-      final baseOffset = estimatedOffset ??
+      final baseOffset =
+          estimatedOffset ??
           (ayahs.length <= 1
               ? 0.0
               : (maxExtent * (targetIndex / (ayahs.length - 1))));
@@ -1267,11 +1253,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (rowContext == null && _ayahScrollController.hasClients) {
       final position = _ayahScrollController.position;
       final maxExtent = position.maxScrollExtent;
-      final viewport =
-          position.viewportDimension <= 0 ? 320.0 : position.viewportDimension;
-      for (var probe = 0.0;
-          probe <= maxExtent && rowContext == null;
-          probe += viewport * 0.8) {
+      final viewport = position.viewportDimension <= 0
+          ? 320.0
+          : position.viewportDimension;
+      for (
+        var probe = 0.0;
+        probe <= maxExtent && rowContext == null;
+        probe += viewport * 0.8
+      ) {
         _ayahScrollController.jumpTo(probe.clamp(0.0, maxExtent));
         await Future<void>.delayed(const Duration(milliseconds: 16));
         rowContext = _ayahRowKey(targetKey).currentContext;
@@ -1388,10 +1377,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         return;
       }
 
-      await repo.addBookmark(
-        surah: ayah.surah,
-        ayah: ayah.ayah,
-      );
+      await repo.addBookmark(surah: ayah.surah, ayah: ayah.ayah);
       _showSnackBar(_strings.bookmarkSaved);
     } catch (_) {
       _showSnackBar(_strings.failedToSaveBookmark);
@@ -1427,7 +1413,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           body: draft.body,
         );
         _showSnackBar(
-            updated ? _strings.noteUpdated : _strings.noteUpdateFailed);
+          updated ? _strings.noteUpdated : _strings.noteUpdateFailed,
+        );
       }
     } catch (_) {
       _showSnackBar(_strings.noteSaveFailed);
@@ -1437,9 +1424,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   Future<void> _copyText(AyahData ayah) async {
     _showSnackBar(_strings.copiedVerseText);
     unawaited(
-      Clipboard.setData(
-        ClipboardData(text: ayah.textUthmani),
-      ).catchError((Object _, StackTrace __) {
+      Clipboard.setData(ClipboardData(text: ayah.textUthmani)).catchError((
+        Object _,
+        StackTrace __,
+      ) {
         // Surface consistent UI feedback even if clipboard channel is unavailable.
       }),
     );
@@ -1450,10 +1438,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return showDialog<_NoteDraft>(
       context: context,
       builder: (dialogContext) {
-        return _ReaderNoteEditorDialog(
-          existing: existing,
-          strings: strings,
-        );
+        return _ReaderNoteEditorDialog(existing: existing, strings: strings);
       },
     );
   }
@@ -1466,9 +1451,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (messenger == null) {
       return;
     }
-    messenger.showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _audioErrorText(Object error) {
@@ -1512,8 +1495,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       return;
     }
     try {
-      final ayahs =
-          await ref.read(quranRepoProvider).getAyahsByPage(selectedPage);
+      final ayahs = await ref
+          .read(quranRepoProvider)
+          .getAyahsByPage(selectedPage);
       if (!mounted) {
         return;
       }
@@ -1640,15 +1624,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final selected = await showModalBottomSheet<double>(
       context: context,
       builder: (sheetContext) {
-        final current = ref.read(ayahAudioStateProvider).asData?.value.speed ??
+        final current =
+            ref.read(ayahAudioStateProvider).asData?.value.speed ??
             ref.read(ayahAudioPreferencesProvider).speed;
         return SafeArea(
           child: ListView(
             shrinkWrap: true,
             children: [
-              ListTile(
-                title: Text(_strings.playbackSpeed),
-              ),
+              ListTile(title: Text(_strings.playbackSpeed)),
               RadioGroup<double>(
                 groupValue: current,
                 onChanged: (value) {
@@ -1681,14 +1664,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       builder: (sheetContext) {
         final current =
             ref.read(ayahAudioStateProvider).asData?.value.repeatCount ??
-                ref.read(ayahAudioPreferencesProvider).repeatCount;
+            ref.read(ayahAudioPreferencesProvider).repeatCount;
         return SafeArea(
           child: ListView(
             shrinkWrap: true,
             children: [
-              ListTile(
-                title: Text(_strings.manageRepeatSettings),
-              ),
+              ListTile(title: Text(_strings.manageRepeatSettings)),
               RadioGroup<int>(
                 groupValue: current,
                 onChanged: (value) {
@@ -1716,16 +1697,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _handleAudioOptionsAction(
-      _ReaderAudioOptionAction action) async {
+    _ReaderAudioOptionAction action,
+  ) async {
     switch (action) {
-      case _ReaderAudioOptionAction.download:
-        _showSnackBar(_strings.downloadComingSoon);
-        return;
       case _ReaderAudioOptionAction.repeat:
         await _openRepeatPicker();
-        return;
-      case _ReaderAudioOptionAction.experience:
-        _showSnackBar(_strings.experienceComingSoon);
         return;
       case _ReaderAudioOptionAction.speed:
         await _openPlaybackSpeedPicker();
@@ -1851,7 +1827,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
     final mushafId = _activeMushafId();
     final translationResourceId = _translationResourceIdForLanguage(
-        ref.read(appPreferencesProvider).language);
+      ref.read(appPreferencesProvider).language,
+    );
     var page = _mode == _ReaderMode.page ? _selectedPage : null;
 
     if (page == null) {
@@ -1891,7 +1868,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
     final mushafId = _activeMushafId();
     final translationResourceId = _translationResourceIdForLanguage(
-        ref.read(appPreferencesProvider).language);
+      ref.read(appPreferencesProvider).language,
+    );
     var page = _mode == _ReaderMode.page ? _selectedPage : null;
     page ??= _firstMadinaPage(ayahs);
     if (page == null) {
@@ -1926,19 +1904,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
 
     final api = ref.read(quranComApiProvider);
-    unawaited(
-      () async {
-        try {
-          await api.getPageWithVerses(
-            page: page,
-            mushafId: mushafId,
-            translationResourceId: translationResourceId,
-          );
-        } catch (_) {
-          _simpleQuranComPrefetchKeys.remove(prefetchKey);
-        }
-      }(),
-    );
+    unawaited(() async {
+      try {
+        await api.getPageWithVerses(
+          page: page,
+          mushafId: mushafId,
+          translationResourceId: translationResourceId,
+        );
+      } catch (_) {
+        _simpleQuranComPrefetchKeys.remove(prefetchKey);
+      }
+    }());
   }
 
   int? _firstMadinaPage(List<AyahData> ayahs) {
@@ -1963,7 +1939,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final mushafId = _activeMushafId();
     final variant = _activeQcfVariant();
     final translationResourceId = _translationResourceIdForLanguage(
-        ref.read(appPreferencesProvider).language);
+      ref.read(appPreferencesProvider).language,
+    );
     final cacheKey = '$ayahKey|m$mushafId|t$translationResourceId';
     return _simpleQuranComRowFutureCache.putIfAbsent(
       cacheKey,
@@ -1984,11 +1961,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required String verseKey,
     required int translationResourceId,
   }) async {
-    final fontSelection = await ref.read(qcfFontManagerProvider).ensurePageFont(
-          page: page,
-          variant: variant,
-        );
-    final verseData = await ref.read(quranComApiProvider).getVerseDataByPage(
+    final fontSelection = await ref
+        .read(qcfFontManagerProvider)
+        .ensurePageFont(page: page, variant: variant);
+    final verseData = await ref
+        .read(quranComApiProvider)
+        .getVerseDataByPage(
           page: page,
           mushafId: mushafId,
           verseKey: verseKey,
@@ -2002,7 +1980,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return _VerseByVerseRowRenderData(
       qcfFamilyName: fontSelection.familyName,
       words: words,
-      translationText: _resolveVerseTranslationText(
+      translationText:
+          _resolveVerseTranslationText(
             verseData,
             translationResourceId: translationResourceId,
           ) ??
@@ -2040,16 +2019,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required String ayahKey,
     required _VerseByVerseRowRenderData data,
   }) {
-    final baseArabicStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontFamily: 'UthmanicHafs',
-              fontSize: 34,
-              height: 1.65,
-            ) ??
-        const TextStyle(
+    final baseArabicStyle =
+        Theme.of(context).textTheme.titleLarge?.copyWith(
           fontFamily: 'UthmanicHafs',
           fontSize: 34,
           height: 1.65,
-        );
+        ) ??
+        const TextStyle(fontFamily: 'UthmanicHafs', fontSize: 34, height: 1.65);
     return QuranWordWrap(
       key: ValueKey('ayah_qurancom_text_$ayahKey'),
       words: data.words,
@@ -2093,8 +2069,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final ayahsFuture = _ayahsFuture;
     final preferences = ref.watch(appPreferencesProvider);
     final strings = AppStrings.of(preferences.language);
-    final translationResourceId =
-        _translationResourceIdForLanguage(preferences.language);
+    final translationResourceId = _translationResourceIdForLanguage(
+      preferences.language,
+    );
     if (ayahsFuture == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -2126,11 +2103,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         final ayahs = snapshot.data ?? const <AyahData>[];
         if (ayahs.isEmpty) {
           if (_mode == _ReaderMode.page && _selectedPage == null) {
-            return Center(
-              child: Text(
-                strings.noPageMetadataImportInSettings,
-              ),
-            );
+            return Center(child: Text(strings.noPageMetadataImportInSettings));
           }
           return Center(
             child: Text(
@@ -2249,15 +2222,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final presentation = _chapterHeaderPresentation(chapter);
     final showBasmala = chapter != 1 && chapter != 9;
     final colorScheme = Theme.of(context).colorScheme;
-    final headerTitleStyle =
-        Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            );
-    final headerSubtitleStyle =
-        Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: colorScheme.onSurface.withValues(alpha: 0.72),
-              fontWeight: FontWeight.w500,
-            );
+    final headerTitleStyle = Theme.of(
+      context,
+    ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600);
+    final headerSubtitleStyle = Theme.of(context).textTheme.headlineSmall
+        ?.copyWith(
+          color: colorScheme.onSurface.withValues(alpha: 0.72),
+          fontWeight: FontWeight.w500,
+        );
 
     return ConstrainedBox(
       key: ValueKey('reader_verse_chapter_header_$chapter'),
@@ -2304,7 +2276,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                           Text(
                             presentation.subtitle,
                             key: ValueKey(
-                                'reader_verse_chapter_subtitle_$chapter'),
+                              'reader_verse_chapter_subtitle_$chapter',
+                            ),
                             style: headerSubtitleStyle,
                           ),
                       ],
@@ -2326,8 +2299,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 _strings.basmalaTranslation,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ],
@@ -2343,7 +2316,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required String translationText,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final highlighted = _jumpHighlightedAyahKey == ayahKey ||
+    final highlighted =
+        _jumpHighlightedAyahKey == ayahKey ||
         _isRangeHighlighted(ayah) ||
         _tappedAyahKey == ayahKey;
     final background = highlighted
@@ -2383,10 +2357,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildVerseByVerseTopActionRow(
-                  ayah: ayah,
-                  ayahKey: ayahKey,
-                ),
+                _buildVerseByVerseTopActionRow(ayah: ayah, ayahKey: ayahKey),
                 const SizedBox(height: 8),
                 Align(
                   alignment: AlignmentDirectional.centerEnd,
@@ -2402,19 +2373,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     translationText,
                     key: ValueKey('reader_verse_translation_$ayahKey'),
                     textAlign: TextAlign.start,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w400,
-                            ) ??
+                    style:
+                        Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w400,
+                        ) ??
                         const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w400,
                         ),
                   ),
                 ),
-                const SizedBox(height: 14),
-                _buildVerseByVerseBottomActionRow(ayahKey: ayahKey),
-                const SizedBox(height: 14),
                 const Divider(height: 1),
               ],
             ),
@@ -2435,9 +2404,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         children: [
           Text(
             ayahKey,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
           ),
           const SizedBox(width: 8),
           IconButton(
@@ -2465,12 +2434,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             onPressed: () => unawaited(_copyText(ayah)),
           ),
           IconButton(
-            key: ValueKey('reader_verse_action_share_$ayahKey'),
-            icon: const Icon(Icons.share_outlined),
-            tooltip: _strings.share,
-            onPressed: () => _showSnackBar(_strings.shareComingSoon),
-          ),
-          IconButton(
             key: ValueKey('reader_verse_action_note_$ayahKey'),
             icon: const Icon(Icons.edit_note_outlined),
             tooltip: _strings.addEditNote,
@@ -2487,60 +2450,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  Widget _buildVerseByVerseBottomActionRow({
-    required String ayahKey,
-  }) {
-    final textColor = Theme.of(context).colorScheme.onSurfaceVariant;
-    final rowStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: textColor,
-            ) ??
-        TextStyle(color: textColor);
-    return SingleChildScrollView(
-      key: ValueKey('reader_verse_bottom_actions_$ayahKey'),
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildVerseByVerseBottomActionChip(
-            key: ValueKey('reader_verse_tafsir_$ayahKey'),
-            icon: Icons.menu_book_outlined,
-            label: _strings.tafsirs,
-            style: rowStyle,
-            onTap: () => _showSnackBar(_strings.tafsirsComingSoon),
-          ),
-          const SizedBox(width: 16),
-          _buildVerseByVerseBottomActionChip(
-            key: ValueKey('reader_verse_lessons_$ayahKey'),
-            icon: Icons.school_outlined,
-            label: _strings.lessons,
-            style: rowStyle,
-            onTap: () => _showSnackBar(_strings.lessonsComingSoon),
-          ),
-          const SizedBox(width: 16),
-          _buildVerseByVerseBottomActionChip(
-            key: ValueKey('reader_verse_reflections_$ayahKey'),
-            icon: Icons.chat_bubble_outline,
-            label: _strings.reflections,
-            style: rowStyle,
-            onTap: () => _showSnackBar(_strings.reflectionsComingSoon),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildVerseByVerseFallbackArabicContent(AyahData ayah) {
-    final baseArabicStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontFamily: 'UthmanicHafs',
-              fontSize: 34,
-              height: 1.6,
-            ) ??
-        const TextStyle(
+    final baseArabicStyle =
+        Theme.of(context).textTheme.titleLarge?.copyWith(
           fontFamily: 'UthmanicHafs',
           fontSize: 34,
           height: 1.6,
-        );
+        ) ??
+        const TextStyle(fontFamily: 'UthmanicHafs', fontSize: 34, height: 1.6);
     final tajweedService = ref.read(tajweedTagsServiceProvider);
-    final tajweedEnabled = _arabicRenderMode == _ArabicRenderMode.tajweed &&
+    final tajweedEnabled =
+        _arabicRenderMode == _ArabicRenderMode.tajweed &&
         tajweedService.hasAnyTags;
     if (!tajweedEnabled) {
       return Text(
@@ -2573,31 +2493,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  Widget _buildVerseByVerseBottomActionChip({
-    required Key key,
-    required IconData icon,
-    required String label,
-    required TextStyle style,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      key: key,
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: style.color),
-            const SizedBox(width: 6),
-            Text(label, style: style),
-          ],
-        ),
-      ),
-    );
-  }
-
   int? _resolveVerseByVerseContextPage(List<AyahData> ayahs) {
     final selectedPage = _selectedPage;
     if (selectedPage != null) {
@@ -2612,17 +2507,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required int translationResourceId,
   }) {
     final cacheKey = '$page|$mushafId|t$translationResourceId';
-    return _verseContextMetaFutureCache.putIfAbsent(
-      cacheKey,
-      () async {
-        final pageData = await ref.read(quranComApiProvider).getPageWithVerses(
-              page: page,
-              mushafId: mushafId,
-              translationResourceId: translationResourceId,
-            );
-        return pageData.meta;
-      },
-    );
+    return _verseContextMetaFutureCache.putIfAbsent(cacheKey, () async {
+      final pageData = await ref
+          .read(quranComApiProvider)
+          .getPageWithVerses(
+            page: page,
+            mushafId: mushafId,
+            translationResourceId: translationResourceId,
+          );
+      return pageData.meta;
+    });
   }
 
   Widget _buildVerseByVerseContextRow({
@@ -2721,9 +2615,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    for (var index = 0;
-                        index < legendItems.length;
-                        index++) ...[
+                    for (
+                      var index = 0;
+                      index < legendItems.length;
+                      index++
+                    ) ...[
                       if (index > 0) const SizedBox(width: 18),
                       _buildTajweedLegendChip(item: legendItems[index]),
                     ],
@@ -2741,22 +2637,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  Widget _buildTajweedLegendChip({
-    required _TajweedLegendItem item,
-  }) {
-    final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w500,
-        );
+  Widget _buildTajweedLegendChip({required _TajweedLegendItem item}) {
+    final textStyle = Theme.of(
+      context,
+    ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(
-            color: item.color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: item.color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
         Text(
@@ -2770,6 +2661,56 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
+  Widget _buildReaderTopActionsSection({
+    required String keyPrefix,
+    required List<Widget> primaryActions,
+  }) {
+    final topActionsEndInset = _readerTopActionsEndInset();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: SingleChildScrollView(
+            key: ValueKey('${keyPrefix}_top_actions_scroll'),
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              key: ValueKey('${keyPrefix}_top_actions'),
+              mainAxisSize: MainAxisSize.min,
+              children: primaryActions,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: IconButton(
+            key: ValueKey('${keyPrefix}_settings_button'),
+            icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
+            tooltip: _mushafSettingsOpen
+                ? _strings.closeSettings
+                : _strings.openSettings,
+            onPressed: () {
+              setState(() {
+                _setMushafSettingsOpen(!_mushafSettingsOpen);
+              });
+            },
+          ),
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
+          child: _buildTajweedLegendSection(
+            keyPrefix: keyPrefix,
+            showLegend: _arabicRenderMode == _ArabicRenderMode.tajweed,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildVerseByVerseTopActionsRow({
     required int translationResourceId,
     required AyahData? firstAyah,
@@ -2777,68 +2718,27 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final translationLabel = _strings.translationLabel(
       _translationResourceLabelForId(translationResourceId),
     );
-    final topActionsEndInset = _readerTopActionsEndInset();
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
-          child: Row(
-            key: const ValueKey('reader_verse_top_actions'),
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  key: const ValueKey('reader_verse_top_actions_scroll'),
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      OutlinedButton.icon(
-                        key: const ValueKey('reader_verse_listen_button'),
-                        onPressed: firstAyah == null
-                            ? null
-                            : () => unawaited(_playFromAyahAudio(firstAyah)),
-                        icon: const Icon(Icons.play_arrow_rounded),
-                        label: Text(_strings.listen),
-                      ),
-                      const SizedBox(width: 8),
-                      OutlinedButton(
-                        key: const ValueKey('reader_verse_translation_button'),
-                        onPressed: () {
-                          setState(() {
-                            _setMushafSettingsOpen(true);
-                            _mushafSettingsTab = _MushafSettingsTab.translation;
-                          });
-                        },
-                        child: Text(translationLabel),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                key: const ValueKey('reader_verse_settings_button'),
-                icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
-                tooltip: _mushafSettingsOpen
-                    ? _strings.closeSettings
-                    : _strings.openSettings,
-                onPressed: () {
-                  setState(() {
-                    _setMushafSettingsOpen(!_mushafSettingsOpen);
-                  });
-                },
-              ),
-            ],
-          ),
+    return _buildReaderTopActionsSection(
+      keyPrefix: 'reader_verse',
+      primaryActions: [
+        OutlinedButton.icon(
+          key: const ValueKey('reader_verse_listen_button'),
+          onPressed: firstAyah == null
+              ? null
+              : () => unawaited(_playFromAyahAudio(firstAyah)),
+          icon: const Icon(Icons.play_arrow_rounded),
+          label: Text(_strings.listen),
         ),
-        const SizedBox(height: 6),
-        Padding(
-          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
-          child: _buildTajweedLegendSection(
-            keyPrefix: 'reader_verse',
-            showLegend: _arabicRenderMode == _ArabicRenderMode.tajweed,
-          ),
+        const SizedBox(width: 8),
+        OutlinedButton(
+          key: const ValueKey('reader_verse_translation_button'),
+          onPressed: () {
+            setState(() {
+              _setMushafSettingsOpen(true);
+              _mushafSettingsTab = _MushafSettingsTab.translation;
+            });
+          },
+          child: Text(translationLabel),
         ),
       ],
     );
@@ -2887,8 +2787,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         }
         _mushafAyahLookupByVerseKey = data.ayahLookupByVerseKey;
         final displayLines = _buildMushafDisplayLines(data.pageData);
-        final interactionEnabled =
-            _hasCompleteMushafWordVerseKeys(data.pageData);
+        final interactionEnabled = _hasCompleteMushafWordVerseKeys(
+          data.pageData,
+        );
         if (!interactionEnabled && data.pageData.verses.isNotEmpty) {
           _logMushafInteractionDisabledOnce(
             page: selectedPage,
@@ -2919,20 +2820,26 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   const horizontalPad = 16.0;
                   final verticalPad = constraints.maxHeight * 0.03;
                   final availableWidth =
-                      (constraints.maxWidth - (2 * horizontalPad))
-                          .clamp(0.0, double.infinity);
+                      (constraints.maxWidth - (2 * horizontalPad)).clamp(
+                        0.0,
+                        double.infinity,
+                      );
                   if (availableWidth <= 0 || constraints.maxHeight <= 0) {
                     return const SizedBox.shrink();
                   }
 
                   final viewportHeight = MediaQuery.sizeOf(context).height;
-                  final upperBound =
-                      math.min(_mushafCanvasMaxWidth, availableWidth);
+                  final upperBound = math.min(
+                    _mushafCanvasMaxWidth,
+                    availableWidth,
+                  );
                   if (upperBound <= 0) {
                     return const SizedBox.shrink();
                   }
-                  final lowerBound =
-                      math.min(_mushafCanvasMinWidth, upperBound);
+                  final lowerBound = math.min(
+                    _mushafCanvasMinWidth,
+                    upperBound,
+                  );
                   final targetCanvasWidth =
                       viewportHeight * _mushafTargetLineWidthToViewportHeight;
                   final canvasWidth = targetCanvasWidth
@@ -2940,17 +2847,20 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       .toDouble();
                   final renderedLineCount = math.max(displayLines.length, 1);
                   final fontScale = _mushafFontScaleForStep(_mushafFontStep);
-                  final lineHeight = viewportHeight *
+                  final lineHeight =
+                      viewportHeight *
                       _mushafLineHeightToViewportHeight *
                       fontScale;
                   if (lineHeight <= 0) {
                     return const SizedBox.shrink();
                   }
                   final canvasHeight = lineHeight * renderedLineCount;
-                  final qcfFontSize = viewportHeight *
+                  final qcfFontSize =
+                      viewportHeight *
                       _mushafQcfFontSizeToViewportHeight *
                       fontScale;
-                  final fallbackFontSize = viewportHeight *
+                  final fallbackFontSize =
+                      viewportHeight *
                       _mushafFallbackFontSizeToViewportHeight *
                       fontScale;
 
@@ -2973,8 +2883,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                               children: [
                                 if (chapterHeader != null)
                                   Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      12,
+                                      8,
+                                      12,
+                                      4,
+                                    ),
                                     child: chapterHeader,
                                   ),
                                 SizedBox(
@@ -3065,73 +2979,31 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget _buildMushafTopActionsRow() {
-    final topActionsEndInset = _readerTopActionsEndInset();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
-          child: Row(
-            key: const ValueKey('reader_mushaf_top_actions'),
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  key: const ValueKey('reader_mushaf_top_actions_scroll'),
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      OutlinedButton.icon(
-                        key: const ValueKey('reader_mushaf_listen_button'),
-                        onPressed: () =>
-                            unawaited(_playFromCurrentMushafPage()),
-                        icon: const Icon(Icons.play_arrow_rounded),
-                        label: Text(_strings.listen),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        key: const ValueKey('reader_mushaf_language_arabic'),
-                        onPressed: () {},
-                        child: Text(_strings.arabic),
-                      ),
-                      const SizedBox(width: 6),
-                      OutlinedButton(
-                        key: const ValueKey(
-                            'reader_mushaf_language_translation'),
-                        onPressed: () {
-                          setState(() {
-                            _setMushafSettingsOpen(true);
-                            _mushafSettingsTab = _MushafSettingsTab.translation;
-                          });
-                        },
-                        child: Text(_strings.translation),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                key: const ValueKey('reader_mushaf_settings_button'),
-                icon: Icon(_mushafSettingsOpen ? Icons.close : Icons.tune),
-                tooltip: _mushafSettingsOpen
-                    ? _strings.closeSettings
-                    : _strings.openSettings,
-                onPressed: () {
-                  setState(() {
-                    _setMushafSettingsOpen(!_mushafSettingsOpen);
-                  });
-                },
-              ),
-            ],
-          ),
+    return _buildReaderTopActionsSection(
+      keyPrefix: 'reader_mushaf',
+      primaryActions: [
+        OutlinedButton.icon(
+          key: const ValueKey('reader_mushaf_listen_button'),
+          onPressed: () => unawaited(_playFromCurrentMushafPage()),
+          icon: const Icon(Icons.play_arrow_rounded),
+          label: Text(_strings.listen),
         ),
-        const SizedBox(height: 6),
-        Padding(
-          padding: EdgeInsetsDirectional.only(end: topActionsEndInset),
-          child: _buildTajweedLegendSection(
-            keyPrefix: 'reader_mushaf',
-            showLegend: _arabicRenderMode == _ArabicRenderMode.tajweed,
-          ),
+        const SizedBox(width: 8),
+        FilledButton(
+          key: const ValueKey('reader_mushaf_language_arabic'),
+          onPressed: () {},
+          child: Text(_strings.arabic),
+        ),
+        const SizedBox(width: 6),
+        OutlinedButton(
+          key: const ValueKey('reader_mushaf_language_translation'),
+          onPressed: () {
+            setState(() {
+              _setMushafSettingsOpen(true);
+              _mushafSettingsTab = _MushafSettingsTab.translation;
+            });
+          },
+          child: Text(_strings.translation),
         ),
       ],
     );
@@ -3150,7 +3022,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         continue;
       }
       final verseKey = (word.verseKey ?? '').trim();
-      wordsByLine.putIfAbsent(lineNumber, () => <_MushafLineWord>[]).add(
+      wordsByLine
+          .putIfAbsent(lineNumber, () => <_MushafLineWord>[])
+          .add(
             _MushafLineWord(
               word: word,
               verseKey: verseKey.isEmpty ? null : verseKey,
@@ -3194,9 +3068,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget? _buildMushafExternalChapterHeader(MushafPageData pageData) {
-    final chapter = pageData.meta.firstChapterId ??
+    final chapter =
+        pageData.meta.firstChapterId ??
         _chapterFromVerseKey(pageData.meta.firstVerseKey);
-    final verseNumber = pageData.meta.firstVerseNumber ??
+    final verseNumber =
+        pageData.meta.firstVerseNumber ??
         _ayahFromVerseKey(pageData.meta.firstVerseKey);
     if (chapter == null || verseNumber != 1) {
       return null;
@@ -3205,15 +3081,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final presentation = _chapterHeaderPresentation(chapter);
     final showBasmala = chapter != 1 && chapter != 9;
     final colorScheme = Theme.of(context).colorScheme;
-    final headerTitleStyle =
-        Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            );
-    final headerSubtitleStyle =
-        Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: colorScheme.onSurface.withValues(alpha: 0.72),
-              fontWeight: FontWeight.w500,
-            );
+    final headerTitleStyle = Theme.of(
+      context,
+    ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600);
+    final headerSubtitleStyle = Theme.of(context).textTheme.headlineSmall
+        ?.copyWith(
+          color: colorScheme.onSurface.withValues(alpha: 0.72),
+          fontWeight: FontWeight.w500,
+        );
 
     return ConstrainedBox(
       key: ValueKey('reader_mushaf_chapter_header_$chapter'),
@@ -3260,7 +3135,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                           Text(
                             presentation.subtitle,
                             key: ValueKey(
-                                'reader_mushaf_chapter_subtitle_$chapter'),
+                              'reader_mushaf_chapter_subtitle_$chapter',
+                            ),
                             style: headerSubtitleStyle,
                           ),
                       ],
@@ -3282,8 +3158,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 _strings.basmalaTranslation,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ],
@@ -3313,8 +3189,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final safeLineHeight = lineHeight <= 0 ? 1.0 : lineHeight;
     final qcfFontSize = math.min(qcfFontSizeBase, safeLineHeight * 0.94);
-    final fallbackFontSize =
-        math.min(fallbackFontSizeBase, safeLineHeight * 0.98);
+    final fallbackFontSize = math.min(
+      fallbackFontSizeBase,
+      safeLineHeight * 0.98,
+    );
     final baseQcfStyle = TextStyle(
       fontFamily: qcfFontFamily,
       fontSize: qcfFontSize,
@@ -3527,17 +3405,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
 
     return Container(
-      key:
-          ValueKey('reader_mushaf_marker_${lineNumber}_${verseKey}_$wordIndex'),
+      key: ValueKey(
+        'reader_mushaf_marker_${lineNumber}_${verseKey}_$wordIndex',
+      ),
       child: hoverableWord,
     );
   }
 
   String _mushafWordTooltipMessage(MushafWord word) {
-    return wordTooltipMessage(
-      word,
-      fallback: _strings.translationUnavailable,
-    );
+    return wordTooltipMessage(word, fallback: _strings.translationUnavailable);
   }
 
   Future<void> _showMushafWordPopover({
@@ -3597,9 +3473,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return _mushafFuture!;
   }
 
-  Future<_MushafRenderData> _loadMushafPage({
-    required int page,
-  }) async {
+  Future<_MushafRenderData> _loadMushafPage({required int page}) async {
     final mushafId = _activeMushafId();
     final variant = _activeQcfVariant();
 
@@ -3613,10 +3487,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final ayahLookupByVerseKey = <String, AyahData>{
       for (final ayah in ayahsOnPage) '${ayah.surah}:${ayah.ayah}': ayah,
     };
-    final fontSelection = await ref.read(qcfFontManagerProvider).ensurePageFont(
-          page: page,
-          variant: variant,
-        );
+    final fontSelection = await ref
+        .read(qcfFontManagerProvider)
+        .ensurePageFont(page: page, variant: variant);
 
     return _MushafRenderData(
       pageData: pageData,
@@ -3831,10 +3704,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  Widget _buildMushafControlLabel(
-    String label, {
-    required TextStyle style,
-  }) {
+  Widget _buildMushafControlLabel(String label, {required TextStyle style}) {
     return Text(
       label,
       maxLines: 1,
@@ -3901,9 +3771,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final labelColor = !enabled
         ? colorScheme.onSurface.withValues(alpha: 0.4)
         : isSelected
-            ? colorScheme.onPrimaryContainer
-            : colorScheme.onSurfaceVariant;
-    final labelStyle = textTheme.labelLarge?.copyWith(
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onSurfaceVariant;
+    final labelStyle =
+        textTheme.labelLarge?.copyWith(
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           color: labelColor,
         ) ??
@@ -3924,8 +3795,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           borderRadius: BorderRadius.circular(24),
           onTap: enabled ? () => onSelected(option.value) : null,
           child: ConstrainedBox(
-            constraints:
-                const BoxConstraints(minHeight: _mushafControlMinHeight),
+            constraints: const BoxConstraints(
+              minHeight: _mushafControlMinHeight,
+            ),
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -3973,9 +3845,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return DecoratedBox(
       key: key,
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: colorScheme.outlineVariant),
-        ),
+        border: Border(bottom: BorderSide(color: colorScheme.outlineVariant)),
       ),
       child: Row(
         children: [
@@ -4006,9 +3876,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final labelColor = !enabled
         ? colorScheme.onSurface.withValues(alpha: 0.4)
         : isSelected
-            ? colorScheme.primary
-            : colorScheme.onSurfaceVariant;
-    final labelStyle = textTheme.labelLarge?.copyWith(
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
+    final labelStyle =
+        textTheme.labelLarge?.copyWith(
           color: labelColor,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
         ) ??
@@ -4050,19 +3921,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (query.isEmpty) {
       return all;
     }
-    return all.where((surah) {
-      final numberMatch = surah.toString().contains(query);
-      final localizedName =
-          (_surahNamesByLanguage[language]?[surah] ?? '').toLowerCase();
-      final enName = (_surahNamesByLanguage[AppLanguage.english]?[surah] ?? '')
-          .toLowerCase();
-      final arName = (_surahNamesByLanguage[AppLanguage.arabic]?[surah] ?? '')
-          .toLowerCase();
-      return numberMatch ||
-          localizedName.contains(query) ||
-          enName.contains(query) ||
-          arName.contains(query);
-    }).toList(growable: false);
+    return all
+        .where((surah) {
+          final numberMatch = surah.toString().contains(query);
+          final localizedName = (_surahNamesByLanguage[language]?[surah] ?? '')
+              .toLowerCase();
+          final enName =
+              (_surahNamesByLanguage[AppLanguage.english]?[surah] ?? '')
+                  .toLowerCase();
+          final arName =
+              (_surahNamesByLanguage[AppLanguage.arabic]?[surah] ?? '')
+                  .toLowerCase();
+          return numberMatch ||
+              localizedName.contains(query) ||
+              enName.contains(query) ||
+              arName.contains(query);
+        })
+        .toList(growable: false);
   }
 
   List<int> _filteredVerseNumbers(int maxAyah) {
@@ -4185,7 +4060,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget _buildMushafVerseNavTab(BuildContext context) {
-    final countFuture = _verseTabAyahCountFuture ??
+    final countFuture =
+        _verseTabAyahCountFuture ??
         _loadVerseTabAyahCount(_verseTabSelectedSurah);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -4244,9 +4120,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return Center(
-                  child: Text(_strings.failedToLoadVerses),
-                );
+                return Center(child: Text(_strings.failedToLoadVerses));
               }
               final maxAyah = snapshot.data ?? 0;
               if (maxAyah <= 0) {
@@ -4340,9 +4214,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 snapshot.data ?? const <MushafJuzNavEntry>[],
               );
               if (entries.isEmpty) {
-                return Center(
-                  child: Text(_strings.noJuzEntriesFound),
-                );
+                return Center(child: Text(_strings.noJuzEntriesFound));
               }
               return ListView.builder(
                 key: const ValueKey('reader_mushaf_nav_juz_list'),
@@ -4417,9 +4289,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 snapshot.data ?? const <int>[],
               );
               if (pages.isEmpty) {
-                return Center(
-                  child: Text(_strings.noPagesAvailable),
-                );
+                return Center(child: Text(_strings.noPagesAvailable));
               }
               return ListView.builder(
                 key: const ValueKey('reader_page_list'),
@@ -4446,11 +4316,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        border: Border(
-          left: BorderSide(
-            color: colorScheme.outlineVariant,
-          ),
-        ),
+        border: Border(left: BorderSide(color: colorScheme.outlineVariant)),
       ),
       child: Column(
         children: [
@@ -4630,12 +4496,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget _buildMushafScaffoldSettingsBody(String message) {
-    return Center(
-      child: Text(
-        message,
-        textAlign: TextAlign.center,
-      ),
-    );
+    return Center(child: Text(message, textAlign: TextAlign.center));
   }
 
   Widget _buildAyahMiniPlayer(AyahAudioState state) {
@@ -4650,15 +4511,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final safePosition = state.position < Duration.zero
         ? Duration.zero
         : (hasDuration && state.position > totalDuration
-            ? totalDuration
-            : state.position);
-    final sliderMax =
-        hasDuration ? totalDuration.inMilliseconds.toDouble() : 1.0;
+              ? totalDuration
+              : state.position);
+    final sliderMax = hasDuration
+        ? totalDuration.inMilliseconds.toDouble()
+        : 1.0;
     final sliderValue = hasDuration
         ? safePosition.inMilliseconds
-            .toDouble()
-            .clamp(0.0, sliderMax)
-            .toDouble()
+              .toDouble()
+              .clamp(0.0, sliderMax)
+              .toDouble()
         : 0.0;
     final elapsedLabel = _formatDuration(safePosition);
     final totalLabel = _formatDuration(state.duration);
@@ -4667,9 +4529,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       key: const ValueKey('reader_audio_mini_player'),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: colorScheme.outlineVariant),
-        ),
+        border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
       ),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Column(
@@ -4682,9 +4542,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 key: const ValueKey('reader_audio_current_ayah'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 8),
               if (state.isBuffering)
@@ -4706,19 +4566,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     unawaited(_handleAudioOptionsAction(action)),
                 itemBuilder: (context) => [
                   PopupMenuItem<_ReaderAudioOptionAction>(
-                    key: const ValueKey('reader_audio_option_download'),
-                    value: _ReaderAudioOptionAction.download,
-                    child: Text(_strings.download),
-                  ),
-                  PopupMenuItem<_ReaderAudioOptionAction>(
                     key: const ValueKey('reader_audio_option_repeat'),
                     value: _ReaderAudioOptionAction.repeat,
                     child: Text(_strings.manageRepeatSettings),
-                  ),
-                  PopupMenuItem<_ReaderAudioOptionAction>(
-                    key: const ValueKey('reader_audio_option_experience'),
-                    value: _ReaderAudioOptionAction.experience,
-                    child: Text(_strings.experience),
                   ),
                   PopupMenuItem<_ReaderAudioOptionAction>(
                     key: const ValueKey('reader_audio_option_speed'),
@@ -4756,9 +4606,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   onChangeEnd: hasDuration
                       ? (value) {
                           unawaited(
-                            _seekAudioTo(
-                              Duration(milliseconds: value.round()),
-                            ),
+                            _seekAudioTo(Duration(milliseconds: value.round())),
                           );
                         }
                       : null,
@@ -4781,8 +4629,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               IconButton(
                 key: const ValueKey('reader_audio_prev_button'),
                 onPressed: state.canPrevious
-                    ? () =>
-                        unawaited(ref.read(ayahAudioServiceProvider).previous())
+                    ? () => unawaited(
+                        ref.read(ayahAudioServiceProvider).previous(),
+                      )
                     : null,
                 tooltip: _strings.previous,
                 icon: const Icon(Icons.skip_previous_rounded),
@@ -4834,8 +4683,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 _formatDuration(state.bufferedPosition),
               ),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ],
@@ -4881,53 +4730,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         _showSnackBar(_strings.audioLoadFailed(trimmed));
       });
     });
-    return SafeArea(
-      child: _buildMushafLayout(context),
-    );
+    return SafeArea(child: _buildMushafLayout(context));
   }
 }
 
-enum _ReaderMode {
-  surah,
-  page,
-}
+enum _ReaderMode { surah, page }
 
-enum _ReaderViewMode {
-  simple,
-  mushaf,
-}
+enum _ReaderViewMode { simple, mushaf }
 
-enum _ArabicRenderMode {
-  plain,
-  tajweed,
-}
+enum _ArabicRenderMode { plain, tajweed }
 
-enum _MushafNavTab {
-  surah,
-  verse,
-  juz,
-  page,
-}
+enum _MushafNavTab { surah, verse, juz, page }
 
-enum _MushafSettingsTab {
-  arabic,
-  translation,
-  wordByWord,
-}
+enum _MushafSettingsTab { arabic, translation, wordByWord }
 
-enum _ReaderAudioOptionAction {
-  download,
-  repeat,
-  experience,
-  speed,
-  reciter,
-}
+enum _ReaderAudioOptionAction { repeat, speed, reciter }
 
-enum _MushafScriptStyleOption {
-  uthmani,
-  tajweed,
-  indopak,
-}
+enum _MushafScriptStyleOption { uthmani, tajweed, indopak }
 
 class _MushafControlOption<T> {
   const _MushafControlOption({
@@ -4944,9 +4763,7 @@ class _MushafControlOption<T> {
 }
 
 class _ReaderAudioPill extends StatelessWidget {
-  const _ReaderAudioPill({
-    required this.label,
-  });
+  const _ReaderAudioPill({required this.label});
 
   final String label;
 
@@ -4967,10 +4784,7 @@ class _ReaderAudioPill extends StatelessWidget {
 }
 
 class _TajweedLegendItem {
-  const _TajweedLegendItem({
-    required this.color,
-    required this.label,
-  });
+  const _TajweedLegendItem({required this.color, required this.label});
 
   final Color color;
   final String label;
@@ -5033,26 +4847,16 @@ class _MushafLineWord {
 }
 
 class _MushafDisplayLine {
-  const _MushafDisplayLine({
-    required this.lineNumber,
-    required this.words,
-  });
+  const _MushafDisplayLine({required this.lineNumber, required this.words});
 
   final int lineNumber;
   final List<_MushafLineWord> words;
 }
 
-enum _AyahAction {
-  bookmark,
-  note,
-  copy,
-}
+enum _AyahAction { bookmark, note, copy }
 
 class _NoteDraft {
-  const _NoteDraft({
-    required this.title,
-    required this.body,
-  });
+  const _NoteDraft({required this.title, required this.body});
 
   final String? title;
   final String body;
@@ -5082,8 +4886,9 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
   @override
   void initState() {
     super.initState();
-    _titleController =
-        TextEditingController(text: widget.existing?.title ?? '');
+    _titleController = TextEditingController(
+      text: widget.existing?.title ?? '',
+    );
     _bodyController = TextEditingController(text: widget.existing?.body ?? '');
   }
 
@@ -5111,12 +4916,7 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
     }
 
     final title = _titleController.text.trim();
-    _close(
-      _NoteDraft(
-        title: title.isEmpty ? null : title,
-        body: body,
-      ),
-    );
+    _close(_NoteDraft(title: title.isEmpty ? null : title, body: body));
   }
 
   @override
@@ -5170,10 +4970,7 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _close,
-          child: Text(widget.strings.cancel),
-        ),
+        TextButton(onPressed: _close, child: Text(widget.strings.cancel)),
         FilledButton(
           key: const ValueKey('note_save_button'),
           onPressed: _save,
@@ -5185,30 +4982,21 @@ class _ReaderNoteEditorDialogState extends State<_ReaderNoteEditorDialog> {
 }
 
 class _VerseJumpTarget {
-  const _VerseJumpTarget({
-    required this.surah,
-    required this.ayah,
-  });
+  const _VerseJumpTarget({required this.surah, required this.ayah});
 
   final int surah;
   final int ayah;
 }
 
 class _VerseRange {
-  const _VerseRange({
-    required this.start,
-    required this.end,
-  });
+  const _VerseRange({required this.start, required this.end});
 
   final _VersePosition start;
   final _VersePosition end;
 }
 
 class _VersePosition implements Comparable<_VersePosition> {
-  const _VersePosition({
-    required this.surah,
-    required this.ayah,
-  });
+  const _VersePosition({required this.surah, required this.ayah});
 
   final int surah;
   final int ayah;

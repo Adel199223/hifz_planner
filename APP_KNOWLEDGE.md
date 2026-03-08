@@ -106,15 +106,20 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
 ## 2) Current User-Facing Surface
 
 ### Navigation
-- Left `NavigationRail` remains active for core app areas:
-  - Reader, Bookmarks, Notes, Plan, Today, Settings, About
-- A top-right global menu drawer (Quran.com-style direction) adds:
-  - Read, Learn, My Quran, Quran Radio, Reciters
+- Left `NavigationRail` now carries the core daily path:
+  - Today, Read, My Plan, Library
+- `Library` is a hub for:
+  - Bookmarks
+  - Notes
+- A top-right `More` drawer holds secondary tools and destinations:
+  - Settings, About, Reciters
+  - `Explore` section: Learn, My Quran, Quran Radio
 
 ### Routes
 Defined in `lib/app/router.dart`:
 - `/reader`
 - `/bookmarks`
+- `/library`
 - `/notes`
 - `/plan`
 - `/learn`
@@ -209,7 +214,11 @@ Chapter header behavior:
 - Header bidi is explicit per locale to avoid punctuation inversion in mixed-script titles.
 
 Top controls and tajweed legend:
-- Listen and Translation remain in the top actions row.
+- Listen and Translation remain primary top actions.
+- Top actions are responsive:
+  - the main action strip stays horizontally scrollable
+  - the settings button sits on its own aligned row
+  - opening reader settings still hides the global menu button
 - `Tajweed colors` is rendered in a dedicated legend section.
 - Tajweed legend (colored dots + labels) appears only when Tajweed mode is active.
 

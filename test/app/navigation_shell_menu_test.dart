@@ -11,11 +11,11 @@ import 'package:hifz_planner/main.dart';
 import '../helpers/pump_until_found.dart';
 
 void main() {
-  testWidgets('global menu drawer shows only required destinations',
-      (tester) async {
+  testWidgets('more drawer shows secondary destinations only', (tester) async {
     final fakeStore = _FakeAppPreferencesStore();
     final container = _createContainer(fakeStore);
     addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -33,9 +33,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('global_menu_drawer')), findsOneWidget);
-    expect(find.byKey(const ValueKey('global_menu_item_read')), findsOneWidget);
     expect(
-        find.byKey(const ValueKey('global_menu_item_learn')), findsOneWidget);
+      find.byKey(const ValueKey('global_menu_item_settings')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('global_menu_item_about')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('global_menu_item_reciters')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('global_menu_item_learn')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const ValueKey('global_menu_item_my_quran')),
       findsOneWidget,
@@ -50,10 +63,13 @@ void main() {
     );
   });
 
-  testWidgets('menu destinations navigate to expected routes', (tester) async {
+  testWidgets('more drawer destinations navigate to expected routes', (
+    tester,
+  ) async {
     final fakeStore = _FakeAppPreferencesStore();
     final container = _createContainer(fakeStore);
     addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -73,18 +89,14 @@ void main() {
     }
 
     await openMenu();
-    await tester.tap(find.byKey(const ValueKey('global_menu_item_my_quran')));
+    await tester.tap(find.byKey(const ValueKey('global_menu_item_settings')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('my_quran_screen_root')), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
 
     await openMenu();
-    await tester
-        .tap(find.byKey(const ValueKey('global_menu_item_quran_radio')));
+    await tester.tap(find.byKey(const ValueKey('global_menu_item_about')));
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('quran_radio_screen_root')),
-      findsOneWidget,
-    );
+    expect(find.text('About'), findsOneWidget);
 
     await openMenu();
     await tester.tap(find.byKey(const ValueKey('global_menu_item_reciters')));
@@ -92,16 +104,65 @@ void main() {
     expect(find.byKey(const ValueKey('reciters_screen_root')), findsOneWidget);
 
     await openMenu();
-    await tester.tap(find.byKey(const ValueKey('global_menu_item_read')));
+    await tester.tap(find.byKey(const ValueKey('global_menu_item_my_quran')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('reader_view_toggle')), findsOneWidget);
+    expect(find.byKey(const ValueKey('my_quran_screen_root')), findsOneWidget);
+
+    await openMenu();
+    await tester.tap(
+      find.byKey(const ValueKey('global_menu_item_quran_radio')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('quran_radio_screen_root')),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('Learn menu route opens Learn screen and Hifz Plan',
-      (tester) async {
+  testWidgets('core rail destinations use the simplified navigation model', (
+    tester,
+  ) async {
     final fakeStore = _FakeAppPreferencesStore();
     final container = _createContainer(fakeStore);
     addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const HifzPlannerApp(),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_screen_root')),
+    );
+
+    await tester.tap(find.text('Read').first);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('reader_view_toggle')), findsOneWidget);
+
+    await tester.tap(find.text('Library').first);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('library_screen_root')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('library_open_bookmarks')));
+    await tester.pumpAndSettle();
+    expect(find.text('Bookmarks'), findsOneWidget);
+
+    await tester.tap(find.text('Library').first);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('library_screen_root')), findsOneWidget);
+  });
+
+  testWidgets('Learn menu route opens Learn screen and Hifz Plan', (
+    tester,
+  ) async {
+    final fakeStore = _FakeAppPreferencesStore();
+    final container = _createContainer(fakeStore);
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -129,11 +190,13 @@ void main() {
     expect(find.text('Suggested Plan (Editable)'), findsOneWidget);
   });
 
-  testWidgets('language selector shows four options and updates state',
-      (tester) async {
+  testWidgets('language selector shows four options and updates state', (
+    tester,
+  ) async {
     final fakeStore = _FakeAppPreferencesStore();
     final container = _createContainer(fakeStore);
     addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -169,8 +232,9 @@ void main() {
       findsOneWidget,
     );
 
-    await tester
-        .tap(find.byKey(const ValueKey('global_menu_language_option_fr')));
+    await tester.tap(
+      find.byKey(const ValueKey('global_menu_language_option_fr')),
+    );
     await tester.pumpAndSettle();
 
     final prefs = container.read(appPreferencesProvider);
@@ -195,7 +259,8 @@ void main() {
       find.byKey(const ValueKey('today_screen_root')),
     );
 
-    expect(find.text('Reader'), findsOneWidget);
+    expect(find.text('Read'), findsOneWidget);
+    expect(find.text('Library'), findsOneWidget);
 
     Future<void> ensureMenuOpen() async {
       if (find.byKey(const ValueKey('global_menu_drawer')).evaluate().isEmpty) {
@@ -210,29 +275,33 @@ void main() {
     await ensureMenuOpen();
     await tester.tap(find.byKey(const ValueKey('global_menu_language_button')));
     await tester.pumpAndSettle();
-    await tester
-        .tap(find.byKey(const ValueKey('global_menu_language_option_fr')));
+    await tester.tap(
+      find.byKey(const ValueKey('global_menu_language_option_fr')),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Lecteur'), findsOneWidget);
-    expect(find.text('Signets'), findsOneWidget);
+    expect(find.text('Lire'), findsOneWidget);
+    expect(find.text('Bibliothèque'), findsOneWidget);
 
     await ensureMenuOpen();
     await tester.tap(find.byKey(const ValueKey('global_menu_language_button')));
     await tester.pumpAndSettle();
-    await tester
-        .tap(find.byKey(const ValueKey('global_menu_language_option_ar')));
+    await tester.tap(
+      find.byKey(const ValueKey('global_menu_language_option_ar')),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('القارئ'), findsOneWidget);
-    expect(find.text('العلامات'), findsOneWidget);
+    expect(find.text('اقرأ'), findsOneWidget);
+    expect(find.text('المكتبة'), findsOneWidget);
   });
 
-  testWidgets('theme selector shows sepia and dark and applies dark mode',
-      (tester) async {
+  testWidgets('theme selector shows sepia and dark and applies dark mode', (
+    tester,
+  ) async {
     final fakeStore = _FakeAppPreferencesStore();
     final container = _createContainer(fakeStore);
     addTearDown(container.dispose);
+    _registerTestCleanup(tester);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -260,8 +329,9 @@ void main() {
       findsOneWidget,
     );
 
-    await tester
-        .tap(find.byKey(const ValueKey('global_menu_theme_option_dark')));
+    await tester.tap(
+      find.byKey(const ValueKey('global_menu_theme_option_dark')),
+    );
     await tester.pumpAndSettle();
 
     final prefs = container.read(appPreferencesProvider);
@@ -276,6 +346,7 @@ void main() {
     final fakeStore = _FakeAppPreferencesStore();
     final container = _createContainer(fakeStore);
     addTearDown(container.dispose);
+    _registerTestCleanup(tester);
     await _seedReaderAyahs(container.read(appDatabaseProvider));
 
     await tester.pumpWidget(
@@ -290,9 +361,7 @@ void main() {
       find.byKey(const ValueKey('today_screen_root')),
     );
 
-    await tester.tap(find.byKey(const ValueKey('global_menu_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('global_menu_item_read')));
+    await tester.tap(find.text('Read').first);
     await tester.pumpAndSettle();
     await pumpUntilFound(
       tester,
@@ -301,8 +370,9 @@ void main() {
 
     expect(find.byKey(const ValueKey('global_menu_button')), findsOneWidget);
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_settings_button')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_settings_button')),
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('global_menu_button')), findsNothing);
 
@@ -311,11 +381,13 @@ void main() {
     expect(find.byKey(const ValueKey('global_menu_button')), findsOneWidget);
   });
 
-  testWidgets('reader top-right controls do not overlap global menu',
-      (tester) async {
+  testWidgets('reader top-right controls do not overlap global menu', (
+    tester,
+  ) async {
     final fakeStore = _FakeAppPreferencesStore();
     final container = _createContainer(fakeStore);
     addTearDown(container.dispose);
+    _registerTestCleanup(tester);
     await _seedReaderAyahs(container.read(appDatabaseProvider));
 
     await tester.pumpWidget(
@@ -330,9 +402,7 @@ void main() {
       find.byKey(const ValueKey('today_screen_root')),
     );
 
-    await tester.tap(find.byKey(const ValueKey('global_menu_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('global_menu_item_read')));
+    await tester.tap(find.text('Read').first);
     await tester.pumpAndSettle();
     await pumpUntilFound(
       tester,
@@ -343,31 +413,39 @@ void main() {
       find.byKey(const ValueKey('global_menu_button')),
     );
 
-    final menuRect =
-        tester.getRect(find.byKey(const ValueKey('global_menu_button')));
-    final readerSettingsRect = tester
-        .getRect(find.byKey(const ValueKey('reader_verse_settings_button')));
+    final menuRect = tester.getRect(
+      find.byKey(const ValueKey('global_menu_button')),
+    );
+    final readerSettingsRect = tester.getRect(
+      find.byKey(const ValueKey('reader_verse_settings_button')),
+    );
     expect(menuRect.overlaps(readerSettingsRect), isFalse);
   });
 }
 
 Future<void> _seedReaderAyahs(AppDatabase db) async {
   await db.batch((batch) {
-    batch.insertAll(
-      db.ayah,
-      [
-        AyahCompanion.insert(
-          surah: 1,
-          ayah: 1,
-          textUthmani: 'ٱلْحَمْدُ لِلَّٰهِ',
-        ),
-        AyahCompanion.insert(
-          surah: 1,
-          ayah: 2,
-          textUthmani: 'رَبِّ ٱلْعَٰلَمِينَ',
-        ),
-      ],
-    );
+    batch.insertAll(db.ayah, [
+      AyahCompanion.insert(
+        surah: 1,
+        ayah: 1,
+        textUthmani: 'ٱلْحَمْدُ لِلَّٰهِ',
+      ),
+      AyahCompanion.insert(
+        surah: 1,
+        ayah: 2,
+        textUthmani: 'رَبِّ ٱلْعَٰلَمِينَ',
+      ),
+    ]);
+  });
+}
+
+void _registerTestCleanup(WidgetTester tester) {
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.idle();
+    await tester.pump(const Duration(milliseconds: 1));
   });
 }
 
@@ -385,9 +463,8 @@ ProviderContainer _createContainer(_FakeAppPreferencesStore fakeStore) {
 }
 
 class _FakeAppPreferencesStore implements AppPreferencesStore {
-  _FakeAppPreferencesStore({
-    StoredAppPreferences? initial,
-  }) : _stored = initial ?? const StoredAppPreferences();
+  _FakeAppPreferencesStore({StoredAppPreferences? initial})
+    : _stored = initial ?? const StoredAppPreferences();
 
   StoredAppPreferences _stored;
   String? savedLanguageCode;

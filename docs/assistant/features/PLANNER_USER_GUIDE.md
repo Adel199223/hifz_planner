@@ -34,7 +34,7 @@ If this guide conflicts with technical docs:
 
 ## Quick Start (No Technical Background)
 
-1. Open `Plan` and enter realistic weekly or weekday minutes.
+1. Open `My Plan` and enter realistic weekly or weekday minutes.
 2. Set conservative caps for new work before enabling advanced options.
 3. Press `Activate Plan`, then open `Today` and execute due tasks consistently.
 4. Use calibration only after collecting real sessions so forecast quality improves.
@@ -59,7 +59,7 @@ This guide is for learners, teachers, and anyone supporting a learner.
 ## Where Planner Fits in the Full Learning Cycle
 
 The app lifecycle is:
-- `Plan` -> define your capacity and schedule rules
+- `My Plan` -> define your capacity and schedule rules
 - `Today` -> execute what is due (reviews, new memorization, delayed checks)
 - `Companion` -> run memorization/retrieval stages for each unit
 - Delayed consolidation checks -> verify stability after time has passed (especially next day)
@@ -80,9 +80,9 @@ Planner tries to optimize for:
 - realism: assignments that fit your actual minutes and days
 - adaptability: calibration + forecast to tune your pace over time
 
-## Plan Screen Walkthrough (Top to Bottom)
+## My Plan Screen Walkthrough (Top to Bottom)
 
-Location: open the left navigation rail and select `Plan`.
+Location: open the left navigation rail and select `My Plan`.
 
 Each section below explains:
 - where it appears
@@ -144,7 +144,7 @@ Each section below explains:
 
 ## 2) Automatic Scheduling Section
 
-Location: scheduling card on the Plan screen.
+Location: scheduling card on the `My Plan` screen.
 
 ### Sessions per day
 - Option: usually `2 sessions/day` toggle.
@@ -191,7 +191,7 @@ Location: scheduling card on the Plan screen.
 
 ## 3) Weekly Calendar Section
 
-Location: weekly calendar card on Plan.
+Location: weekly calendar card on `My Plan`.
 
 How to read each day card:
 - focus: new + review or revision-only
@@ -209,7 +209,7 @@ What this changes:
 
 ## 4) Calibration Section
 
-Location: calibration card on Plan.
+Location: calibration card on `My Plan`.
 
 Purpose:
 - teach the planner your real pace instead of relying only on defaults.
@@ -228,7 +228,7 @@ What changes after calibration:
 
 ## 5) Forecast Section
 
-Location: forecast card on Plan.
+Location: forecast card on `My Plan`.
 
 Purpose:
 - run a deterministic projection of expected planning pressure and output.
@@ -243,7 +243,7 @@ How to interpret:
 
 ## 6) Today Screen Execution Flow
 
-Location: `Today` in navigation rail.
+Location: `Today` in the main navigation rail.
 
 Execution order is designed to protect retention quality:
 

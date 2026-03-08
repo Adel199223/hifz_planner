@@ -7,6 +7,7 @@ import '../screens/bookmarks_screen.dart';
 import '../screens/companion_chain_screen.dart';
 import '../data/services/companion/companion_models.dart';
 import '../screens/learn_screen.dart';
+import '../screens/library_screen.dart';
 import '../screens/my_quran_screen.dart';
 import '../screens/notes_screen.dart';
 import '../screens/plan_screen.dart';
@@ -21,16 +22,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/today',
     routes: [
-      GoRoute(
-        path: '/',
-        redirect: (context, state) => '/today',
-      ),
+      GoRoute(path: '/', redirect: (context, state) => '/today'),
       ShellRoute(
         builder: (context, state, child) {
-          return AppNavigationShell(
-            location: state.uri.path,
-            child: child,
-          );
+          return AppNavigationShell(location: state.uri.path, child: child);
         },
         routes: [
           GoRoute(
@@ -77,6 +72,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const BookmarksScreen(),
           ),
           GoRoute(
+            path: '/library',
+            builder: (context, state) => const LibraryScreen(),
+          ),
+          GoRoute(
             path: '/notes',
             builder: (context, state) => const NotesScreen(),
           ),
@@ -116,9 +115,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               if (unitId == null || unitId <= 0) {
                 return const Scaffold(
                   body: SafeArea(
-                    child: Center(
-                      child: Text('Missing or invalid unitId'),
-                    ),
+                    child: Center(child: Text('Missing or invalid unitId')),
                   ),
                 );
               }

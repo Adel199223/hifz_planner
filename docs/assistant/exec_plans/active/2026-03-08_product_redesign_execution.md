@@ -51,7 +51,7 @@
 - For each active branch, run the wave-specific tests listed in its ExecPlan before PR.
 
 ## Progress
-- [ ] Publish Stage 1-5 roadmap docs
+- [x] Publish Stage 1-5 roadmap docs
 - [ ] Merge Wave 1
 - [ ] Merge post-Wave1 critical fixes
 - [ ] Start Wave 2
@@ -87,8 +87,8 @@
 
 | Stream | Status | Branch | Worktree | Notes |
 |---|---|---|---|---|
-| Stage 1-5 roadmap publication | active | `feat/stage1-product-audit` | `/home/fa507/dev/hifz_planner_stage1` | Docs-only publication branch |
-| Wave 1 | active | `feat/ux-wave1-navigation-copy` | `/home/fa507/dev/hifz_planner_wave1` | Ready to close after roadmap merge |
+| Stage 1-5 roadmap publication | merged | `feat/stage1-product-audit` | `/home/fa507/dev/hifz_planner_stage1` | Merged to `main` as PR #3 |
+| Wave 1 | active | `feat/ux-wave1-navigation-copy` | `/home/fa507/dev/hifz_planner_wave1` | Simplified shell, Library hub, responsive Reader top actions, narrow docs sync |
 | Post-Wave1 critical fixes | planned | `feat/stability-post-wave1-critical-fixes` | not created yet | Will port only approved runtime/test fixes |
 | Wave 2 | planned | `feat/ux-wave2-today-coaching` | not created yet | Starts after Wave 1 and stability port merge |
 | Wave 3 | planned | `feat/ux-wave3-my-plan-preset-flow` | not created yet | Resume after Wave 2 |
@@ -102,5 +102,6 @@
   - The critical fixes need a clean post-Wave1 branch so only the approved runtime/test changes move forward.
 - Detours and plan updates:
   - 2026-03-08: Research/spec work completed before broader implementation. Preserve it before merging app code branches.
+  - 2026-03-08: Roadmap publication finished first so the execution tracker exists on `main` before Wave 1 closes.
 - Next recommended action:
-  - Merge the roadmap docs to `main`, then sync this tracker into Wave 1 and close that branch next.
+  - Validate Wave 1, publish it through PR flow, then start the clean post-Wave1 critical-fix port.
