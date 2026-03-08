@@ -207,9 +207,9 @@ void main() {
     expect(find.text('Sourate'), findsOneWidget);
     expect(find.text('Écouter'), findsOneWidget);
     expect(find.text('Couleurs du Tajwid'), findsOneWidget);
-    expect(find.text('Tafsirs'), findsWidgets);
-    expect(find.text('Leçons'), findsWidgets);
-    expect(find.text('Réflexions'), findsWidgets);
+    expect(find.text('Tafsirs'), findsNothing);
+    expect(find.text('Leçons'), findsNothing);
+    expect(find.text('Réflexions'), findsNothing);
   });
 
   testWidgets('reader labels localize to Portuguese terminology',
@@ -245,8 +245,8 @@ void main() {
     expect(find.text('Página'), findsWidgets);
     expect(find.text('Ouvir'), findsOneWidget);
     expect(find.text('Cores de Tajweed'), findsOneWidget);
-    expect(find.text('Lições'), findsWidgets);
-    expect(find.text('Reflexões'), findsWidgets);
+    expect(find.text('Lições'), findsNothing);
+    expect(find.text('Reflexões'), findsNothing);
   });
 
   testWidgets('reader labels localize to Arabic and app direction is RTL', (
@@ -282,9 +282,9 @@ void main() {
     expect(find.text('سورة'), findsOneWidget);
     expect(find.text('استمع'), findsOneWidget);
     expect(find.text('ألوان التجويد'), findsOneWidget);
-    expect(find.text('تفاسير'), findsWidgets);
-    expect(find.text('فوائد'), findsWidgets);
-    expect(find.text('تدبرات'), findsWidgets);
+    expect(find.text('تفاسير'), findsNothing);
+    expect(find.text('فوائد'), findsNothing);
+    expect(find.text('تدبرات'), findsNothing);
 
     final context =
         tester.element(find.byKey(const ValueKey('reader_view_toggle')));
