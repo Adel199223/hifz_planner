@@ -79,7 +79,7 @@
 - `flutter test` refreshed `pubspec.lock` during the first validation pass; that incidental lockfile churn was restored before keeping the branch active.
 
 ## Handoff
-- Wave 7 is active on `feat/planner-wave7-optional-adaptive-followup` in `/home/fa507/dev/hifz_planner_wave7`.
-- Wave 7 now adds one explainable adaptive refinement: recent calibration pace can nudge the shared planner slightly slower or faster, and the forecast UI explains that pace trend in plain language.
+- Wave 7 shipped on `feat/planner-wave7-optional-adaptive-followup` and merged to `main` as PR #16.
+- The delivered refinement is intentionally narrow: recent calibration pace can nudge the shared planner slightly slower or faster, and the forecast UI explains that pace trend in plain language.
 - All research stages are complete; implementation continues by wave.
-- Next step: close Wave 7 with docs sync and PR merge
+- Next step: define the next backlog or roadmap after the completed Wave 1-7 program
