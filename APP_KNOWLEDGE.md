@@ -21,8 +21,11 @@ Documentation contract for contributors and AI agents:
 - DB/Drift deep reference: `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - Assistant doc index: `docs/assistant/INDEX.md`
 - Machine manifest: `docs/assistant/manifest.json`
+- Issue memory registry: `docs/assistant/ISSUE_MEMORY.md` and `docs/assistant/ISSUE_MEMORY.json`
 - Mechanical rules: `docs/assistant/GOLDEN_PRINCIPLES.md`
 - ExecPlan playbook: `docs/assistant/exec_plans/PLANS.md`
+- Local environment overlay format: `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+- Discovered capability inventory: `docs/assistant/LOCAL_CAPABILITIES.md`
 
 User-perspective guides:
 - Planner deep guide (non-coder): `docs/assistant/features/PLANNER_USER_GUIDE.md`
@@ -40,6 +43,7 @@ Workflow runbooks:
 - Scheduling + companion engine: `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`
 - Workspace performance: `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
 - Reference discovery: `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
+- Worktree/build identity: `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`
 - Docs maintenance: `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`
 - CI and repo operations: `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
 - Commit/publish hygiene: `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
@@ -54,6 +58,7 @@ Significant-change docs sync policy:
 - after significant implementation changes, ask:
   - "Would you like me to run Assistant Docs Sync for this change now?"
 - if approved, update only relevant assistant docs by touched scope.
+- consult issue memory first when deciding whether the docs sync should widen beyond directly touched files.
 
 Why two `APP_KNOWLEDGE.md` files:
 - Root `APP_KNOWLEDGE.md` is canonical and complete.
@@ -62,6 +67,30 @@ Why two `APP_KNOWLEDGE.md` files:
 Why both `AGENTS.md` and `agent.md` exist:
 - `AGENTS.md` is a short compatibility shim for auto-discovery tools.
 - `agent.md` is the operational runbook for humans and AI agents.
+
+## 0.1) Bootstrap Module Status
+
+Active modules:
+- Core contract and routing:
+  - canonical docs, bridge docs, manifest routing, validators, and targeted workflows are active
+- Issue memory system:
+  - `docs/assistant/ISSUE_MEMORY.md`
+  - `docs/assistant/ISSUE_MEMORY.json`
+- Local environment overlay:
+  - tracked format: `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+  - machine-local overlay: `docs/assistant/LOCAL_ENV_PROFILE.local.md`
+- Capability discovery:
+  - `docs/assistant/LOCAL_CAPABILITIES.md`
+- Worktree/build identity:
+  - `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`
+  - `tooling/print_build_identity.dart`
+  - canonical runnable build: `/home/fa507/dev/hifz_planner` via `/home/fa507/dev/hifz_planner-only.code-workspace`
+
+Intentionally inactive modules:
+- Host integration preflight:
+  - keep inactive until a feature depends on local auth, desktop automation, browser state, or same-host CLI integration
+- Bootstrap update policy as a project workflow:
+  - template maintenance remains separate from normal project work even though this repo carries local template files
 
 ## 1) App Purpose
 

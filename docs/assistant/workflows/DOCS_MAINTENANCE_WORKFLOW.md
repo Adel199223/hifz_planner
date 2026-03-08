@@ -47,9 +47,14 @@ Use when changes touch:
 - `docs/assistant/APP_KNOWLEDGE.md`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - `docs/assistant/INDEX.md`
+- `docs/assistant/ISSUE_MEMORY.md`
+- `docs/assistant/ISSUE_MEMORY.json`
+- `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+- `docs/assistant/LOCAL_CAPABILITIES.md`
 - `docs/assistant/manifest.json`
 - `docs/assistant/LOCALIZATION_GLOSSARY.md`
 - `docs/assistant/PERFORMANCE_BASELINES.md`
+- `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`
 - `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
 - `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
@@ -96,6 +101,8 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
    - restore plain-language wording and keep canonical-deference boundaries explicit.
 8. Symptoms: user guides use unexplained technical terms.
    - add or refresh `Terms in Plain English` and keep definitions short.
+9. Symptoms: the same workflow or tooling failure keeps recurring.
+   - update `docs/assistant/ISSUE_MEMORY.md` and `docs/assistant/ISSUE_MEMORY.json`, then sync only the docs touched by that repeatable issue class.
 
 ## Significant-Change Docs Sync Policy
 
@@ -106,6 +113,10 @@ Significant change definition:
 
 Mandatory end-of-implementation prompt:
 - "Would you like me to run Assistant Docs Sync for this change now?"
+
+Issue-memory rule:
+- before widening touched-scope docs, consult `docs/assistant/ISSUE_MEMORY.md`
+- if the current change matches a repeatable issue class, refresh issue memory and only then widen the affected docs/workflows
 
 Relevance matrix:
 - Reader/UI change -> reader workflow + canonical app sections + relevant test/docs links
@@ -119,21 +130,24 @@ Relevance matrix:
 
 1. Update canonical:
    - `APP_KNOWLEDGE.md`
-2. Update bridge:
+2. Update issue memory when a repeatable issue class exists:
+   - `docs/assistant/ISSUE_MEMORY.md`
+   - `docs/assistant/ISSUE_MEMORY.json`
+3. Update bridge:
    - `docs/assistant/APP_KNOWLEDGE.md`
-3. Update routing docs:
+4. Update routing docs:
    - `docs/assistant/INDEX.md`
    - `docs/assistant/manifest.json`
-4. Update validator and tests:
+5. Update validator and tests:
    - `tooling/validate_agent_docs.dart`
    - `tooling/validate_localization.dart`
    - `tooling/validate_workspace_hygiene.dart`
    - `test/tooling/validate_agent_docs_test.dart`
    - `test/tooling/validate_localization_test.dart`
    - `test/tooling/validate_workspace_hygiene_test.dart`
-5. Update private templates only when requested:
+6. Update private templates only when requested:
    - `docs/assistant/templates/*`
-6. For significant implementation work, ask docs-sync prompt and update only relevant files when approved.
+7. For significant implementation work, ask docs-sync prompt and update only relevant files when approved.
 
 ## Handoff Checklist
 
@@ -148,3 +162,4 @@ Relevance matrix:
 - relevant user-guide sections were updated or explicitly deemed unchanged
 - touched user-guide sections remain understandable to non-technical readers and still defer to canonical docs
 - beginner-focused sections (`Quick Start`, `Terms in Plain English`) were updated or explicitly confirmed unchanged
+- issue memory was updated or explicitly deemed not relevant for the current change

@@ -39,8 +39,10 @@ Use when changes touch:
 - `docs/assistant/INDEX.md`
 - `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
 - `docs/assistant/PERFORMANCE_BASELINES.md`
+- `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`
 - `tooling/validate_localization.dart`
 - `tooling/validate_workspace_hygiene.dart`
+- `tooling/print_build_identity.dart`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
 - `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`
 - `tooling/validate_agent_docs.dart`
@@ -52,6 +54,7 @@ git worktree list
 git fetch --prune origin
 git status --short --branch
 git branch -vv
+dart tooling/print_build_identity.dart
 flutter analyze --no-fatal-infos --no-fatal-warnings
 dart run tooling/validate_localization.dart
 dart run tooling/validate_workspace_hygiene.dart
@@ -84,6 +87,8 @@ flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
    - Rebuild keep-list and rerun branch pruning with explicit allowlist.
 5. Symptoms: parallel agent runs contaminate one branch state.
    - Move one stream to a dedicated `git worktree` and keep branch scopes isolated.
+6. Symptoms: the wrong runnable build is being tested.
+   - Run `dart tooling/print_build_identity.dart` and confirm the branch, SHA, worktree path, and launch command before proceeding.
 
 ## Handoff Checklist
 

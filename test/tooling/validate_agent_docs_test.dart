@@ -67,6 +67,56 @@ void main() {
     );
   });
 
+  for (final missingFileCase in <Map<String, String>>[
+    <String, String>{
+      'description': 'issue memory markdown file',
+      'path': 'docs/assistant/ISSUE_MEMORY.md',
+      'needle': 'ISSUE_MEMORY.md',
+    },
+    <String, String>{
+      'description': 'issue memory json file',
+      'path': 'docs/assistant/ISSUE_MEMORY.json',
+      'needle': 'ISSUE_MEMORY.json',
+    },
+    <String, String>{
+      'description': 'local env profile example file',
+      'path': 'docs/assistant/LOCAL_ENV_PROFILE.example.md',
+      'needle': 'LOCAL_ENV_PROFILE.example.md',
+    },
+    <String, String>{
+      'description': 'local capabilities file',
+      'path': 'docs/assistant/LOCAL_CAPABILITIES.md',
+      'needle': 'LOCAL_CAPABILITIES.md',
+    },
+    <String, String>{
+      'description': 'worktree build identity workflow doc',
+      'path': 'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
+      'needle': 'WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
+    },
+  ]) {
+    test('validator fails when ${missingFileCase['description']} is missing',
+        () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final file = File(_joinPath(fixture.path, missingFileCase['path']!));
+      file.deleteSync();
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('Missing required file:') &&
+              issue.contains(missingFileCase['needle']!),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    });
+  }
+
   test('validator fails when manifest misses required ci_repo_ops workflow',
       () {
     final fixture = _createValidFixture();
@@ -228,6 +278,64 @@ void main() {
             issue.contains('Manifest must include required workflow id') &&
             issue.contains('reference_discovery'),
       ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when manifest misses worktree_build_identity workflow',
+      () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final workflows = (manifest['workflows'] as List<dynamic>)
+        .whereType<Map<String, dynamic>>()
+        .where((workflow) => workflow['id'] != 'worktree_build_identity')
+        .toList();
+    manifest['workflows'] = workflows;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Manifest must include required workflow id') &&
+            issue.contains('worktree_build_identity'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when manifest version is not 10', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    manifest['version'] = 9;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues
+          .any((issue) => issue.contains('Manifest key "version" must be 10.')),
       isTrue,
       reason: issues.join('\n'),
     );
@@ -1565,6 +1673,43 @@ void main() {
     );
   });
 
+  for (final contractKey in <String>[
+    'issue_memory_policy',
+    'local_env_overlay_policy',
+    'capability_inventory_policy',
+    'worktree_build_identity_policy',
+    'commit_shorthand_policy',
+    'push_shorthand_policy',
+  ]) {
+    test('validator fails when $contractKey key is missing', () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove(contractKey);
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any((issue) => issue.contains('contracts.$contractKey')),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    });
+  }
+
   test(
       'validator fails when template misses Terms in Plain English requirement',
       () {
@@ -1725,6 +1870,40 @@ Directory _createValidFixture() {
       '- docs/assistant/exec_plans/PLANS.md',
     ].join('\n'),
   );
+  writeFile(
+    'docs/assistant/ISSUE_MEMORY.md',
+    [
+      '# ISSUE MEMORY',
+      '',
+      'Use this file for repeatable workflow and tooling issues.',
+    ].join('\n'),
+  );
+  writeFile(
+    'docs/assistant/ISSUE_MEMORY.json',
+    const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+      'version': 1,
+      'last_updated': '2026-03-08',
+      'issues': <dynamic>[],
+    }),
+  );
+  writeFile(
+    'docs/assistant/LOCAL_CAPABILITIES.md',
+    [
+      '# LOCAL CAPABILITIES',
+      '',
+      '- dart',
+      '- git',
+      '- rg',
+    ].join('\n'),
+  );
+  writeFile(
+    'docs/assistant/LOCAL_ENV_PROFILE.example.md',
+    [
+      '# LOCAL ENV PROFILE EXAMPLE',
+      '',
+      'Use docs/assistant/LOCAL_ENV_PROFILE.local.md for machine-local facts.',
+    ].join('\n'),
+  );
   writeFile('docs/assistant/LOCALIZATION_GLOSSARY.md', '# LOCALIZATION');
   writeFile('docs/assistant/PERFORMANCE_BASELINES.md', '# PERFORMANCE');
   writeFile('docs/assistant/exec_plans/PLANS.md', '# PLANS');
@@ -1788,6 +1967,10 @@ Directory _createValidFixture() {
     'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
     _docsMaintenanceWorkflowTemplate(),
   );
+  writeFile(
+    'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
+    workflowTemplate,
+  );
 
   writeFile('tooling/validate_agent_docs.dart', '// placeholder');
   writeFile('tooling/validate_workspace_hygiene.dart', '// placeholder');
@@ -1796,7 +1979,7 @@ Directory _createValidFixture() {
       'test/tooling/validate_workspace_hygiene_test.dart', '// placeholder');
 
   final manifest = <String, dynamic>{
-    'version': 9,
+    'version': 10,
     'canonical': <String, dynamic>{
       'agent_runbook': 'agent.md',
       'app_knowledge': 'APP_KNOWLEDGE.md',
@@ -1840,6 +2023,10 @@ Directory _createValidFixture() {
         doc: 'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
       ),
       _manifestWorkflow(
+        id: 'worktree_build_identity',
+        doc: 'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
+      ),
+      _manifestWorkflow(
         id: 'ci_repo_ops',
         doc: 'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
         primaryFiles: <String>[
@@ -1881,6 +2068,18 @@ Directory _createValidFixture() {
           'Heavyweight environments and generated runtime artifacts should live outside repo root when feasible.',
       'post_change_docs_sync_prompt_policy':
           'After significant implementation changes, ask whether to run Assistant Docs Sync and update only relevant assistant docs if approved.',
+      'issue_memory_policy':
+          'docs/assistant/ISSUE_MEMORY.md and docs/assistant/ISSUE_MEMORY.json are the always-on issue registry; Assistant Docs Sync should consult issue memory before widening touched-scope updates.',
+      'local_env_overlay_policy':
+          'Use docs/assistant/LOCAL_ENV_PROFILE.example.md for shared routing format and keep machine-local runtime facts in docs/assistant/LOCAL_ENV_PROFILE.local.md.',
+      'capability_inventory_policy':
+          'Use docs/assistant/LOCAL_CAPABILITIES.md to record only discovered local capabilities that materially affect workflow decisions.',
+      'worktree_build_identity_policy':
+          'Use docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md and tooling/print_build_identity.dart for runnable-build identity, baseline locking, and deterministic launch handoff.',
+      'commit_shorthand_policy':
+          'Bare commit means full pending-tree triage, logical grouped commits, and immediate push suggestion unless the user narrows scope.',
+      'push_shorthand_policy':
+          'Bare push means Push+PR+Merge+Cleanup unless the user narrows scope explicitly.',
       'inspiration_reference_discovery_policy':
           'When user names a product/site to emulate, run docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md and prioritize official sources first.',
       'golden_principles_source_of_truth':
@@ -1906,7 +2105,7 @@ Directory _createValidFixture() {
       'term_definition_policy':
           'If a technical term is unavoidable in support replies, define it in one short sentence.',
     },
-    'last_updated': '2026-02-22',
+    'last_updated': '2026-03-08',
   };
 
   writeFile(

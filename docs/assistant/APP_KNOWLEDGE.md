@@ -17,6 +17,10 @@ Recommended starting points:
 - `agent.md` (primary runbook)
 - `docs/assistant/INDEX.md` (human index)
 - `docs/assistant/manifest.json` (machine routing map)
+- `docs/assistant/ISSUE_MEMORY.md` (repeatable issue registry)
+- `docs/assistant/LOCAL_ENV_PROFILE.example.md` (WSL-vs-Windows routing format)
+- `docs/assistant/LOCAL_CAPABILITIES.md` (discovered local tool inventory)
+- `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` (launch/build identity)
 
 ## What This File Is For
 
@@ -48,6 +52,9 @@ Do not use this file as primary truth when there is a conflict.
 - `APP_KNOWLEDGE.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
+- `docs/assistant/ISSUE_MEMORY.md`
+- `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+- `docs/assistant/LOCAL_CAPABILITIES.md`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - `docs/assistant/features/APP_USER_GUIDE.md`
 - `docs/assistant/features/PLANNER_USER_GUIDE.md`
@@ -77,6 +84,12 @@ Do not use this file as primary truth when there is a conflict.
 - `docs/assistant/PERFORMANCE_BASELINES.md`
 - `tooling/validate_workspace_hygiene.dart`
 - `test/tooling/validate_workspace_hygiene_test.dart`
+
+### Local environment and launch identity
+- `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+- `docs/assistant/LOCAL_CAPABILITIES.md`
+- `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`
+- `tooling/print_build_identity.dart`
 
 ### Inspiration/parity reference discovery
 - `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
@@ -112,6 +125,11 @@ Do not use this file as primary truth when there is a conflict.
 5. Confirm DB schema version:
    - open `lib/data/database/app_database.dart`
 6. Pick relevant smoke tests for your area before edits
+7. If local tooling or host routing is unclear:
+   - open `docs/assistant/LOCAL_CAPABILITIES.md`
+   - open `docs/assistant/LOCAL_ENV_PROFILE.example.md`
+8. If launch/build identity matters:
+   - run `dart tooling/print_build_identity.dart`
 
 ## Windows Command Baseline
 

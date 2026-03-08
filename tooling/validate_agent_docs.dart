@@ -11,6 +11,10 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
   'docs/assistant/GOLDEN_PRINCIPLES.md',
   'docs/assistant/INDEX.md',
+  'docs/assistant/ISSUE_MEMORY.md',
+  'docs/assistant/ISSUE_MEMORY.json',
+  'docs/assistant/LOCAL_CAPABILITIES.md',
+  'docs/assistant/LOCAL_ENV_PROFILE.example.md',
   'docs/assistant/LOCALIZATION_GLOSSARY.md',
   'docs/assistant/PERFORMANCE_BASELINES.md',
   'docs/assistant/exec_plans/PLANS.md',
@@ -27,6 +31,7 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+  'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
   'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
   'tooling/validate_workspace_hygiene.dart',
   'test/tooling/validate_workspace_hygiene_test.dart',
@@ -53,6 +58,9 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
   'docs/assistant/GOLDEN_PRINCIPLES.md',
   'docs/assistant/INDEX.md',
+  'docs/assistant/ISSUE_MEMORY.md',
+  'docs/assistant/LOCAL_CAPABILITIES.md',
+  'docs/assistant/LOCAL_ENV_PROFILE.example.md',
   'docs/assistant/LOCALIZATION_GLOSSARY.md',
   'docs/assistant/PERFORMANCE_BASELINES.md',
   'docs/assistant/exec_plans/PLANS.md',
@@ -66,6 +74,7 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
   'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+  'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
 ];
 
 final RegExp _backtickRegex = RegExp(r'`([^`\n]+)`');
@@ -149,6 +158,8 @@ class AgentDocsValidator {
     final version = manifest['version'];
     if (version is! int) {
       issues.add('Manifest key "version" must be an integer.');
+    } else if (version != 10) {
+      issues.add('Manifest key "version" must be 10.');
     }
 
     final canonical = manifest['canonical'];
@@ -262,6 +273,13 @@ class AgentDocsValidator {
         expectedDoc:
             'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
       );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
+        requiredId: 'worktree_build_identity',
+        expectedDoc:
+            'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
+      );
     }
 
     final globalCommands = manifest['global_commands'];
@@ -328,6 +346,36 @@ class AgentDocsValidator {
         issues,
         contracts['post_change_docs_sync_prompt_policy'],
         'contracts.post_change_docs_sync_prompt_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['issue_memory_policy'],
+        'contracts.issue_memory_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['local_env_overlay_policy'],
+        'contracts.local_env_overlay_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['capability_inventory_policy'],
+        'contracts.capability_inventory_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['worktree_build_identity_policy'],
+        'contracts.worktree_build_identity_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['commit_shorthand_policy'],
+        'contracts.commit_shorthand_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['push_shorthand_policy'],
+        'contracts.push_shorthand_policy',
       );
       _validateNonEmptyString(
         issues,
@@ -421,6 +469,71 @@ class AgentDocsValidator {
           !docsSyncPolicy.toLowerCase().contains('assistant docs sync')) {
         issues.add(
           'contracts.post_change_docs_sync_prompt_policy must include "Assistant Docs Sync" guidance.',
+        );
+      }
+      final issueMemoryPolicy = contracts['issue_memory_policy'];
+      if (issueMemoryPolicy is String &&
+          (!issueMemoryPolicy.contains('docs/assistant/ISSUE_MEMORY.md') ||
+              !issueMemoryPolicy.contains(
+                'docs/assistant/ISSUE_MEMORY.json',
+              ))) {
+        issues.add(
+          'contracts.issue_memory_policy must reference docs/assistant/ISSUE_MEMORY.md and docs/assistant/ISSUE_MEMORY.json.',
+        );
+      }
+      final localEnvOverlayPolicy = contracts['local_env_overlay_policy'];
+      if (localEnvOverlayPolicy is String &&
+          (!localEnvOverlayPolicy.contains(
+                'docs/assistant/LOCAL_ENV_PROFILE.example.md',
+              ) ||
+              !localEnvOverlayPolicy.contains(
+                'docs/assistant/LOCAL_ENV_PROFILE.local.md',
+              ))) {
+        issues.add(
+          'contracts.local_env_overlay_policy must reference docs/assistant/LOCAL_ENV_PROFILE.example.md and docs/assistant/LOCAL_ENV_PROFILE.local.md.',
+        );
+      }
+      final capabilityInventoryPolicy =
+          contracts['capability_inventory_policy'];
+      if (capabilityInventoryPolicy is String &&
+          !capabilityInventoryPolicy.contains(
+            'docs/assistant/LOCAL_CAPABILITIES.md',
+          )) {
+        issues.add(
+          'contracts.capability_inventory_policy must reference docs/assistant/LOCAL_CAPABILITIES.md.',
+        );
+      }
+      final worktreeBuildIdentityPolicy =
+          contracts['worktree_build_identity_policy'];
+      if (worktreeBuildIdentityPolicy is String &&
+          (!worktreeBuildIdentityPolicy.contains(
+                'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
+              ) ||
+              !worktreeBuildIdentityPolicy.contains(
+                'tooling/print_build_identity.dart',
+              ))) {
+        issues.add(
+          'contracts.worktree_build_identity_policy must reference docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md and tooling/print_build_identity.dart.',
+        );
+      }
+      final commitShorthandPolicy = contracts['commit_shorthand_policy'];
+      if (commitShorthandPolicy is String &&
+          (!commitShorthandPolicy.toLowerCase().contains('bare commit') ||
+              !commitShorthandPolicy.toLowerCase().contains(
+                    'logical grouped commits',
+                  ))) {
+        issues.add(
+          'contracts.commit_shorthand_policy must define bare commit triage and logical grouped commits.',
+        );
+      }
+      final pushShorthandPolicy = contracts['push_shorthand_policy'];
+      if (pushShorthandPolicy is String &&
+          (!pushShorthandPolicy.toLowerCase().contains('bare push') ||
+              !pushShorthandPolicy.toLowerCase().contains(
+                    'push+pr+merge+cleanup',
+                  ))) {
+        issues.add(
+          'contracts.push_shorthand_policy must define bare push as Push+PR+Merge+Cleanup.',
         );
       }
       final referencePolicy =
@@ -566,6 +679,7 @@ class AgentDocsValidator {
       'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
       'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
       'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+      'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
     ];
     for (final relativePath in workflowDocs) {
       final file = _resolveFile(relativePath);
@@ -595,6 +709,7 @@ class AgentDocsValidator {
       'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
       'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
       'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+      'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
     ];
     for (final relativePath in workflowDocs) {
       final file = _resolveFile(relativePath);

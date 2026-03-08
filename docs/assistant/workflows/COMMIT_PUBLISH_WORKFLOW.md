@@ -35,9 +35,11 @@ Use when requests include:
 - `agent.md`
 - `APP_KNOWLEDGE.md`
 - `docs/assistant/manifest.json`
+- `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`
 - `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
 - `.gitignore`
+- `tooling/print_build_identity.dart`
 
 ## Minimal Commands
 
@@ -72,6 +74,29 @@ git push origin --delete <stale-branch>
 git fetch --prune origin
 ```
 
+## Shorthand Defaults
+
+### Bare `commit`
+
+Treat `commit` as full pending-tree triage:
+- inspect modified tracked files, staged files, untracked files, and temp artifacts
+- split the result into logical grouped commits
+- validate each commit scope before committing
+- suggest push immediately after the commits are complete
+
+### Bare `push`
+
+Treat `push` as Push+PR+Merge+Cleanup:
+- push the correct branch
+- create or update the PR
+- ensure the latest SHA is under review
+- merge when green and clean
+- remove stale branch state when safe
+
+### Override Rule
+
+If the user narrows scope, follow the narrower scope instead of the default lifecycle.
+
 ## Targeted Tests
 
 Use tests that match touched files before committing. For docs/repo operations, minimum:
@@ -97,6 +122,8 @@ flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
    - keep branch and report the denied deletion explicitly.
 6. Symptoms: parallel feature streams keep polluting staged scope.
    - move each stream to its own `git worktree` and recommit from isolated working trees.
+7. Symptoms: runnable build identity is unclear before commit/push handoff.
+   - run `dart tooling/print_build_identity.dart` and include the resulting packet in the handoff.
 
 ## Significant-Change Docs Sync Policy
 
