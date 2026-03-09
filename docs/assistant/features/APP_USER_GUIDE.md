@@ -111,6 +111,7 @@ Typical actions:
 - listen to recitation
 - turn meaning help on or off from the Reader settings drawer
 - use translation, word help, and transliteration where available
+- open `Study this verse` from the verse actions when you want one focused study view
 - add bookmarks/notes from the Reader, then revisit them later in `Library`
 
 What the Reader meaning controls do:
@@ -119,6 +120,12 @@ What the Reader meaning controls do:
 - `Show transliteration`: show or hide transliteration where the current Reader data already includes it
 - these settings stay saved for later, so you do not need to turn them on every time
 - translation still follows the app language's current default translation source for now
+
+What `Study this verse` does:
+- it opens one focused study sheet for that verse
+- it shows the Arabic text, the current translation, and available word help
+- it keeps the existing bookmark and note actions in the same place so you can save the verse for later
+- if some meaning data is missing, it says so calmly instead of pretending extra explanation exists
 
 ## 2) Plan Your Memorization
 

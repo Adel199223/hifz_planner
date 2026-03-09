@@ -214,6 +214,12 @@ Behavior:
 - Verse-by-Verse suppresses Quran.com end-marker circle tokens (`char_type_name=end`) at display time.
 - No "whole-row tap opens old sheet" behavior.
 - Bookmark/note/copy are wired to existing logic.
+- Verse overflow actions now start with a meaning-first `Study this verse` path.
+- `Study this verse` opens one study sheet using existing Reader data only:
+  - Arabic text
+  - current translation
+  - available word help / transliteration
+  - existing bookmark and note actions
 - Copy feedback is truthful:
   - success appears only after the clipboard write completes
   - clipboard failures show a failure snackbar instead of a false success message
@@ -254,6 +260,7 @@ Translation behavior:
   - `Show transliteration` -> default `off`
 - The Translation tab now controls whether verse translation is visible.
 - The Word By Word tab now controls whether word help and transliteration are shown where existing data supports them.
+- The study sheet uses the same current translation resource that Reader already follows for the active app language.
 - Fallback text: `Translation unavailable`
 
 ### 3.2 Reader recitation playback (streaming)
@@ -318,6 +325,9 @@ Interaction model:
   - transliteration appears when transliteration is enabled and data exists
   - fallback text stays calm when enabled meaning data is unavailable
 - Tooltip uses word translation when available; fallback `Translation unavailable`.
+- Verse study sheet fallback stays calm too:
+  - translation falls back to `Translation unavailable`
+  - word-help section explains when word-level meaning is not available for that verse
 
 Header/spacing model:
 - External chapter header for surah starts.

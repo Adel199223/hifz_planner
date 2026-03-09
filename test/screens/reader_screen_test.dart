@@ -507,9 +507,112 @@ void main() {
         .tap(find.byKey(const ValueKey('reader_verse_action_more_1:1')));
     await tester.pumpAndSettle();
 
+    expect(find.text('Study this verse'), findsOneWidget);
     expect(find.text('Bookmark verse'), findsOneWidget);
     expect(find.text('Add/Edit note'), findsOneWidget);
     expect(find.text('Copy text (Uthmani)'), findsOneWidget);
+  });
+
+  testWidgets('study action opens verse study sheet with meaning data',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildVerseStudySheetDataFixture());
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_action_more_1:1')),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('reader_verse_action_more_1:1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('action_study')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('reader_verse_study_sheet_1:1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('reader_study_translation_1:1')),
+      findsOneWidget,
+    );
+    final studyTranslation = tester.widget<Text>(
+      find.byKey(const ValueKey('reader_study_translation_1:1')),
+    );
+    expect(studyTranslation.data, 'All praise is for Allah.');
+    expect(
+      find.byKey(const ValueKey('reader_study_word_card_1:1_0')),
+      findsOneWidget,
+    );
+    final studyTransliteration = tester.widget<Text>(
+      find.byKey(const ValueKey('reader_study_word_transliteration_1:1_0')),
+    );
+    expect(studyTransliteration.data, 'Transliteration: Al-hamdu');
+    expect(
+      find.byKey(const ValueKey('reader_study_bookmark_1:1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('reader_study_note_1:1')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('study sheet keeps calm fallbacks when meaning data is unavailable',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildVerseStudySheetFallbackFixture());
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_action_more_1:1')),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('reader_verse_action_more_1:1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('action_study')));
+    await tester.pumpAndSettle();
+
+    final translationText = tester.widget<Text>(
+      find.byKey(const ValueKey('reader_study_translation_1:1')),
+    );
+    expect(translationText.data, 'Translation unavailable');
+    expect(
+      find.byKey(const ValueKey('reader_study_word_help_empty_1:1')),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -3416,6 +3519,124 @@ MushafPageData _buildSimpleQuranComDataFixture() {
         verseKey: '1:3',
         codeV2: 'B مَٰلِكِ',
         words: verse13Words,
+      ),
+    ],
+    meta: const MushafPageMeta(
+      firstChapterId: 1,
+      firstVerseNumber: 1,
+      firstVerseKey: '1:1',
+    ),
+  );
+}
+
+MushafPageData _buildVerseStudySheetDataFixture() {
+  const verse11Words = <MushafWord>[
+    MushafWord(
+      codeV2: '۝',
+      textQpcHafs: '۝',
+      charTypeName: 'end',
+      lineNumber: 1,
+      position: 1,
+      pageNumber: 1,
+    ),
+    MushafWord(
+      codeV2: '',
+      textQpcHafs: 'ٱلْحَمْدُ',
+      translationText: 'All praise',
+      transliterationText: 'Al-hamdu',
+      charTypeName: 'word',
+      lineNumber: 1,
+      position: 2,
+      pageNumber: 1,
+    ),
+    MushafWord(
+      codeV2: '',
+      textQpcHafs: 'لِلَّٰهِ',
+      translationText: 'belongs to Allah',
+      transliterationText: 'lillahi',
+      charTypeName: 'word',
+      lineNumber: 1,
+      position: 3,
+      pageNumber: 1,
+    ),
+  ];
+  const verse12Words = <MushafWord>[
+    MushafWord(
+      codeV2: '',
+      textQpcHafs: 'رَبِّ',
+      charTypeName: 'word',
+      lineNumber: 2,
+      position: 4,
+      pageNumber: 1,
+    ),
+  ];
+
+  return MushafPageData(
+    words: const [
+      ...verse11Words,
+      ...verse12Words,
+    ],
+    verses: const [
+      MushafVerseData(
+        verseKey: '1:1',
+        codeV2: '۝ ٱلْحَمْدُ لِلَّٰهِ',
+        words: verse11Words,
+        translations: <MushafVerseTranslation>[
+          MushafVerseTranslation(
+            resourceId: 85,
+            text: 'All praise is for Allah.',
+          ),
+        ],
+      ),
+      MushafVerseData(
+        verseKey: '1:2',
+        codeV2: 'رَبِّ',
+        words: verse12Words,
+        translations: <MushafVerseTranslation>[
+          MushafVerseTranslation(
+            resourceId: 85,
+            text: 'Lord of the worlds.',
+          ),
+        ],
+      ),
+    ],
+    meta: const MushafPageMeta(
+      firstChapterId: 1,
+      firstVerseNumber: 1,
+      firstVerseKey: '1:1',
+    ),
+  );
+}
+
+MushafPageData _buildVerseStudySheetFallbackFixture() {
+  const verse11Words = <MushafWord>[
+    MushafWord(
+      codeV2: '۝',
+      textQpcHafs: '۝',
+      charTypeName: 'end',
+      lineNumber: 1,
+      position: 1,
+      pageNumber: 1,
+    ),
+    MushafWord(
+      codeV2: '',
+      textQpcHafs: 'ٱلْحَمْدُ',
+      charTypeName: 'word',
+      lineNumber: 1,
+      position: 2,
+      pageNumber: 1,
+    ),
+  ];
+
+  return MushafPageData(
+    words: const [
+      ...verse11Words,
+    ],
+    verses: const [
+      MushafVerseData(
+        verseKey: '1:1',
+        codeV2: '۝ ٱلْحَمْدُ',
+        words: verse11Words,
       ),
     ],
     meta: const MushafPageMeta(
