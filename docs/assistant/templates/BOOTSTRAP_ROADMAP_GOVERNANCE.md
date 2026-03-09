@@ -88,6 +88,10 @@ If research stages are already complete, closeout wording should allow:
 
 If the next action is a closeout step instead of a new wave, the closeout should say that explicitly.
 
+When no roadmap is active:
+- completed roadmap trackers and finished ExecPlans should live in `docs/assistant/exec_plans/completed/`
+- `docs/assistant/SESSION_RESUME.md` should point to the latest completed roadmap tracker and relevant completed closeout plan instead of stale `active/` files
+
 ## Generalization Rule
 This module must stay universal.
 

@@ -129,6 +129,7 @@ Generated repos should also document:
 - `docs/assistant/SESSION_RESUME.md` as the roadmap anchor file
 - stages as optional research/spec phases and waves as implementation slices
 - the active-worktree authority rule for live roadmap state
+- the archive-first resting state for completed roadmap trackers and finished ExecPlans
 - the update order:
   1. active wave ExecPlan
   2. active roadmap tracker

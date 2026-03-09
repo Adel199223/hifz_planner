@@ -52,6 +52,7 @@ Equivalent resume intents:
 For complex multi-wave work, open `docs/assistant/workflows/ROADMAP_WORKFLOW.md`.
 
 While a wave is active in a separate worktree, that active worktree's `docs/assistant/SESSION_RESUME.md`, active roadmap tracker, and active wave ExecPlan are the live source of roadmap state.
+When no roadmap is active, `docs/assistant/SESSION_RESUME.md` should point to the latest completed roadmap tracker and relevant completed closeout plan under `docs/assistant/exec_plans/completed/`.
 
 ## Vendored Bootstrap Apply
 

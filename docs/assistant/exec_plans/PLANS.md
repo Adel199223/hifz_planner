@@ -28,6 +28,7 @@ When starting major work:
 2. Keep the plan self-contained so execution can restart from the plan alone.
 3. Update Progress and Decision Log as work proceeds.
 4. Move the finished plan to `completed/`.
+5. If a roadmap tracker is fully complete and no new roadmap has started, move that tracker to `completed/` too.
 
 ## Required ExecPlan Structure
 
@@ -118,3 +119,4 @@ Required rule:
 - The active roadmap tracker is the sequence source.
 - The active wave ExecPlan is the implementation-detail source.
 - If a wave is active in a separate worktree, that active worktree is authoritative for live roadmap state.
+- When no roadmap is active, completed roadmap trackers and finished ExecPlans belong in `docs/assistant/exec_plans/completed/`, and `docs/assistant/SESSION_RESUME.md` should point to the latest completed roadmap tracker plus the relevant completed closeout plan.

@@ -9,6 +9,7 @@ Use this workflow for long-running, multi-wave product or architecture programs 
 - The repo uses one consistent roadmap/master-plan system instead of ad-hoc multi-wave planning.
 - Fresh sessions can resume from one stable anchor file.
 - The active worktree, active roadmap tracker, and active wave ExecPlan stay aligned.
+- Completed roadmap trackers and finished ExecPlans do not stay stranded in `docs/assistant/exec_plans/active/`.
 - Future stages or waves can be restructured when new discoveries force a better sequence.
 - Small tasks do not pay roadmap overhead.
 
@@ -46,6 +47,7 @@ If the user explicitly asks for a roadmap or master plan, use one even if a ligh
 - Do not use issue memory as a substitute for roadmap history.
 - Do not let detours skip the roadmap update order.
 - Do not collapse wave-specific implementation detail into `docs/assistant/SESSION_RESUME.md`; keep that file summary-level only.
+- Do not leave completed roadmap trackers or finished ExecPlans parked in `docs/assistant/exec_plans/active/` when no roadmap is live.
 - Don't use this workflow when a small isolated change or one-merge bounded task can stay lighter. Instead use ExecPlan-only planning or `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`, whichever fits the safer smaller mode.
 
 ## Primary Files
@@ -94,6 +96,8 @@ flutter test --no-pub -j 1 -r expanded test/tooling/validate_agent_docs_test.dar
    - Keep normal roadmap history in the active tracker and wave ExecPlans; use issue memory only for reusable governance or operational issue classes.
 6. Symptoms: the roadmap process becomes too heavy for simple work.
    - Drop back to ExecPlan-only or no-roadmap flow unless the user explicitly wants roadmap mode.
+7. Symptoms: the roadmap is complete but `SESSION_RESUME.md` still points into `active/`.
+   - Archive the completed roadmap tracker and any finished ExecPlans to `docs/assistant/exec_plans/completed/`, then point `docs/assistant/SESSION_RESUME.md` to the latest completed roadmap tracker and relevant completed closeout plan.
 
 ## Handoff Checklist
 
@@ -105,6 +109,7 @@ flutter test --no-pub -j 1 -r expanded test/tooling/validate_agent_docs_test.dar
 - the active roadmap tracker still carries current stage/wave, exact next step, blockers, detours, and any sequence revisions
 - the active worktree is explicitly treated as authoritative during in-flight wave work
 - if a wave is active in a separate worktree, that active worktree is the live roadmap source
+- if no roadmap is active, `docs/assistant/SESSION_RESUME.md` points to completed roadmap history and `docs/assistant/exec_plans/active/` contains only genuinely live plans
 - the update order is preserved:
   1. active wave ExecPlan
   2. active roadmap tracker

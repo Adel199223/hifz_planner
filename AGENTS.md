@@ -118,8 +118,8 @@ Pause and ask for explicit user confirmation before commands that:
   - `where did we leave off`
   - `what is the next roadmap step`
 - After `docs/assistant/SESSION_RESUME.md`, open:
-  1. the linked active roadmap tracker
-  2. the linked active wave ExecPlan
+  1. the linked active roadmap tracker and linked active wave ExecPlan when a roadmap is in flight
+  2. if `docs/assistant/SESSION_RESUME.md` says no roadmap is active, the linked latest completed roadmap tracker and relevant completed closeout plan
 - Answer with:
   - current roadmap status
   - exact next step
@@ -131,6 +131,7 @@ Pause and ask for explicit user confirmation before commands that:
 - The active wave ExecPlan is the implementation-detail source.
 - Use issue memory only for repeatable governance or workflow failures, not normal roadmap history.
 - While a wave is active in a separate worktree, that active worktree's `SESSION_RESUME.md`, roadmap tracker, and active wave ExecPlan are authoritative for live roadmap state.
+- When no roadmap is active, completed roadmap trackers and finished ExecPlans belong in `docs/assistant/exec_plans/completed/`, and `docs/assistant/SESSION_RESUME.md` should point to the latest completed roadmap tracker plus the relevant completed closeout plan.
 - `main` is the stable merged baseline, not the live source of in-progress wave state.
 
 ## Roadmap Return Protocol
@@ -149,3 +150,4 @@ Pause and ask for explicit user confirmation before commands that:
   - `Next step: Wave X - <name>`
 - If the next action is closeout rather than a new wave, end with:
   - `Next step: close Wave X with <closeout action>`
+- When no roadmap is active, `docs/assistant/exec_plans/active/` should contain only genuinely live plans.
