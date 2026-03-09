@@ -1198,6 +1198,93 @@ void main() {
     expect(tooltip.message, 'All praise and thanks');
   });
 
+  testWidgets('verse translation toggle hides translation and saves setting',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
+    final fakeFonts = _FakeQcfFontManager(
+      familyName: 'qcf_test_family',
+    );
+    final store = _FakeAppPreferencesStore();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        appPreferencesStoreProvider.overrideWithValue(store),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_translation_1:1')),
+    );
+    expect(find.byKey(const ValueKey('reader_verse_translation_1:1')),
+        findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('reader_verse_settings_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_settings_tab_translation')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('reader_translation_visibility_toggle')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('reader_verse_translation_1:1')),
+        findsNothing);
+    expect(store.savedReaderShowVerseTranslation, isFalse);
+  });
+
+  testWidgets('word help toggle hides verse by verse word tooltips',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
+    final fakeFonts = _FakeQcfFontManager(
+      familyName: 'qcf_test_family',
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(readerShowWordHelp: false),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+    );
+
+    expect(
+      find.byKey(const ValueKey('reader_verse_word_tooltip_1:1_0')),
+      findsNothing,
+    );
+  });
+
   testWidgets(
       'verse by verse hover tooltip falls back when translation missing',
       (tester) async {
@@ -1458,7 +1545,8 @@ void main() {
     );
   });
 
-  testWidgets('mushaf settings drawer tabs render', (tester) async {
+  testWidgets('mushaf settings drawer tabs render real meaning controls',
+      (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi =
         _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
@@ -1495,13 +1583,28 @@ void main() {
       find.byKey(const ValueKey('reader_mushaf_settings_tab_translation')),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Translation settings are coming soon.'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('reader_translation_visibility_toggle')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('reader_translation_language_note')),
+      findsOneWidget,
+    );
 
     await tester.tap(
       find.byKey(const ValueKey('reader_mushaf_settings_tab_word_by_word')),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Word by Word settings are coming soon.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('reader_word_help_toggle')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('reader_transliteration_toggle')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('reader_word_by_word_preview')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('mushaf controls render without selected check icons',
@@ -2070,6 +2173,51 @@ void main() {
     expect(tooltipFinder, findsOneWidget);
     final tooltip = tester.widget<Tooltip>(tooltipFinder);
     expect(tooltip.message, 'All praise and thanks');
+  });
+
+  testWidgets('transliteration toggle shows transliteration in word popover',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
+    final fakeFonts = _FakeQcfFontManager(
+      familyName: 'qcf_test_family',
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(
+            initial: const StoredAppPreferences(
+              readerShowTransliteration: true,
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    await _switchToMushafView(tester);
+
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_word_1_0_1:1')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('reader_mushaf_word_popover_1_0')),
+      findsOneWidget,
+    );
+    expect(find.text('Transliteration'), findsOneWidget);
+    expect(find.text('Al-hamdu'), findsOneWidget);
   });
 
   testWidgets('mushaf hover tooltip falls back when translation is missing',
@@ -3904,6 +4052,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   }) : _stored = initial ?? const StoredAppPreferences();
 
   StoredAppPreferences _stored;
+  bool? savedReaderShowVerseTranslation;
+  bool? savedReaderShowWordHelp;
+  bool? savedReaderShowTransliteration;
 
   @override
   Future<StoredAppPreferences> load() async => _stored;
@@ -3914,6 +4065,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: code,
       themeCode: _stored.themeCode,
       companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
     );
   }
 
@@ -3923,6 +4077,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: _stored.languageCode,
       themeCode: code,
       companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
     );
   }
 
@@ -3932,6 +4089,48 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: _stored.languageCode,
       themeCode: _stored.themeCode,
       companionAutoReciteEnabled: value,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowVerseTranslation(bool value) async {
+    savedReaderShowVerseTranslation = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: value,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowWordHelp(bool value) async {
+    savedReaderShowWordHelp = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: value,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowTransliteration(bool value) async {
+    savedReaderShowTransliteration = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: value,
     );
   }
 }

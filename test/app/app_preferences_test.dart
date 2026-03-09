@@ -11,6 +11,9 @@ void main() {
         languageCode: 'pt',
         themeCode: 'dark',
         companionAutoReciteEnabled: true,
+        readerShowVerseTranslation: false,
+        readerShowWordHelp: false,
+        readerShowTransliteration: true,
       ),
     );
     final container = ProviderContainer(
@@ -28,6 +31,9 @@ void main() {
     expect(state.language, AppLanguage.portuguese);
     expect(state.theme, AppThemeChoice.dark);
     expect(state.companionAutoReciteEnabled, isTrue);
+    expect(state.readerShowVerseTranslation, isFalse);
+    expect(state.readerShowWordHelp, isFalse);
+    expect(state.readerShowTransliteration, isTrue);
     expect(state.hasLoaded, isTrue);
   });
 
@@ -52,14 +58,29 @@ void main() {
     await container
         .read(appPreferencesProvider.notifier)
         .setCompanionAutoReciteEnabled(true);
+    await container
+        .read(appPreferencesProvider.notifier)
+        .setReaderShowVerseTranslation(false);
+    await container
+        .read(appPreferencesProvider.notifier)
+        .setReaderShowWordHelp(false);
+    await container
+        .read(appPreferencesProvider.notifier)
+        .setReaderShowTransliteration(true);
 
     final state = container.read(appPreferencesProvider);
     expect(state.language, AppLanguage.french);
     expect(state.theme, AppThemeChoice.dark);
     expect(state.companionAutoReciteEnabled, isTrue);
+    expect(state.readerShowVerseTranslation, isFalse);
+    expect(state.readerShowWordHelp, isFalse);
+    expect(state.readerShowTransliteration, isTrue);
     expect(store.savedLanguageCode, 'fr');
     expect(store.savedThemeCode, 'dark');
     expect(store.savedCompanionAutoReciteEnabled, isTrue);
+    expect(store.savedReaderShowVerseTranslation, isFalse);
+    expect(store.savedReaderShowWordHelp, isFalse);
+    expect(store.savedReaderShowTransliteration, isTrue);
   });
 }
 
@@ -76,6 +97,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   String? savedLanguageCode;
   String? savedThemeCode;
   bool? savedCompanionAutoReciteEnabled;
+  bool? savedReaderShowVerseTranslation;
+  bool? savedReaderShowWordHelp;
+  bool? savedReaderShowTransliteration;
 
   @override
   Future<StoredAppPreferences> load() async {
@@ -89,6 +113,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: code,
       themeCode: _stored.themeCode,
       companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
     );
   }
 
@@ -99,6 +126,9 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: _stored.languageCode,
       themeCode: code,
       companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
     );
   }
 
@@ -109,6 +139,48 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: _stored.languageCode,
       themeCode: _stored.themeCode,
       companionAutoReciteEnabled: value,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowVerseTranslation(bool value) async {
+    savedReaderShowVerseTranslation = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: value,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowWordHelp(bool value) async {
+    savedReaderShowWordHelp = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: value,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowTransliteration(bool value) async {
+    savedReaderShowTransliteration = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: value,
     );
   }
 }

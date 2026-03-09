@@ -194,7 +194,7 @@ The reader has two views (internal enum names kept for backward compatibility):
 Both views use one unified shell:
 - Left pane: Surah / Verse / Juz / Page navigation tabs
 - Center pane: context + top actions + content
-- Right pane: settings drawer (`Arabic`, `Translation`, `Word By Word`)
+- Right pane: settings drawer (`Arabic`, `Translation`, `Word By Word`) with real Reader meaning controls
 
 ### 3.1 Verse by Verse view
 
@@ -204,7 +204,7 @@ Intent:
 Per-verse cell includes:
 - Top action row (`surah:ayah` + action icons)
 - Arabic row (Quran.com words/QCF pipeline when available)
-- Translation line
+- Optional translation line (visible by default, hideable in Reader settings)
 - Bottom action row (`Tafsirs`, `Lessons`, `Reflections` scaffold actions)
 - Divider
 
@@ -248,6 +248,12 @@ Translation behavior:
   - French -> resource `31` (Muhammad Hamidullah)
   - Portuguese -> resource `43` (Samir El-Hayek)
   - Arabic app language -> currently falls back to English resource `85`
+- Reader meaning controls are persistent local preferences:
+  - `Show verse translation` -> default `on`
+  - `Show word help` -> default `on`
+  - `Show transliteration` -> default `off`
+- The Translation tab now controls whether verse translation is visible.
+- The Word By Word tab now controls whether word help and transliteration are shown where existing data supports them.
 - Fallback text: `Translation unavailable`
 
 ### 3.2 Reader recitation playback (streaming)
@@ -306,6 +312,11 @@ Interaction model:
 - Hover highlights word/verse context.
 - End-marker click opens verse actions.
 - Non-marker click opens word popover.
+- Verse-by-verse word help can be turned on or off from Reader settings.
+- Word popover meaning details respect the Reader meaning controls:
+  - translation appears when word help is enabled and data exists
+  - transliteration appears when transliteration is enabled and data exists
+  - fallback text stays calm when enabled meaning data is unavailable
 - Tooltip uses word translation when available; fallback `Translation unavailable`.
 
 Header/spacing model:
@@ -779,7 +790,7 @@ Representative files:
 ## 12) Known Constraints / Incomplete Areas
 
 - Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
-- `Translation` and `Word By Word` settings tabs are scaffolded but not fully implemented.
+- Reader meaning controls are implemented, but translation-source selection is still fixed to one default resource per app language.
 - My Quran and Quran Radio screens are placeholders.
 - Web parity will require abstraction of `dart:io` usage in Quran.com cache/font services.
 - Quran.com parity work is active; visuals and interactions are close in many areas but still evolving.

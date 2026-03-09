@@ -1804,6 +1804,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   void _resetMushafSettings() {
+    final preferences = ref.read(appPreferencesProvider);
     setState(() {
       _mushafFontStep = 5;
       _mushafSettingsTab = _MushafSettingsTab.arabic;
@@ -1812,6 +1813,25 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         _invalidateMushafFuture();
       }
     });
+    if (!preferences.readerShowVerseTranslation) {
+      unawaited(
+        ref
+            .read(appPreferencesProvider.notifier)
+            .setReaderShowVerseTranslation(true),
+      );
+    }
+    if (!preferences.readerShowWordHelp) {
+      unawaited(
+        ref.read(appPreferencesProvider.notifier).setReaderShowWordHelp(true),
+      );
+    }
+    if (preferences.readerShowTransliteration) {
+      unawaited(
+        ref
+            .read(appPreferencesProvider.notifier)
+            .setReaderShowTransliteration(false),
+      );
+    }
   }
 
   int _activeMushafId() {
@@ -2029,6 +2049,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required BuildContext context,
     required String ayahKey,
     required _VerseByVerseRowRenderData data,
+    required bool showWordHelp,
   }) {
     final baseArabicStyle =
         Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -2043,7 +2064,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       qcfFamilyName: data.qcfFamilyName,
       baseStyle: baseArabicStyle,
       showWordHover: true,
-      showTooltips: true,
+      showTooltips: showWordHelp,
       suppressEndMarkers: true,
       preserveQcfTextColorOnHover:
           _arabicRenderMode == _ArabicRenderMode.tajweed,
@@ -2083,6 +2104,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final translationResourceId = _translationResourceIdForLanguage(
       preferences.language,
     );
+    final showVerseTranslation = preferences.readerShowVerseTranslation;
+    final showWordHelp = preferences.readerShowWordHelp;
     if (ayahsFuture == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -2180,6 +2203,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       ayahKey: ayahKey,
                       renderData: null,
                       translationText: strings.translationUnavailable,
+                      showVerseTranslation: showVerseTranslation,
+                      showWordHelp: showWordHelp,
                     );
                   }
 
@@ -2206,6 +2231,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                           ayahKey: ayahKey,
                           renderData: renderData,
                           translationText: renderData.translationText,
+                          showVerseTranslation: showVerseTranslation,
+                          showWordHelp: showWordHelp,
                         );
                       },
                     ),
@@ -2325,6 +2352,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required String ayahKey,
     required _VerseByVerseRowRenderData? renderData,
     required String translationText,
+    required bool showVerseTranslation,
+    required bool showWordHelp,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final highlighted =
@@ -2341,6 +2370,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             context: context,
             ayahKey: ayahKey,
             data: renderData,
+            showWordHelp: showWordHelp,
           );
 
     return KeyedSubtree(
@@ -2377,24 +2407,26 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     child: arabicWidget,
                   ),
                 ),
-                const SizedBox(height: 12),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Text(
-                    translationText,
-                    key: ValueKey('reader_verse_translation_$ayahKey'),
-                    textAlign: TextAlign.start,
-                    style:
-                        Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w400,
-                        ) ??
-                        const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w400,
-                        ),
+                if (showVerseTranslation) ...[
+                  const SizedBox(height: 12),
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Text(
+                      translationText,
+                      key: ValueKey('reader_verse_translation_$ayahKey'),
+                      textAlign: TextAlign.start,
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w400,
+                          ) ??
+                          const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w400,
+                          ),
+                    ),
                   ),
-                ),
+                ],
                 const Divider(height: 1),
               ],
             ),
@@ -3427,6 +3459,47 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return wordTooltipMessage(word, fallback: _strings.translationUnavailable);
   }
 
+  String _wordMeaningFallbackText(AppPreferencesState preferences) {
+    if (!preferences.readerShowWordHelp &&
+        !preferences.readerShowTransliteration) {
+      return _strings.meaningAidsOff;
+    }
+    if (preferences.readerShowWordHelp &&
+        !preferences.readerShowTransliteration) {
+      return _strings.translationUnavailable;
+    }
+    return _strings.meaningUnavailable;
+  }
+
+  String _readerMeaningPreviewText(
+    MushafWord? word,
+    AppPreferencesState preferences,
+  ) {
+    if (word == null) {
+      return _strings.hoverWordToPreviewMeaning;
+    }
+
+    final lines = <String>[];
+    if (preferences.readerShowWordHelp) {
+      final translation = _cleanTranslationText(word.translationText);
+      if (translation.isNotEmpty) {
+        lines.add(translation);
+      }
+    }
+
+    if (preferences.readerShowTransliteration) {
+      final transliteration = (word.transliterationText ?? '').trim();
+      if (transliteration.isNotEmpty) {
+        lines.add('${_strings.transliteration}: $transliteration');
+      }
+    }
+
+    if (lines.isEmpty) {
+      return _wordMeaningFallbackText(preferences);
+    }
+    return lines.join('\n');
+  }
+
   Future<void> _showMushafWordPopover({
     required _MushafLineWord lineWord,
     required int lineNumber,
@@ -3435,7 +3508,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (!mounted) {
       return;
     }
+    final preferences = ref.read(appPreferencesProvider);
     final wordText = lineWord.word.textQpcHafs ?? lineWord.displayText;
+    final translation = preferences.readerShowWordHelp
+        ? _cleanTranslationText(lineWord.word.translationText)
+        : '';
+    final transliteration = preferences.readerShowTransliteration
+        ? (lineWord.word.transliterationText ?? '').trim()
+        : '';
+    final showFallbackMeaning =
+        translation.isEmpty && transliteration.isEmpty;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -3459,6 +3541,28 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               Text(
                 '${_strings.verse}: ${lineWord.verseKey ?? _strings.unknown}',
               ),
+              if (translation.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _strings.translation,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(height: 4),
+                Text(translation),
+              ],
+              if (transliteration.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _strings.transliteration,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(height: 4),
+                Text(transliteration),
+              ],
+              if (showFallbackMeaning) ...[
+                const SizedBox(height: 12),
+                Text(_wordMeaningFallbackText(preferences)),
+              ],
             ],
           ),
           actions: [
@@ -4338,13 +4442,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               child: switch (_mushafSettingsTab) {
                 _MushafSettingsTab.arabic => _buildMushafArabicSettingsBody(),
                 _MushafSettingsTab.translation =>
-                  _buildMushafScaffoldSettingsBody(
-                    _strings.translationSettingsComingSoon,
-                  ),
+                  _buildMushafTranslationSettingsBody(),
                 _MushafSettingsTab.wordByWord =>
-                  _buildMushafScaffoldSettingsBody(
-                    _strings.wordByWordSettingsComingSoon,
-                  ),
+                  _buildMushafWordByWordSettingsBody(),
               },
             ),
           ),
@@ -4377,15 +4477,17 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget _buildMushafArabicSettingsBody() {
+    final preferences = ref.watch(appPreferencesProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final previewWord = _hoveredMushafPreviewWord;
     final selectedReciter = ref.watch(selectedReciterProvider);
     final isSwitchingReciter = ref.watch(ayahReciterSwitchInProgressProvider);
     final previewArabic =
         previewWord?.textQpcHafs ?? previewWord?.codeV2 ?? _strings.preview;
-    final previewTranslation = previewWord == null
-        ? _strings.translationUnavailable
-        : _mushafWordTooltipMessage(previewWord);
+    final previewTranslation = _readerMeaningPreviewText(
+      previewWord,
+      preferences,
+    );
 
     return SingleChildScrollView(
       key: const ValueKey('reader_mushaf_settings_scroll'),
@@ -4506,8 +4608,128 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  Widget _buildMushafScaffoldSettingsBody(String message) {
-    return Center(child: Text(message, textAlign: TextAlign.center));
+  Widget _buildMushafTranslationSettingsBody() {
+    final preferences = ref.watch(appPreferencesProvider);
+    final translationResourceId = _translationResourceIdForLanguage(
+      preferences.language,
+    );
+    final translationLabel = _translationResourceLabelForId(
+      translationResourceId,
+    );
+
+    return SingleChildScrollView(
+      key: const ValueKey('reader_translation_settings_body'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile.adaptive(
+            key: const ValueKey('reader_translation_visibility_toggle'),
+            contentPadding: EdgeInsets.zero,
+            value: preferences.readerShowVerseTranslation,
+            title: Text(_strings.showVerseTranslation),
+            onChanged: (value) {
+              unawaited(
+                ref
+                    .read(appPreferencesProvider.notifier)
+                    .setReaderShowVerseTranslation(value),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          Container(
+            key: const ValueKey('reader_translation_language_note'),
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              _strings.translationFollowsAppLanguage(translationLabel),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMushafWordByWordSettingsBody() {
+    final preferences = ref.watch(appPreferencesProvider);
+    final previewArabic =
+        _hoveredMushafPreviewWord?.textQpcHafs ??
+        _hoveredMushafPreviewWord?.codeV2 ??
+        _strings.preview;
+    final previewMeaning = _readerMeaningPreviewText(
+      _hoveredMushafPreviewWord,
+      preferences,
+    );
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SingleChildScrollView(
+      key: const ValueKey('reader_word_by_word_settings_body'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_strings.wordHelpDescription),
+          const SizedBox(height: 12),
+          Container(
+            key: const ValueKey('reader_word_by_word_preview'),
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  previewArabic,
+                  textDirection: TextDirection.rtl,
+                  style: const TextStyle(
+                    fontFamily: 'UthmanicHafs',
+                    fontSize: 34,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(previewMeaning),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SwitchListTile.adaptive(
+            key: const ValueKey('reader_word_help_toggle'),
+            contentPadding: EdgeInsets.zero,
+            value: preferences.readerShowWordHelp,
+            title: Text(_strings.showWordHelp),
+            onChanged: (value) {
+              unawaited(
+                ref.read(appPreferencesProvider.notifier).setReaderShowWordHelp(
+                  value,
+                ),
+              );
+            },
+          ),
+          SwitchListTile.adaptive(
+            key: const ValueKey('reader_transliteration_toggle'),
+            contentPadding: EdgeInsets.zero,
+            value: preferences.readerShowTransliteration,
+            title: Text(_strings.showTransliteration),
+            onChanged: (value) {
+              unawaited(
+                ref
+                    .read(appPreferencesProvider.notifier)
+                    .setReaderShowTransliteration(value),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildAyahMiniPlayer(AyahAudioState state) {

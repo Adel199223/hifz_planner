@@ -763,6 +763,45 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       languageCode: _stored.languageCode,
       themeCode: _stored.themeCode,
       companionAutoReciteEnabled: value,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowVerseTranslation(bool value) async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: value,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowWordHelp(bool value) async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: value,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+    );
+  }
+
+  @override
+  Future<void> saveReaderShowTransliteration(bool value) async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: value,
     );
   }
 }
