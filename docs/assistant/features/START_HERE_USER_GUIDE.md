@@ -98,7 +98,7 @@ Safe beginner rule:
 ### I saved something and want to reopen it
 
 1. Open `Library`.
-2. Use `Bookmarks` or `Notes`.
+2. Use `Saved verses` or `Notes`.
 3. Press `Reopen in Reader` to go back to that verse.
 
 ### I want to continue where I left off
@@ -106,7 +106,7 @@ Safe beginner rule:
 1. Open `My Quran`.
 2. Use `Continue reading` if a recent reading target is available.
 3. If there is no saved reading target yet, use `Open Reader`.
-4. In the same screen, use the saved-study preview if you want to reopen your latest bookmark or note directly.
+4. In the same screen, use the saved-study preview if you want to reopen your latest saved verse or note directly.
 5. Use `Study setup` there if you want to quickly turn translation, word help, transliteration, or autoplay on or off.
 
 ## What This App Does Not Do Yet

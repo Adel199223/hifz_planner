@@ -54,7 +54,7 @@
 - [x] Merge Wave 2
 - [x] Start Wave 3
 - [x] Merge Wave 3
-- [ ] Start Wave 4
+- [x] Start Wave 4
 - [ ] Merge Wave 4
 - [ ] Close the roadmap
 
@@ -78,6 +78,7 @@
 | My Quran Wave 1 | merged | historical | removed after merge | Three-card hub foundation merged to `main` in PR `#42`; active plan archived in `docs/assistant/exec_plans/completed/` |
 | My Quran Wave 2 | merged | historical | removed after merge | Saved-study previews, real resume depth, beginner-guide routing, and fresh-session resume routing merged to `main` in PR `#44`; active plan archived in `docs/assistant/exec_plans/completed/` |
 | My Quran Wave 3 | merged | historical | removed after merge | Personal setup shortcuts merged to `main` in PR `#47`; active plan archived in `docs/assistant/exec_plans/completed/` |
+| My Quran Wave 4 | active | `feat/my-quran-wave4-consistency-closeout` | `/home/fa507/dev/hifz_planner_my_quran_wave4` | Cross-surface consistency pass is implemented, locally green, and docs-synced; PR closeout is next |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -139,5 +140,22 @@
 - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical app brief, assistant bridge, broader app user guide, and beginner start guide so Wave 3 study-setup behavior is durable in both technical and non-technical support docs.
 - 2026-03-09: Wave 3 feature work merged to `main` in PR `#47`.
 - 2026-03-09: Wave 3 active ExecPlan is now archived to `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave3_personal_setup_shortcuts.md`.
+- 2026-03-09: Wave 4 started in isolated worktree `/home/fa507/dev/hifz_planner_my_quran_wave4` on branch `feat/my-quran-wave4-consistency-closeout`.
+- 2026-03-09: Wave 4 startup ExecPlan created at `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave4_cross_surface_consistency_closeout.md`.
+- 2026-03-09: The first Wave 4 target is cross-surface wording alignment so `Reader`, `My Quran`, `Library`, and support docs stop mixing `Save for later` language with `Bookmarks`.
+- 2026-03-09: Wave 4 now aligns learner-facing saved-study wording around `Save for later` and `Saved verses` while keeping internal bookmark routes, providers, and storage names unchanged.
+- 2026-03-09: Wave 4 validation is green in the isolated worktree:
+  - `flutter test -j 1 -r expanded test/screens/my_quran_screen_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/bookmarks_screen_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart`
+  - `flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart`
+  - `flutter test -j 1 -r expanded test/widget_test.dart`
+  - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+  - `dart tooling/validate_localization.dart`
+  - `dart tooling/validate_agent_docs.dart`
+  - `dart tooling/validate_workspace_hygiene.dart`
+- 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` before validation again; the incidental churn was reverted so Wave 4 remains dependency-neutral.
+- 2026-03-09: Wave 4 also refreshed `test/widget_test.dart` because the old smoke test still assumed a direct bookmark destination instead of the current `Library` -> saved-verses flow.
+- 2026-03-09: Narrow Assistant Docs Sync completed for the canonical app brief, assistant bridge, broader app user guide, beginner guide, and issue memory so the final saved-study vocabulary and repeated lockfile-churn evidence are durable outside runtime code.
 - Next recommended action:
-  - Wave 4 - Cross-Surface Consistency and Closeout
+  - close Wave 4 with PR merge

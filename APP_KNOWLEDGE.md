@@ -111,7 +111,7 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
 - Left `NavigationRail` now carries the core daily path:
   - Today, Read, My Plan, Library
 - `Library` is a hub for:
-  - Bookmarks
+  - Saved verses
   - Notes
   - saved-study follow-up with enough verse context to recognize what was saved
 - A top-right `More` drawer holds secondary tools and destinations:
@@ -820,11 +820,12 @@ Representative files:
 
 - Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
 - Reader meaning controls are implemented, but translation-source selection is still fixed to one default resource per app language.
-- My Quran Wave 3 is now implemented locally in the active roadmap worktree:
+- My Quran Wave 4 is now implemented locally in the active roadmap worktree:
   - normal Reader usage now persists a lightweight last-reader resume target
-  - `My Quran` can now show the latest bookmark preview with a direct reopen path
+  - `My Quran` can now show the latest saved-verse preview with a direct reopen path
   - `My Quran` can now show the latest updated note preview with a direct reopen path
   - `My Quran` now also shows a separate `Study setup` section with plain-language summary text plus inline toggles for translation, word help, transliteration, and Practice from Memory autoplay
+  - learner-facing saved-study wording is now aligned around `Save for later` and `Saved verses` across `Reader`, `My Quran`, and `Library`
   - reciter changes still stay routed through `Listening setup` and `Reciters`
   - when no saved reader target exists yet, the hub still falls back safely to `Open Reader`
 - Quran Radio is still a placeholder surface.
@@ -844,9 +845,10 @@ Representative files:
   - verse mode with target surah/ayah
 - if no snapshot exists yet, the hub stays useful and falls back to `Open Reader`
 - `Saved for later` now also surfaces:
-  - the latest bookmark preview with direct reopen
+  - the latest saved-verse preview with direct reopen
   - the latest updated note preview with direct reopen
   - the full route into `Library`
+- `Library` now presents those saved bookmark-style items to the learner as `Saved verses` for consistency with `Save for later`
 - `Listening setup` currently summarizes the selected reciter plus speed and repeat, then routes into `Reciters`
 - `Study setup` now sits underneath the three summary cards and lets the learner quickly switch:
   - verse translation
@@ -854,7 +856,7 @@ Representative files:
   - transliteration
   - Practice from Memory autoplay
 - reciter changes still go through `Listening setup` and `Reciters`
-- the hub is still intentionally summary-first in Wave 3:
+- the hub is still intentionally summary-first in Wave 4:
   - no full settings duplication
   - no duplicate Library list
   - no inline reciter picker
