@@ -208,9 +208,137 @@ void main() {
     expect(find.text('Hudhaify'), findsOneWidget);
     expect(find.text('Speed 1.25x · Repeat 2x'), findsOneWidget);
 
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('my_quran_library_button')),
+    );
     await tester.tap(find.byKey(const ValueKey('my_quran_library_button')));
     await pumpUntilFound(tester, find.text('Route /library'));
     expect(find.text('Route /library'), findsOneWidget);
+  });
+
+  testWidgets('shows latest saved previews and reopens them in Reader', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final earlier = DateTime(2026, 3, 9, 8, 0);
+    final later = DateTime(2026, 3, 9, 9, 15);
+    await db.into(db.ayah).insert(
+          AyahCompanion.insert(
+            surah: 2,
+            ayah: 255,
+            textUthmani: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ',
+            pageMadina: const Value(42),
+          ),
+        );
+    await db.into(db.ayah).insert(
+          AyahCompanion.insert(
+            surah: 18,
+            ayah: 10,
+            textUthmani: 'رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً',
+            pageMadina: const Value(293),
+          ),
+        );
+    await db.into(db.bookmark).insert(
+          BookmarkCompanion.insert(
+            surah: 1,
+            ayah: 1,
+            createdAt: Value(earlier),
+          ),
+        );
+    await db.into(db.bookmark).insert(
+          BookmarkCompanion.insert(
+            surah: 2,
+            ayah: 255,
+            createdAt: Value(later),
+          ),
+        );
+    await db.into(db.note).insert(
+          NoteCompanion.insert(
+            surah: 18,
+            ayah: 10,
+            title: const Value('Cave opening'),
+            body: 'Remember the dua here.',
+            updatedAt: Value(later),
+          ),
+        );
+
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(
+          _FakeAppPreferencesStore(),
+        ),
+        ayahAudioPreferencesStoreProvider.overrideWithValue(
+          _FakeAudioPreferencesStore(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    final router = _buildRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('my_quran_latest_bookmark_section')),
+    );
+
+    expect(find.text('Latest bookmark'), findsOneWidget);
+    expect(find.text('Surah 2, Ayah 255'), findsOneWidget);
+    expect(find.text('اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ'), findsOneWidget);
+    expect(find.text('Page 42'), findsOneWidget);
+
+    expect(find.text('Latest note'), findsOneWidget);
+    expect(find.text('Surah 18, Ayah 10'), findsOneWidget);
+    expect(find.text('Cave opening: Remember the dua here.'), findsOneWidget);
+    expect(find.text('Page 293'), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('my_quran_reopen_bookmark_button')),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('my_quran_reopen_bookmark_button')),
+    );
+    await pumpUntilFound(
+      tester,
+      find.text('Route /reader?mode=page&page=42&targetSurah=2&targetAyah=255'),
+    );
+    expect(
+      find.text('Route /reader?mode=page&page=42&targetSurah=2&targetAyah=255'),
+      findsOneWidget,
+    );
+
+    router.go('/my-quran');
+    await tester.pumpAndSettle();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('my_quran_reopen_note_button')),
+    );
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('my_quran_reopen_note_button')),
+    );
+    await tester.tap(find.byKey(const ValueKey('my_quran_reopen_note_button')));
+    await pumpUntilFound(
+      tester,
+      find.text(
+        'Route /reader?mode=page&page=293&targetSurah=18&targetAyah=10',
+      ),
+    );
+    expect(
+      find.text('Route /reader?mode=page&page=293&targetSurah=18&targetAyah=10'),
+      findsOneWidget,
+    );
   });
 }
 

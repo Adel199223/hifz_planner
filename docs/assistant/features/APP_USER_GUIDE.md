@@ -1,6 +1,8 @@
 # App User Guide (Non-Technical)
 
-This is a plain-language guide to how the app works as a complete system, so you can choose the right screen at the right time and keep memorization quality high over months, not just days.
+If this is your first time using the app, start with `docs/assistant/features/START_HERE_USER_GUIDE.md` first.
+
+This guide is the broader plain-language whole-app explainer. Use it after the start guide when you want more detail about how the app works as a complete system, so you can choose the right screen at the right time and keep memorization quality high over months, not just days.
 
 ## Use This Guide When
 
@@ -8,6 +10,7 @@ Use this guide for:
 - user support and non-technical app explanation
 - onboarding conversations about what each area of the app is for
 - high-level feature expectations and day-to-day usage flow
+- broader follow-up explanation after `START_HERE_USER_GUIDE.md`
 
 ## Do Not Use This Guide For
 
@@ -15,6 +18,7 @@ Do not use this guide for:
 - DB schema/migration details
 - implementation internals or architecture decisions
 - authoritative behavior when this guide conflicts with canonical docs/code
+- the shortest first-time orientation path; use `START_HERE_USER_GUIDE.md` for that
 
 ## For Agents: Support Interaction Contract
 

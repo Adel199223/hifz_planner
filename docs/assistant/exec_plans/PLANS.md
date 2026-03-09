@@ -93,14 +93,15 @@ For roadmap-driven work, every ExecPlan must support returning to the main seque
 
 Required rule:
 1. After a detour for bugfixes, tooling, docs, or environment, update the active wave ExecPlan first.
-2. Update `docs/assistant/exec_plans/active/2026-03-08_product_redesign_execution.md` second.
-3. Resume from the tracker unless it explicitly records a new sequence.
-4. Every roadmap closeout must state:
+2. Update the active roadmap tracker second.
+3. Update `docs/assistant/SESSION_RESUME.md` third.
+4. Resume from `docs/assistant/SESSION_RESUME.md` unless the active roadmap tracker explicitly records a new sequence.
+5. Every roadmap closeout must state:
    - current roadmap status
    - exact next step by wave or stage name
-5. When research stages are already done, say exactly:
+6. When research stages are already done, say exactly:
    - `All research stages are complete; implementation continues by wave.`
-6. Every roadmap closeout message must end with one explicit line in this shape:
+7. Every roadmap closeout message must end with one explicit line in this shape:
    - `Next step: Wave X - <name>`
-7. If the next action is closeout instead of a new wave, end with:
+8. If the next action is closeout instead of a new wave, end with:
    - `Next step: close Wave X with <closeout action>`

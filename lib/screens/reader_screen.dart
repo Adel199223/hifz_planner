@@ -443,6 +443,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     });
     unawaited(_loadSurahMetadata());
     _applyWidgetInputs();
+    _syncReaderLastLocationFromCurrentState();
   }
 
   @override
@@ -456,6 +457,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     setState(() {
       _applyWidgetInputs();
     });
+    _syncReaderLastLocationFromCurrentState();
   }
 
   @override
@@ -530,6 +532,30 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       target: target,
       showMissingTargetMessage: true,
     );
+  }
+
+  void _syncReaderLastLocationFromCurrentState() {
+    final mode = _mode;
+    final selectedPage = _selectedPage;
+    final target = _pendingJumpTarget;
+    final selectedSurah = _selectedSurah;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      if (mode == _ReaderMode.page) {
+        if (selectedPage != null) {
+          _persistReaderPageLocation(page: selectedPage);
+        }
+        return;
+      }
+
+      _persistReaderVerseLocation(
+        surah: target?.surah ?? selectedSurah,
+        ayah: target?.ayah ?? 1,
+      );
+    });
   }
 
   _ReaderMode _resolveMode({required String? mode, required int? page}) {
@@ -644,6 +670,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       _invalidateMushafFuture();
       _clearSimpleQuranComRowCache();
     });
+    _persistReaderPageLocation(
+      page: pageToSelect,
+      targetSurah: targetForJump?.surah,
+      targetAyah: targetForJump?.ayah,
+    );
     _maybePrefetchSimpleQuranComCurrentContext();
   }
 
@@ -808,6 +839,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       _invalidateMushafFuture();
       _clearSimpleQuranComRowCache();
     });
+    _persistReaderVerseLocation(surah: surah, ayah: 1);
     _maybePrefetchSimpleQuranComCurrentContext();
   }
 
@@ -827,7 +859,40 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (_viewMode == _ReaderViewMode.mushaf) {
       _resetMushafScrollToTop();
     }
+    _persistReaderPageLocation(page: page);
     _maybePrefetchSimpleQuranComCurrentContext();
+  }
+
+  void _persistReaderVerseLocation({
+    required int surah,
+    required int ayah,
+  }) {
+    unawaited(
+      ref
+          .read(appPreferencesProvider.notifier)
+          .setReaderLastLocation(
+            mode: ReaderLastLocationMode.verse,
+            targetSurah: surah,
+            targetAyah: ayah,
+          ),
+    );
+  }
+
+  void _persistReaderPageLocation({
+    required int page,
+    int? targetSurah,
+    int? targetAyah,
+  }) {
+    unawaited(
+      ref
+          .read(appPreferencesProvider.notifier)
+          .setReaderLastLocation(
+            mode: ReaderLastLocationMode.page,
+            page: page,
+            targetSurah: targetSurah,
+            targetAyah: targetAyah,
+          ),
+    );
   }
 
   void _selectVerseTabSurah(int surah) {

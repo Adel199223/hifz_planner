@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../app/app_preferences.dart';
 import '../data/providers/audio_providers.dart';
 import '../data/providers/my_quran_providers.dart';
+import '../data/services/my_quran_snapshot_service.dart';
 import '../l10n/app_strings.dart';
 
 class MyQuranScreen extends ConsumerWidget {
@@ -68,6 +69,11 @@ class MyQuranScreen extends ConsumerWidget {
                               ),
                             );
                           },
+                          extraContent: _buildContinueReadingPreview(
+                            context,
+                            strings,
+                            snapshot.lastReaderLocation,
+                          ),
                         ),
                         _MyQuranCard(
                           cardKey: const ValueKey('my_quran_saved_card'),
@@ -87,6 +93,11 @@ class MyQuranScreen extends ConsumerWidget {
                           onPressed: () {
                             context.go('/library');
                           },
+                          extraContent: _buildSavedStudyPreview(
+                            context,
+                            strings,
+                            snapshot,
+                          ),
                         ),
                         _MyQuranCard(
                           cardKey: const ValueKey('my_quran_listening_card'),
@@ -118,6 +129,98 @@ class MyQuranScreen extends ConsumerWidget {
     );
   }
 
+  Widget? _buildContinueReadingPreview(
+    BuildContext context,
+    AppStrings strings,
+    ReaderLastLocation? location,
+  ) {
+    if (location == null ||
+        location.targetSurah == null ||
+        location.targetAyah == null) {
+      return null;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Text(
+          strings.surahAyahListLabel(
+            location.targetSurah!,
+            location.targetAyah!,
+          ),
+          key: const ValueKey('my_quran_continue_target'),
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+      ],
+    );
+  }
+
+  Widget? _buildSavedStudyPreview(
+    BuildContext context,
+    AppStrings strings,
+    MyQuranDashboardSnapshot snapshot,
+  ) {
+    if (snapshot.latestBookmark == null && snapshot.latestNote == null) {
+      return null;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (snapshot.latestBookmark != null)
+          _SavedStudyPreviewSection(
+            sectionKey: const ValueKey('my_quran_latest_bookmark_section'),
+            label: strings.myQuranLatestBookmark,
+            title: strings.surahAyahListLabel(
+              snapshot.latestBookmark!.bookmark.surah,
+              snapshot.latestBookmark!.bookmark.ayah,
+            ),
+            body: snapshot.latestBookmark!.ayah?.textUthmani,
+            trailing: snapshot.latestBookmark!.ayah?.pageMadina == null
+                ? null
+                : strings.pageLabel(snapshot.latestBookmark!.ayah!.pageMadina!),
+            buttonKey: const ValueKey('my_quran_reopen_bookmark_button'),
+            buttonLabel: strings.goToVerse,
+            onPressed: () {
+              context.go(
+                _buildVerseRoute(
+                  surah: snapshot.latestBookmark!.bookmark.surah,
+                  ayah: snapshot.latestBookmark!.bookmark.ayah,
+                  page: snapshot.latestBookmark!.ayah?.pageMadina,
+                ),
+              );
+            },
+          ),
+        if (snapshot.latestBookmark != null && snapshot.latestNote != null)
+          const SizedBox(height: 12),
+        if (snapshot.latestNote != null)
+          _SavedStudyPreviewSection(
+            sectionKey: const ValueKey('my_quran_latest_note_section'),
+            label: strings.myQuranLatestNote,
+            title: strings.surahAyahListLabel(
+              snapshot.latestNote!.note.surah,
+              snapshot.latestNote!.note.ayah,
+            ),
+            body: _buildLatestNoteBody(strings, snapshot.latestNote!),
+            trailing: snapshot.latestNote!.ayah?.pageMadina == null
+                ? null
+                : strings.pageLabel(snapshot.latestNote!.ayah!.pageMadina!),
+            buttonKey: const ValueKey('my_quran_reopen_note_button'),
+            buttonLabel: strings.goToVerse,
+            onPressed: () {
+              context.go(
+                _buildVerseRoute(
+                  surah: snapshot.latestNote!.note.surah,
+                  ayah: snapshot.latestNote!.note.ayah,
+                  page: snapshot.latestNote!.ayah?.pageMadina,
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
   String _continueReadingSummary(
     AppStrings strings,
     ReaderLastLocation? location,
@@ -129,7 +232,7 @@ class MyQuranScreen extends ConsumerWidget {
       return strings.myQuranResumeFromPage(location.page!);
     }
     if (location.targetSurah != null && location.targetAyah != null) {
-      return strings.surahAyahListLabel(
+      return strings.myQuranResumeVerse(
         location.targetSurah!,
         location.targetAyah!,
       );
@@ -155,6 +258,32 @@ class MyQuranScreen extends ConsumerWidget {
     }
     final query = Uri(queryParameters: queryParameters).query;
     return '/reader?$query';
+  }
+
+  String _buildVerseRoute({
+    required int surah,
+    required int ayah,
+    int? page,
+  }) {
+    if (page != null) {
+      return '/reader?mode=page&page=$page&targetSurah=$surah&targetAyah=$ayah';
+    }
+    return '/reader?targetSurah=$surah&targetAyah=$ayah';
+  }
+
+  String _buildLatestNoteBody(
+    AppStrings strings,
+    MyQuranNotePreview preview,
+  ) {
+    final title = (preview.note.title ?? '').trim();
+    final body = preview.note.body.trim();
+    if (title.isEmpty) {
+      return body;
+    }
+    if (body.isEmpty) {
+      return title;
+    }
+    return strings.myQuranLatestNoteSummary(title, body);
   }
 
   String _formatSpeed(double speed) {
@@ -188,6 +317,7 @@ class _MyQuranCard extends StatelessWidget {
     required this.buttonKey,
     required this.buttonLabel,
     required this.onPressed,
+    this.extraContent,
   });
 
   final Key cardKey;
@@ -198,6 +328,7 @@ class _MyQuranCard extends StatelessWidget {
   final Key buttonKey;
   final String buttonLabel;
   final VoidCallback onPressed;
+  final Widget? extraContent;
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +352,10 @@ class _MyQuranCard extends StatelessWidget {
               Text(summary, style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 8),
               Text(description, style: Theme.of(context).textTheme.bodyMedium),
+              if (extraContent != null) ...[
+                const SizedBox(height: 16),
+                extraContent!,
+              ],
               const SizedBox(height: 16),
               FilledButton.tonal(
                 key: buttonKey,
@@ -231,6 +366,82 @@ class _MyQuranCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SavedStudyPreviewSection extends StatelessWidget {
+  const _SavedStudyPreviewSection({
+    required this.sectionKey,
+    required this.label,
+    required this.title,
+    required this.body,
+    required this.buttonKey,
+    required this.buttonLabel,
+    required this.onPressed,
+    this.trailing,
+  });
+
+  final Key sectionKey;
+  final String label;
+  final String title;
+  final String? body;
+  final String? trailing;
+  final Key buttonKey;
+  final String buttonLabel;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: sectionKey,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 6),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          if (body != null && body!.trim().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              body!,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              textDirection: _looksArabic(body!)
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+              textAlign: _looksArabic(body!)
+                  ? TextAlign.right
+                  : TextAlign.start,
+            ),
+          ],
+          if (trailing != null) ...[
+            const SizedBox(height: 6),
+            Text(trailing!, style: Theme.of(context).textTheme.bodySmall),
+          ],
+          const SizedBox(height: 10),
+          OutlinedButton(
+            key: buttonKey,
+            onPressed: onPressed,
+            child: Text(buttonLabel),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _looksArabic(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      return false;
+    }
+    return normalized.runes.any(
+      (rune) => rune >= 0x0600 && rune <= 0x06FF,
     );
   }
 }

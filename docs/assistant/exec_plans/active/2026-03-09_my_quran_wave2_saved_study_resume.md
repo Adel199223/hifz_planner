@@ -53,21 +53,38 @@
 
 ## Progress
 - [x] Create Wave 2 ExecPlan
-- [ ] Persist last-reader location from Reader usage
-- [ ] Add saved-study previews to My Quran
-- [ ] Add reopen actions and focused tests
-- [ ] Run targeted validation
+- [x] Persist last-reader location from Reader usage
+- [x] Add saved-study previews to My Quran
+- [x] Add reopen actions and focused tests
+- [x] Run targeted validation
 
 ## Surprises and Adjustments
-- Use this section for any scope correction or repeated local workflow issue discovered during Wave 2.
+- 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation; the incidental churn was reverted so Wave 2 stays dependency-neutral.
+- 2026-03-09: A docs-governance detour was attached to Wave 2 so a new primary beginner guide could be added before publish.
+- 2026-03-09: The beginner-guide detour stays inside the active Wave 2 worktree so the guide includes the unmerged saved-study preview and resume-depth behavior.
+- 2026-03-09: A second docs-governance detour was attached to Wave 2 so fresh Codex sessions can resume the master plan from one stable file instead of reconstructing state from multiple active trackers.
+- 2026-03-09: The fresh-session detour adds `docs/assistant/SESSION_RESUME.md`, explicit resume-trigger routing, and validator enforcement, but does not change the Wave 2 publish target.
 
 ## Handoff
-- Starting state summary:
-  - Wave 1 is merged on `main` and archived.
-  - `My Quran` already has three stable cards:
-    - `Continue reading`
-    - `Saved for later`
-    - `Listening setup`
-  - The current roadmap return point is to deepen resume and saved-study usefulness without changing routes or schema.
+- Final state summary:
+  - `My Quran` now deepens the Wave 1 hub with:
+    - last-reader resume targets persisted from normal Reader usage
+    - latest bookmark preview with direct reopen path
+    - latest note preview with direct reopen path
+  - The saved-study card still routes to `Library`, but no longer feels like a blind storage shortcut.
+  - Wave 2 validation is green:
+    - `flutter test -j 1 -r expanded test/screens/my_quran_screen_test.dart`
+    - `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart`
+    - `flutter test -j 1 -r expanded test/app/app_preferences_test.dart`
+    - `flutter test -j 1 -r expanded test/app/app_preferences_store_test.dart`
+    - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+    - `dart tooling/validate_localization.dart`
+    - `dart tooling/validate_agent_docs.dart`
+    - `dart tooling/validate_workspace_hygiene.dart`
+  - A docs-governance detour now adds:
+    - `docs/assistant/features/START_HERE_USER_GUIDE.md` as the primary beginner guide
+    - routing/validator support so Assistant Docs Sync keeps that guide current
+    - an issue-memory record for support-guide density after many roadmap waves
+  - After that detour, Wave 2 should return to publish closeout.
 - Follow-up risks:
-  - Reader location persistence may reveal edge cases between page mode and verse mode that need explicit fallback rules.
+  - Reader resume remains target-based, not scroll-position based; this is intentional for stability but may still feel coarse in long surahs.

@@ -27,6 +27,8 @@ Use when changes touch:
 - Don't use this workflow for commit-stage/publish requests. Instead use `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`.
 - Don't use this workflow to bypass targeted docs sync scope after feature work. Instead apply only touched-scope updates.
 - Do not rewrite entire user guides when only one user journey changed; update touched sections only.
+- Do not widen the beginner start guide unless the change affects first-run mental model, primary navigation, or the role of the main user surfaces.
+- Do not let `docs/assistant/SESSION_RESUME.md` drift from the active roadmap tracker or active wave ExecPlan.
 - Do not replace plain-language user-guide support guidance with implementation jargon; preserve exact support scope boundaries.
 - Do not remove beginner-focused sections (`Quick Start`, `Terms in Plain English`) when updating support-facing guides.
 - Do not let bridge docs become alternate canon.
@@ -45,6 +47,8 @@ Use when changes touch:
 - `README.md`
 - `.github/workflows/dart.yml`
 - `docs/assistant/APP_KNOWLEDGE.md`
+- `docs/assistant/SESSION_RESUME.md`
+- `docs/assistant/features/START_HERE_USER_GUIDE.md`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/ISSUE_MEMORY.md`
@@ -101,7 +105,11 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
    - restore plain-language wording and keep canonical-deference boundaries explicit.
 8. Symptoms: user guides use unexplained technical terms.
    - add or refresh `Terms in Plain English` and keep definitions short.
-9. Symptoms: the same workflow or tooling failure keeps recurring.
+9. Symptoms: the broad support guide becomes too dense for first-time users.
+   - refresh `docs/assistant/features/START_HERE_USER_GUIDE.md` and keep it focused on beginner navigation, what to ignore at first, and the main user journeys.
+10. Symptoms: a fresh session cannot tell which roadmap or wave is active.
+   - update `docs/assistant/SESSION_RESUME.md`, then confirm it points to the active roadmap tracker and active wave ExecPlan.
+11. Symptoms: the same workflow or tooling failure keeps recurring.
    - update `docs/assistant/ISSUE_MEMORY.md` and `docs/assistant/ISSUE_MEMORY.json`, then sync only the docs touched by that repeatable issue class.
 
 ## Significant-Change Docs Sync Policy
@@ -125,6 +133,9 @@ Relevance matrix:
 - CI/repo ops change -> CI workflow + manifest/validator only
 - Template-only change -> template only unless user requests broader propagation
 - User-facing behavior copy/flow change -> update affected sections in `docs/assistant/features/APP_USER_GUIDE.md` and/or `docs/assistant/features/PLANNER_USER_GUIDE.md`
+- Beginner navigation/mental-model change -> update `docs/assistant/features/START_HERE_USER_GUIDE.md` and then only the touched sections of the broader user guides
+- Fresh-session roadmap resume change -> update `docs/assistant/SESSION_RESUME.md` and only the routing/validator docs needed to keep it discoverable
+- Do not update `docs/assistant/features/START_HERE_USER_GUIDE.md` for isolated deep/internal behavior changes that do not change beginner navigation or expectations
 
 ## Sync Order
 
@@ -133,21 +144,23 @@ Relevance matrix:
 2. Update issue memory when a repeatable issue class exists:
    - `docs/assistant/ISSUE_MEMORY.md`
    - `docs/assistant/ISSUE_MEMORY.json`
-3. Update bridge:
+3. Update fresh-session resume state when roadmap status, active wave, next step, or worktree/branch changes:
+   - `docs/assistant/SESSION_RESUME.md`
+4. Update bridge:
    - `docs/assistant/APP_KNOWLEDGE.md`
-4. Update routing docs:
+5. Update routing docs:
    - `docs/assistant/INDEX.md`
    - `docs/assistant/manifest.json`
-5. Update validator and tests:
+6. Update validator and tests:
    - `tooling/validate_agent_docs.dart`
    - `tooling/validate_localization.dart`
    - `tooling/validate_workspace_hygiene.dart`
    - `test/tooling/validate_agent_docs_test.dart`
    - `test/tooling/validate_localization_test.dart`
    - `test/tooling/validate_workspace_hygiene_test.dart`
-6. Update private templates only when requested:
+7. Update private templates only when requested:
    - `docs/assistant/templates/*`
-7. For significant implementation work, ask docs-sync prompt and update only relevant files when approved.
+8. For significant implementation work, ask docs-sync prompt and update only relevant files when approved.
 
 ## Handoff Checklist
 
@@ -160,6 +173,8 @@ Relevance matrix:
 - significant-change docs-sync prompt was asked and response handled
 - worktree isolation was used when multiple doc streams ran in parallel
 - relevant user-guide sections were updated or explicitly deemed unchanged
+- `docs/assistant/features/START_HERE_USER_GUIDE.md` was updated or explicitly deemed unchanged when the beginner mental model changed
+- `docs/assistant/SESSION_RESUME.md` was updated or explicitly deemed unchanged when roadmap state, next step, or active worktree changed
 - touched user-guide sections remain understandable to non-technical readers and still defer to canonical docs
 - beginner-focused sections (`Quick Start`, `Terms in Plain English`) were updated or explicitly confirmed unchanged
 - issue memory was updated or explicitly deemed not relevant for the current change

@@ -1,5 +1,7 @@
 # Planner User Guide (Non-Technical)
 
+If you are brand new to the app, start with `docs/assistant/features/START_HERE_USER_GUIDE.md` first.
+
 This guide explains the Planner system in plain language so you can set up a realistic memorization routine, keep daily momentum, and avoid the common trap of adding new material faster than you can retain it.
 
 ## Use This Guide When
@@ -8,6 +10,7 @@ Use this guide for:
 - user support about planning/scheduling behavior
 - non-technical explanations of plan and today decisions
 - onboarding and troubleshooting around planner settings and outcomes
+- deeper planner detail after the first-time start guide
 
 ## Do Not Use This Guide For
 
@@ -15,6 +18,7 @@ Do not use this guide for:
 - schema/migration or repository internals
 - scheduler implementation details or algorithm-level code reasoning
 - authoritative architecture decisions when technical docs/code disagree
+- your first overview of the whole app; use `START_HERE_USER_GUIDE.md` for that
 
 ## For Agents: Support Interaction Contract
 

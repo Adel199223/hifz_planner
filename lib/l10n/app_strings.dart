@@ -73,6 +73,13 @@ class AppStrings {
     _t('my_quran_resume_from_page', 'Resume on Page {page}'),
     <String, Object>{'page': pageNumber},
   );
+  String myQuranResumeVerse(int surah, int ayah) => _fmt(
+    _t(
+      'my_quran_resume_verse',
+      'Resume Surah {surah}, Ayah {ayah}',
+    ),
+    <String, Object>{'surah': surah, 'ayah': ayah},
+  );
   String get myQuranOpenReader => _t('my_quran_open_reader', 'Open Reader');
   String get myQuranSavedForLaterTitle =>
       _t('my_quran_saved_for_later_title', 'Saved for later');
@@ -87,6 +94,14 @@ class AppStrings {
   String get myQuranSavedForLaterDescription => _t(
     'my_quran_saved_for_later_description',
     'Open Library to revisit saved verses and notes.',
+  );
+  String get myQuranLatestBookmark =>
+      _t('my_quran_latest_bookmark', 'Latest bookmark');
+  String get myQuranLatestNote =>
+      _t('my_quran_latest_note', 'Latest note');
+  String myQuranLatestNoteSummary(String title, String body) => _fmt(
+    _t('my_quran_latest_note_summary', '{title}: {body}'),
+    <String, Object>{'title': title, 'body': body},
   );
   String get myQuranOpenLibrary => _t('my_quran_open_library', 'Open Library');
   String get myQuranListeningSetupTitle =>

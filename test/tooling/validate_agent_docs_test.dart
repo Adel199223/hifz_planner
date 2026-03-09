@@ -316,7 +316,7 @@ void main() {
     );
   });
 
-  test('validator fails when manifest version is not 10', () {
+  test('validator fails when manifest version is not 12', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
 
@@ -335,7 +335,31 @@ void main() {
 
     expect(
       issues
-          .any((issue) => issue.contains('Manifest key "version" must be 10.')),
+          .any((issue) => issue.contains('Manifest key "version" must be 12.')),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when manifest session_resume is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    manifest.remove('session_resume');
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any((issue) => issue.contains('Manifest key "session_resume"')),
       isTrue,
       reason: issues.join('\n'),
     );
@@ -773,6 +797,61 @@ void main() {
     );
   });
 
+  test('validator fails when start-here guide file is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final file = File(
+      _joinPath(
+        fixture.path,
+        'docs/assistant/features/START_HERE_USER_GUIDE.md',
+      ),
+    );
+    file.deleteSync();
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Missing required file:') &&
+            issue.contains('START_HERE_USER_GUIDE.md'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when start-here guide misses required heading', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final startGuide = File(
+      _joinPath(
+        fixture.path,
+        'docs/assistant/features/START_HERE_USER_GUIDE.md',
+      ),
+    );
+    final updated = startGuide
+        .readAsStringSync()
+        .replaceAll('## What This App Helps You Do', '## Purpose');
+    startGuide.writeAsStringSync(updated);
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Beginner guide is missing required section') &&
+            issue.contains('START_HERE_USER_GUIDE.md'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when planner user guide misses required heading', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
@@ -867,6 +946,7 @@ void main() {
     final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
     final updated = agentsFile
         .readAsStringSync()
+        .replaceAll('START_HERE_USER_GUIDE.md', 'START_HERE.md')
         .replaceAll('APP_USER_GUIDE.md', 'APP_GUIDE.md')
         .replaceAll('PLANNER_USER_GUIDE.md', 'PLANNER_GUIDE.md');
     agentsFile.writeAsStringSync(updated);
@@ -884,6 +964,37 @@ void main() {
     );
   });
 
+  test('validator fails when AGENTS.md misses fresh-session resume protocol',
+      () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
+    final mutated = agentsFile
+        .readAsStringSync()
+        .replaceAll('## Fresh Session Resume Protocol', '## Resume Protocol')
+        .replaceAll('resume master plan', 'resume plan');
+    agentsFile.writeAsStringSync(mutated);
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+            (issue) => issue.contains(
+              'AGENTS.md must include "## Fresh Session Resume Protocol" section.',
+            ),
+          ) ||
+          issues.any(
+            (issue) => issue.contains(
+              'AGENTS.md must route fresh-session roadmap resume to docs/assistant/SESSION_RESUME.md and mention `resume master plan`.',
+            ),
+          ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when agent.md misses support routing to user guides',
       () {
     final fixture = _createValidFixture();
@@ -892,6 +1003,7 @@ void main() {
     final runbook = File(_joinPath(fixture.path, 'agent.md'));
     final updated = runbook
         .readAsStringSync()
+        .replaceAll('START_HERE_USER_GUIDE.md', 'START_HERE.md')
         .replaceAll('APP_USER_GUIDE.md', 'APP_GUIDE.md')
         .replaceAll('PLANNER_USER_GUIDE.md', 'PLANNER_GUIDE.md');
     runbook.writeAsStringSync(updated);
@@ -902,7 +1014,7 @@ void main() {
     expect(
       issues.any(
         (issue) => issue.contains(
-          'agent.md quick routing must include APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md',
+          'agent.md quick routing must include START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and PLANNER_USER_GUIDE.md',
         ),
       ),
       isTrue,
@@ -1055,6 +1167,67 @@ void main() {
     );
   });
 
+  test('validator fails when beginner-guide entrypoint contract key is missing',
+      () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final contracts = Map<String, dynamic>.from(
+      manifest['contracts'] as Map<String, dynamic>,
+    );
+    contracts.remove('beginner_guide_entrypoint_policy');
+    manifest['contracts'] = contracts;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) => issue.contains('contracts.beginner_guide_entrypoint_policy'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when beginner-guide sync contract key is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final contracts = Map<String, dynamic>.from(
+      manifest['contracts'] as Map<String, dynamic>,
+    );
+    contracts.remove('beginner_guide_sync_policy');
+    manifest['contracts'] = contracts;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) => issue.contains('contracts.beginner_guide_sync_policy'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when docs maintenance misses user-guide sync clause',
       () {
     final fixture = _createValidFixture();
@@ -1066,6 +1239,7 @@ void main() {
     );
     final updated = docsWorkflow
         .readAsStringSync()
+        .replaceAll('START_HERE_USER_GUIDE.md', 'START_HERE.md')
         .replaceAll('APP_USER_GUIDE.md', 'APP_GUIDE.md')
         .replaceAll('PLANNER_USER_GUIDE.md', 'PLANNER_GUIDE.md')
         .replaceAll('user-guide sections', 'sections');
@@ -1768,9 +1942,13 @@ Directory _createValidFixture() {
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
-      'For user support/non-technical explanation tasks, start with docs/assistant/features/APP_USER_GUIDE.md; for planner behavior/support use docs/assistant/features/PLANNER_USER_GUIDE.md. Respond in plain language first and run a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
+      '## Fresh Session Resume Protocol',
+      'For a new chat that asks to continue, resume, or asks what the next roadmap step is, open docs/assistant/SESSION_RESUME.md first.',
+      'Use `resume master plan` as the explicit trigger phrase.',
+      'After docs/assistant/SESSION_RESUME.md, open the linked active roadmap tracker and linked active wave ExecPlan.',
+      'For user support/non-technical explanation tasks, start with docs/assistant/features/START_HERE_USER_GUIDE.md; then use docs/assistant/features/APP_USER_GUIDE.md for broader support and docs/assistant/features/PLANNER_USER_GUIDE.md for planner behavior/support. Respond in plain language first and run a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
       '## Non-Coder Communication Mode',
-      'For support tasks, start with docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-specific support.',
+      'For support tasks, start with docs/assistant/features/START_HERE_USER_GUIDE.md, then docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-specific support.',
       'Answer in plain language first.',
       'Avoid jargon unless you define it in one short line.',
       'Verify technical claims using APP_KNOWLEDGE.md before asserting them.',
@@ -1795,9 +1973,13 @@ Directory _createValidFixture() {
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
-      'Support/non-technical explanation routing: docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md. Use plain language first and perform a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
+      '## Fresh Session Resume Protocol',
+      'Open docs/assistant/SESSION_RESUME.md first when a new chat needs roadmap continuity.',
+      'Use `resume master plan` as the explicit trigger phrase.',
+      'After docs/assistant/SESSION_RESUME.md, open the linked active roadmap tracker and linked active wave ExecPlan.',
+      'Support/non-technical explanation routing: docs/assistant/features/START_HERE_USER_GUIDE.md, docs/assistant/features/APP_USER_GUIDE.md, and docs/assistant/features/PLANNER_USER_GUIDE.md. Use plain language first and perform a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
       '## Non-Coder Communication Mode',
-      'For support tasks, start with docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-specific support.',
+      'For support tasks, start with docs/assistant/features/START_HERE_USER_GUIDE.md, then docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-specific support.',
       'Answer in plain language first, then give numbered UI steps.',
       'If you must use a technical term, define it in one short line.',
       'Verify technical claims with APP_KNOWLEDGE.md before asserting them.',
@@ -1814,6 +1996,7 @@ Directory _createValidFixture() {
       '# APP_KNOWLEDGE',
       '',
       '## If You Are Not a Developer (Read This First)',
+      '- docs/assistant/features/START_HERE_USER_GUIDE.md',
       '- docs/assistant/features/APP_USER_GUIDE.md',
       '- docs/assistant/features/PLANNER_USER_GUIDE.md',
       'Canonical app brief: `APP_KNOWLEDGE.md`',
@@ -1826,7 +2009,11 @@ Directory _createValidFixture() {
     [
       '# README',
       '',
+      '## Fresh Session Resume',
+      '- docs/assistant/SESSION_RESUME.md',
+      '- `resume master plan`',
       '## If You Are Not a Developer, Start Here',
+      '- docs/assistant/features/START_HERE_USER_GUIDE.md',
       '- docs/assistant/features/APP_USER_GUIDE.md',
       '- docs/assistant/features/PLANNER_USER_GUIDE.md',
       '- docs/assistant/INDEX.md',
@@ -1858,14 +2045,67 @@ Directory _createValidFixture() {
   writeFile('docs/assistant/DB_DRIFT_KNOWLEDGE.md', '# DB');
   writeFile('docs/assistant/GOLDEN_PRINCIPLES.md', '# GOLDEN');
   writeFile(
+    'docs/assistant/SESSION_RESUME.md',
+    [
+      '# Session Resume',
+      '',
+      '## Fresh Session Rule',
+      '',
+      'Start here for roadmap continuity.',
+      '',
+      '## Resume Trigger',
+      '',
+      'Use `resume master plan`.',
+      '',
+      '## Current Roadmap',
+      '',
+      'Roadmap.',
+      '',
+      '## Current Wave',
+      '',
+      'Wave.',
+      '',
+      '## Current Status',
+      '',
+      'Status.',
+      '',
+      '## Exact Next Step',
+      '',
+      'Next.',
+      '',
+      '## Active Worktree And Branch',
+      '',
+      'Worktree and branch.',
+      '',
+      '## Read These Next',
+      '',
+      'Read these.',
+      '',
+      '## Completed Roadmaps',
+      '',
+      'Completed.',
+      '',
+      '## Detours And Open Notes',
+      '',
+      'Notes.',
+    ].join('\n'),
+  );
+  writeFile(
     'docs/assistant/INDEX.md',
     [
       '# INDEX',
       '',
       '## Beginner Quick Path',
+      '- docs/assistant/features/START_HERE_USER_GUIDE.md',
       '- docs/assistant/features/APP_USER_GUIDE.md',
       '- docs/assistant/features/PLANNER_USER_GUIDE.md',
       '- APP_KNOWLEDGE.md',
+      '',
+      '## Fresh Session Resume',
+      '- docs/assistant/SESSION_RESUME.md',
+      '- `resume master plan`',
+      '- active roadmap tracker',
+      '- active wave ExecPlan',
       '- docs/assistant/GOLDEN_PRINCIPLES.md',
       '- docs/assistant/exec_plans/PLANS.md',
     ].join('\n'),
@@ -1906,7 +2146,19 @@ Directory _createValidFixture() {
   );
   writeFile('docs/assistant/LOCALIZATION_GLOSSARY.md', '# LOCALIZATION');
   writeFile('docs/assistant/PERFORMANCE_BASELINES.md', '# PERFORMANCE');
-  writeFile('docs/assistant/exec_plans/PLANS.md', '# PLANS');
+  writeFile(
+    'docs/assistant/exec_plans/PLANS.md',
+    [
+      '# PLANS',
+      '',
+      '## Roadmap Return Protocol',
+      '',
+      'Update the active wave ExecPlan first.',
+      'Update the active roadmap tracker second.',
+      'Update docs/assistant/SESSION_RESUME.md third.',
+      'Resume from docs/assistant/SESSION_RESUME.md unless the active roadmap tracker changes sequence.',
+    ].join('\n'),
+  );
   writeFile('docs/assistant/exec_plans/active/.gitkeep', '');
   writeFile('docs/assistant/exec_plans/completed/.gitkeep', '');
   writeFile(
@@ -1979,17 +2231,19 @@ Directory _createValidFixture() {
       'test/tooling/validate_workspace_hygiene_test.dart', '// placeholder');
 
   final manifest = <String, dynamic>{
-    'version': 10,
+    'version': 12,
     'canonical': <String, dynamic>{
       'agent_runbook': 'agent.md',
       'app_knowledge': 'APP_KNOWLEDGE.md',
       'db_knowledge': 'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
     },
+    'session_resume': 'docs/assistant/SESSION_RESUME.md',
     'bridges': <String>[
       'AGENTS.md',
       'docs/assistant/APP_KNOWLEDGE.md',
     ],
     'user_guides': <String>[
+      'docs/assistant/features/START_HERE_USER_GUIDE.md',
       'docs/assistant/features/APP_USER_GUIDE.md',
       'docs/assistant/features/PLANNER_USER_GUIDE.md',
     ],
@@ -2093,13 +2347,23 @@ Directory _createValidFixture() {
       'doc_gardening_policy':
           'Run docs validators regularly and apply targeted docs maintenance to prevent drift.',
       'user_guides_support_usage_policy':
-          'For support/non-technical explanations, start with docs/assistant/features/APP_USER_GUIDE.md and use docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.',
+          'For support/non-technical explanations, start with docs/assistant/features/START_HERE_USER_GUIDE.md for first-time orientation, then use docs/assistant/features/APP_USER_GUIDE.md for broader support and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.',
       'user_guides_canonical_deference_policy':
           'Feature guides are explanatory docs; if they conflict with technical docs, APP_KNOWLEDGE.md and source code win.',
       'user_guides_update_sync_policy':
-          'When user-facing behavior copy/flow changes, update only affected sections in APP_USER_GUIDE.md and/or PLANNER_USER_GUIDE.md.',
+          'When user-facing behavior copy/flow changes, update only affected sections in START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and/or PLANNER_USER_GUIDE.md based on scope.',
       'non_coder_entrypoint_policy':
-          'Non-coders should start with docs/assistant/features/APP_USER_GUIDE.md (or PLANNER_USER_GUIDE.md for planner topics) before technical docs.',
+          'Non-coders should start with docs/assistant/features/START_HERE_USER_GUIDE.md before moving to APP_USER_GUIDE.md or PLANNER_USER_GUIDE.md.',
+      'beginner_guide_entrypoint_policy':
+          'First-time users and future restarts should start with docs/assistant/features/START_HERE_USER_GUIDE.md before the broader support guides.',
+      'beginner_guide_sync_policy':
+          'When main navigation, first-run mental model, primary user journeys, what-to-ignore-at-first guidance, or the role of Today, Read, My Plan, Practice from Memory, Library, or My Quran changes, update START_HERE_USER_GUIDE.md during Assistant Docs Sync.',
+      'fresh_session_resume_policy':
+          'Fresh sessions that need roadmap continuity should resume from docs/assistant/SESSION_RESUME.md before opening any active roadmap tracker or wave ExecPlan.',
+      'resume_trigger_policy':
+          'Use `resume master plan` as the explicit resume trigger phrase; equivalent intents like `where did we leave off` and `what is the next roadmap step` should route to docs/assistant/SESSION_RESUME.md too.',
+      'roadmap_resume_update_policy':
+          'After roadmap detours or changes to active wave, next step, closeout state, branch, or worktree, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third.',
       'plain_language_support_response_policy':
           'Support responses must be plain-language-first with numbered next steps and exact UI labels.',
       'term_definition_policy':
@@ -2108,6 +2372,10 @@ Directory _createValidFixture() {
     'last_updated': '2026-03-08',
   };
 
+  writeFile(
+    'docs/assistant/features/START_HERE_USER_GUIDE.md',
+    _startHereGuideTemplate(),
+  );
   writeFile(
     'docs/assistant/features/APP_USER_GUIDE.md',
     _featureGuideTemplate(),
@@ -2251,9 +2519,13 @@ String _docsMaintenanceWorkflowTemplate() {
     '',
     'Don\'t use this workflow when runtime implementation is requested. Instead use docs/assistant/workflows/READER_WORKFLOW.md.',
     'Do not rewrite entire user guides when only one user journey changed; update touched sections only.',
+    'Do not widen docs/assistant/features/START_HERE_USER_GUIDE.md unless the beginner mental model or main navigation changed.',
+    'Do not let docs/assistant/SESSION_RESUME.md drift from the active roadmap tracker or active wave ExecPlan.',
     '',
     '## Primary Files',
     '',
+    '- docs/assistant/SESSION_RESUME.md',
+    '- docs/assistant/features/START_HERE_USER_GUIDE.md',
     '- docs/assistant/features/APP_USER_GUIDE.md',
     '- docs/assistant/features/PLANNER_USER_GUIDE.md',
     '',
@@ -2272,11 +2544,54 @@ String _docsMaintenanceWorkflowTemplate() {
     '',
     '## Significant-Change Docs Sync Policy',
     '',
-    'User-facing behavior copy/flow change -> update affected sections in docs/assistant/features/APP_USER_GUIDE.md and/or docs/assistant/features/PLANNER_USER_GUIDE.md',
+    'User-facing behavior copy/flow change -> update affected sections in docs/assistant/features/START_HERE_USER_GUIDE.md, docs/assistant/features/APP_USER_GUIDE.md, and/or docs/assistant/features/PLANNER_USER_GUIDE.md',
+    'Beginner navigation/mental-model change -> update docs/assistant/features/START_HERE_USER_GUIDE.md first.',
+    'Fresh-session roadmap resume change -> update docs/assistant/SESSION_RESUME.md and only the routing/validator docs needed to keep it discoverable.',
+    'Update docs/assistant/SESSION_RESUME.md when active roadmap, active wave, next step, or worktree state changes.',
     '',
     '## Handoff Checklist',
     '',
     'Relevant user-guide sections were updated or explicitly deemed unchanged.',
+    'docs/assistant/features/START_HERE_USER_GUIDE.md was updated or explicitly deemed unchanged when beginner navigation changed.',
+    'docs/assistant/SESSION_RESUME.md was updated or explicitly deemed unchanged when roadmap state or next step changed.',
+  ].join('\n');
+}
+
+String _startHereGuideTemplate() {
+  return [
+    '# START HERE',
+    '',
+    '## Quick Start (No Technical Background)',
+    '',
+    'Start here.',
+    '',
+    '## What This App Helps You Do',
+    '',
+    'What it helps with.',
+    '',
+    '## The Main Places You Need',
+    '',
+    'Places.',
+    '',
+    '## How The Parts Work Together',
+    '',
+    'Flow.',
+    '',
+    '## What To Ignore At First',
+    '',
+    'Ignore advanced items.',
+    '',
+    '## Common Situations',
+    '',
+    'Situations.',
+    '',
+    '## What This App Does Not Do Yet',
+    '',
+    'Limits.',
+    '',
+    '## If You Want More Detail',
+    '',
+    'See APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
   ].join('\n');
 }
 
