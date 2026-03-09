@@ -34,8 +34,8 @@ For any of those, open these docs in order:
 ## Current Status
 
 - Wave 2 is merged to `main`.
-- The Wave 2 active plan is archived.
-- The roadmap is ready to continue from Wave 3.
+- Wave 3 is started in an isolated worktree.
+- The roadmap is now actively implementing Wave 3.
 
 ## Exact Next Step
 
@@ -43,13 +43,13 @@ For any of those, open these docs in order:
 
 ## Active Worktree And Branch
 
-- Worktree: `/home/fa507/dev/hifz_planner`
-- Branch: `main`
+- Worktree: `/home/fa507/dev/hifz_planner_my_quran_wave3`
+- Branch: `feat/my-quran-wave3-setup-shortcuts`
 
 ## Read These Next
 
 1. `docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md`
-2. the next Wave 3 ExecPlan once it exists
+2. `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave3_personal_setup_shortcuts.md`
 3. `docs/assistant/ISSUE_MEMORY.md`
 
 ## Completed Roadmaps

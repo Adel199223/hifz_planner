@@ -52,7 +52,7 @@
 - [x] Merge Wave 1
 - [x] Start Wave 2
 - [x] Merge Wave 2
-- [ ] Start Wave 3
+- [x] Start Wave 3
 - [ ] Merge Wave 3
 - [ ] Start Wave 4
 - [ ] Merge Wave 4
@@ -77,6 +77,7 @@
 | Reader Understanding roadmap | merged | historical | removed | Integrated 4-wave reader roadmap completed before this roadmap started |
 | My Quran Wave 1 | merged | historical | removed after merge | Three-card hub foundation merged to `main` in PR `#42`; active plan archived in `docs/assistant/exec_plans/completed/` |
 | My Quran Wave 2 | merged | historical | removed after merge | Saved-study previews, real resume depth, beginner-guide routing, and fresh-session resume routing merged to `main` in PR `#44`; active plan archived in `docs/assistant/exec_plans/completed/` |
+| My Quran Wave 3 | active | `feat/my-quran-wave3-setup-shortcuts` | `/home/fa507/dev/hifz_planner_my_quran_wave3` | Personal setup shortcuts are the new active wave; startup ExecPlan created and ready for implementation |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -120,5 +121,8 @@
 - 2026-03-09: That detour adds `docs/assistant/SESSION_RESUME.md`, resume-trigger routing, validator coverage, and an issue-memory entry for roadmap resume fragmentation.
 - 2026-03-09: Wave 2 feature work merged to `main` in PR `#44`.
 - 2026-03-09: Wave 2 active ExecPlan is now archived to `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave2_saved_study_resume.md`.
+- 2026-03-09: Wave 2 closeout merged in PR `#45`, active tracker and session-resume state now point forward from merged `main`.
+- 2026-03-09: Wave 3 started in isolated worktree `/home/fa507/dev/hifz_planner_my_quran_wave3` on branch `feat/my-quran-wave3-setup-shortcuts`.
+- 2026-03-09: Wave 3 startup ExecPlan created at `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave3_personal_setup_shortcuts.md`.
 - Next recommended action:
   - Wave 3 - Personal Setup Shortcuts
