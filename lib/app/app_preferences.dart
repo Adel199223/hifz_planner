@@ -5,13 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_language.dart';
 import 'app_preferences_store.dart';
 
+const Object _readerLastLocationNoChange = Object();
+
 enum AppThemeChoice {
   sepia(code: 'sepia'),
   dark(code: 'dark');
 
-  const AppThemeChoice({
-    required this.code,
-  });
+  const AppThemeChoice({required this.code});
 
   final String code;
 
@@ -28,6 +28,41 @@ enum AppThemeChoice {
   }
 }
 
+enum ReaderLastLocationMode {
+  verse(code: 'verse'),
+  page(code: 'page');
+
+  const ReaderLastLocationMode({required this.code});
+
+  final String code;
+
+  static ReaderLastLocationMode? fromCode(String? code) {
+    if (code == null) {
+      return null;
+    }
+    for (final value in values) {
+      if (value.code == code) {
+        return value;
+      }
+    }
+    return null;
+  }
+}
+
+class ReaderLastLocation {
+  const ReaderLastLocation({
+    required this.mode,
+    this.page,
+    this.targetSurah,
+    this.targetAyah,
+  });
+
+  final ReaderLastLocationMode mode;
+  final int? page;
+  final int? targetSurah;
+  final int? targetAyah;
+}
+
 class AppPreferencesState {
   const AppPreferencesState({
     this.language = AppLanguage.english,
@@ -36,6 +71,7 @@ class AppPreferencesState {
     this.readerShowVerseTranslation = true,
     this.readerShowWordHelp = true,
     this.readerShowTransliteration = false,
+    this.readerLastLocation,
     this.hasLoaded = false,
   });
 
@@ -45,6 +81,7 @@ class AppPreferencesState {
   final bool readerShowVerseTranslation;
   final bool readerShowWordHelp;
   final bool readerShowTransliteration;
+  final ReaderLastLocation? readerLastLocation;
   final bool hasLoaded;
 
   AppPreferencesState copyWith({
@@ -54,6 +91,7 @@ class AppPreferencesState {
     bool? readerShowVerseTranslation,
     bool? readerShowWordHelp,
     bool? readerShowTransliteration,
+    Object? readerLastLocation = _readerLastLocationNoChange,
     bool? hasLoaded,
   }) {
     return AppPreferencesState(
@@ -66,6 +104,10 @@ class AppPreferencesState {
       readerShowWordHelp: readerShowWordHelp ?? this.readerShowWordHelp,
       readerShowTransliteration:
           readerShowTransliteration ?? this.readerShowTransliteration,
+      readerLastLocation:
+          identical(readerLastLocation, _readerLastLocationNoChange)
+          ? this.readerLastLocation
+          : readerLastLocation as ReaderLastLocation?,
       hasLoaded: hasLoaded ?? this.hasLoaded,
     );
   }
@@ -77,8 +119,8 @@ final appPreferencesStoreProvider = Provider<AppPreferencesStore>((ref) {
 
 final appPreferencesProvider =
     NotifierProvider<AppPreferencesNotifier, AppPreferencesState>(
-  AppPreferencesNotifier.new,
-);
+      AppPreferencesNotifier.new,
+    );
 
 class AppPreferencesNotifier extends Notifier<AppPreferencesState> {
   bool _didStartLoad = false;
@@ -123,9 +165,9 @@ class AppPreferencesNotifier extends Notifier<AppPreferencesState> {
       return;
     }
     state = state.copyWith(readerShowVerseTranslation: value);
-    await ref.read(appPreferencesStoreProvider).saveReaderShowVerseTranslation(
-      value,
-    );
+    await ref
+        .read(appPreferencesStoreProvider)
+        .saveReaderShowVerseTranslation(value);
   }
 
   Future<void> setReaderShowWordHelp(bool value) async {
@@ -146,20 +188,61 @@ class AppPreferencesNotifier extends Notifier<AppPreferencesState> {
         .saveReaderShowTransliteration(value);
   }
 
+  Future<void> setReaderLastLocation({
+    required ReaderLastLocationMode mode,
+    int? page,
+    int? targetSurah,
+    int? targetAyah,
+  }) async {
+    final normalizedPage = page != null && page > 0 ? page : null;
+    final normalizedSurah = targetSurah != null && targetSurah > 0
+        ? targetSurah
+        : null;
+    final normalizedAyah = targetAyah != null && targetAyah > 0
+        ? targetAyah
+        : null;
+    final nextLocation = ReaderLastLocation(
+      mode: mode,
+      page: normalizedPage,
+      targetSurah: normalizedSurah,
+      targetAyah: normalizedAyah,
+    );
+    state = state.copyWith(readerLastLocation: nextLocation);
+    await ref
+        .read(appPreferencesStoreProvider)
+        .saveLastReaderLocation(
+          mode: mode.code,
+          page: normalizedPage,
+          surah: normalizedSurah,
+          ayah: normalizedAyah,
+        );
+  }
+
+  Future<void> clearReaderLastLocation() async {
+    if (state.readerLastLocation == null) {
+      return;
+    }
+    state = state.copyWith(readerLastLocation: null);
+    await ref.read(appPreferencesStoreProvider).clearLastReaderLocation();
+  }
+
   Future<void> _restore() async {
     final stored = await ref.read(appPreferencesStoreProvider).load();
     const defaults = AppPreferencesState();
     final language =
         AppLanguage.fromCode(stored.languageCode) ?? defaults.language;
     final theme = AppThemeChoice.fromCode(stored.themeCode) ?? defaults.theme;
-    final companionAutoReciteEnabled = stored.companionAutoReciteEnabled ??
+    final companionAutoReciteEnabled =
+        stored.companionAutoReciteEnabled ??
         defaults.companionAutoReciteEnabled;
-    final readerShowVerseTranslation = stored.readerShowVerseTranslation ??
+    final readerShowVerseTranslation =
+        stored.readerShowVerseTranslation ??
         defaults.readerShowVerseTranslation;
     final readerShowWordHelp =
         stored.readerShowWordHelp ?? defaults.readerShowWordHelp;
-    final readerShowTransliteration = stored.readerShowTransliteration ??
-        defaults.readerShowTransliteration;
+    final readerShowTransliteration =
+        stored.readerShowTransliteration ?? defaults.readerShowTransliteration;
+    final readerLastLocation = _restoreReaderLastLocation(stored);
     state = state.copyWith(
       language: language,
       theme: theme,
@@ -167,7 +250,48 @@ class AppPreferencesNotifier extends Notifier<AppPreferencesState> {
       readerShowVerseTranslation: readerShowVerseTranslation,
       readerShowWordHelp: readerShowWordHelp,
       readerShowTransliteration: readerShowTransliteration,
+      readerLastLocation: readerLastLocation,
       hasLoaded: true,
     );
+  }
+
+  ReaderLastLocation? _restoreReaderLastLocation(StoredAppPreferences stored) {
+    final mode = ReaderLastLocationMode.fromCode(stored.lastReaderMode);
+    if (mode == null) {
+      return null;
+    }
+    final page = stored.lastReaderPage != null && stored.lastReaderPage! > 0
+        ? stored.lastReaderPage
+        : null;
+    final targetSurah =
+        stored.lastReaderSurah != null && stored.lastReaderSurah! > 0
+        ? stored.lastReaderSurah
+        : null;
+    final targetAyah =
+        stored.lastReaderAyah != null && stored.lastReaderAyah! > 0
+        ? stored.lastReaderAyah
+        : null;
+
+    switch (mode) {
+      case ReaderLastLocationMode.page:
+        if (page == null) {
+          return null;
+        }
+        return ReaderLastLocation(
+          mode: mode,
+          page: page,
+          targetSurah: targetSurah,
+          targetAyah: targetAyah,
+        );
+      case ReaderLastLocationMode.verse:
+        if (targetSurah == null || targetAyah == null) {
+          return null;
+        }
+        return ReaderLastLocation(
+          mode: mode,
+          targetSurah: targetSurah,
+          targetAyah: targetAyah,
+        );
+    }
   }
 }

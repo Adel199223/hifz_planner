@@ -52,20 +52,22 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 ### `flutter_parallel_test_plugin_symlink_race`
 
 - first seen: 2026-03-08
-- last seen: 2026-03-08
-- repeat count: 2
+- last seen: 2026-03-09
+- repeat count: 3
 - status: mitigated
 - trigger source:
   - local Flutter validation in isolated worktrees
 - symptoms:
-  - parallel `flutter test` runs in one worktree can break plugin-symlink state and make the validation result noisy or untrustworthy
+  - overlapping Flutter commands in one worktree can break plugin-symlink state or stall on the startup lock
+  - validation output becomes noisy or untrustworthy until rerun sequentially
 - likely root cause:
-  - concurrent Flutter test processes racing shared ephemeral/plugin-symlink state inside one worktree
+  - concurrent Flutter startup/plugin work races shared ephemeral state inside one worktree
 - attempted fix history:
   - Wave 1: reran the same validation set sequentially after the parallel run failed noisily
   - Wave 2: kept Flutter validation sequential from the start
+  - My Quran Wave 1: stopped overlapping `flutter test` and `flutter analyze`, then reran validation sequentially
 - accepted fix:
-  - run Flutter test commands sequentially per worktree
+  - run Flutter commands sequentially per worktree
 - regressed after fix:
   - no
 - affected workflows:
@@ -79,12 +81,13 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 - evidence refs:
   - `docs/assistant/exec_plans/active/2026-03-08_goals_progress_execution.md`
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md`
+  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave1_hub_foundation.md`
 
 ### `fresh_worktree_flutter_validation_lockfile_churn`
 
 - first seen: 2026-03-08
-- last seen: 2026-03-08
-- repeat count: 2
+- last seen: 2026-03-09
+- repeat count: 4
 - status: mitigated
 - trigger source:
   - first Flutter validation in a fresh isolated worktree
@@ -96,6 +99,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
   - Wave 2: allowed the initial validation bootstrap to complete, then manually reverted incidental `pubspec.lock` churn before closeout
   - Wave 3: the first fresh-worktree test run touched `pubspec.lock` again, and the incidental change was reverted after validation
   - Wave 4: `flutter test` touched `pubspec.lock` again in a fresh worktree, and the incidental change was reverted before closeout
+  - My Quran Wave 1: fresh-worktree Flutter bootstrap touched `pubspec.lock` again, and the incidental change was reverted before docs sync
 - accepted fix:
   - treat lockfile churn as incidental unless dependencies were intentionally changed, and revert it before closeout
 - regressed after fix:
@@ -111,3 +115,4 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md`
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave3_coaching_adjustment_guidance.md`
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave4_cross_surface_consistency.md`
+  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave1_hub_foundation.md`

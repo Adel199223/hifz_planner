@@ -802,6 +802,43 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: value,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
+    );
+  }
+
+  @override
+  Future<void> saveLastReaderLocation({
+    required String mode,
+    int? page,
+    int? surah,
+    int? ayah,
+  }) async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: mode,
+      lastReaderPage: page,
+      lastReaderSurah: surah,
+      lastReaderAyah: ayah,
+    );
+  }
+
+  @override
+  Future<void> clearLastReaderLocation() async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
     );
   }
 }

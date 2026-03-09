@@ -29,6 +29,10 @@ class AppStrings {
   String get read => _t('read', 'Read');
   String get learn => _t('learn', 'Learn');
   String get myQuran => _t('my_quran', 'My Quran');
+  String get myQuranSubtitle => _t(
+    'my_quran_subtitle',
+    'Keep your place, saved study, and listening setup together.',
+  );
   String get quranRadio => _t('quran_radio', 'Quran Radio');
   String get reciters => _t('reciters', 'Reciters');
   String get reader => _t('reader', 'Reader');
@@ -51,6 +55,50 @@ class AppStrings {
   String get share => _t('share', 'Share');
   String get more => _t('more', 'More');
   String get comingSoon => _t('coming_soon', 'Coming soon.');
+  String get myQuranContinueReadingTitle =>
+      _t('my_quran_continue_reading_title', 'Continue reading');
+  String get myQuranContinueReadingButton =>
+      _t('my_quran_continue_reading_button', 'Continue reading');
+  String get myQuranContinueReadingFallback =>
+      _t('my_quran_continue_reading_fallback', 'Start from Reader');
+  String get myQuranContinueReadingDescription => _t(
+    'my_quran_continue_reading_description',
+    'Pick up where you last opened Reader.',
+  );
+  String get myQuranNoRecentReading => _t(
+    'my_quran_no_recent_reading',
+    'No recent reading saved yet. Open Reader to start from a place you can return to later.',
+  );
+  String myQuranResumeFromPage(int pageNumber) => _fmt(
+    _t('my_quran_resume_from_page', 'Resume on Page {page}'),
+    <String, Object>{'page': pageNumber},
+  );
+  String get myQuranOpenReader => _t('my_quran_open_reader', 'Open Reader');
+  String get myQuranSavedForLaterTitle =>
+      _t('my_quran_saved_for_later_title', 'Saved for later');
+  String myQuranSavedCounts(int bookmarks, int notes) => _fmt(
+    _t('my_quran_saved_counts', 'Bookmarks: {bookmarks} · Notes: {notes}'),
+    <String, Object>{'bookmarks': bookmarks, 'notes': notes},
+  );
+  String get myQuranNoSavedItems => _t(
+    'my_quran_no_saved_items',
+    'No saved items yet. Use Save for later or notes while you read.',
+  );
+  String get myQuranSavedForLaterDescription => _t(
+    'my_quran_saved_for_later_description',
+    'Open Library to revisit saved verses and notes.',
+  );
+  String get myQuranOpenLibrary => _t('my_quran_open_library', 'Open Library');
+  String get myQuranListeningSetupTitle =>
+      _t('my_quran_listening_setup_title', 'Listening setup');
+  String myQuranListeningSetupSummary(String speed, String repeat) => _fmt(
+    _t('my_quran_listening_setup_summary', 'Speed {speed} · Repeat {repeat}'),
+    <String, Object>{'speed': speed, 'repeat': repeat},
+  );
+  String get myQuranOpenReciters =>
+      _t('my_quran_open_reciters', 'Open Reciters');
+  String get myQuranLoadFailed =>
+      _t('my_quran_load_failed', 'Failed to load My Quran.');
   String get unknown => _t('unknown', 'Unknown');
   String get practiceFromMemoryTitle =>
       _t('practice_from_memory_title', 'Practice from Memory');
@@ -1635,6 +1683,8 @@ class AppStrings {
       'read': 'Lire',
       'learn': 'Apprendre',
       'my_quran': 'Mon Coran',
+      'my_quran_subtitle':
+          "Gardez votre place, vos éléments sauvegardés et votre configuration d'écoute ensemble.",
       'quran_radio': 'Radio Coran',
       'reciters': 'Récitateurs',
       'reader': 'Lecteur',
@@ -1653,6 +1703,26 @@ class AppStrings {
       'copy': 'Copier',
       'share': 'Partager',
       'more': 'Plus',
+      'my_quran_continue_reading_title': 'Continuer la lecture',
+      'my_quran_continue_reading_button': 'Continuer la lecture',
+      'my_quran_continue_reading_fallback': 'Commencer dans le Lecteur',
+      'my_quran_continue_reading_description':
+          'Reprenez là où vous avez ouvert le Lecteur pour la dernière fois.',
+      'my_quran_no_recent_reading':
+          "Aucune lecture récente enregistrée. Ouvrez le Lecteur pour commencer à un endroit que vous pourrez retrouver plus tard.",
+      'my_quran_resume_from_page': 'Reprendre à la page {page}',
+      'my_quran_open_reader': 'Ouvrir le Lecteur',
+      'my_quran_saved_for_later_title': 'Sauvegardé pour plus tard',
+      'my_quran_saved_counts': 'Signets : {bookmarks} · Notes : {notes}',
+      'my_quran_no_saved_items':
+          "Aucun élément sauvegardé pour l'instant. Utilisez Sauvegarder pour plus tard ou les notes pendant votre lecture.",
+      'my_quran_saved_for_later_description':
+          'Ouvrez la Bibliothèque pour revoir vos versets et notes sauvegardés.',
+      'my_quran_open_library': 'Ouvrir la Bibliothèque',
+      'my_quran_listening_setup_title': "Configuration d'écoute",
+      'my_quran_listening_setup_summary': 'Vitesse {speed} · Répéter {repeat}',
+      'my_quran_open_reciters': 'Ouvrir les récitateurs',
+      'my_quran_load_failed': 'Impossible de charger Mon Coran.',
       'verse_by_verse': 'Ayah par Ayah',
       'reading': 'Lecture',
       'surah': 'Sourate',
@@ -2061,6 +2131,8 @@ class AppStrings {
       'read': 'Ler',
       'learn': 'Aprender',
       'my_quran': 'Meu Alcorão',
+      'my_quran_subtitle':
+          'Mantenha seu lugar, seus estudos salvos e sua configuração de escuta juntos.',
       'quran_radio': 'Rádio Alcorão',
       'reciters': 'Recitadores',
       'reader': 'Leitor',
@@ -2079,6 +2151,27 @@ class AppStrings {
       'copy': 'Copiar',
       'share': 'Compartilhar',
       'more': 'Mais',
+      'my_quran_continue_reading_title': 'Continuar leitura',
+      'my_quran_continue_reading_button': 'Continuar leitura',
+      'my_quran_continue_reading_fallback': 'Começar no Leitor',
+      'my_quran_continue_reading_description':
+          'Retome de onde você abriu o Leitor pela última vez.',
+      'my_quran_no_recent_reading':
+          'Nenhuma leitura recente foi salva ainda. Abra o Leitor para começar de um lugar ao qual você possa voltar depois.',
+      'my_quran_resume_from_page': 'Retomar na página {page}',
+      'my_quran_open_reader': 'Abrir Leitor',
+      'my_quran_saved_for_later_title': 'Salvo para depois',
+      'my_quran_saved_counts': 'Favoritos: {bookmarks} · Notas: {notes}',
+      'my_quran_no_saved_items':
+          'Nenhum item salvo ainda. Use Salvar para depois ou notas enquanto lê.',
+      'my_quran_saved_for_later_description':
+          'Abra a Biblioteca para rever versículos e notas salvos.',
+      'my_quran_open_library': 'Abrir Biblioteca',
+      'my_quran_listening_setup_title': 'Configuração de escuta',
+      'my_quran_listening_setup_summary':
+          'Velocidade {speed} · Repetição {repeat}',
+      'my_quran_open_reciters': 'Abrir recitadores',
+      'my_quran_load_failed': 'Falha ao carregar Meu Alcorão.',
       'verse_by_verse': 'Verso por verso',
       'reading': 'Lendo',
       'surah': 'Surah',
@@ -2478,6 +2571,8 @@ class AppStrings {
       'read': 'اقرأ',
       'learn': 'تعلّم',
       'my_quran': 'قرآني',
+      'my_quran_subtitle':
+          'اجمع موضعك والعناصر المحفوظة وإعدادات الاستماع في مكان واحد.',
       'quran_radio': 'راديو القرآن',
       'reciters': 'القراء',
       'reader': 'القارئ',
@@ -2496,6 +2591,26 @@ class AppStrings {
       'copy': 'نسخ',
       'share': 'مشاركة',
       'more': 'المزيد',
+      'my_quran_continue_reading_title': 'متابعة القراءة',
+      'my_quran_continue_reading_button': 'متابعة القراءة',
+      'my_quran_continue_reading_fallback': 'ابدأ من القارئ',
+      'my_quran_continue_reading_description':
+          'تابع من الموضع الذي فتحت عنده القارئ آخر مرة.',
+      'my_quran_no_recent_reading':
+          'لا توجد قراءة حديثة محفوظة بعد. افتح القارئ لتبدأ من موضع يمكنك الرجوع إليه لاحقًا.',
+      'my_quran_resume_from_page': 'المتابعة من الصفحة {page}',
+      'my_quran_open_reader': 'فتح القارئ',
+      'my_quran_saved_for_later_title': 'محفوظ لوقت لاحق',
+      'my_quran_saved_counts': 'العلامات: {bookmarks} · الملاحظات: {notes}',
+      'my_quran_no_saved_items':
+          'لا توجد عناصر محفوظة بعد. استخدم "احفظ لوقت لاحق" أو الملاحظات أثناء القراءة.',
+      'my_quran_saved_for_later_description':
+          'افتح المكتبة لمراجعة الآيات والملاحظات المحفوظة.',
+      'my_quran_open_library': 'فتح المكتبة',
+      'my_quran_listening_setup_title': 'إعدادات الاستماع',
+      'my_quran_listening_setup_summary': 'السرعة {speed} · التكرار {repeat}',
+      'my_quran_open_reciters': 'فتح القراء',
+      'my_quran_load_failed': 'تعذر تحميل قرآني.',
       'reset': 'إعادة تعيين',
       'save': 'حفظ',
       'cancel': 'إلغاء',

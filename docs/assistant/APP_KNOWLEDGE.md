@@ -71,6 +71,7 @@ Do not use this file as primary truth when there is a conflict.
 - `Library` is now also the study-follow-up surface for saved verses and verse notes, not just generic storage
 - Top-right drawer is the `More` surface for `Settings`, `About`, `Reciters`, and the demoted Explore entries
 - `Learn` now includes a simple `Practice from Memory` hub plus the existing `Hifz Plan` card
+- `My Quran` is now a real support hub for `Continue reading`, `Saved for later`, and `Listening setup`
 - Reader top actions are now responsive, with the settings button on its own row to avoid narrow-layout collisions
 
 ## Current Stability Notes
@@ -124,6 +125,15 @@ Do not use this file as primary truth when there is a conflict.
   - current weekly progress metrics stay count-based and calm instead of pretending session-minute precision
   - current completed-practice counts are intentionally generic because non-stage4 new-vs-review completions are not yet reliably separated in persisted data
   - the learner is now told explicitly that only real completed practice, review, or delayed-check work counts as progress
+
+## Current My Quran Notes
+
+- `My Quran` is no longer placeholder-only
+- it now summarizes:
+  - last reading location when available
+  - bookmark and note counts
+  - reciter/speed/repeat setup
+- Wave 1 still falls back safely to `Open Reader` when no last-reading snapshot exists yet
 
 ## Current Practice Entry Notes
 
