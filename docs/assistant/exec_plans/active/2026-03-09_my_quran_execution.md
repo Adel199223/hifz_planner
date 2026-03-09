@@ -51,7 +51,7 @@
 - [x] Start Wave 1
 - [x] Merge Wave 1
 - [x] Start Wave 2
-- [ ] Merge Wave 2
+- [x] Merge Wave 2
 - [ ] Start Wave 3
 - [ ] Merge Wave 3
 - [ ] Start Wave 4
@@ -76,7 +76,7 @@
 | Goals + Progress roadmap | merged | historical | removed | Supportive 4-wave goals roadmap completed before this roadmap started |
 | Reader Understanding roadmap | merged | historical | removed | Integrated 4-wave reader roadmap completed before this roadmap started |
 | My Quran Wave 1 | merged | historical | removed after merge | Three-card hub foundation merged to `main` in PR `#42`; active plan archived in `docs/assistant/exec_plans/completed/` |
-| My Quran Wave 2 | active | `feat/my-quran-wave2-saved-study-resume` | `/home/fa507/dev/hifz_planner_my_quran_wave2` | Saved-study previews and real resume depth are implemented locally, validated, and ready for docs sync/closeout |
+| My Quran Wave 2 | merged | historical | removed after merge | Saved-study previews, real resume depth, beginner-guide routing, and fresh-session resume routing merged to `main` in PR `#44`; active plan archived in `docs/assistant/exec_plans/completed/` |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -118,5 +118,7 @@
 - 2026-03-09: That detour updates routing docs, the docs validator, and issue memory so Assistant Docs Sync will keep the beginner guide current when first-run mental model or core user journeys change.
 - 2026-03-09: A fresh-session roadmap-resume detour was attached to Wave 2 before publish so brand-new Codex chats can recover roadmap status from one stable file instead of reconstructing it from scattered trackers.
 - 2026-03-09: That detour adds `docs/assistant/SESSION_RESUME.md`, resume-trigger routing, validator coverage, and an issue-memory entry for roadmap resume fragmentation.
+- 2026-03-09: Wave 2 feature work merged to `main` in PR `#44`.
+- 2026-03-09: Wave 2 active ExecPlan is now archived to `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave2_saved_study_resume.md`.
 - Next recommended action:
-  - close Wave 2 with docs sync and PR merge
+  - Wave 3 - Personal Setup Shortcuts
