@@ -1,5 +1,5 @@
 {
-  "version": 13,
+  "version": 14,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
@@ -210,9 +210,36 @@
       ]
     },
     {
+      "id": "project_harness_sync",
+      "doc": "docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md",
+      "scope": "Vendored template apply, local harness alignment, and template-protected repo sync triggered by `implement the template files` or `sync project harness`.",
+      "primary_files": [
+        "AGENTS.md",
+        "agent.md",
+        "README.md",
+        "docs/assistant/INDEX.md",
+        "docs/assistant/manifest.json",
+        "docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md",
+        "docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md",
+        "docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md",
+        "docs/assistant/workflows/ROADMAP_WORKFLOW.md",
+        "docs/assistant/exec_plans/PLANS.md",
+        "tooling/validate_agent_docs.dart",
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "git status --short --branch",
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test --no-pub -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+      ]
+    },
+    {
       "id": "roadmap_governance",
       "doc": "docs/assistant/workflows/ROADMAP_WORKFLOW.md",
-      "scope": "Adaptive roadmap triggering, active-worktree authority, fresh-session continuity, and detour/closeout governance for long-running multi-wave work.",
+      "scope": "Adaptive roadmap triggering, `SESSION_RESUME.md` as the roadmap anchor file, active-worktree authority, fresh-session continuity, and detour/closeout governance for long-running multi-wave work.",
       "primary_files": [
         "docs/assistant/SESSION_RESUME.md",
         "docs/assistant/exec_plans/PLANS.md",
@@ -376,7 +403,9 @@
     "canonical_precedence": "APP_KNOWLEDGE.md is canonical for app-level architecture and status. Source code is final truth on conflicts.",
     "docs_sync_rule": "If bridge docs conflict with canonical docs, canonical wins and bridge docs must be updated.",
     "windows_test_policy": "Prefer flutter test -j 1 -r expanded for stability on Windows.",
-    "templates_read_policy": "docs/assistant/templates/* are read-on-demand only; open/update only when explicitly requested by the user.",
+    "templates_read_policy": "docs/assistant/templates/* are read-on-demand only, but vendored template files remain committed project assets in bootstrapped repos. Open/update them only when explicitly requested by the user or when reading them as local input for `implement the template files`.",
+    "vendored_template_assets_policy": "Vendored docs/assistant/templates/* files are committed project assets. Do not remove or ignore them by default during commit triage, and keep them tracked when they match the template inventory.",
+    "project_harness_sync_policy": "Use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md for `implement the template files`, `sync project harness`, `audit project harness`, and `check project harness`. Apply vendored templates to the local harness without editing docs/assistant/templates/* unless the user explicitly asks to update the template folder itself.",
     "localization_glossary_source_of_truth": "docs/assistant/LOCALIZATION_GLOSSARY.md is the canonical term source for localized UI labels.",
     "workspace_performance_source_of_truth": "docs/assistant/PERFORMANCE_BASELINES.md is the canonical source for workspace/editor performance defaults.",
     "env_artifacts_outside_workspace_default": "Heavyweight environments and generated runtime artifacts should live outside repo root when feasible.",
@@ -399,14 +428,15 @@
       "non_coder_entrypoint_policy": "Non-coders should start with docs/assistant/features/START_HERE_USER_GUIDE.md before moving to APP_USER_GUIDE.md or PLANNER_USER_GUIDE.md.",
       "beginner_guide_entrypoint_policy": "First-time users and future restarts should start with docs/assistant/features/START_HERE_USER_GUIDE.md before the broader support guides.",
       "beginner_guide_sync_policy": "When main navigation, first-run mental model, primary user journeys, what-to-ignore-at-first guidance, or the role of Today, Read, My Plan, Practice from Memory, Library, or My Quran changes, update START_HERE_USER_GUIDE.md during Assistant Docs Sync.",
-      "fresh_session_resume_policy": "Fresh sessions that need roadmap continuity should resume from docs/assistant/SESSION_RESUME.md before opening any active roadmap tracker or wave ExecPlan.",
-      "resume_trigger_policy": "Use `resume master plan` as the explicit resume trigger phrase; equivalent intents like `where did we leave off` and `what is the next roadmap step` should route to docs/assistant/SESSION_RESUME.md too.",
+    "fresh_session_resume_policy": "Fresh sessions that need roadmap continuity should resume from docs/assistant/SESSION_RESUME.md before opening any active roadmap tracker or wave ExecPlan.",
+    "roadmap_anchor_file_policy": "docs/assistant/SESSION_RESUME.md is the roadmap anchor file and stable resume anchor. Keep it summary-level, point it to the live roadmap sequence, and return through it after detours.",
+    "resume_trigger_policy": "Use `resume master plan` as the explicit resume trigger phrase; equivalent intents like `where did we leave off` and `what is the next roadmap step` should route to docs/assistant/SESSION_RESUME.md too.",
       "roadmap_resume_update_policy": "After roadmap detours or changes to active wave, next step, closeout state, branch, or worktree, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third.",
-      "roadmap_trigger_policy": "Use no roadmap for small isolated work, use ExecPlan-only for bounded major work, and use roadmap mode for long-running multi-wave restart-sensitive work. Treat master plan and roadmap as equivalent user intents.",
+    "roadmap_trigger_policy": "Use no roadmap for small isolated work, use ExecPlan-only for bounded major work, and use roadmap mode for long-running multi-wave or stage-plus-wave restart-sensitive work. Treat master plan and roadmap as equivalent user intents.",
       "roadmap_granularity_policy": "Do not open a roadmap for single-file fixes, narrow bug fixes, small UI text tweaks, or one-shot docs cleanup. Prefer the lightest planning mode that is still safe.",
-      "roadmap_artifact_authority_policy": "During in-flight roadmap work, docs/assistant/SESSION_RESUME.md is the stable first resume stop, the active roadmap tracker is the sequence source, and the active wave ExecPlan is the implementation-detail source. If a wave is active in a separate worktree, that worktree's roadmap files are authoritative for live roadmap state.",
-      "roadmap_detour_policy": "After roadmap detours, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third before resuming the sequence.",
-      "roadmap_closeout_policy": "Every roadmap closeout must report current roadmap status and exact next step. When the next action is a closeout step, say so explicitly instead of naming a new wave.",
+    "roadmap_artifact_authority_policy": "During in-flight roadmap work, docs/assistant/SESSION_RESUME.md is the roadmap anchor file and stable first resume stop, the active roadmap tracker is the sequence source, and the active wave ExecPlan is the implementation-detail source. If a wave is active in a separate worktree, that worktree's roadmap files are authoritative for live roadmap state.",
+    "roadmap_detour_policy": "After roadmap detours, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third before resuming the sequence.",
+    "roadmap_closeout_policy": "Every roadmap closeout must report current roadmap status and exact next step. When the next action is a closeout step, say so explicitly instead of naming a new wave. When research stages are complete, say exactly `All research stages are complete; implementation continues by wave.`",
       "plain_language_support_response_policy": "Support responses must be plain-language-first with numbered next steps and exact UI labels.",
       "term_definition_policy": "If a technical term is unavoidable in support replies, define it in one short sentence."
     },

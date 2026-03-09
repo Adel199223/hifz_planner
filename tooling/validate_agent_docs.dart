@@ -6,6 +6,7 @@ const List<String> _requiredFiles = <String>[
   'agent.md',
   'APP_KNOWLEDGE.md',
   'README.md',
+  '.gitignore',
   '.github/workflows/dart.yml',
   'docs/assistant/APP_KNOWLEDGE.md',
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
@@ -27,6 +28,7 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
   'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
   'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+  'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
   'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
@@ -35,10 +37,35 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
   'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
+  'docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json',
+  'docs/assistant/templates/BOOTSTRAP_CORE_CONTRACT.md',
+  'docs/assistant/templates/BOOTSTRAP_MODULES_AND_TRIGGERS.md',
+  'docs/assistant/templates/BOOTSTRAP_ISSUE_MEMORY_SYSTEM.md',
+  'docs/assistant/templates/BOOTSTRAP_PROJECT_HARNESS_SYNC_POLICY.md',
+  'docs/assistant/templates/BOOTSTRAP_LOCAL_ENV_OVERLAY.md',
+  'docs/assistant/templates/BOOTSTRAP_CAPABILITY_DISCOVERY.md',
+  'docs/assistant/templates/BOOTSTRAP_WORKTREE_BUILD_IDENTITY.md',
   'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+  'docs/assistant/templates/BOOTSTRAP_HOST_INTEGRATION_PREFLIGHT.md',
+  'docs/assistant/templates/BOOTSTRAP_HARNESS_ISOLATION_AND_DIAGNOSTICS.md',
+  'docs/assistant/templates/BOOTSTRAP_UPDATE_POLICY.md',
   'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
   'tooling/validate_workspace_hygiene.dart',
   'test/tooling/validate_workspace_hygiene_test.dart',
+];
+
+const List<String> _requiredTemplateModuleIds = <String>[
+  'core_contract',
+  'modules_and_triggers',
+  'issue_memory_system',
+  'project_harness_sync',
+  'local_env_overlay',
+  'capability_discovery',
+  'worktree_build_identity',
+  'roadmap_governance',
+  'host_integration_preflight',
+  'harness_isolation_diagnostics',
+  'bootstrap_update_policy',
 ];
 
 const List<String> _workflowRequiredSections = <String>[
@@ -74,6 +101,7 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
   'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
   'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+  'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
   'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
   'docs/assistant/workflows/READER_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
@@ -100,9 +128,7 @@ final List<RegExp> _bashOnlyPatterns = <RegExp>[
 ];
 
 class AgentDocsValidator {
-  AgentDocsValidator({
-    required this.rootDirectory,
-  });
+  AgentDocsValidator({required this.rootDirectory});
 
   final Directory rootDirectory;
 
@@ -124,12 +150,16 @@ class AgentDocsValidator {
     _validateDocsMaintenanceUserGuideSyncPolicy(issues);
     _validateFreshSessionResumeRoutingPolicy(issues);
     _validateRoadmapGovernanceRoutingPolicy(issues);
+    _validateProjectHarnessSyncRoutingPolicy(issues);
     _validateLocalizationRoutingPolicy(issues);
     _validatePerformanceRoutingPolicy(issues);
     _validateReferenceDiscoveryPolicy(issues);
     _validatePostChangeDocsSyncPolicy(issues);
     _validateTemplatePolicies(issues);
+    _validateVendoredTemplateCommitPolicy(issues);
+    _validateVendoredTemplateIgnorePolicy(issues);
     _validateBootstrapRoadmapGovernanceTemplate(issues);
+    _validateBootstrapTemplateMapIntegrity(issues);
     _validateTemplateNewbieLayer(issues);
     _validateNonCoderEntrypoints(issues);
     _validateGoldenAndExecPlanDiscoverability(issues);
@@ -169,8 +199,8 @@ class AgentDocsValidator {
     final version = manifest['version'];
     if (version is! int) {
       issues.add('Manifest key "version" must be an integer.');
-    } else if (version != 13) {
-      issues.add('Manifest key "version" must be 13.');
+    } else if (version != 14) {
+      issues.add('Manifest key "version" must be 14.');
     }
 
     final canonical = manifest['canonical'];
@@ -216,7 +246,8 @@ class AgentDocsValidator {
     final sessionResume = manifest['session_resume'];
     if (sessionResume is! String || sessionResume.trim().isEmpty) {
       issues.add(
-          'Manifest key "session_resume" must be a non-empty string path.');
+        'Manifest key "session_resume" must be a non-empty string path.',
+      );
     } else {
       if (sessionResume != 'docs/assistant/SESSION_RESUME.md') {
         issues.add(
@@ -224,8 +255,9 @@ class AgentDocsValidator {
         );
       }
       if (!_exists(sessionResume)) {
-        issues
-            .add('Manifest session_resume path does not exist: $sessionResume');
+        issues.add(
+          'Manifest session_resume path does not exist: $sessionResume',
+        );
       }
     }
 
@@ -237,8 +269,9 @@ class AgentDocsValidator {
       for (var i = 0; i < userGuides.length; i++) {
         final value = userGuides[i];
         if (value is! String || value.trim().isEmpty) {
-          issues
-              .add('Manifest user_guides[$i] must be a non-empty string path.');
+          issues.add(
+            'Manifest user_guides[$i] must be a non-empty string path.',
+          );
           continue;
         }
         values.add(value);
@@ -313,6 +346,13 @@ class AgentDocsValidator {
       _validateRequiredWorkflowId(
         issues,
         workflowsById: workflowsById,
+        requiredId: 'project_harness_sync',
+        expectedDoc:
+            'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+      );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
         requiredId: 'roadmap_governance',
         expectedDoc: 'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       );
@@ -376,6 +416,16 @@ class AgentDocsValidator {
         issues,
         contracts['templates_read_policy'],
         'contracts.templates_read_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['vendored_template_assets_policy'],
+        'contracts.vendored_template_assets_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['project_harness_sync_policy'],
+        'contracts.project_harness_sync_policy',
       );
       _validateNonEmptyString(
         issues,
@@ -479,6 +529,51 @@ class AgentDocsValidator {
       );
       _validateNonEmptyString(
         issues,
+        contracts['fresh_session_resume_policy'],
+        'contracts.fresh_session_resume_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['roadmap_anchor_file_policy'],
+        'contracts.roadmap_anchor_file_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['resume_trigger_policy'],
+        'contracts.resume_trigger_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['roadmap_resume_update_policy'],
+        'contracts.roadmap_resume_update_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['roadmap_trigger_policy'],
+        'contracts.roadmap_trigger_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['roadmap_granularity_policy'],
+        'contracts.roadmap_granularity_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['roadmap_artifact_authority_policy'],
+        'contracts.roadmap_artifact_authority_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['roadmap_detour_policy'],
+        'contracts.roadmap_detour_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['roadmap_closeout_policy'],
+        'contracts.roadmap_closeout_policy',
+      );
+      _validateNonEmptyString(
+        issues,
         contracts['plain_language_support_response_policy'],
         'contracts.plain_language_support_response_policy',
       );
@@ -492,6 +587,39 @@ class AgentDocsValidator {
           !templatePolicy.toLowerCase().contains('read-on-demand')) {
         issues.add(
           'contracts.templates_read_policy must include read-on-demand guidance.',
+        );
+      }
+      if (templatePolicy is String &&
+          !templatePolicy.toLowerCase().contains('committed project assets')) {
+        issues.add(
+          'contracts.templates_read_policy must explain that vendored templates remain committed project assets.',
+        );
+      }
+      final vendoredTemplateAssetsPolicy =
+          contracts['vendored_template_assets_policy'];
+      if (vendoredTemplateAssetsPolicy is! String ||
+          !vendoredTemplateAssetsPolicy.contains(
+            'docs/assistant/templates/*',
+          ) ||
+          !vendoredTemplateAssetsPolicy.toLowerCase().contains(
+            'do not remove or ignore',
+          )) {
+        issues.add(
+          'contracts.vendored_template_assets_policy must reference docs/assistant/templates/* and forbid remove/ignore defaults.',
+        );
+      }
+      final projectHarnessSyncPolicy = contracts['project_harness_sync_policy'];
+      if (projectHarnessSyncPolicy is! String ||
+          !projectHarnessSyncPolicy.contains(
+            'PROJECT_HARNESS_SYNC_WORKFLOW.md',
+          ) ||
+          !projectHarnessSyncPolicy.contains('implement the template files') ||
+          !projectHarnessSyncPolicy.contains('sync project harness') ||
+          !projectHarnessSyncPolicy.toLowerCase().contains(
+            'without editing docs/assistant/templates/*',
+          )) {
+        issues.add(
+          'contracts.project_harness_sync_policy must reference PROJECT_HARNESS_SYNC_WORKFLOW.md, the local apply triggers, and the no-template-edit rule.',
         );
       }
       final glossaryContract =
@@ -570,8 +698,8 @@ class AgentDocsValidator {
       if (commitShorthandPolicy is String &&
           (!commitShorthandPolicy.toLowerCase().contains('bare commit') ||
               !commitShorthandPolicy.toLowerCase().contains(
-                    'logical grouped commits',
-                  ))) {
+                'logical grouped commits',
+              ))) {
         issues.add(
           'contracts.commit_shorthand_policy must define bare commit triage and logical grouped commits.',
         );
@@ -580,8 +708,8 @@ class AgentDocsValidator {
       if (pushShorthandPolicy is String &&
           (!pushShorthandPolicy.toLowerCase().contains('bare push') ||
               !pushShorthandPolicy.toLowerCase().contains(
-                    'push+pr+merge+cleanup',
-                  ))) {
+                'push+pr+merge+cleanup',
+              ))) {
         issues.add(
           'contracts.push_shorthand_policy must define bare push as Push+PR+Merge+Cleanup.',
         );
@@ -589,9 +717,7 @@ class AgentDocsValidator {
       final referencePolicy =
           contracts['inspiration_reference_discovery_policy'];
       if (referencePolicy is String &&
-          !referencePolicy.contains(
-            'REFERENCE_DISCOVERY_WORKFLOW.md',
-          )) {
+          !referencePolicy.contains('REFERENCE_DISCOVERY_WORKFLOW.md')) {
         issues.add(
           'contracts.inspiration_reference_discovery_policy must reference docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
         );
@@ -680,6 +806,14 @@ class AgentDocsValidator {
           'contracts.fresh_session_resume_policy must reference docs/assistant/SESSION_RESUME.md.',
         );
       }
+      final roadmapAnchorFile = contracts['roadmap_anchor_file_policy'];
+      if (roadmapAnchorFile is! String ||
+          !roadmapAnchorFile.contains('docs/assistant/SESSION_RESUME.md') ||
+          !roadmapAnchorFile.toLowerCase().contains('anchor file')) {
+        issues.add(
+          'contracts.roadmap_anchor_file_policy must reference docs/assistant/SESSION_RESUME.md as the roadmap anchor file.',
+        );
+      }
       final resumeTrigger = contracts['resume_trigger_policy'];
       if (resumeTrigger is! String ||
           !resumeTrigger.contains('resume master plan') ||
@@ -717,7 +851,10 @@ class AgentDocsValidator {
       final roadmapAuthorityPolicy =
           contracts['roadmap_artifact_authority_policy'];
       if (roadmapAuthorityPolicy is! String ||
-          !roadmapAuthorityPolicy.contains('docs/assistant/SESSION_RESUME.md') ||
+          !roadmapAuthorityPolicy.contains(
+            'docs/assistant/SESSION_RESUME.md',
+          ) ||
+          !roadmapAuthorityPolicy.toLowerCase().contains('anchor file') ||
           !roadmapAuthorityPolicy.toLowerCase().contains(
             'active roadmap tracker',
           ) ||
@@ -770,9 +907,7 @@ class AgentDocsValidator {
     final lastUpdated = manifest['last_updated'];
     if (lastUpdated is! String ||
         !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(lastUpdated.trim())) {
-      issues.add(
-        'Manifest key "last_updated" must use YYYY-MM-DD format.',
-      );
+      issues.add('Manifest key "last_updated" must use YYYY-MM-DD format.');
     }
   }
 
@@ -783,7 +918,10 @@ class AgentDocsValidator {
   }) {
     _validateNonEmptyString(issues, workflow['id'], 'workflows[$index].id');
     _validateNonEmptyString(
-        issues, workflow['scope'], 'workflows[$index].scope');
+      issues,
+      workflow['scope'],
+      'workflows[$index].scope',
+    );
 
     final doc = workflow['doc'];
     if (doc is! String || doc.trim().isEmpty) {
@@ -815,6 +953,7 @@ class AgentDocsValidator {
       'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
       'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
       'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+      'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
       'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
       'docs/assistant/workflows/PLANNER_WORKFLOW.md',
@@ -846,6 +985,7 @@ class AgentDocsValidator {
       'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
       'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
       'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+      'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
       'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
       'docs/assistant/workflows/PLANNER_WORKFLOW.md',
@@ -982,6 +1122,11 @@ class AgentDocsValidator {
         'SESSION_RESUME.md must document `resume master plan` as the explicit trigger phrase.',
       );
     }
+    if (!content.toLowerCase().contains('roadmap anchor file')) {
+      issues.add(
+        'SESSION_RESUME.md must explicitly identify itself as the roadmap anchor file.',
+      );
+    }
   }
 
   void _validateUserGuideSupportRoutingPolicy(List<String> issues) {
@@ -1057,8 +1202,9 @@ class AgentDocsValidator {
   }
 
   void _validateDocsMaintenanceUserGuideSyncPolicy(List<String> issues) {
-    final file =
-        _resolveFile('docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md');
+    final file = _resolveFile(
+      'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+    );
     if (!file.existsSync()) {
       return;
     }
@@ -1107,6 +1253,11 @@ class AgentDocsValidator {
           'AGENTS.md must route fresh-session roadmap resume to docs/assistant/SESSION_RESUME.md and mention `resume master plan`.',
         );
       }
+      if (!text.toLowerCase().contains('roadmap anchor file')) {
+        issues.add(
+          'AGENTS.md fresh-session routing must identify docs/assistant/SESSION_RESUME.md as the roadmap anchor file.',
+        );
+      }
     }
 
     final runbook = _resolveFile('agent.md');
@@ -1123,6 +1274,11 @@ class AgentDocsValidator {
           'agent.md must route fresh-session roadmap resume to docs/assistant/SESSION_RESUME.md and mention `resume master plan`.',
         );
       }
+      if (!text.toLowerCase().contains('roadmap anchor file')) {
+        issues.add(
+          'agent.md fresh-session routing must identify docs/assistant/SESSION_RESUME.md as the roadmap anchor file.',
+        );
+      }
     }
 
     final readme = _resolveFile('README.md');
@@ -1135,6 +1291,11 @@ class AgentDocsValidator {
           'README.md must include a Fresh Session Resume section that links docs/assistant/SESSION_RESUME.md and mentions `resume master plan`.',
         );
       }
+      if (!text.toLowerCase().contains('roadmap anchor file')) {
+        issues.add(
+          'README.md Fresh Session Resume section must identify docs/assistant/SESSION_RESUME.md as the roadmap anchor file.',
+        );
+      }
     }
 
     final index = _resolveFile('docs/assistant/INDEX.md');
@@ -1145,6 +1306,11 @@ class AgentDocsValidator {
           !text.contains('resume master plan')) {
         issues.add(
           'INDEX.md must include a Fresh Session Resume section that routes to docs/assistant/SESSION_RESUME.md and mentions `resume master plan`.',
+        );
+      }
+      if (!text.toLowerCase().contains('roadmap anchor file')) {
+        issues.add(
+          'INDEX.md Fresh Session Resume section must identify docs/assistant/SESSION_RESUME.md as the roadmap anchor file.',
         );
       }
     }
@@ -1161,8 +1327,9 @@ class AgentDocsValidator {
   }
 
   void _validateRoadmapGovernanceRoutingPolicy(List<String> issues) {
-    final roadmapWorkflow =
-        _resolveFile('docs/assistant/workflows/ROADMAP_WORKFLOW.md');
+    final roadmapWorkflow = _resolveFile(
+      'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
+    );
     if (roadmapWorkflow.existsSync()) {
       final text = roadmapWorkflow.readAsStringSync();
       final lowered = text.toLowerCase();
@@ -1172,6 +1339,15 @@ class AgentDocsValidator {
           !text.contains('docs/assistant/SESSION_RESUME.md')) {
         issues.add(
           'ROADMAP_WORKFLOW.md must define adaptive granularity, separate-worktree authority, and docs/assistant/SESSION_RESUME.md as the stable first stop.',
+        );
+      }
+      if (!lowered.contains('roadmap anchor file') ||
+          !lowered.contains('master plan') ||
+          !lowered.contains('stages are optional') ||
+          !lowered.contains('exact next step') ||
+          !lowered.contains('resequence')) {
+        issues.add(
+          'ROADMAP_WORKFLOW.md must define roadmap/master-plan equivalence, anchor-file wording, stage/wave flexibility, exact-next-step guidance, and resequencing support.',
         );
       }
     }
@@ -1222,7 +1398,7 @@ class AgentDocsValidator {
       if (!text.contains('## Adaptive Planning Rule') ||
           !text.contains('## Roadmap Artifact Authority') ||
           !text.contains(
-            'long-running multi-wave, restart-sensitive work -> roadmap',
+            'long-running multi-wave or stage-plus-wave, restart-sensitive work -> roadmap',
           )) {
         issues.add(
           'PLANS.md must include adaptive planning guidance and roadmap artifact authority.',
@@ -1243,14 +1419,113 @@ class AgentDocsValidator {
     }
   }
 
+  void _validateProjectHarnessSyncRoutingPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('implement the template files') ||
+          !text.contains('sync project harness') ||
+          !text.contains(
+            'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+          )) {
+        issues.add(
+          'AGENTS.md must route `implement the template files` and `sync project harness` to PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+        );
+      }
+      if (!lowered.contains('committed project assets')) {
+        issues.add(
+          'AGENTS.md must state that vendored templates are committed project assets.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('implement the template files') ||
+          !text.contains('sync project harness') ||
+          !text.contains(
+            'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+          )) {
+        issues.add(
+          'agent.md must route `implement the template files` and `sync project harness` to PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+        );
+      }
+      if (!lowered.contains('committed project assets') ||
+          !lowered.contains('do not edit')) {
+        issues.add(
+          'agent.md must explain that vendored templates are committed project assets and that local apply should not edit them by default.',
+        );
+      }
+    }
+
+    final readme = _resolveFile('README.md');
+    if (readme.existsSync()) {
+      final text = readme.readAsStringSync();
+      if (!text.contains('## Vendored Bootstrap Apply') ||
+          !text.contains('implement the template files') ||
+          !text.contains('sync project harness') ||
+          !text.contains(
+            'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+          )) {
+        issues.add(
+          'README.md must include a Vendored Bootstrap Apply section that routes `implement the template files` to PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+        );
+      }
+    }
+
+    final index = _resolveFile('docs/assistant/INDEX.md');
+    if (index.existsSync()) {
+      final text = index.readAsStringSync();
+      if (!text.contains('## Vendored Template Apply') ||
+          !text.contains('implement the template files') ||
+          !text.contains('sync project harness') ||
+          !text.contains('PROJECT_HARNESS_SYNC_WORKFLOW.md')) {
+        issues.add(
+          'INDEX.md must include Vendored Template Apply routing for `implement the template files` and `sync project harness`.',
+        );
+      }
+    }
+
+    final docsWorkflow = _resolveFile(
+      'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+    );
+    if (docsWorkflow.existsSync()) {
+      final text = docsWorkflow.readAsStringSync();
+      if (!text.contains('implement the template files') ||
+          !text.contains('PROJECT_HARNESS_SYNC_WORKFLOW.md')) {
+        issues.add(
+          'DOCS_MAINTENANCE_WORKFLOW.md must negatively route `implement the template files` to PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+        );
+      }
+    }
+
+    final harnessWorkflow = _resolveFile(
+      'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+    );
+    if (harnessWorkflow.existsSync()) {
+      final text = harnessWorkflow.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('implement the template files') ||
+          !text.contains('sync project harness') ||
+          !text.contains('docs/assistant/templates/*') ||
+          (!lowered.contains("don't edit") &&
+              !lowered.contains('do not edit'))) {
+        issues.add(
+          'PROJECT_HARNESS_SYNC_WORKFLOW.md must document the local apply triggers and the no-template-edit default.',
+        );
+      }
+    }
+  }
+
   void _validateCanonicalContracts(List<String> issues) {
     final agentsShim = _resolveFile('AGENTS.md');
     if (agentsShim.existsSync()) {
       final text = agentsShim.readAsStringSync();
       if (!text.contains('compatibility shim')) {
-        issues.add(
-          'AGENTS.md must state that it is a compatibility shim.',
-        );
+        issues.add('AGENTS.md must state that it is a compatibility shim.');
       }
     }
 
@@ -1258,9 +1533,7 @@ class AgentDocsValidator {
     if (agentRunbook.existsSync()) {
       final text = agentRunbook.readAsStringSync();
       if (!text.contains('short shim')) {
-        issues.add(
-          'agent.md must explain AGENTS.md compatibility role.',
-        );
+        issues.add('agent.md must explain AGENTS.md compatibility role.');
       }
     }
 
@@ -1297,8 +1570,9 @@ class AgentDocsValidator {
           'Bridge doc must include explicit conflict rule for APP_KNOWLEDGE.md.',
         );
       }
-      if (!text
-          .contains('intentionally shorter than the canonical root document')) {
+      if (!text.contains(
+        'intentionally shorter than the canonical root document',
+      )) {
         issues.add(
           'Bridge doc must explain why it differs from canonical content.',
         );
@@ -1345,9 +1619,60 @@ class AgentDocsValidator {
     }
   }
 
+  void _validateVendoredTemplateCommitPolicy(List<String> issues) {
+    final workflow = _resolveFile(
+      'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
+    );
+    if (!workflow.existsSync()) {
+      return;
+    }
+    final text = workflow.readAsStringSync().toLowerCase();
+    if (!text.contains('docs/assistant/templates/*') ||
+        (!(text.contains('remove or ignore') ||
+            text.contains('removing or ignoring')))) {
+      issues.add(
+        'COMMIT_PUBLISH_WORKFLOW.md must state that vendored docs/assistant/templates/* files are not remove/ignore candidates by default.',
+      );
+    }
+    if (!text.contains('vendored template sync') ||
+        !text.contains('harness implementation from vendored templates')) {
+      issues.add(
+        'COMMIT_PUBLISH_WORKFLOW.md must define the default commit split between vendored template sync and harness implementation.',
+      );
+    }
+  }
+
+  void _validateVendoredTemplateIgnorePolicy(List<String> issues) {
+    final gitignore = _resolveFile('.gitignore');
+    if (!gitignore.existsSync()) {
+      return;
+    }
+    final text = gitignore.readAsStringSync();
+    final lines = text.split('\n');
+    for (final rawLine in lines) {
+      final line = rawLine.trim();
+      if (line.isEmpty || line.startsWith('#') || line.startsWith('!')) {
+        continue;
+      }
+      if (line == 'docs/assistant/templates' ||
+          line == 'docs/assistant/templates/' ||
+          line.startsWith('docs/assistant/templates/')) {
+        issues.add(
+          '.gitignore must not ignore vendored docs/assistant/templates/* files.',
+        );
+      }
+    }
+    if (!text.contains('!docs/assistant/templates/**')) {
+      issues.add(
+        '.gitignore must explicitly protect vendored docs/assistant/templates/** from accidental ignore rules.',
+      );
+    }
+  }
+
   void _validateBootstrapRoadmapGovernanceTemplate(List<String> issues) {
-    final roadmapTemplate =
-        _resolveFile('docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md');
+    final roadmapTemplate = _resolveFile(
+      'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+    );
     if (roadmapTemplate.existsSync()) {
       final text = roadmapTemplate.readAsStringSync();
       final lowered = text.toLowerCase();
@@ -1367,24 +1692,19 @@ class AgentDocsValidator {
           'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define adaptive thresholds for no-roadmap, ExecPlan-only, and roadmap-grade work.',
         );
       }
-    }
-
-    final templateMap =
-        _resolveFile('docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json');
-    if (templateMap.existsSync()) {
-      final text = templateMap.readAsStringSync();
-      if (!text.contains('"id": "roadmap_governance"') ||
-          !text.contains(
-            '"path": "docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md"',
-          )) {
+      if (!lowered.contains('roadmap anchor file') ||
+          !lowered.contains('master plan') ||
+          !lowered.contains('stage') ||
+          !lowered.contains('exact next step')) {
         issues.add(
-          'BOOTSTRAP_TEMPLATE_MAP.json must include the roadmap_governance module and BOOTSTRAP_ROADMAP_GOVERNANCE.md path.',
+          'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define roadmap/master-plan equivalence, SESSION_RESUME.md as the roadmap anchor file, stage/wave terminology, and exact-next-step closeout guidance.',
         );
       }
     }
 
-    final modules =
-        _resolveFile('docs/assistant/templates/BOOTSTRAP_MODULES_AND_TRIGGERS.md');
+    final modules = _resolveFile(
+      'docs/assistant/templates/BOOTSTRAP_MODULES_AND_TRIGGERS.md',
+    );
     if (modules.existsSync()) {
       final text = modules.readAsStringSync();
       final lowered = text.toLowerCase();
@@ -1396,10 +1716,18 @@ class AgentDocsValidator {
           'BOOTSTRAP_MODULES_AND_TRIGGERS.md must reference Roadmap Governance, BOOTSTRAP_ROADMAP_GOVERNANCE.md, and adaptive activation thresholds.',
         );
       }
+      if (!text.contains('implement the template files') ||
+          !lowered.contains('project harness sync') ||
+          !lowered.contains('roadmap anchor file')) {
+        issues.add(
+          'BOOTSTRAP_MODULES_AND_TRIGGERS.md must reference local harness apply triggers and the roadmap anchor-file model.',
+        );
+      }
     }
 
-    final prompt =
-        _resolveFile('docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md');
+    final prompt = _resolveFile(
+      'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
+    );
     if (prompt.existsSync()) {
       final text = prompt.readAsStringSync();
       final lowered = text.toLowerCase();
@@ -1410,10 +1738,17 @@ class AgentDocsValidator {
           'CODEX_PROJECT_BOOTSTRAP_PROMPT.md must reference BOOTSTRAP_ROADMAP_GOVERNANCE.md, adaptive roadmap mode, and SESSION_RESUME.md generation.',
         );
       }
+      if (!text.contains('implement the template files') ||
+          !lowered.contains('full vendored template set')) {
+        issues.add(
+          'CODEX_PROJECT_BOOTSTRAP_PROMPT.md must describe the local `implement the template files` flow and the full vendored template set.',
+        );
+      }
     }
 
-    final updatePolicy =
-        _resolveFile('docs/assistant/templates/BOOTSTRAP_UPDATE_POLICY.md');
+    final updatePolicy = _resolveFile(
+      'docs/assistant/templates/BOOTSTRAP_UPDATE_POLICY.md',
+    );
     if (updatePolicy.existsSync()) {
       final text = updatePolicy.readAsStringSync();
       final lowered = text.toLowerCase();
@@ -1427,9 +1762,86 @@ class AgentDocsValidator {
     }
   }
 
+  void _validateBootstrapTemplateMapIntegrity(List<String> issues) {
+    const templateMapPath =
+        'docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json';
+    final templateMapFile = _resolveFile(templateMapPath);
+    if (!templateMapFile.existsSync()) {
+      return;
+    }
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(templateMapFile.readAsStringSync());
+    } catch (error) {
+      issues.add('BOOTSTRAP_TEMPLATE_MAP.json must be valid JSON: $error');
+      return;
+    }
+
+    if (decoded is! Map<String, dynamic>) {
+      issues.add('BOOTSTRAP_TEMPLATE_MAP.json root must be a JSON object.');
+      return;
+    }
+
+    final entrypoint = decoded['entrypoint'];
+    if (entrypoint is! String || entrypoint.trim().isEmpty) {
+      issues.add(
+        'BOOTSTRAP_TEMPLATE_MAP.json must define a non-empty "entrypoint" path.',
+      );
+    } else if (!_exists(entrypoint)) {
+      issues.add(
+        'BOOTSTRAP_TEMPLATE_MAP.json entrypoint path does not exist: $entrypoint',
+      );
+    }
+
+    final modules = decoded['modules'];
+    if (modules is! List) {
+      issues.add('BOOTSTRAP_TEMPLATE_MAP.json must define a "modules" array.');
+      return;
+    }
+
+    final moduleIds = <String>{};
+    for (var i = 0; i < modules.length; i++) {
+      final module = modules[i];
+      if (module is! Map<String, dynamic>) {
+        issues.add(
+          'BOOTSTRAP_TEMPLATE_MAP.json modules[$i] must be an object.',
+        );
+        continue;
+      }
+      final id = module['id'];
+      final path = module['path'];
+      if (id is! String || id.trim().isEmpty) {
+        issues.add(
+          'BOOTSTRAP_TEMPLATE_MAP.json modules[$i].id must be a non-empty string.',
+        );
+      } else {
+        moduleIds.add(id);
+      }
+      if (path is! String || path.trim().isEmpty) {
+        issues.add(
+          'BOOTSTRAP_TEMPLATE_MAP.json modules[$i].path must be a non-empty string.',
+        );
+      } else if (!_exists(path)) {
+        issues.add(
+          'BOOTSTRAP_TEMPLATE_MAP.json references missing template file: $path',
+        );
+      }
+    }
+
+    for (final requiredId in _requiredTemplateModuleIds) {
+      if (!moduleIds.contains(requiredId)) {
+        issues.add(
+          'BOOTSTRAP_TEMPLATE_MAP.json must include required module id "$requiredId".',
+        );
+      }
+    }
+  }
+
   void _validateTemplateNewbieLayer(List<String> issues) {
     final template = _resolveFile(
-        'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md');
+      'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
+    );
     if (!template.existsSync()) {
       return;
     }
@@ -1438,9 +1850,7 @@ class AgentDocsValidator {
     const heading =
         '## Newbie-First Layer (Optional: remove for developer-first repos)';
     if (!text.contains(heading)) {
-      issues.add(
-        'CODEX_PROJECT_BOOTSTRAP_PROMPT.md must include "$heading".',
-      );
+      issues.add('CODEX_PROJECT_BOOTSTRAP_PROMPT.md must include "$heading".');
     }
     if (!lowered.contains('assume user is a complete beginner/non-coder')) {
       issues.add(
@@ -1481,8 +1891,9 @@ class AgentDocsValidator {
         'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must include support reply skeleton guidance.',
       );
     }
-    if (!lowered
-        .contains('define unavoidable technical terms in one sentence')) {
+    if (!lowered.contains(
+      'define unavoidable technical terms in one sentence',
+    )) {
       issues.add(
         'CODEX_PROJECT_BOOTSTRAP_PROMPT.md newbie layer must require one-sentence technical-term definitions.',
       );
@@ -1516,10 +1927,12 @@ class AgentDocsValidator {
           'README.md non-coder entrypoint section must link START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, PLANNER_USER_GUIDE.md, and docs/assistant/INDEX.md.',
         );
       }
-      final startIndex =
-          text.indexOf('docs/assistant/features/START_HERE_USER_GUIDE.md');
-      final appIndex =
-          text.indexOf('docs/assistant/features/APP_USER_GUIDE.md');
+      final startIndex = text.indexOf(
+        'docs/assistant/features/START_HERE_USER_GUIDE.md',
+      );
+      final appIndex = text.indexOf(
+        'docs/assistant/features/APP_USER_GUIDE.md',
+      );
       if (startIndex == -1 || appIndex == -1 || startIndex > appIndex) {
         issues.add(
           'README.md non-coder entrypoint section must mention START_HERE_USER_GUIDE.md before APP_USER_GUIDE.md.',
@@ -1548,9 +1961,7 @@ class AgentDocsValidator {
     if (index.existsSync()) {
       final text = index.readAsStringSync();
       if (!text.contains('## Beginner Quick Path')) {
-        issues.add(
-          'INDEX.md must include "## Beginner Quick Path" section.',
-        );
+        issues.add('INDEX.md must include "## Beginner Quick Path" section.');
       }
       if (!text.contains('START_HERE_USER_GUIDE.md') ||
           !text.contains('APP_USER_GUIDE.md') ||
@@ -1692,8 +2103,9 @@ class AgentDocsValidator {
       }
     }
 
-    final ciWorkflow =
-        _resolveFile('docs/assistant/workflows/CI_REPO_WORKFLOW.md');
+    final ciWorkflow = _resolveFile(
+      'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
+    );
     if (ciWorkflow.existsSync()) {
       final text = ciWorkflow.readAsStringSync().toLowerCase();
       if (!text.contains('major changes directly on `main`') ||
@@ -1974,11 +2386,7 @@ class AgentDocsValidator {
     }
   }
 
-  void _validatePathList(
-    List<String> issues,
-    dynamic value,
-    String label,
-  ) {
+  void _validatePathList(List<String> issues, dynamic value, String label) {
     if (value is! List) {
       issues.add('Manifest key "$label" must be an array of paths.');
       return;
@@ -1995,11 +2403,7 @@ class AgentDocsValidator {
     }
   }
 
-  void _validateCommandList(
-    List<String> issues,
-    dynamic value,
-    String label,
-  ) {
+  void _validateCommandList(List<String> issues, dynamic value, String label) {
     if (value is! List) {
       issues.add('Manifest key "$label" must be an array of strings.');
       return;
@@ -2104,9 +2508,7 @@ String _join(String root, String child) {
 }
 
 int main() {
-  final validator = AgentDocsValidator(
-    rootDirectory: Directory.current,
-  );
+  final validator = AgentDocsValidator(rootDirectory: Directory.current);
   final issues = validator.validate();
   if (issues.isEmpty) {
     stdout.writeln('Agent docs validation passed.');

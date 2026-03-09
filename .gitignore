@@ -23,3 +23,7 @@ __pycache__/
 .ruff_cache/
 playstore_audit_dump.txt
 docs/assistant/LOCAL_ENV_PROFILE.local.md
+
+# Vendored bootstrap templates are committed project assets.
+!docs/assistant/templates/
+!docs/assistant/templates/**

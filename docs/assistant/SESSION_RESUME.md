@@ -4,7 +4,7 @@
 
 If a brand-new Codex chat in VS Code needs to continue roadmap work, start here before opening any roadmap tracker or wave plan.
 
-This file is the stable resume entrypoint for:
+This file is the roadmap anchor file and stable resume anchor for:
 - `resume master plan`
 - `where did we leave off`
 - `what is the next roadmap step`
@@ -64,6 +64,7 @@ For any of those, open these docs in order:
 
 - A docs-governance detour added `docs/assistant/features/START_HERE_USER_GUIDE.md` and the related docs-routing/validator support before Wave 2 publish.
 - Fresh-session resume routing is now in place so future chats do not need to reconstruct roadmap state from scattered trackers.
+- `docs/assistant/SESSION_RESUME.md` remains summary-level only as the roadmap anchor file; the tracker and active wave plan remain the deeper execution sources.
 - Roadmap governance is now explicit in `docs/assistant/workflows/ROADMAP_WORKFLOW.md`, including adaptive trigger thresholds and the rule that the active worktree is authoritative during in-flight wave work.
 - The reusable UCBS roadmap-governance template module is now merged to `main`, and this active worktree has been rebased onto that baseline so the live project harness matches the reusable template contracts.
 - The repeated fresh-worktree Flutter lockfile-churn issue also surfaced during the final Wave 4 closeout validation; the incidental change was reverted and issue memory now points at the archived plan.

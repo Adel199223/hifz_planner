@@ -7,15 +7,9 @@ import '../../tooling/validate_agent_docs.dart';
 
 void main() {
   test('agent docs validator passes for current repository docs', () {
-    final validator = AgentDocsValidator(
-      rootDirectory: Directory.current,
-    );
+    final validator = AgentDocsValidator(rootDirectory: Directory.current);
     final issues = validator.validate();
-    expect(
-      issues,
-      isEmpty,
-      reason: issues.isEmpty ? null : issues.join('\n'),
-    );
+    expect(issues, isEmpty, reason: issues.isEmpty ? null : issues.join('\n'));
   });
 
   test('validator fails when CI workflow doc is missing', () {
@@ -94,6 +88,11 @@ void main() {
       'needle': 'WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
     },
     <String, String>{
+      'description': 'project harness sync workflow doc',
+      'path': 'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+      'needle': 'PROJECT_HARNESS_SYNC_WORKFLOW.md',
+    },
+    <String, String>{
       'description': 'roadmap workflow doc',
       'path': 'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       'needle': 'ROADMAP_WORKFLOW.md',
@@ -103,14 +102,57 @@ void main() {
       'path': 'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
       'needle': 'BOOTSTRAP_ROADMAP_GOVERNANCE.md',
     },
+    <String, String>{
+      'description': 'bootstrap harness isolation template',
+      'path':
+          'docs/assistant/templates/BOOTSTRAP_HARNESS_ISOLATION_AND_DIAGNOSTICS.md',
+      'needle': 'BOOTSTRAP_HARNESS_ISOLATION_AND_DIAGNOSTICS.md',
+    },
   ]) {
-    test('validator fails when ${missingFileCase['description']} is missing',
-        () {
+    test(
+      'validator fails when ${missingFileCase['description']} is missing',
+      () {
+        final fixture = _createValidFixture();
+        addTearDown(() => fixture.deleteSync(recursive: true));
+
+        final file = File(_joinPath(fixture.path, missingFileCase['path']!));
+        file.deleteSync();
+
+        final validator = AgentDocsValidator(rootDirectory: fixture);
+        final issues = validator.validate();
+
+        expect(
+          issues.any(
+            (issue) =>
+                issue.contains('Missing required file:') &&
+                issue.contains(missingFileCase['needle']!),
+          ),
+          isTrue,
+          reason: issues.join('\n'),
+        );
+      },
+    );
+  }
+
+  test(
+    'validator fails when manifest misses required ci_repo_ops workflow',
+    () {
       final fixture = _createValidFixture();
       addTearDown(() => fixture.deleteSync(recursive: true));
 
-      final file = File(_joinPath(fixture.path, missingFileCase['path']!));
-      file.deleteSync();
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final workflows = (manifest['workflows'] as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .where((workflow) => workflow['id'] != 'ci_repo_ops')
+          .toList();
+      manifest['workflows'] = workflows;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
       final validator = AgentDocsValidator(rootDirectory: fixture);
       final issues = validator.validate();
@@ -118,148 +160,119 @@ void main() {
       expect(
         issues.any(
           (issue) =>
-              issue.contains('Missing required file:') &&
-              issue.contains(missingFileCase['needle']!),
+              issue.contains('Manifest must include required workflow id') &&
+              issue.contains('ci_repo_ops'),
         ),
         isTrue,
         reason: issues.join('\n'),
       );
-    });
-  }
-
-  test('validator fails when manifest misses required ci_repo_ops workflow',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
-
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final workflows = (manifest['workflows'] as List<dynamic>)
-        .whereType<Map<String, dynamic>>()
-        .where((workflow) => workflow['id'] != 'ci_repo_ops')
-        .toList();
-    manifest['workflows'] = workflows;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
-
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
-
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('Manifest must include required workflow id') &&
-            issue.contains('ci_repo_ops'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+    },
+  );
 
   test(
-      'validator fails when manifest misses required commit_publish_ops workflow',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when manifest misses required commit_publish_ops workflow',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final workflows = (manifest['workflows'] as List<dynamic>)
-        .whereType<Map<String, dynamic>>()
-        .where((workflow) => workflow['id'] != 'commit_publish_ops')
-        .toList();
-    manifest['workflows'] = workflows;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final workflows = (manifest['workflows'] as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .where((workflow) => workflow['id'] != 'commit_publish_ops')
+          .toList();
+      manifest['workflows'] = workflows;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('Manifest must include required workflow id') &&
-            issue.contains('commit_publish_ops'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('Manifest must include required workflow id') &&
+              issue.contains('commit_publish_ops'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test(
-      'validator fails when manifest misses required localization_i18n workflow',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when manifest misses required localization_i18n workflow',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final workflows = (manifest['workflows'] as List<dynamic>)
-        .whereType<Map<String, dynamic>>()
-        .where((workflow) => workflow['id'] != 'localization_i18n')
-        .toList();
-    manifest['workflows'] = workflows;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final workflows = (manifest['workflows'] as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .where((workflow) => workflow['id'] != 'localization_i18n')
+          .toList();
+      manifest['workflows'] = workflows;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('Manifest must include required workflow id') &&
-            issue.contains('localization_i18n'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('Manifest must include required workflow id') &&
+              issue.contains('localization_i18n'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
-  test('validator fails when manifest misses workspace_performance workflow',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when manifest misses workspace_performance workflow',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final workflows = (manifest['workflows'] as List<dynamic>)
-        .whereType<Map<String, dynamic>>()
-        .where((workflow) => workflow['id'] != 'workspace_performance')
-        .toList();
-    manifest['workflows'] = workflows;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final workflows = (manifest['workflows'] as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .where((workflow) => workflow['id'] != 'workspace_performance')
+          .toList();
+      manifest['workflows'] = workflows;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('Manifest must include required workflow id') &&
-            issue.contains('workspace_performance'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('Manifest must include required workflow id') &&
+              issue.contains('workspace_performance'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test('validator fails when manifest misses reference_discovery workflow', () {
     final fixture = _createValidFixture();
@@ -325,40 +338,77 @@ void main() {
     );
   });
 
-  test('validator fails when manifest misses worktree_build_identity workflow',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when manifest misses worktree_build_identity workflow',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final workflows = (manifest['workflows'] as List<dynamic>)
-        .whereType<Map<String, dynamic>>()
-        .where((workflow) => workflow['id'] != 'worktree_build_identity')
-        .toList();
-    manifest['workflows'] = workflows;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final workflows = (manifest['workflows'] as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .where((workflow) => workflow['id'] != 'worktree_build_identity')
+          .toList();
+      manifest['workflows'] = workflows;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('Manifest must include required workflow id') &&
-            issue.contains('worktree_build_identity'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('Manifest must include required workflow id') &&
+              issue.contains('worktree_build_identity'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
-  test('validator fails when manifest version is not 13', () {
+  test(
+    'validator fails when manifest misses project_harness_sync workflow',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final workflows = (manifest['workflows'] as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .where((workflow) => workflow['id'] != 'project_harness_sync')
+          .toList();
+      manifest['workflows'] = workflows;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('Manifest must include required workflow id') &&
+              issue.contains('project_harness_sync'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
+
+  test('validator fails when manifest version is not 14', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
 
@@ -376,8 +426,9 @@ void main() {
     final issues = validator.validate();
 
     expect(
-      issues
-          .any((issue) => issue.contains('Manifest key "version" must be 13.')),
+      issues.any(
+        (issue) => issue.contains('Manifest key "version" must be 14.'),
+      ),
       isTrue,
       reason: issues.join('\n'),
     );
@@ -407,133 +458,142 @@ void main() {
     );
   });
 
-  test('validator fails when localization glossary contract key is missing',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when localization glossary contract key is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final contracts = Map<String, dynamic>.from(
-      manifest['contracts'] as Map<String, dynamic>,
-    );
-    contracts.remove('localization_glossary_source_of_truth');
-    manifest['contracts'] = contracts;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove('localization_glossary_source_of_truth');
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('contracts.localization_glossary_source_of_truth'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('contracts.localization_glossary_source_of_truth'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
-  test('validator fails when workspace performance contract key is missing',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when workspace performance contract key is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final contracts = Map<String, dynamic>.from(
-      manifest['contracts'] as Map<String, dynamic>,
-    );
-    contracts.remove('workspace_performance_source_of_truth');
-    manifest['contracts'] = contracts;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove('workspace_performance_source_of_truth');
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('contracts.workspace_performance_source_of_truth'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('contracts.workspace_performance_source_of_truth'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
-  test('validator fails when post-change docs sync contract key is missing',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when post-change docs sync contract key is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final contracts = Map<String, dynamic>.from(
-      manifest['contracts'] as Map<String, dynamic>,
-    );
-    contracts.remove('post_change_docs_sync_prompt_policy');
-    manifest['contracts'] = contracts;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove('post_change_docs_sync_prompt_policy');
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('contracts.post_change_docs_sync_prompt_policy'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('contracts.post_change_docs_sync_prompt_policy'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
-  test('validator fails when inspiration discovery contract key is missing',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when inspiration discovery contract key is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final contracts = Map<String, dynamic>.from(
-      manifest['contracts'] as Map<String, dynamic>,
-    );
-    contracts.remove('inspiration_reference_discovery_policy');
-    manifest['contracts'] = contracts;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove('inspiration_reference_discovery_policy');
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('contracts.inspiration_reference_discovery_policy'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'contracts.inspiration_reference_discovery_policy',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test('validator fails when golden principles file is missing', () {
     final fixture = _createValidFixture();
@@ -586,8 +646,10 @@ void main() {
     addTearDown(() => fixture.deleteSync(recursive: true));
 
     final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
-    final updated =
-        agentsFile.readAsStringSync().replaceAll('## Approval Gates', '## X');
+    final updated = agentsFile.readAsStringSync().replaceAll(
+      '## Approval Gates',
+      '## X',
+    );
     agentsFile.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -651,9 +713,10 @@ void main() {
     final workflow = File(
       _joinPath(fixture.path, 'docs/assistant/workflows/READER_WORKFLOW.md'),
     );
-    final updated = workflow
-        .readAsStringSync()
-        .replaceAll('## Expected Outputs\n\n- Output.\n', '');
+    final updated = workflow.readAsStringSync().replaceAll(
+      '## Expected Outputs\n\n- Output.\n',
+      '',
+    );
     workflow.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -780,7 +843,8 @@ void main() {
 
     expect(
       issues.any(
-          (issue) => issue.contains('contracts.worktree_isolation_policy')),
+        (issue) => issue.contains('contracts.worktree_isolation_policy'),
+      ),
       isTrue,
       reason: issues.join('\n'),
     );
@@ -822,7 +886,9 @@ void main() {
       _joinPath(fixture.path, 'docs/assistant/features/APP_USER_GUIDE.md'),
     );
     final updated = appGuide.readAsStringSync().replaceAll(
-        '## For Agents: Support Interaction Contract', '## Support');
+      '## For Agents: Support Interaction Contract',
+      '## Support',
+    );
     appGuide.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -875,9 +941,10 @@ void main() {
         'docs/assistant/features/START_HERE_USER_GUIDE.md',
       ),
     );
-    final updated = startGuide
-        .readAsStringSync()
-        .replaceAll('## What This App Helps You Do', '## Purpose');
+    final updated = startGuide.readAsStringSync().replaceAll(
+      '## What This App Helps You Do',
+      '## Purpose',
+    );
     startGuide.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -901,9 +968,10 @@ void main() {
     final plannerGuide = File(
       _joinPath(fixture.path, 'docs/assistant/features/PLANNER_USER_GUIDE.md'),
     );
-    final updated = plannerGuide
-        .readAsStringSync()
-        .replaceAll('## Canonical Deference Rule', '## Deference');
+    final updated = plannerGuide.readAsStringSync().replaceAll(
+      '## Canonical Deference Rule',
+      '## Deference',
+    );
     plannerGuide.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -921,93 +989,102 @@ void main() {
   });
 
   test(
-      'validator fails when APP user guide support contract misses plain language',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when APP user guide support contract misses plain language',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final appGuide = File(
-      _joinPath(fixture.path, 'docs/assistant/features/APP_USER_GUIDE.md'),
-    );
-    final updated = appGuide
-        .readAsStringSync()
-        .replaceAll('plain language first', 'technical jargon first');
-    appGuide.writeAsStringSync(updated);
+      final appGuide = File(
+        _joinPath(fixture.path, 'docs/assistant/features/APP_USER_GUIDE.md'),
+      );
+      final updated = appGuide.readAsStringSync().replaceAll(
+        'plain language first',
+        'technical jargon first',
+      );
+      appGuide.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains(
-              'Feature guide support contract must require plain-language responses',
-            ) &&
-            issue.contains('APP_USER_GUIDE.md'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains(
+                'Feature guide support contract must require plain-language responses',
+              ) &&
+              issue.contains('APP_USER_GUIDE.md'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test(
-      'validator fails when planner user guide support contract misses plain language',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when planner user guide support contract misses plain language',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final plannerGuide = File(
-      _joinPath(fixture.path, 'docs/assistant/features/PLANNER_USER_GUIDE.md'),
-    );
-    final updated = plannerGuide
-        .readAsStringSync()
-        .replaceAll('plain language first', 'technical jargon first');
-    plannerGuide.writeAsStringSync(updated);
+      final plannerGuide = File(
+        _joinPath(
+          fixture.path,
+          'docs/assistant/features/PLANNER_USER_GUIDE.md',
+        ),
+      );
+      final updated = plannerGuide.readAsStringSync().replaceAll(
+        'plain language first',
+        'technical jargon first',
+      );
+      plannerGuide.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains(
-              'Feature guide support contract must require plain-language responses',
-            ) &&
-            issue.contains('PLANNER_USER_GUIDE.md'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains(
+                'Feature guide support contract must require plain-language responses',
+              ) &&
+              issue.contains('PLANNER_USER_GUIDE.md'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
-  test('validator fails when AGENTS.md misses support routing to user guides',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when AGENTS.md misses support routing to user guides',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
-    final updated = agentsFile
-        .readAsStringSync()
-        .replaceAll('START_HERE_USER_GUIDE.md', 'START_HERE.md')
-        .replaceAll('APP_USER_GUIDE.md', 'APP_GUIDE.md')
-        .replaceAll('PLANNER_USER_GUIDE.md', 'PLANNER_GUIDE.md');
-    agentsFile.writeAsStringSync(updated);
+      final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
+      final updated = agentsFile
+          .readAsStringSync()
+          .replaceAll('START_HERE_USER_GUIDE.md', 'START_HERE.md')
+          .replaceAll('APP_USER_GUIDE.md', 'APP_GUIDE.md')
+          .replaceAll('PLANNER_USER_GUIDE.md', 'PLANNER_GUIDE.md');
+      agentsFile.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('AGENTS.md must route support/non-technical tasks'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'AGENTS.md must route support/non-technical tasks',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
-  test('validator fails when AGENTS.md misses fresh-session resume protocol',
-      () {
+  test('validator fails when AGENTS.md misses fresh-session resume protocol', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
 
@@ -1054,10 +1131,10 @@ void main() {
 
     expect(
       issues.any(
-        (issue) => issue.contains(
-          'AGENTS.md must include Roadmap Trigger Policy and Roadmap Artifact Authority sections.',
-        ),
-      ) ||
+            (issue) => issue.contains(
+              'AGENTS.md must include Roadmap Trigger Policy and Roadmap Artifact Authority sections.',
+            ),
+          ) ||
           issues.any(
             (issue) => issue.contains(
               'AGENTS.md must reference ROADMAP_WORKFLOW.md, adaptive granularity, and active-worktree authority.',
@@ -1075,8 +1152,14 @@ void main() {
     final readme = File(_joinPath(fixture.path, 'README.md'));
     final updated = readme
         .readAsStringSync()
-        .replaceAll('docs/assistant/workflows/ROADMAP_WORKFLOW.md', 'docs/assistant/workflows/PLANNER_WORKFLOW.md')
-        .replaceAll('active worktree is authoritative during live roadmap work', 'main is enough');
+        .replaceAll(
+          'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
+          'docs/assistant/workflows/PLANNER_WORKFLOW.md',
+        )
+        .replaceAll(
+          'active worktree is authoritative during live roadmap work',
+          'main is enough',
+        );
     readme.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1093,8 +1176,7 @@ void main() {
     );
   });
 
-  test('validator fails when agent.md misses support routing to user guides',
-      () {
+  test('validator fails when agent.md misses support routing to user guides', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
 
@@ -1121,180 +1203,196 @@ void main() {
   });
 
   test(
-      'validator fails when AGENTS.md support routing misses plain-language rule',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when AGENTS.md support routing misses plain-language rule',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
-    final updated =
-        agentsFile.readAsStringSync().replaceAll('plain language', 'jargon');
-    agentsFile.writeAsStringSync(updated);
+      final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
+      final updated = agentsFile.readAsStringSync().replaceAll(
+        'plain language',
+        'jargon',
+      );
+      agentsFile.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) => issue.contains(
-          'AGENTS.md support-routing policy must require plain-language responses',
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'AGENTS.md support-routing policy must require plain-language responses',
+          ),
         ),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test(
-      'validator fails when agent.md support routing misses plain-language rule',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when agent.md support routing misses plain-language rule',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final runbook = File(_joinPath(fixture.path, 'agent.md'));
-    final updated =
-        runbook.readAsStringSync().replaceAll('plain language', 'jargon');
-    runbook.writeAsStringSync(updated);
+      final runbook = File(_joinPath(fixture.path, 'agent.md'));
+      final updated = runbook.readAsStringSync().replaceAll(
+        'plain language',
+        'jargon',
+      );
+      runbook.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) => issue.contains(
-          'agent.md support-routing policy must require plain-language responses',
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'agent.md support-routing policy must require plain-language responses',
+          ),
         ),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
-
-  test('validator fails when user-guides support usage contract key is missing',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
-
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final contracts = Map<String, dynamic>.from(
-      manifest['contracts'] as Map<String, dynamic>,
-    );
-    contracts.remove('user_guides_support_usage_policy');
-    manifest['contracts'] = contracts;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
-
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
-
-    expect(
-      issues.any(
-        (issue) => issue.contains('contracts.user_guides_support_usage_policy'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test(
-      'validator fails when user-guides canonical deference contract key is missing',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when user-guides support usage contract key is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final contracts = Map<String, dynamic>.from(
-      manifest['contracts'] as Map<String, dynamic>,
-    );
-    contracts.remove('user_guides_canonical_deference_policy');
-    manifest['contracts'] = contracts;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove('user_guides_support_usage_policy');
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('contracts.user_guides_canonical_deference_policy'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('contracts.user_guides_support_usage_policy'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
-  test('validator fails when user-guides update sync contract key is missing',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when user-guides canonical deference contract key is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final contracts = Map<String, dynamic>.from(
-      manifest['contracts'] as Map<String, dynamic>,
-    );
-    contracts.remove('user_guides_update_sync_policy');
-    manifest['contracts'] = contracts;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove('user_guides_canonical_deference_policy');
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) => issue.contains('contracts.user_guides_update_sync_policy'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'contracts.user_guides_canonical_deference_policy',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
-  test('validator fails when beginner-guide entrypoint contract key is missing',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when user-guides update sync contract key is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final contracts = Map<String, dynamic>.from(
-      manifest['contracts'] as Map<String, dynamic>,
-    );
-    contracts.remove('beginner_guide_entrypoint_policy');
-    manifest['contracts'] = contracts;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove('user_guides_update_sync_policy');
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) => issue.contains('contracts.beginner_guide_entrypoint_policy'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) => issue.contains('contracts.user_guides_update_sync_policy'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
+
+  test(
+    'validator fails when beginner-guide entrypoint contract key is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove('beginner_guide_entrypoint_policy');
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('contracts.beginner_guide_entrypoint_policy'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test('validator fails when beginner-guide sync contract key is missing', () {
     final fixture = _createValidFixture();
@@ -1326,35 +1424,40 @@ void main() {
     );
   });
 
-  test('validator fails when docs maintenance misses user-guide sync clause',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when docs maintenance misses user-guide sync clause',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final docsWorkflow = File(
-      _joinPath(fixture.path,
-          'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md'),
-    );
-    final updated = docsWorkflow
-        .readAsStringSync()
-        .replaceAll('START_HERE_USER_GUIDE.md', 'START_HERE.md')
-        .replaceAll('APP_USER_GUIDE.md', 'APP_GUIDE.md')
-        .replaceAll('PLANNER_USER_GUIDE.md', 'PLANNER_GUIDE.md')
-        .replaceAll('user-guide sections', 'sections');
-    docsWorkflow.writeAsStringSync(updated);
+      final docsWorkflow = File(
+        _joinPath(
+          fixture.path,
+          'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+        ),
+      );
+      final updated = docsWorkflow
+          .readAsStringSync()
+          .replaceAll('START_HERE_USER_GUIDE.md', 'START_HERE.md')
+          .replaceAll('APP_USER_GUIDE.md', 'APP_GUIDE.md')
+          .replaceAll('PLANNER_USER_GUIDE.md', 'PLANNER_GUIDE.md')
+          .replaceAll('user-guide sections', 'sections');
+      docsWorkflow.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) => issue.contains(
-            'DOCS_MAINTENANCE_WORKFLOW.md must include user-guide sync guidance'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'DOCS_MAINTENANCE_WORKFLOW.md must include user-guide sync guidance',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test('validator fails when AGENTS.md misses template read-policy phrase', () {
     final fixture = _createValidFixture();
@@ -1362,11 +1465,7 @@ void main() {
 
     final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
     agentsFile.writeAsStringSync(
-      [
-        '# AGENTS',
-        '',
-        'This is a compatibility shim.',
-      ].join('\n'),
+      ['# AGENTS', '', 'This is a compatibility shim.'].join('\n'),
     );
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1414,9 +1513,10 @@ void main() {
     addTearDown(() => fixture.deleteSync(recursive: true));
 
     final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
-    final updated = agentsFile
-        .readAsStringSync()
-        .replaceAll('REFERENCE_DISCOVERY_WORKFLOW.md', 'MISSING_WORKFLOW.md');
+    final updated = agentsFile.readAsStringSync().replaceAll(
+      'REFERENCE_DISCOVERY_WORKFLOW.md',
+      'MISSING_WORKFLOW.md',
+    );
     agentsFile.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1438,8 +1538,9 @@ void main() {
 
     final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
     final updated = agentsFile.readAsStringSync().replaceAll(
-        'Would you like me to run Assistant Docs Sync for this change now?',
-        'REMOVED_PROMPT');
+      'Would you like me to run Assistant Docs Sync for this change now?',
+      'REMOVED_PROMPT',
+    );
     agentsFile.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1448,7 +1549,8 @@ void main() {
     expect(
       issues.any(
         (issue) => issue.contains(
-            'AGENTS.md must include significant-change Assistant Docs Sync prompt policy.'),
+          'AGENTS.md must include significant-change Assistant Docs Sync prompt policy.',
+        ),
       ),
       isTrue,
       reason: issues.join('\n'),
@@ -1460,9 +1562,10 @@ void main() {
     addTearDown(() => fixture.deleteSync(recursive: true));
 
     final runbookFile = File(_joinPath(fixture.path, 'agent.md'));
-    final updated = runbookFile
-        .readAsStringSync()
-        .replaceAll('REFERENCE_DISCOVERY_WORKFLOW.md', 'MISSING_WORKFLOW.md');
+    final updated = runbookFile.readAsStringSync().replaceAll(
+      'REFERENCE_DISCOVERY_WORKFLOW.md',
+      'MISSING_WORKFLOW.md',
+    );
     runbookFile.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1484,8 +1587,9 @@ void main() {
 
     final runbookFile = File(_joinPath(fixture.path, 'agent.md'));
     final updated = runbookFile.readAsStringSync().replaceAll(
-        'Would you like me to run Assistant Docs Sync for this change now?',
-        'REMOVED_PROMPT');
+      'Would you like me to run Assistant Docs Sync for this change now?',
+      'REMOVED_PROMPT',
+    );
     runbookFile.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1494,7 +1598,8 @@ void main() {
     expect(
       issues.any(
         (issue) => issue.contains(
-            'agent.md must include mandatory post-significant-change Assistant Docs Sync prompt policy.'),
+          'agent.md must include mandatory post-significant-change Assistant Docs Sync prompt policy.',
+        ),
       ),
       isTrue,
       reason: issues.join('\n'),
@@ -1567,8 +1672,9 @@ void main() {
       ),
     );
     final updated = template.readAsStringSync().replaceAll(
-        '## Newbie-First Layer (Optional: remove for developer-first repos)',
-        '## Beginner Layer');
+      '## Newbie-First Layer (Optional: remove for developer-first repos)',
+      '## Beginner Layer',
+    );
     template.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1596,7 +1702,9 @@ void main() {
       ),
     );
     final updated = template.readAsStringSync().replaceAll(
-        'Assume user is a complete beginner/non-coder', 'Assume user');
+      'Assume user is a complete beginner/non-coder',
+      'Assume user',
+    );
     template.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1624,9 +1732,9 @@ void main() {
       ),
     );
     final updated = template.readAsStringSync().replaceAll(
-          'If user explicitly requests developer depth, switch style while keeping all governance contracts unchanged.',
-          'If user explicitly requests developer depth, switch style.',
-        );
+      'If user explicitly requests developer depth, switch style while keeping all governance contracts unchanged.',
+      'If user explicitly requests developer depth, switch style.',
+    );
     template.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1636,7 +1744,8 @@ void main() {
       issues.any(
         (issue) =>
             issue.contains(
-                'newbie layer must include removable/override rule') ||
+              'newbie layer must include removable/override rule',
+            ) ||
             issue.contains(
               'newbie layer must define developer-depth override behavior',
             ),
@@ -1651,9 +1760,10 @@ void main() {
     addTearDown(() => fixture.deleteSync(recursive: true));
 
     final readme = File(_joinPath(fixture.path, 'README.md'));
-    final updated = readme
-        .readAsStringSync()
-        .replaceAll('## If You Are Not a Developer, Start Here', '## Start');
+    final updated = readme.readAsStringSync().replaceAll(
+      '## If You Are Not a Developer, Start Here',
+      '## Start',
+    );
     readme.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1670,40 +1780,43 @@ void main() {
     );
   });
 
-  test('validator fails when APP_KNOWLEDGE misses non-coder entrypoint section',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when APP_KNOWLEDGE misses non-coder entrypoint section',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final appKnowledge = File(_joinPath(fixture.path, 'APP_KNOWLEDGE.md'));
-    final updated = appKnowledge.readAsStringSync().replaceAll(
-          '## If You Are Not a Developer (Read This First)',
-          '## For Developers',
-        );
-    appKnowledge.writeAsStringSync(updated);
+      final appKnowledge = File(_joinPath(fixture.path, 'APP_KNOWLEDGE.md'));
+      final updated = appKnowledge.readAsStringSync().replaceAll(
+        '## If You Are Not a Developer (Read This First)',
+        '## For Developers',
+      );
+      appKnowledge.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) => issue.contains(
-          'APP_KNOWLEDGE.md must include "## If You Are Not a Developer (Read This First)" section.',
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'APP_KNOWLEDGE.md must include "## If You Are Not a Developer (Read This First)" section.',
+          ),
         ),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test('validator fails when INDEX misses beginner quick path section', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
 
     final index = File(_joinPath(fixture.path, 'docs/assistant/INDEX.md'));
-    final updated = index
-        .readAsStringSync()
-        .replaceAll('## Beginner Quick Path', '## Path');
+    final updated = index.readAsStringSync().replaceAll(
+      '## Beginner Quick Path',
+      '## Path',
+    );
     index.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1720,62 +1833,70 @@ void main() {
     );
   });
 
-  test('validator fails when APP guide misses Terms in Plain English heading',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+  test(
+    'validator fails when APP guide misses Terms in Plain English heading',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final appGuide = File(
-      _joinPath(fixture.path, 'docs/assistant/features/APP_USER_GUIDE.md'),
-    );
-    final updated = appGuide
-        .readAsStringSync()
-        .replaceAll('## Terms in Plain English', '## Terms');
-    appGuide.writeAsStringSync(updated);
+      final appGuide = File(
+        _joinPath(fixture.path, 'docs/assistant/features/APP_USER_GUIDE.md'),
+      );
+      final updated = appGuide.readAsStringSync().replaceAll(
+        '## Terms in Plain English',
+        '## Terms',
+      );
+      appGuide.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('Feature guide is missing required section') &&
-            issue.contains('## Terms in Plain English') &&
-            issue.contains('APP_USER_GUIDE.md'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('Feature guide is missing required section') &&
+              issue.contains('## Terms in Plain English') &&
+              issue.contains('APP_USER_GUIDE.md'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test(
-      'validator fails when planner guide misses Terms in Plain English heading',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when planner guide misses Terms in Plain English heading',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final plannerGuide = File(
-      _joinPath(fixture.path, 'docs/assistant/features/PLANNER_USER_GUIDE.md'),
-    );
-    final updated = plannerGuide
-        .readAsStringSync()
-        .replaceAll('## Terms in Plain English', '## Terms');
-    plannerGuide.writeAsStringSync(updated);
+      final plannerGuide = File(
+        _joinPath(
+          fixture.path,
+          'docs/assistant/features/PLANNER_USER_GUIDE.md',
+        ),
+      );
+      final updated = plannerGuide.readAsStringSync().replaceAll(
+        '## Terms in Plain English',
+        '## Terms',
+      );
+      plannerGuide.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('Feature guide is missing required section') &&
-            issue.contains('## Terms in Plain English') &&
-            issue.contains('PLANNER_USER_GUIDE.md'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('Feature guide is missing required section') &&
+              issue.contains('## Terms in Plain English') &&
+              issue.contains('PLANNER_USER_GUIDE.md'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test('validator fails when support contract misses term-definition rule', () {
     final fixture = _createValidFixture();
@@ -1785,9 +1906,9 @@ void main() {
       _joinPath(fixture.path, 'docs/assistant/features/APP_USER_GUIDE.md'),
     );
     final updated = appGuide.readAsStringSync().replaceAll(
-          'Define unavoidable technical terms in one short sentence.',
-          'Keep terms simple.',
-        );
+      'Define unavoidable technical terms in one short sentence.',
+      'Keep terms simple.',
+    );
     appGuide.writeAsStringSync(updated);
 
     final validator = AgentDocsValidator(rootDirectory: fixture);
@@ -1805,52 +1926,60 @@ void main() {
   });
 
   test(
-      'validator fails when AGENTS.md misses Non-Coder Communication Mode section',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when AGENTS.md misses Non-Coder Communication Mode section',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final agents = File(_joinPath(fixture.path, 'AGENTS.md'));
-    final updated = agents.readAsStringSync().replaceAll(
-          '## Non-Coder Communication Mode',
-          '## Communication',
-        );
-    agents.writeAsStringSync(updated);
+      final agents = File(_joinPath(fixture.path, 'AGENTS.md'));
+      final updated = agents.readAsStringSync().replaceAll(
+        '## Non-Coder Communication Mode',
+        '## Communication',
+      );
+      agents.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any((issue) => issue.contains(
-          'AGENTS.md must include "## Non-Coder Communication Mode" section.')),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'AGENTS.md must include "## Non-Coder Communication Mode" section.',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test(
-      'validator fails when agent.md misses Non-Coder Communication Mode section',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when agent.md misses Non-Coder Communication Mode section',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final runbook = File(_joinPath(fixture.path, 'agent.md'));
-    final updated = runbook.readAsStringSync().replaceAll(
-          '## Non-Coder Communication Mode',
-          '## Communication',
-        );
-    runbook.writeAsStringSync(updated);
+      final runbook = File(_joinPath(fixture.path, 'agent.md'));
+      final updated = runbook.readAsStringSync().replaceAll(
+        '## Non-Coder Communication Mode',
+        '## Communication',
+      );
+      runbook.writeAsStringSync(updated);
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any((issue) => issue.contains(
-          'agent.md must include "## Non-Coder Communication Mode" section.')),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'agent.md must include "## Non-Coder Communication Mode" section.',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test('validator fails when non_coder_entrypoint_policy key is missing', () {
     final fixture = _createValidFixture();
@@ -1883,37 +2012,39 @@ void main() {
   });
 
   test(
-      'validator fails when plain_language_support_response_policy key is missing',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when plain_language_support_response_policy key is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final manifestFile = File(
-      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
-    );
-    final manifest =
-        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
-    final contracts = Map<String, dynamic>.from(
-      manifest['contracts'] as Map<String, dynamic>,
-    );
-    contracts.remove('plain_language_support_response_policy');
-    manifest['contracts'] = contracts;
-    manifestFile.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(manifest),
-    );
+      final manifestFile = File(
+        _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+      );
+      final manifest =
+          jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+      final contracts = Map<String, dynamic>.from(
+        manifest['contracts'] as Map<String, dynamic>,
+      );
+      contracts.remove('plain_language_support_response_policy');
+      manifest['contracts'] = contracts;
+      manifestFile.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(manifest),
+      );
 
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    expect(
-      issues.any(
-        (issue) =>
-            issue.contains('contracts.plain_language_support_response_policy'),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'contracts.plain_language_support_response_policy',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test('validator fails when term_definition_policy key is missing', () {
     final fixture = _createValidFixture();
@@ -1937,9 +2068,7 @@ void main() {
     final issues = validator.validate();
 
     expect(
-      issues.any(
-        (issue) => issue.contains('contracts.term_definition_policy'),
-      ),
+      issues.any((issue) => issue.contains('contracts.term_definition_policy')),
       isTrue,
       reason: issues.join('\n'),
     );
@@ -1952,6 +2081,9 @@ void main() {
     'worktree_build_identity_policy',
     'commit_shorthand_policy',
     'push_shorthand_policy',
+    'vendored_template_assets_policy',
+    'project_harness_sync_policy',
+    'roadmap_anchor_file_policy',
     'roadmap_trigger_policy',
     'roadmap_granularity_policy',
     'roadmap_artifact_authority_policy',
@@ -1988,67 +2120,104 @@ void main() {
   }
 
   test(
-      'validator fails when template misses Terms in Plain English requirement',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+    'validator fails when template misses Terms in Plain English requirement',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
 
-    final template = File(
-      _joinPath(
-        fixture.path,
-        'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
-      ),
-    );
-    final updated = template
-        .readAsStringSync()
-        .replaceAll('## Terms in Plain English', '## Glossary');
-    template.writeAsStringSync(updated);
-
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
-
-    expect(
-      issues.any(
-        (issue) => issue.contains(
-          'newbie layer must require user guides to include "## Terms in Plain English"',
+      final template = File(
+        _joinPath(
+          fixture.path,
+          'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
         ),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+      );
+      final updated = template.readAsStringSync().replaceAll(
+        '## Terms in Plain English',
+        '## Glossary',
+      );
+      template.writeAsStringSync(updated);
 
-  test('validator fails when bootstrap roadmap template misses adaptive rules',
-      () {
-    final fixture = _createValidFixture();
-    addTearDown(() => fixture.deleteSync(recursive: true));
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
 
-    final template = File(
-      _joinPath(
-        fixture.path,
-        'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
-      ),
-    );
-    final updated = template
-        .readAsStringSync()
-        .replaceAll('single-file fixes', 'small fixes')
-        .replaceAll('one-shot docs cleanup', 'docs work')
-        .replaceAll('ExecPlan-only', 'ExecPlan only');
-    template.writeAsStringSync(updated);
-
-    final validator = AgentDocsValidator(rootDirectory: fixture);
-    final issues = validator.validate();
-
-    expect(
-      issues.any(
-        (issue) => issue.contains(
-          'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define adaptive thresholds for no-roadmap, ExecPlan-only, and roadmap-grade work.',
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'newbie layer must require user guides to include "## Terms in Plain English"',
+          ),
         ),
-      ),
-      isTrue,
-      reason: issues.join('\n'),
-    );
-  });
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
+
+  test(
+    'validator fails when bootstrap roadmap template misses adaptive rules',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final template = File(
+        _joinPath(
+          fixture.path,
+          'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+        ),
+      );
+      final updated = template
+          .readAsStringSync()
+          .replaceAll('single-file fixes', 'small fixes')
+          .replaceAll('one-shot docs cleanup', 'docs work')
+          .replaceAll('ExecPlan-only', 'ExecPlan only');
+      template.writeAsStringSync(updated);
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define adaptive thresholds for no-roadmap, ExecPlan-only, and roadmap-grade work.',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
+
+  test(
+    'validator fails when bootstrap roadmap template misses anchor wording',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final template = File(
+        _joinPath(
+          fixture.path,
+          'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+        ),
+      );
+      final updated = template
+          .readAsStringSync()
+          .replaceAll('roadmap anchor file', 'resume wrapper')
+          .replaceAll('master plan', 'plan');
+      template.writeAsStringSync(updated);
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define roadmap/master-plan equivalence, SESSION_RESUME.md as the roadmap anchor file, stage/wave terminology, and exact-next-step closeout guidance.',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
 
   test('validator fails when bootstrap template map misses roadmap module', () {
     final fixture = _createValidFixture();
@@ -2063,6 +2232,8 @@ void main() {
     templateMap.writeAsStringSync(
       const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
         'version': 2,
+        'entrypoint':
+            'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
         'modules': <Map<String, dynamic>>[],
       }),
     );
@@ -2072,8 +2243,158 @@ void main() {
 
     expect(
       issues.any(
+        (issue) =>
+            issue.contains(
+              'BOOTSTRAP_TEMPLATE_MAP.json must include required module id',
+            ) &&
+            issue.contains('roadmap_governance'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test(
+    'validator fails when bootstrap template map entrypoint path is missing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final templateMap = File(
+        _joinPath(
+          fixture.path,
+          'docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json',
+        ),
+      );
+      final map =
+          jsonDecode(templateMap.readAsStringSync()) as Map<String, dynamic>;
+      map['entrypoint'] = 'docs/assistant/templates/MISSING_ENTRYPOINT.md';
+      templateMap.writeAsStringSync(
+        const JsonEncoder.withIndent('  ').convert(map),
+      );
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'BOOTSTRAP_TEMPLATE_MAP.json entrypoint path does not exist',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
+
+  test('validator fails when bootstrap template map points at missing file', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final missingTemplate = File(
+      _joinPath(
+        fixture.path,
+        'docs/assistant/templates/BOOTSTRAP_HARNESS_ISOLATION_AND_DIAGNOSTICS.md',
+      ),
+    );
+    missingTemplate.deleteSync();
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains(
+              'BOOTSTRAP_TEMPLATE_MAP.json references missing template file',
+            ) &&
+            issue.contains('BOOTSTRAP_HARNESS_ISOLATION_AND_DIAGNOSTICS.md'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test(
+    'validator fails when AGENTS.md misses implement-the-template routing',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final agents = File(_joinPath(fixture.path, 'AGENTS.md'));
+      final updated = agents.readAsStringSync().replaceAll(
+        'implement the template files',
+        'apply templates',
+      );
+      agents.writeAsStringSync(updated);
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'AGENTS.md must route `implement the template files` and `sync project harness` to PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
+
+  test(
+    'validator fails when commit workflow misses vendored-template policy',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final workflow = File(
+        _joinPath(
+          fixture.path,
+          'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
+        ),
+      );
+      final updated = workflow
+          .readAsStringSync()
+          .replaceAll('remove or ignore', 'clean up')
+          .replaceAll('vendored template sync', 'template sync')
+          .replaceAll(
+            'harness implementation from vendored templates',
+            'harness changes',
+          );
+      workflow.writeAsStringSync(updated);
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any(
+          (issue) =>
+              issue.contains('COMMIT_PUBLISH_WORKFLOW.md must') &&
+              issue.contains('vendored'),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
+
+  test('validator fails when gitignore excludes vendored templates', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final gitignore = File(_joinPath(fixture.path, '.gitignore'));
+    gitignore.writeAsStringSync(['docs/assistant/templates/'].join('\n'));
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
         (issue) => issue.contains(
-          'BOOTSTRAP_TEMPLATE_MAP.json must include the roadmap_governance module and BOOTSTRAP_ROADMAP_GOVERNANCE.md path.',
+          '.gitignore must not ignore vendored docs/assistant/templates/* files.',
         ),
       ),
       isTrue,
@@ -2113,8 +2434,11 @@ Directory _createValidFixture() {
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
+      'If the repo carries vendored docs/assistant/templates/* files and the user says `implement the template files` or `sync project harness`, route to docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+      'Vendored docs/assistant/templates/* files are committed project assets.',
       '## Fresh Session Resume Protocol',
       'For a new chat that asks to continue, resume, or asks what the next roadmap step is, open docs/assistant/SESSION_RESUME.md first.',
+      'Treat docs/assistant/SESSION_RESUME.md as the roadmap anchor file.',
       'Use `resume master plan` as the explicit trigger phrase.',
       'After docs/assistant/SESSION_RESUME.md, open the linked active roadmap tracker and linked active wave ExecPlan.',
       '## Roadmap Artifact Authority',
@@ -2129,6 +2453,7 @@ Directory _createValidFixture() {
       'Major changes must start on a new feat/* branch, not on main.',
       'Keep main stable; merge major work through PR flow with required checks.',
       'docs/assistant/templates/* is read-on-demand only.',
+      'When the user says `implement the template files`, read vendored templates as local input but do not edit them unless the user explicitly asks to update the template folder itself.',
     ].join('\n'),
   );
   writeFile(
@@ -2151,8 +2476,11 @@ Directory _createValidFixture() {
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
+      'If the repo carries vendored docs/assistant/templates/* files and the user says `implement the template files` or `sync project harness`, route to docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+      'Vendored docs/assistant/templates/* files are committed project assets.',
       '## Fresh Session Resume Protocol',
       'Open docs/assistant/SESSION_RESUME.md first when a new chat needs roadmap continuity.',
+      'Treat docs/assistant/SESSION_RESUME.md as the roadmap anchor file.',
       'Use `resume master plan` as the explicit trigger phrase.',
       'After docs/assistant/SESSION_RESUME.md, open the linked active roadmap tracker and linked active wave ExecPlan.',
       '## Roadmap Artifact Authority',
@@ -2166,6 +2494,7 @@ Directory _createValidFixture() {
       'Would you like me to run Assistant Docs Sync for this change now?',
       'docs/assistant/templates/* is read-on-demand only.',
       'Only open templates when user explicitly requests template/prompt work.',
+      'When the user says `implement the template files`, read vendored templates as local input but do not edit them unless the user explicitly asks to update the template folder itself.',
       'Major changes must start on a new feat/* branch, not on main.',
       'Keep main stable; merge major work through PR flow with required checks.',
     ].join('\n'),
@@ -2191,9 +2520,15 @@ Directory _createValidFixture() {
       '',
       '## Fresh Session Resume',
       '- docs/assistant/SESSION_RESUME.md',
+      '- docs/assistant/SESSION_RESUME.md is the roadmap anchor file',
       '- `resume master plan`',
       '- docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       '- active worktree is authoritative during live roadmap work',
+      '## Vendored Bootstrap Apply',
+      '- implement the template files',
+      '- sync project harness',
+      '- docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+      '- vendored docs/assistant/templates/* files are committed project assets',
       '## If You Are Not a Developer, Start Here',
       '- docs/assistant/features/START_HERE_USER_GUIDE.md',
       '- docs/assistant/features/APP_USER_GUIDE.md',
@@ -2227,6 +2562,16 @@ Directory _createValidFixture() {
   writeFile('docs/assistant/DB_DRIFT_KNOWLEDGE.md', '# DB');
   writeFile('docs/assistant/GOLDEN_PRINCIPLES.md', '# GOLDEN');
   writeFile(
+    '.gitignore',
+    [
+      'docs/assistant/LOCAL_ENV_PROFILE.local.md',
+      '',
+      '# Vendored bootstrap templates are committed project assets.',
+      '!docs/assistant/templates/',
+      '!docs/assistant/templates/**',
+    ].join('\n'),
+  );
+  writeFile(
     'docs/assistant/SESSION_RESUME.md',
     [
       '# Session Resume',
@@ -2234,6 +2579,7 @@ Directory _createValidFixture() {
       '## Fresh Session Rule',
       '',
       'Start here for roadmap continuity.',
+      'This file is the roadmap anchor file.',
       '',
       '## Resume Trigger',
       '',
@@ -2285,9 +2631,15 @@ Directory _createValidFixture() {
       '',
       '## Fresh Session Resume',
       '- docs/assistant/SESSION_RESUME.md',
+      '- docs/assistant/SESSION_RESUME.md is the roadmap anchor file',
       '- `resume master plan`',
       '- active roadmap tracker',
       '- active wave ExecPlan',
+      '## Vendored Template Apply',
+      '- implement the template files',
+      '- sync project harness',
+      '- docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+      '- vendored template files are committed project assets',
       '- docs/assistant/GOLDEN_PRINCIPLES.md',
       '- docs/assistant/exec_plans/PLANS.md',
     ].join('\n'),
@@ -2310,13 +2662,7 @@ Directory _createValidFixture() {
   );
   writeFile(
     'docs/assistant/LOCAL_CAPABILITIES.md',
-    [
-      '# LOCAL CAPABILITIES',
-      '',
-      '- dart',
-      '- git',
-      '- rg',
-    ].join('\n'),
+    ['# LOCAL CAPABILITIES', '', '- dart', '- git', '- rg'].join('\n'),
   );
   writeFile(
     'docs/assistant/LOCAL_ENV_PROFILE.example.md',
@@ -2337,7 +2683,7 @@ Directory _createValidFixture() {
       '',
       'small isolated work -> no roadmap, ExecPlan optional',
       'bounded major work -> ExecPlan only',
-      'long-running multi-wave, restart-sensitive work -> roadmap',
+      'long-running multi-wave or stage-plus-wave, restart-sensitive work -> roadmap',
       '',
       '## Roadmap Return Protocol',
       '',
@@ -2348,7 +2694,7 @@ Directory _createValidFixture() {
       '',
       '## Roadmap Artifact Authority',
       '',
-      'docs/assistant/SESSION_RESUME.md is the stable first resume stop.',
+      'docs/assistant/SESSION_RESUME.md is the roadmap anchor file and stable first resume stop.',
       'The active roadmap tracker is the sequence source.',
       'The active wave ExecPlan is the implementation-detail source.',
       'If a wave is active in a separate worktree, that active worktree is authoritative for live roadmap state.',
@@ -2362,9 +2708,13 @@ Directory _createValidFixture() {
       '# Template',
       '',
       'Template files to apply:',
+      '- docs/assistant/templates/BOOTSTRAP_CORE_CONTRACT.md',
+      '- docs/assistant/templates/BOOTSTRAP_PROJECT_HARNESS_SYNC_POLICY.md',
       '- docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+      'Use the full vendored template set.',
       'Use adaptive roadmap mode for long-running multi-wave restart-sensitive work.',
       'Generate docs/assistant/SESSION_RESUME.md when roadmap mode is active.',
+      'If the repo already carries vendored template files and the user says `implement the template files`, apply them locally without editing docs/assistant/templates/*.',
       '',
       '## Newbie-First Layer (Optional: remove for developer-first repos)',
       '- Assume user is a complete beginner/non-coder unless this section is removed or user explicitly requests technical depth.',
@@ -2381,10 +2731,7 @@ Directory _createValidFixture() {
   );
 
   final workflowTemplate = _workflowTemplate();
-  writeFile(
-    'docs/assistant/workflows/READER_WORKFLOW.md',
-    workflowTemplate,
-  );
+  writeFile('docs/assistant/workflows/READER_WORKFLOW.md', workflowTemplate);
   writeFile(
     'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
     workflowTemplate,
@@ -2401,19 +2748,18 @@ Directory _createValidFixture() {
     'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
     workflowTemplate,
   );
-  writeFile(
-    'docs/assistant/workflows/PLANNER_WORKFLOW.md',
-    workflowTemplate,
-  );
+  writeFile('docs/assistant/workflows/PLANNER_WORKFLOW.md', workflowTemplate);
   writeFile(
     'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
     workflowTemplate,
   );
   writeFile(
-      'docs/assistant/workflows/CI_REPO_WORKFLOW.md', _ciWorkflowTemplate());
+    'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
+    _ciWorkflowTemplate(),
+  );
   writeFile(
     'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
-    workflowTemplate,
+    _commitPublishWorkflowTemplate(),
   );
   writeFile(
     'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
@@ -2433,17 +2779,21 @@ Directory _createValidFixture() {
       '## Expected Outputs',
       '',
       '- Adaptive roadmap output.',
+      '- Exact next step output.',
       '',
       '## When To Use',
       '',
-      'Use for long-running multi-wave, restart-sensitive work.',
+      'Use for long-running multi-wave or stage-plus-wave, restart-sensitive work.',
       'Use ExecPlan-only for bounded major work.',
       'Use no roadmap for small isolated work.',
+      'Treat roadmap and master plan as equivalent user intents.',
+      'Stages are optional research/spec phases and waves are implementation slices.',
       '',
       '## What Not To Do',
       '',
       'Don\'t use this workflow when a small isolated change can stay lighter. Instead use docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md.',
       'Do not treat main as the live roadmap source while a wave is active in a separate worktree.',
+      'Do not collapse details into docs/assistant/SESSION_RESUME.md; keep that roadmap anchor file summary-level only.',
       '',
       '## Primary Files',
       '',
@@ -2462,12 +2812,58 @@ Directory _createValidFixture() {
       '## Failure Modes and Fallback Steps',
       '',
       'Fallback.',
+      'If discoveries force a better order, resequence future stages or waves and keep one exact next step.',
       '',
       '## Handoff Checklist',
       '',
       'Use ExecPlan-only when work is bounded.',
       'Use the active worktree as the live roadmap authority during in-flight wave work.',
-      'Keep docs/assistant/SESSION_RESUME.md as the stable first stop.',
+      'Keep docs/assistant/SESSION_RESUME.md as the roadmap anchor file and stable first stop.',
+    ].join('\n'),
+  );
+  writeFile(
+    'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+    [
+      '## What This Workflow Is For',
+      '',
+      'Apply vendored template files to the local project harness.',
+      '',
+      '## Expected Outputs',
+      '',
+      '- Local harness matches vendored template contracts.',
+      '',
+      '## When To Use',
+      '',
+      'Use for `implement the template files`.',
+      'Use for `sync project harness`.',
+      '',
+      '## What Not To Do',
+      '',
+      'Don\'t use this workflow when the task is global bootstrap maintenance. Instead use docs/assistant/templates/BOOTSTRAP_UPDATE_POLICY.md.',
+      'Do not edit `docs/assistant/templates/*` during local apply.',
+      '',
+      '## Primary Files',
+      '',
+      '- AGENTS.md',
+      '- agent.md',
+      '- docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+      '',
+      '## Minimal Commands',
+      '',
+      'git status --short --branch',
+      '',
+      '## Targeted Tests',
+      '',
+      'flutter test --no-pub -j 1 -r expanded test/tooling/validate_agent_docs_test.dart',
+      '',
+      '## Failure Modes and Fallback Steps',
+      '',
+      'If local apply starts editing templates, stop and do not edit `docs/assistant/templates/*`.',
+      '',
+      '## Handoff Checklist',
+      '',
+      'implement the template files routing exists.',
+      'sync project harness routing exists.',
     ].join('\n'),
   );
   writeFile(
@@ -2479,24 +2875,18 @@ Directory _createValidFixture() {
       'Use ExecPlan-only for bounded major work.',
       'Use no roadmap for single-file fixes or one-shot docs cleanup.',
       'Treat roadmap and master plan as equivalent user intents.',
-      'Generate docs/assistant/SESSION_RESUME.md as the stable fresh-session wrapper.',
+      'Generate docs/assistant/SESSION_RESUME.md as the roadmap anchor file and stable fresh-session wrapper.',
       'Generate an active roadmap tracker and active wave ExecPlan.',
+      'Stages are optional research/spec phases and waves are implementation slices.',
       'During in-flight work in a separate worktree, that separate worktree is authoritative for live roadmap state.',
       'Update order: active wave ExecPlan, active roadmap tracker, docs/assistant/SESSION_RESUME.md.',
+      'Roadmap closeouts must report the exact next step.',
       'Reusable issue classes include roadmap_trigger_granularity_ambiguity and active_worktree_resume_authority_confusion.',
     ].join('\n'),
   );
   writeFile(
     'docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json',
-    const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
-      'version': 2,
-      'modules': <Map<String, dynamic>>[
-        <String, dynamic>{
-          'id': 'roadmap_governance',
-          'path': 'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
-        },
-      ],
-    }),
+    const JsonEncoder.withIndent('  ').convert(_fixtureTemplateMap),
   );
   writeFile(
     'docs/assistant/templates/BOOTSTRAP_MODULES_AND_TRIGGERS.md',
@@ -2504,10 +2894,46 @@ Directory _createValidFixture() {
       '# BOOTSTRAP MODULES AND TRIGGERS',
       '',
       'Roadmap Governance -> docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+      'Project Harness Sync -> implement the template files -> docs/assistant/templates/BOOTSTRAP_PROJECT_HARNESS_SYNC_POLICY.md',
       'Use no roadmap for single-file fixes.',
       'Use ExecPlan-only for bounded major work.',
       'Use roadmap mode for long-running multi-wave restart-sensitive work.',
+      'Generated repos should document docs/assistant/SESSION_RESUME.md as the roadmap anchor file.',
     ].join('\n'),
+  );
+  writeFile('docs/assistant/templates/BOOTSTRAP_CORE_CONTRACT.md', '# CORE');
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_ISSUE_MEMORY_SYSTEM.md',
+    '# ISSUE MEMORY SYSTEM',
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_PROJECT_HARNESS_SYNC_POLICY.md',
+    [
+      '# PROJECT HARNESS SYNC POLICY',
+      'Use `implement the template files` and `sync project harness`.',
+      'Vendored docs/assistant/templates/* files are committed project assets.',
+      'Do not edit docs/assistant/templates/* during local apply.',
+    ].join('\n'),
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_LOCAL_ENV_OVERLAY.md',
+    '# LOCAL ENV OVERLAY',
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_CAPABILITY_DISCOVERY.md',
+    '# CAPABILITY DISCOVERY',
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_WORKTREE_BUILD_IDENTITY.md',
+    '# WORKTREE BUILD IDENTITY',
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_HOST_INTEGRATION_PREFLIGHT.md',
+    '# HOST PREFLIGHT',
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_HARNESS_ISOLATION_AND_DIAGNOSTICS.md',
+    '# HARNESS ISOLATION',
   );
   writeFile(
     'docs/assistant/templates/BOOTSTRAP_UPDATE_POLICY.md',
@@ -2525,20 +2951,19 @@ Directory _createValidFixture() {
   writeFile('tooling/validate_workspace_hygiene.dart', '// placeholder');
   writeFile('test/tooling/validate_agent_docs_test.dart', '// placeholder');
   writeFile(
-      'test/tooling/validate_workspace_hygiene_test.dart', '// placeholder');
+    'test/tooling/validate_workspace_hygiene_test.dart',
+    '// placeholder',
+  );
 
   final manifest = <String, dynamic>{
-    'version': 13,
+    'version': 14,
     'canonical': <String, dynamic>{
       'agent_runbook': 'agent.md',
       'app_knowledge': 'APP_KNOWLEDGE.md',
       'db_knowledge': 'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
     },
     'session_resume': 'docs/assistant/SESSION_RESUME.md',
-    'bridges': <String>[
-      'AGENTS.md',
-      'docs/assistant/APP_KNOWLEDGE.md',
-    ],
+    'bridges': <String>['AGENTS.md', 'docs/assistant/APP_KNOWLEDGE.md'],
     'user_guides': <String>[
       'docs/assistant/features/START_HERE_USER_GUIDE.md',
       'docs/assistant/features/APP_USER_GUIDE.md',
@@ -2566,6 +2991,10 @@ Directory _createValidFixture() {
         doc: 'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
       ),
       _manifestWorkflow(
+        id: 'project_harness_sync',
+        doc: 'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+      ),
+      _manifestWorkflow(
         id: 'roadmap_governance',
         doc: 'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       ),
@@ -2584,10 +3013,7 @@ Directory _createValidFixture() {
       _manifestWorkflow(
         id: 'ci_repo_ops',
         doc: 'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
-        primaryFiles: <String>[
-          '.github/workflows/dart.yml',
-          'agent.md',
-        ],
+        primaryFiles: <String>['.github/workflows/dart.yml', 'agent.md'],
       ),
       _manifestWorkflow(
         id: 'commit_publish_ops',
@@ -2599,9 +3025,7 @@ Directory _createValidFixture() {
       ),
     ],
     'global_commands': <String, dynamic>{
-      'bootstrap': <String>[
-        'git status --short --branch',
-      ],
+      'bootstrap': <String>['git status --short --branch'],
       'analysis': <String>[
         'flutter analyze --no-fatal-infos --no-fatal-warnings',
       ],
@@ -2614,7 +3038,11 @@ Directory _createValidFixture() {
       'docs_sync_rule': 'docs sync contract',
       'windows_test_policy': 'windows test policy',
       'templates_read_policy':
-          'docs/assistant/templates/* are read-on-demand only.',
+          'docs/assistant/templates/* are read-on-demand only and vendored template files remain committed project assets.',
+      'vendored_template_assets_policy':
+          'Vendored docs/assistant/templates/* files are committed project assets. Do not remove or ignore them by default.',
+      'project_harness_sync_policy':
+          'Use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md for `implement the template files` and `sync project harness`, and apply vendored templates without editing docs/assistant/templates/*.',
       'localization_glossary_source_of_truth':
           'docs/assistant/LOCALIZATION_GLOSSARY.md is the canonical term source.',
       'workspace_performance_source_of_truth':
@@ -2661,20 +3089,22 @@ Directory _createValidFixture() {
           'When main navigation, first-run mental model, primary user journeys, what-to-ignore-at-first guidance, or the role of Today, Read, My Plan, Practice from Memory, Library, or My Quran changes, update START_HERE_USER_GUIDE.md during Assistant Docs Sync.',
       'fresh_session_resume_policy':
           'Fresh sessions that need roadmap continuity should resume from docs/assistant/SESSION_RESUME.md before opening any active roadmap tracker or wave ExecPlan.',
+      'roadmap_anchor_file_policy':
+          'docs/assistant/SESSION_RESUME.md is the roadmap anchor file and stable resume anchor.',
       'resume_trigger_policy':
           'Use `resume master plan` as the explicit resume trigger phrase; equivalent intents like `where did we leave off` and `what is the next roadmap step` should route to docs/assistant/SESSION_RESUME.md too.',
       'roadmap_resume_update_policy':
           'After roadmap detours or changes to active wave, next step, closeout state, branch, or worktree, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third.',
       'roadmap_trigger_policy':
-          'Use no roadmap for small isolated work, use ExecPlan-only for bounded major work, and use roadmap mode for long-running multi-wave restart-sensitive work. Treat master plan and roadmap as equivalent user intents.',
+          'Use no roadmap for small isolated work, use ExecPlan-only for bounded major work, and use roadmap mode for long-running multi-wave or stage-plus-wave restart-sensitive work. Treat master plan and roadmap as equivalent user intents.',
       'roadmap_granularity_policy':
           'Do not open a roadmap for single-file fixes, narrow bug fixes, small UI text tweaks, or one-shot docs cleanup. Prefer the lightest planning mode that is still safe.',
       'roadmap_artifact_authority_policy':
-          'During in-flight roadmap work, docs/assistant/SESSION_RESUME.md is the stable first resume stop, the active roadmap tracker is the sequence source, and the active wave ExecPlan is the implementation-detail source. If a wave is active in a separate worktree, that worktree\'s roadmap files are authoritative for live roadmap state.',
+          'During in-flight roadmap work, docs/assistant/SESSION_RESUME.md is the roadmap anchor file and stable first resume stop, the active roadmap tracker is the sequence source, and the active wave ExecPlan is the implementation-detail source. If a wave is active in a separate worktree, that worktree\'s roadmap files are authoritative for live roadmap state.',
       'roadmap_detour_policy':
           'After roadmap detours, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third before resuming the sequence.',
       'roadmap_closeout_policy':
-          'Every roadmap closeout must report current roadmap status and exact next step. When the next action is a closeout step, say so explicitly instead of naming a new wave.',
+          'Every roadmap closeout must report current roadmap status and exact next step. When research stages are complete, say exactly `All research stages are complete; implementation continues by wave.` When the next action is a closeout step, say so explicitly instead of naming a new wave.',
       'plain_language_support_response_policy':
           'Support responses must be plain-language-first with numbered next steps and exact UI labels.',
       'term_definition_policy':
@@ -2703,6 +3133,60 @@ Directory _createValidFixture() {
   return root;
 }
 
+const Map<String, dynamic> _fixtureTemplateMap = <String, dynamic>{
+  'version': 2,
+  'entrypoint': 'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
+  'modules': <Map<String, dynamic>>[
+    <String, dynamic>{
+      'id': 'core_contract',
+      'path': 'docs/assistant/templates/BOOTSTRAP_CORE_CONTRACT.md',
+    },
+    <String, dynamic>{
+      'id': 'modules_and_triggers',
+      'path': 'docs/assistant/templates/BOOTSTRAP_MODULES_AND_TRIGGERS.md',
+    },
+    <String, dynamic>{
+      'id': 'issue_memory_system',
+      'path': 'docs/assistant/templates/BOOTSTRAP_ISSUE_MEMORY_SYSTEM.md',
+    },
+    <String, dynamic>{
+      'id': 'project_harness_sync',
+      'path':
+          'docs/assistant/templates/BOOTSTRAP_PROJECT_HARNESS_SYNC_POLICY.md',
+    },
+    <String, dynamic>{
+      'id': 'local_env_overlay',
+      'path': 'docs/assistant/templates/BOOTSTRAP_LOCAL_ENV_OVERLAY.md',
+    },
+    <String, dynamic>{
+      'id': 'capability_discovery',
+      'path': 'docs/assistant/templates/BOOTSTRAP_CAPABILITY_DISCOVERY.md',
+    },
+    <String, dynamic>{
+      'id': 'worktree_build_identity',
+      'path': 'docs/assistant/templates/BOOTSTRAP_WORKTREE_BUILD_IDENTITY.md',
+    },
+    <String, dynamic>{
+      'id': 'roadmap_governance',
+      'path': 'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+    },
+    <String, dynamic>{
+      'id': 'host_integration_preflight',
+      'path':
+          'docs/assistant/templates/BOOTSTRAP_HOST_INTEGRATION_PREFLIGHT.md',
+    },
+    <String, dynamic>{
+      'id': 'harness_isolation_diagnostics',
+      'path':
+          'docs/assistant/templates/BOOTSTRAP_HARNESS_ISOLATION_AND_DIAGNOSTICS.md',
+    },
+    <String, dynamic>{
+      'id': 'bootstrap_update_policy',
+      'path': 'docs/assistant/templates/BOOTSTRAP_UPDATE_POLICY.md',
+    },
+  ],
+};
+
 Map<String, dynamic> _manifestWorkflow({
   required String id,
   required String doc,
@@ -2712,13 +3196,8 @@ Map<String, dynamic> _manifestWorkflow({
     'id': id,
     'doc': doc,
     'scope': 'workflow scope',
-    'primary_files': primaryFiles ??
-        <String>[
-          'APP_KNOWLEDGE.md',
-        ],
-    'targeted_tests': <String>[
-      'test/tooling/validate_agent_docs_test.dart',
-    ],
+    'primary_files': primaryFiles ?? <String>['APP_KNOWLEDGE.md'],
+    'targeted_tests': <String>['test/tooling/validate_agent_docs_test.dart'],
     'validation_commands': <String>[
       'git status --short --branch',
       'flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart',
@@ -2812,6 +3291,48 @@ String _ciWorkflowTemplate() {
   ].join('\n');
 }
 
+String _commitPublishWorkflowTemplate() {
+  return [
+    '## What This Workflow Is For',
+    '',
+    'Commit purpose.',
+    '',
+    '## Expected Outputs',
+    '',
+    '- Commit output.',
+    '',
+    '## When To Use',
+    '',
+    'When.',
+    '',
+    '## What Not To Do',
+    '',
+    'Don\'t use this workflow when runtime implementation is requested. Instead use docs/assistant/workflows/READER_WORKFLOW.md.',
+    'Do not remove or ignore vendored docs/assistant/templates/* files by default.',
+    '',
+    '## Primary Files',
+    '',
+    '- docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
+    '',
+    '## Minimal Commands',
+    '',
+    'git status --short --branch',
+    '',
+    '## Targeted Tests',
+    '',
+    'flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart',
+    '',
+    '## Failure Modes and Fallback Steps',
+    '',
+    'If vendored templates appear untracked, treat them as intentional scope.',
+    '',
+    '## Handoff Checklist',
+    '',
+    'vendored template sync',
+    'harness implementation from vendored templates',
+  ].join('\n');
+}
+
 String _docsMaintenanceWorkflowTemplate() {
   return [
     '## What This Workflow Is For',
@@ -2829,6 +3350,7 @@ String _docsMaintenanceWorkflowTemplate() {
     '## What Not To Do',
     '',
     'Don\'t use this workflow when runtime implementation is requested. Instead use docs/assistant/workflows/READER_WORKFLOW.md.',
+    'Don\'t use this workflow when the task is `implement the template files`. Instead use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md.',
     'Do not rewrite entire user guides when only one user journey changed; update touched sections only.',
     'Do not widen docs/assistant/features/START_HERE_USER_GUIDE.md unless the beginner mental model or main navigation changed.',
     'Do not let docs/assistant/SESSION_RESUME.md drift from the active roadmap tracker or active wave ExecPlan.',

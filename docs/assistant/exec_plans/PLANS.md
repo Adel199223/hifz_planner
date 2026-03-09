@@ -6,7 +6,7 @@ Use ExecPlans for major or multi-file features/refactors.
 
 - small isolated work -> no roadmap, ExecPlan optional
 - bounded major work -> ExecPlan only
-- long-running multi-wave, restart-sensitive work -> roadmap
+- long-running multi-wave or stage-plus-wave, restart-sensitive work -> roadmap
 
 ## Trigger Rule
 
@@ -114,7 +114,7 @@ Required rule:
 
 ## Roadmap Artifact Authority
 
-- `docs/assistant/SESSION_RESUME.md` is the stable first resume stop.
+- `docs/assistant/SESSION_RESUME.md` is the roadmap anchor file and stable first resume stop.
 - The active roadmap tracker is the sequence source.
 - The active wave ExecPlan is the implementation-detail source.
 - If a wave is active in a separate worktree, that active worktree is authoritative for live roadmap state.

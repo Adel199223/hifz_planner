@@ -8,7 +8,7 @@ Use this runbook to quickly route a task to the right files, commands, and tests
 
 ## Canonical Docs Stack
 
-1. `docs/assistant/SESSION_RESUME.md` (fresh-session roadmap resume entrypoint)
+1. `docs/assistant/SESSION_RESUME.md` (roadmap anchor file and fresh-session resume entrypoint)
 2. `APP_KNOWLEDGE.md` (canonical app status and architecture)
 3. `docs/assistant/manifest.json` (machine-readable routing map)
 4. `docs/assistant/INDEX.md` (human doc index)
@@ -21,7 +21,8 @@ Use this runbook to quickly route a task to the right files, commands, and tests
 11. `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` (launch/build identity)
 12. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
 13. `docs/assistant/workflows/ROADMAP_WORKFLOW.md` (complex multi-wave roadmap governance)
-14. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
+14. `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` (vendored template apply and local harness alignment)
+15. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
 
 Compatibility:
 - `AGENTS.md` is a short shim for tools that auto-open that filename.
@@ -46,6 +47,7 @@ Ask for explicit approval before commands that:
 | Quran.com API/cache/fonts | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | `flutter test -j 1 -r expanded test/data/services/qurancom_api_test.dart` |
 | Planning/scheduling/calibration | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart` |
 | "Like X"/"same as X"/parity inspired by named app/site | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
+| Vendored bootstrap/template sync or `implement the template files` | `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | Build identity, launch/open app, parallel worktrees | `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` | `dart tooling/print_build_identity.dart` |
 | User support / non-technical app explanation | `docs/assistant/features/START_HERE_USER_GUIDE.md` first, then `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner questions); respond in plain language first and define unavoidable jargon once | `dart run tooling/validate_agent_docs.dart` when docs were edited |
 | Agent docs/structure | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
@@ -90,14 +92,15 @@ For user support or explanation tasks:
 Use this when a new chat session needs to continue the current roadmap.
 
 1. Open `docs/assistant/SESSION_RESUME.md` first.
-2. Treat `resume master plan` as the explicit trigger phrase.
-3. Also treat these as equivalent resume intents:
+2. Treat `docs/assistant/SESSION_RESUME.md` as the roadmap anchor file and stable resume anchor.
+3. Treat `resume master plan` as the explicit trigger phrase.
+4. Also treat these as equivalent resume intents:
    - `where did we leave off`
    - `what is the next roadmap step`
-4. After `docs/assistant/SESSION_RESUME.md`, open:
+5. After `docs/assistant/SESSION_RESUME.md`, open:
    - the linked active roadmap tracker
    - the linked active wave ExecPlan
-5. Answer with:
+6. Answer with:
    - current roadmap status
    - exact next step
 
@@ -121,17 +124,20 @@ Use this when a new chat session needs to continue the current roadmap.
 6. If user says `commit`, follow `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` before creating commits.
 7. `docs/assistant/templates/*` is read-on-demand only.
 8. Only open or update template files when the user explicitly requests template/prompt work.
-9. Exception: if user says to create/update the reusable prompt/template, `docs/assistant/templates/*` becomes in-scope for that task only.
-10. Major changes must start on a new `feat/*` branch, not on `main`.
-11. Keep `main` stable; merge major work through PR flow with required checks.
-12. For localization tasks, open `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` and use `docs/assistant/LOCALIZATION_GLOSSARY.md` as the term source of truth.
-13. For workspace performance tasks, open `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` and treat `docs/assistant/PERFORMANCE_BASELINES.md` as the source of truth.
-14. For inspiration/parity requests against named apps/sites, open `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` and base implementation decisions on cited references.
-15. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
-16. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
-17. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
-18. Consult `docs/assistant/ISSUE_MEMORY.md` before widening touched-scope docs for a repeated workflow or tooling failure.
-19. When launch/build identity matters, route through `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` and use `dart tooling/print_build_identity.dart`.
+9. If the repo carries vendored templates and the user says `implement the template files` or `sync project harness`, route through `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`.
+10. Vendored `docs/assistant/templates/*` files are committed project assets; do not remove or ignore them by default during commit triage.
+11. Exception: if user says to create/update the reusable prompt/template, `docs/assistant/templates/*` becomes in-scope for that task only.
+12. When the user says `implement the template files`, read vendored templates as local input but do not edit them unless the user explicitly asks to update the template folder itself.
+13. Major changes must start on a new `feat/*` branch, not on `main`.
+14. Keep `main` stable; merge major work through PR flow with required checks.
+15. For localization tasks, open `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` and use `docs/assistant/LOCALIZATION_GLOSSARY.md` as the term source of truth.
+16. For workspace performance tasks, open `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` and treat `docs/assistant/PERFORMANCE_BASELINES.md` as the source of truth.
+17. For inspiration/parity requests against named apps/sites, open `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` and base implementation decisions on cited references.
+18. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
+19. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
+20. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
+21. Consult `docs/assistant/ISSUE_MEMORY.md` before widening touched-scope docs for a repeated workflow or tooling failure.
+22. When launch/build identity matters, route through `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` and use `dart tooling/print_build_identity.dart`.
 
 ## ExecPlans
 
@@ -145,7 +151,7 @@ ExecPlans are optional for minor isolated edits.
 
 ## Roadmap Artifact Authority
 
-- `docs/assistant/SESSION_RESUME.md` is the stable first fresh-session stop.
+- `docs/assistant/SESSION_RESUME.md` is the roadmap anchor file and stable first fresh-session stop.
 - The active roadmap tracker is the sequence source.
 - The active wave ExecPlan is the implementation-detail source.
 - Use issue memory only for repeatable governance or workflow failures, not normal roadmap history.

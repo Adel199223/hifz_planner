@@ -18,11 +18,19 @@ One-page navigation guide for agent-facing documentation.
 ## Fresh Session Resume
 
 1. Start with `docs/assistant/SESSION_RESUME.md`.
-2. Use `resume master plan` as the explicit trigger phrase.
-3. Also route these intents there:
+2. Treat `docs/assistant/SESSION_RESUME.md` as the roadmap anchor file and stable resume anchor.
+3. Use `resume master plan` as the explicit trigger phrase.
+4. Also route these intents there:
    - `where did we leave off`
    - `what is the next roadmap step`
-4. After that, open the linked active roadmap tracker and linked active wave ExecPlan.
+5. After that, open the linked active roadmap tracker and linked active wave ExecPlan.
+
+## Vendored Template Apply
+
+1. Use `implement the template files` for the beginner-facing local apply flow.
+2. `sync project harness` is the technical alias for the same action.
+3. Route both to `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`.
+4. Vendored template files are committed project assets and should not be treated as cleanup clutter.
 
 ## Agent Doc Map
 
@@ -46,6 +54,7 @@ One-page navigation guide for agent-facing documentation.
 | `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` | Task targets VS Code lag, file watchers, indexing pressure, or workspace artifact placement. | Feature/domain logic implementation details. | 2 min |
 | `docs/assistant/PERFORMANCE_BASELINES.md` | You need canonical watcher/search excludes and environment placement defaults. | CI release logic or runtime architecture decisions. | 1 min |
 | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | Task requires parity/inspiration from named apps/sites and external reference selection. | Direct implementation details without external-source analysis. | 2 min |
+| `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` | The repo has vendored template files and the task is to apply them locally with `implement the template files` or `sync project harness`. | Global bootstrap-template maintenance or unrelated product docs edits. | 2 min |
 | `docs/assistant/workflows/ROADMAP_WORKFLOW.md` | Work is a long-running multi-wave program and needs adaptive roadmap governance, detour handling, and fresh-session continuity. | Small isolated changes or one-merge bounded work that should stay lighter. | 2 min |
 | `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` | Task needs launch identity, parallel worktree discipline, or deterministic GUI handoff. | Small single-worktree edits with no runnable-build ambiguity. | 2 min |
 | `docs/assistant/DB_DRIFT_KNOWLEDGE.md` | You are changing schema/migrations/repos/planner persistence. | Reader-only UI behavior changes. | 3 min |
