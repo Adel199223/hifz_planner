@@ -115,6 +115,10 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
 - A top-right `More` drawer holds secondary tools and destinations:
   - Settings, About, Reciters
   - `Explore` section: Learn, My Quran, Quran Radio
+- `My Quran` is now a practical personal hub for:
+  - continue reading
+  - saved-for-later counts
+  - listening setup summary
 - `Learn` now includes:
   - a simple `Practice from Memory` hub
   - the existing `Hifz Plan` card
@@ -642,7 +646,12 @@ Current capabilities:
   - falls back to `/today` when no direct practice target is ready yet
   - includes the Hifz Plan entry card linking to `/plan`
 - `lib/screens/my_quran_screen.dart`
-  - placeholder scaffold (`coming soon`)
+  - real personal hub with:
+    - `Continue reading`
+    - `Saved for later`
+    - `Listening setup`
+  - routes into `/reader`, `/library`, and `/reciters`
+  - uses one shared dashboard snapshot plus a lightweight last-reader location shape from app preferences
 - `lib/screens/quran_radio_screen.dart`
   - placeholder scaffold (`coming soon`)
 - `lib/screens/reciters_screen.dart`
@@ -806,10 +815,29 @@ Representative files:
 
 - Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
 - Reader meaning controls are implemented, but translation-source selection is still fixed to one default resource per app language.
-- My Quran and Quran Radio screens are placeholders.
+- My Quran Wave 1 is implemented, but normal Reader usage does not yet persist the last-reader snapshot; when no snapshot exists, the hub falls back to `Open Reader`.
+- Quran Radio is still a placeholder surface.
 - Web parity will require abstraction of `dart:io` usage in Quran.com cache/font services.
 - Quran.com parity work is active; visuals and interactions are close in many areas but still evolving.
 - No Python CI/tooling is configured because this repository currently has no Python code path; add Python configuration only when Python tooling is introduced.
+
+## Current My Quran Notes
+
+- `My Quran` is no longer a placeholder.
+- Wave 1 now provides exactly three summary cards:
+  - `Continue reading`
+  - `Saved for later`
+  - `Listening setup`
+- `Continue reading` uses a lightweight last-reader snapshot if one exists:
+  - page mode with optional target ayah context
+  - verse mode with target surah/ayah
+- if no snapshot exists yet, the hub stays useful and falls back to `Open Reader`
+- `Saved for later` currently summarizes bookmark and note counts, then routes into `Library`
+- `Listening setup` currently summarizes the selected reciter plus speed and repeat, then routes into `Reciters`
+- the hub is intentionally summary-first in Wave 1:
+  - no inline editing yet
+  - no duplicate Library list
+  - no duplicate Settings surface
 
 ## 13) Where to Edit What
 

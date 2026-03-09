@@ -482,6 +482,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   bool? savedReaderShowVerseTranslation;
   bool? savedReaderShowWordHelp;
   bool? savedReaderShowTransliteration;
+  String? savedLastReaderMode;
+  int? savedLastReaderPage;
+  int? savedLastReaderSurah;
+  int? savedLastReaderAyah;
 
   @override
   Future<StoredAppPreferences> load() async {
@@ -498,6 +502,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -511,6 +519,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -524,6 +536,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -537,6 +553,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: value,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -550,6 +570,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: value,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -563,6 +587,51 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: value,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
+    );
+  }
+
+  @override
+  Future<void> saveLastReaderLocation({
+    required String mode,
+    int? page,
+    int? surah,
+    int? ayah,
+  }) async {
+    savedLastReaderMode = mode;
+    savedLastReaderPage = page;
+    savedLastReaderSurah = surah;
+    savedLastReaderAyah = ayah;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: mode,
+      lastReaderPage: page,
+      lastReaderSurah: surah,
+      lastReaderAyah: ayah,
+    );
+  }
+
+  @override
+  Future<void> clearLastReaderLocation() async {
+    savedLastReaderMode = null;
+    savedLastReaderPage = null;
+    savedLastReaderSurah = null;
+    savedLastReaderAyah = null;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
     );
   }
 }

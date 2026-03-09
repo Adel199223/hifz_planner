@@ -22,6 +22,10 @@ void main() {
     expect(stored.readerShowVerseTranslation, isNull);
     expect(stored.readerShowWordHelp, isNull);
     expect(stored.readerShowTransliteration, isNull);
+    expect(stored.lastReaderMode, isNull);
+    expect(stored.lastReaderPage, isNull);
+    expect(stored.lastReaderSurah, isNull);
+    expect(stored.lastReaderAyah, isNull);
     expect(operations, <String>['load app preferences']);
   });
 
@@ -43,6 +47,13 @@ void main() {
     await store.saveReaderShowVerseTranslation(false);
     await store.saveReaderShowWordHelp(false);
     await store.saveReaderShowTransliteration(true);
+    await store.saveLastReaderLocation(
+      mode: 'page',
+      page: 12,
+      surah: 2,
+      ayah: 255,
+    );
+    await store.clearLastReaderLocation();
 
     expect(operations, <String>[
       'save app theme code',
@@ -51,6 +62,8 @@ void main() {
       'save reader verse translation preference',
       'save reader word help preference',
       'save reader transliteration preference',
+      'save last reader location preference',
+      'clear last reader location preference',
     ]);
   });
 }

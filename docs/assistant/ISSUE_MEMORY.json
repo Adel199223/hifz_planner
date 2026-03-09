@@ -5,20 +5,21 @@
     {
       "id": "flutter_parallel_test_plugin_symlink_race",
       "first_seen": "2026-03-08",
-      "last_seen": "2026-03-08",
-      "repeat_count": 2,
+      "last_seen": "2026-03-09",
+      "repeat_count": 3,
       "status": "mitigated",
       "trigger_source": "local Flutter validation in isolated worktrees",
       "symptoms": [
-        "parallel flutter test runs in one worktree can break plugin-symlink state",
+        "overlapping Flutter commands in one worktree can break plugin-symlink state or stall on the startup lock",
         "validation output becomes noisy or untrustworthy until rerun sequentially"
       ],
-      "likely_root_cause": "concurrent Flutter test processes race shared ephemeral/plugin-symlink state inside one worktree",
+      "likely_root_cause": "concurrent Flutter startup/plugin work races shared ephemeral state inside one worktree",
       "attempted_fix_history": [
         "Wave 1 reran the failing validation set sequentially after the parallel run failed noisily",
-        "Wave 2 kept Flutter validation sequential from the start"
+        "Wave 2 kept Flutter validation sequential from the start",
+        "My Quran Wave 1 stopped overlapping flutter test and flutter analyze, then reran validation sequentially"
       ],
-      "accepted_fix": "Run Flutter test commands sequentially per worktree.",
+      "accepted_fix": "Run Flutter commands sequentially per worktree.",
       "regressed_after_fix": false,
       "affected_workflows": [
         "feature_validation",
@@ -29,14 +30,15 @@
       "docs_sync_relevance": "required",
       "evidence_refs": [
         "docs/assistant/exec_plans/active/2026-03-08_goals_progress_execution.md",
-        "docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md"
+        "docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md",
+        "docs/assistant/exec_plans/active/2026-03-09_my_quran_wave1_hub_foundation.md"
       ]
     },
     {
       "id": "fresh_worktree_flutter_validation_lockfile_churn",
       "first_seen": "2026-03-08",
-      "last_seen": "2026-03-08",
-      "repeat_count": 3,
+      "last_seen": "2026-03-09",
+      "repeat_count": 4,
       "status": "mitigated",
       "trigger_source": "first Flutter validation in a fresh isolated worktree",
       "symptoms": [
@@ -48,7 +50,8 @@
         "Wave 2 allowed the first Flutter validation bootstrap to complete",
         "Wave 2 reverted incidental pubspec.lock churn before closeout",
         "Wave 3 reverted incidental pubspec.lock churn after the first fresh-worktree validation run touched it again",
-        "Wave 4 reverted incidental pubspec.lock churn after fresh-worktree Flutter validation touched it again"
+        "Wave 4 reverted incidental pubspec.lock churn after fresh-worktree Flutter validation touched it again",
+        "My Quran Wave 1 reverted incidental pubspec.lock churn before docs sync"
       ],
       "accepted_fix": "Treat lockfile churn as incidental unless dependencies were intentionally changed, and revert it before closeout.",
       "regressed_after_fix": false,
@@ -61,7 +64,8 @@
       "evidence_refs": [
         "docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md",
         "docs/assistant/exec_plans/completed/2026-03-08_goals_wave3_coaching_adjustment_guidance.md",
-        "docs/assistant/exec_plans/completed/2026-03-08_goals_wave4_cross_surface_consistency.md"
+        "docs/assistant/exec_plans/completed/2026-03-08_goals_wave4_cross_surface_consistency.md",
+        "docs/assistant/exec_plans/active/2026-03-09_my_quran_wave1_hub_foundation.md"
       ]
     }
   ]

@@ -126,9 +126,7 @@ void main() {
       addTearDown(container.dispose);
       _registerPumpCleanup(tester);
 
-      await db
-          .into(db.ayah)
-          .insert(
+      await db.into(db.ayah).insert(
             AyahCompanion.insert(
               surah: 1,
               ayah: 1,
@@ -1113,10 +1111,13 @@ void main() {
 
       await _seedAyahs(db);
       await db.batch((batch) {
-        batch.insertAll(db.ayah, [
-          for (var i = 4; i <= 40; i++)
-            AyahCompanion.insert(surah: 1, ayah: i, textUthmani: 'ayah $i'),
-        ], mode: InsertMode.insertOrIgnore);
+        batch.insertAll(
+            db.ayah,
+            [
+              for (var i = 4; i <= 40; i++)
+                AyahCompanion.insert(surah: 1, ayah: i, textUthmani: 'ayah $i'),
+            ],
+            mode: InsertMode.insertOrIgnore);
       });
 
       await _pumpReader(
@@ -2372,7 +2373,7 @@ void main() {
 
     final gapPoint =
         (tester.getRect(firstWord).center + tester.getRect(secondWord).center) /
-        2;
+            2;
     await tester.tapAt(gapPoint, kind: PointerDeviceKind.mouse);
     await tester.pumpAndSettle();
 
@@ -3959,19 +3960,19 @@ class _FakeQuranComApi extends QuranComApi {
     this._data, {
     List<MushafJuzNavEntry>? juzEntries,
     bool throwJuzError = false,
-  }) : _byPage = null,
-       _juzEntries = juzEntries,
-       _throwJuzError = throwJuzError;
+  })  : _byPage = null,
+        _juzEntries = juzEntries,
+        _throwJuzError = throwJuzError;
 
   _FakeQuranComApi.byPage(
     Map<int, MushafPageData> byPage, {
     List<MushafJuzNavEntry>? juzEntries,
     bool throwJuzError = false,
-  }) : assert(byPage.isNotEmpty),
-       _data = byPage.values.first,
-       _byPage = Map<int, MushafPageData>.from(byPage),
-       _juzEntries = juzEntries,
-       _throwJuzError = throwJuzError;
+  })  : assert(byPage.isNotEmpty),
+        _data = byPage.values.first,
+        _byPage = Map<int, MushafPageData>.from(byPage),
+        _juzEntries = juzEntries,
+        _throwJuzError = throwJuzError;
 
   final MushafPageData _data;
   final Map<int, MushafPageData>? _byPage;
@@ -4100,8 +4101,8 @@ class _FakeQuranComApi extends QuranComApi {
 class _FakeQuranComChaptersService extends QuranComChaptersService {
   _FakeQuranComChaptersService({
     required Map<String, List<QuranComChapterEntry>> byLanguageCode,
-  }) : _byLanguageCode = byLanguageCode,
-       super();
+  })  : _byLanguageCode = byLanguageCode,
+        super();
 
   final Map<String, List<QuranComChapterEntry>> _byLanguageCode;
 
@@ -4156,7 +4157,7 @@ class _FakeQcfFontManager extends QcfFontManager {
 
 class _FakeAppPreferencesStore implements AppPreferencesStore {
   _FakeAppPreferencesStore({StoredAppPreferences? initial})
-    : _stored = initial ?? const StoredAppPreferences();
+      : _stored = initial ?? const StoredAppPreferences();
 
   StoredAppPreferences _stored;
   bool? savedReaderShowVerseTranslation;
@@ -4175,6 +4176,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -4187,6 +4192,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -4199,6 +4208,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -4212,6 +4225,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: value,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -4225,6 +4242,10 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: value,
       readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
     );
   }
 
@@ -4238,6 +4259,43 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
       readerShowVerseTranslation: _stored.readerShowVerseTranslation,
       readerShowWordHelp: _stored.readerShowWordHelp,
       readerShowTransliteration: value,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
+    );
+  }
+
+  @override
+  Future<void> saveLastReaderLocation({
+    required String mode,
+    int? page,
+    int? surah,
+    int? ayah,
+  }) async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: mode,
+      lastReaderPage: page,
+      lastReaderSurah: surah,
+      lastReaderAyah: ayah,
+    );
+  }
+
+  @override
+  Future<void> clearLastReaderLocation() async {
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
     );
   }
 }

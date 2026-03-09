@@ -169,6 +169,17 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
 
   @override
   Future<void> saveReaderShowTransliteration(bool value) async {}
+
+  @override
+  Future<void> saveLastReaderLocation({
+    required String mode,
+    int? page,
+    int? surah,
+    int? ayah,
+  }) async {}
+
+  @override
+  Future<void> clearLastReaderLocation() async {}
 }
 
 class _FakeAudioPreferencesStore implements AyahAudioPreferencesStore {
