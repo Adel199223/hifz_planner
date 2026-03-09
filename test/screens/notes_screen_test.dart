@@ -39,7 +39,7 @@ void main() {
       db,
       surah: 1,
       ayah: 3,
-      textUthmani: 'Ayah',
+      textUthmani: 'الرَّحْمَٰنِ الرَّحِيمِ',
       pageMadina: 7,
     );
     expect(id, greaterThan(0));
@@ -47,23 +47,17 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(
-          home: Scaffold(body: NotesScreen()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: NotesScreen())),
       ),
     );
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('notes_list')),
-    );
-    await pumpUntilFound(
-      tester,
-      find.byKey(ValueKey('note_page_$id')),
-    );
+    await pumpUntilFound(tester, find.byKey(const ValueKey('notes_list')));
+    await pumpUntilFound(tester, find.byKey(ValueKey('note_page_$id')));
 
     expect(find.byKey(const ValueKey('notes_list')), findsOneWidget);
     expect(find.text('Daily'), findsOneWidget);
     expect(find.text('Review this verse'), findsOneWidget);
+    expect(find.byKey(ValueKey('note_ayah_preview_$id')), findsOneWidget);
+    expect(find.text('الرَّحْمَٰنِ الرَّحِيمِ'), findsOneWidget);
     expect(find.text('Surah 1, Ayah 3'), findsOneWidget);
     expect(find.byKey(ValueKey('note_page_$id')), findsOneWidget);
     expect(find.text('Page 7'), findsOneWidget);
@@ -104,10 +98,7 @@ void main() {
         child: MaterialApp.router(routerConfig: router),
       ),
     );
-    await pumpUntilFound(
-      tester,
-      find.byKey(ValueKey('note_row_$id')),
-    );
+    await pumpUntilFound(tester, find.byKey(ValueKey('note_row_$id')));
 
     await tester.tap(find.byKey(ValueKey('note_row_$id')));
     await pumpUntilFound(
@@ -120,10 +111,7 @@ void main() {
       '',
     );
     await tester.tap(find.byKey(const ValueKey('notes_editor_save_button')));
-    await pumpUntilFound(
-      tester,
-      find.text('Body is required.'),
-    );
+    await pumpUntilFound(tester, find.text('Body is required.'));
     expect(find.text('Body is required.'), findsOneWidget);
 
     await tester.enterText(
@@ -135,14 +123,11 @@ void main() {
       'Updated body',
     );
     await tester.tap(find.byKey(const ValueKey('notes_editor_save_button')));
-    await pumpUntilFound(
-      tester,
-      find.text('Note updated.'),
-    );
+    await pumpUntilFound(tester, find.text('Note updated.'));
 
-    final updated = await (db.select(db.note)
-          ..where((tbl) => tbl.id.equals(id)))
-        .getSingle();
+    final updated = await (db.select(
+      db.note,
+    )..where((tbl) => tbl.id.equals(id))).getSingle();
     expect(updated.title, 'Updated title');
     expect(updated.body, 'Updated body');
   });
@@ -189,16 +174,14 @@ void main() {
         child: MaterialApp.router(routerConfig: router),
       ),
     );
-    await pumpUntilFound(
-      tester,
-      find.byKey(ValueKey('note_row_$id')),
-    );
+    await pumpUntilFound(tester, find.byKey(ValueKey('note_row_$id')));
 
     await tester.tap(find.byKey(ValueKey('note_row_$id')));
     await pumpUntilFound(
       tester,
       find.byKey(const ValueKey('notes_editor_go_button')),
     );
+    expect(find.text('Reopen in Reader'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('notes_editor_go_button')));
     await pumpUntilFound(
@@ -207,7 +190,9 @@ void main() {
     );
 
     expect(
-        find.text('Reader route mode=page page=77 target=3:8'), findsOneWidget);
+      find.text('Reader route mode=page page=77 target=3:8'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('go to page button navigates to reader page target', (
@@ -252,10 +237,7 @@ void main() {
         child: MaterialApp.router(routerConfig: router),
       ),
     );
-    await pumpUntilFound(
-      tester,
-      find.byKey(ValueKey('note_row_$id')),
-    );
+    await pumpUntilFound(tester, find.byKey(ValueKey('note_row_$id')));
 
     await tester.tap(find.byKey(ValueKey('note_row_$id')));
     await pumpUntilFound(
@@ -269,8 +251,10 @@ void main() {
       find.text('Reader route mode=page page=294 target=18:10'),
     );
 
-    expect(find.text('Reader route mode=page page=294 target=18:10'),
-        findsOneWidget);
+    expect(
+      find.text('Reader route mode=page page=294 target=18:10'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('go to page button is disabled when page metadata is missing', (
@@ -308,10 +292,7 @@ void main() {
         child: MaterialApp.router(routerConfig: router),
       ),
     );
-    await pumpUntilFound(
-      tester,
-      find.byKey(ValueKey('note_row_$id')),
-    );
+    await pumpUntilFound(tester, find.byKey(ValueKey('note_row_$id')));
 
     await tester.tap(find.byKey(ValueKey('note_row_$id')));
     await pumpUntilFound(
@@ -341,7 +322,9 @@ Future<int> _insertNote(
   required String? title,
   required String body,
 }) {
-  return db.into(db.note).insert(
+  return db
+      .into(db.note)
+      .insert(
         NoteCompanion.insert(
           surah: surah,
           ayah: ayah,
@@ -358,13 +341,16 @@ Future<int> _insertAyah(
   required String textUthmani,
   int? pageMadina,
 }) {
-  return db.into(db.ayah).insert(
+  return db
+      .into(db.ayah)
+      .insert(
         AyahCompanion.insert(
           surah: surah,
           ayah: ayah,
           textUthmani: textUthmani,
-          pageMadina:
-              pageMadina == null ? const Value.absent() : Value(pageMadina),
+          pageMadina: pageMadina == null
+              ? const Value.absent()
+              : Value(pageMadina),
         ),
       );
 }

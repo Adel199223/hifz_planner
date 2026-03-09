@@ -95,7 +95,7 @@ Inside `More`:
 - Today: execute the day’s work in priority order.
 - Read: open the Reader for focused Quran reading, listening, and verse tools.
 - My Plan: start with a guided plan setup, then open `Advanced` only when you need expert controls.
-- Library: open saved material and writing tools in one place.
+- Library: reopen saved verses and verse notes with enough context to keep studying.
 - Learn: open the simple `Practice from Memory` hub or go to `Hifz Plan`.
 - Practice from Memory: start the right memorization session without needing internal stage names.
 - More: open settings, reciters, about, and secondary exploration areas.
@@ -126,6 +126,11 @@ What `Study this verse` does:
 - it shows the Arabic text, the current translation, and available word help
 - it keeps the existing bookmark and note actions in the same place so you can save the verse for later
 - if some meaning data is missing, it says so calmly instead of pretending extra explanation exists
+
+What happens later in `Library`:
+- `Bookmarks` now show a short saved-for-later-study cue and an Arabic verse preview when the local verse text is available
+- `Notes` now show the note plus the linked Arabic verse preview, so you can recognize the study context before opening the note
+- the main button now says `Reopen in Reader`, which takes you back to that verse
 
 ## 2) Plan Your Memorization
 
@@ -314,8 +319,8 @@ If some remote assets fail temporarily:
 - I missed sessions and need a safe recovery path -> Today -> Recovery assistant
 - I need to start a memorization session -> Practice from Memory
 - I want pure Quran reading/listening -> Read
-- I need to revisit saved locations -> Library -> Bookmarks
-- I want to store verse-linked thoughts -> Library -> Notes
+- I need to revisit a saved verse and remember why I saved it -> Library -> Bookmarks
+- I want to reopen a verse-linked note with verse context -> Library -> Notes
 - I need language/theme adjustments -> More -> Settings
 - I want forecast or pace calibration tools -> My Plan -> Advanced
 - I want to check whether the week and Today are using the same workload logic -> My Plan -> Advanced -> Forecast

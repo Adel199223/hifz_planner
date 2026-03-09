@@ -111,6 +111,7 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
 - `Library` is a hub for:
   - Bookmarks
   - Notes
+  - saved-study follow-up with enough verse context to recognize what was saved
 - A top-right `More` drawer holds secondary tools and destinations:
   - Settings, About, Reciters
   - `Explore` section: Learn, My Quran, Quran Radio
@@ -220,6 +221,10 @@ Behavior:
   - current translation
   - available word help / transliteration
   - existing bookmark and note actions
+- Library follow-up is now study-oriented too:
+  - bookmarks show a short saved-for-later-study cue and an Arabic verse preview when local ayah text is available
+  - notes show the linked Arabic verse preview directly in the list beside the saved note body
+  - the primary reopen action is labeled `Reopen in Reader` instead of a generic go-to label
 - Copy feedback is truthful:
   - success appears only after the clipboard write completes
   - clipboard failures show a failure snackbar instead of a false success message
