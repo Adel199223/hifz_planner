@@ -141,6 +141,7 @@ class AgentDocsValidator {
     _validateFeatureGuideSections(issues);
     _validateStartHereGuideSections(issues);
     _validateSessionResumeSections(issues);
+    _validateRoadmapRestingState(issues);
     _validateCanonicalContracts(issues);
     _validateBranchSafetyPolicy(issues);
     _validateApprovalGatesPolicy(issues);
@@ -574,6 +575,16 @@ class AgentDocsValidator {
       );
       _validateNonEmptyString(
         issues,
+        contracts['roadmap_resting_state_policy'],
+        'contracts.roadmap_resting_state_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['execplan_archive_policy'],
+        'contracts.execplan_archive_policy',
+      );
+      _validateNonEmptyString(
+        issues,
         contracts['plain_language_support_response_policy'],
         'contracts.plain_language_support_response_policy',
       );
@@ -885,6 +896,30 @@ class AgentDocsValidator {
           'contracts.roadmap_closeout_policy must require current roadmap status and exact next step in closeout messaging.',
         );
       }
+      final roadmapRestingStatePolicy = contracts['roadmap_resting_state_policy'];
+      if (roadmapRestingStatePolicy is! String ||
+          !roadmapRestingStatePolicy.contains(
+            'docs/assistant/exec_plans/completed/',
+          ) ||
+          !roadmapRestingStatePolicy.contains(
+            'latest completed roadmap tracker',
+          )) {
+        issues.add(
+          'contracts.roadmap_resting_state_policy must reference docs/assistant/exec_plans/completed/ and the latest completed roadmap tracker.',
+        );
+      }
+      final execplanArchivePolicy = contracts['execplan_archive_policy'];
+      if (execplanArchivePolicy is! String ||
+          !execplanArchivePolicy.contains(
+            'docs/assistant/exec_plans/active/',
+          ) ||
+          !execplanArchivePolicy.contains(
+            'docs/assistant/exec_plans/completed/',
+          )) {
+        issues.add(
+          'contracts.execplan_archive_policy must reference docs/assistant/exec_plans/active/ and docs/assistant/exec_plans/completed/.',
+        );
+      }
       final plainLanguagePolicy =
           contracts['plain_language_support_response_policy'];
       if (plainLanguagePolicy is String &&
@@ -1126,6 +1161,56 @@ class AgentDocsValidator {
       issues.add(
         'SESSION_RESUME.md must explicitly identify itself as the roadmap anchor file.',
       );
+    }
+  }
+
+  void _validateRoadmapRestingState(List<String> issues) {
+    final sessionResume = _resolveFile('docs/assistant/SESSION_RESUME.md');
+    if (sessionResume.existsSync()) {
+      final content = sessionResume.readAsStringSync();
+      final lowered = content.toLowerCase();
+      final readTheseNext = _sectionBody(content, '## Read These Next');
+      final noActiveRoadmap = lowered.contains('no active roadmap') ||
+          lowered.contains('no active wave') ||
+          lowered.contains('define the next backlog or a new roadmap');
+      if (noActiveRoadmap) {
+        if (!readTheseNext.contains('docs/assistant/exec_plans/completed/')) {
+          issues.add(
+            'SESSION_RESUME.md must point Read These Next to completed roadmap history when no roadmap is active.',
+          );
+        }
+        if (readTheseNext.contains('docs/assistant/exec_plans/active/')) {
+          issues.add(
+            'SESSION_RESUME.md must not point Read These Next to docs/assistant/exec_plans/active/ when no roadmap is active.',
+          );
+        }
+      }
+    }
+
+    final activePlansDir = _resolveDirectory('docs/assistant/exec_plans/active');
+    if (!activePlansDir.existsSync()) {
+      return;
+    }
+    for (final entity in activePlansDir.listSync()) {
+      if (entity is! File || !entity.path.endsWith('.md')) {
+        continue;
+      }
+      final content = entity.readAsStringSync();
+      final progress = _sectionBody(content, '## Progress');
+      final checklistLines = progress
+          .split('\n')
+          .map((line) => line.trim())
+          .where((line) => line.startsWith('- ['))
+          .toList();
+      if (checklistLines.isNotEmpty &&
+          checklistLines.every((line) => line.startsWith('- [x]'))) {
+        final relativePath = entity.path
+            .substring(rootDirectory.path.length + 1)
+            .replaceAll(Platform.pathSeparator, '/');
+        issues.add(
+          'Finished ExecPlans and completed roadmap trackers must move from active to completed: $relativePath',
+        );
+      }
     }
   }
 
@@ -1695,9 +1780,10 @@ class AgentDocsValidator {
       if (!lowered.contains('roadmap anchor file') ||
           !lowered.contains('master plan') ||
           !lowered.contains('stage') ||
-          !lowered.contains('exact next step')) {
+          !lowered.contains('exact next step') ||
+          !text.contains('docs/assistant/exec_plans/completed/')) {
         issues.add(
-          'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define roadmap/master-plan equivalence, SESSION_RESUME.md as the roadmap anchor file, stage/wave terminology, and exact-next-step closeout guidance.',
+          'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define roadmap/master-plan equivalence, SESSION_RESUME.md as the roadmap anchor file, stage/wave terminology, exact-next-step closeout guidance, and the archive-first resting state.',
         );
       }
     }
@@ -2496,6 +2582,19 @@ class AgentDocsValidator {
 
   Directory _resolveDirectory(String relativePath) {
     return Directory(_join(rootDirectory.path, relativePath));
+  }
+
+  String _sectionBody(String markdown, String heading) {
+    final start = markdown.indexOf(heading);
+    if (start == -1) {
+      return '';
+    }
+    final afterHeading = markdown.substring(start + heading.length);
+    final nextHeading = RegExp(r'\n##\s').firstMatch(afterHeading);
+    if (nextHeading == null) {
+      return afterHeading;
+    }
+    return afterHeading.substring(0, nextHeading.start);
   }
 }
 

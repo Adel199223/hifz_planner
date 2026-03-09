@@ -80,7 +80,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
   - required
 - evidence refs:
   - `docs/assistant/SESSION_RESUME.md`
-  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md`
+  - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_execution.md`
   - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave2_saved_study_resume.md`
 
 ### `user_support_guide_density_after_multi_wave_growth`
@@ -113,7 +113,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
   - required
 - evidence refs:
   - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave2_saved_study_resume.md`
-  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md`
+  - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_execution.md`
   - `docs/assistant/features/APP_USER_GUIDE.md`
 
 ### `flutter_parallel_test_plugin_symlink_race`
@@ -146,7 +146,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 - docs sync relevance:
   - required
 - evidence refs:
-  - `docs/assistant/exec_plans/active/2026-03-08_goals_progress_execution.md`
+  - `docs/assistant/exec_plans/completed/2026-03-08_goals_progress_execution.md`
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md`
   - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave1_hub_foundation.md`
 
@@ -252,4 +252,71 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 - evidence refs:
   - `docs/assistant/workflows/ROADMAP_WORKFLOW.md`
   - `docs/assistant/SESSION_RESUME.md`
-  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md`
+  - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_execution.md`
+
+### `closed_plan_in_active_governance_drift`
+
+- first seen: 2026-03-09
+- last seen: 2026-03-09
+- repeat count: 1
+- status: mitigated
+- trigger source:
+  - no-active-roadmap resting state after multiple merged waves and assistant-harness closeouts
+- symptoms:
+  - completed roadmap trackers and finished ExecPlans remained stranded in `docs/assistant/exec_plans/active/`
+  - `docs/assistant/SESSION_RESUME.md` still pointed at an `active/` tracker even though no roadmap was live
+- likely root cause:
+  - roadmap closeout rules covered active waves, but the no-active-roadmap resting state did not explicitly archive completed trackers and finished plans
+- attempted fix history:
+  - moved finished roadmap trackers and finished ExecPlans from `active/` to `completed/`
+  - updated `docs/assistant/SESSION_RESUME.md`, roadmap docs, manifest contracts, bootstrap wording, and validators to enforce the archive-first resting model
+- accepted fix:
+  - when no roadmap is active, keep `docs/assistant/exec_plans/active/` for genuinely live plans only and point `docs/assistant/SESSION_RESUME.md` to the latest completed roadmap tracker plus the relevant completed closeout plan
+- regressed after fix:
+  - no
+- affected workflows:
+  - roadmap_governance
+  - assistant_docs_sync
+  - future_restart_handoff
+- bootstrap relevance:
+  - possible
+- docs sync relevance:
+  - required
+- evidence refs:
+  - `docs/assistant/SESSION_RESUME.md`
+  - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_execution.md`
+  - `docs/assistant/workflows/ROADMAP_WORKFLOW.md`
+
+### `worktree_build_identity_ref_resolution_failure`
+
+- first seen: 2026-03-09
+- last seen: 2026-03-09
+- repeat count: 1
+- status: mitigated
+- trigger source:
+  - running `dart tooling/print_build_identity.dart` from an isolated feature worktree
+- symptoms:
+  - the script failed with `Could not resolve git ref ... inside .../.git/worktrees/...`
+  - runnable-build handoff could work from `main` but fail from a real worktree
+- likely root cause:
+  - branch refs can live in the common git dir while the worktree-local gitdir stores only `HEAD` and worktree metadata
+- attempted fix history:
+  - reproduced the failure from a real feature worktree
+  - added `commondir` / common git dir fallback for loose-ref and packed-ref lookup
+  - added targeted regression tests for normal repos and worktree gitdirs
+- accepted fix:
+  - resolve branch refs from the worktree-local gitdir first, then fall back through the worktree `commondir` / common git dir before failing
+- regressed after fix:
+  - no
+- affected workflows:
+  - worktree_build_identity
+  - future_restart_handoff
+  - commit_publish_handoff
+- bootstrap relevance:
+  - possible
+- docs sync relevance:
+  - required
+- evidence refs:
+  - `tooling/print_build_identity.dart`
+  - `test/tooling/print_build_identity_test.dart`
+  - `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`

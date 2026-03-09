@@ -1176,6 +1176,139 @@ void main() {
     );
   });
 
+  test(
+    'validator fails when no-active-roadmap session resume still points to active tracker',
+    () {
+      final fixture = _createValidFixture();
+      addTearDown(() => fixture.deleteSync(recursive: true));
+
+      final resume = File(
+        _joinPath(fixture.path, 'docs/assistant/SESSION_RESUME.md'),
+      );
+      resume.writeAsStringSync(
+        [
+          '# Session Resume',
+          '',
+          '## Fresh Session Rule',
+          '',
+          'This file is the roadmap anchor file.',
+          '',
+          '## Resume Trigger',
+          '',
+          'Use `resume master plan`.',
+          '',
+          '## Current Roadmap',
+          '',
+          'No active roadmap.',
+          '',
+          '## Current Wave',
+          '',
+          'No active wave.',
+          '',
+          '## Current Status',
+          '',
+          'Roadmap complete.',
+          '',
+          '## Exact Next Step',
+          '',
+          'define the next backlog or a new roadmap',
+          '',
+          '## Active Worktree And Branch',
+          '',
+          'main',
+          '',
+          '## Read These Next',
+          '',
+          'docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md',
+          '',
+          '## Completed Roadmaps',
+          '',
+          'Completed.',
+          '',
+          '## Detours And Open Notes',
+          '',
+          'Notes.',
+        ].join('\n'),
+      );
+
+      final validator = AgentDocsValidator(rootDirectory: fixture);
+      final issues = validator.validate();
+
+      expect(
+        issues.any(
+          (issue) => issue.contains(
+            'SESSION_RESUME.md must not point Read These Next to docs/assistant/exec_plans/active/ when no roadmap is active.',
+          ),
+        ),
+        isTrue,
+        reason: issues.join('\n'),
+      );
+    },
+  );
+
+  test('validator fails when finished plan remains in active', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final finishedPlan = File(
+      _joinPath(
+        fixture.path,
+        'docs/assistant/exec_plans/active/2026-03-09_finished.md',
+      ),
+    );
+    finishedPlan.parent.createSync(recursive: true);
+    finishedPlan.writeAsStringSync(
+      [
+        '# ExecPlan: Finished',
+        '',
+        '## Purpose',
+        '- Done.',
+        '',
+        '## Scope',
+        '- In scope:',
+        '- Out of scope:',
+        '',
+        '## Assumptions',
+        '- None.',
+        '',
+        '## Milestones',
+        '1. One',
+        '',
+        '## Detailed Steps',
+        '1. Done.',
+        '',
+        '## Decision Log',
+        '- 2026-03-09: Done.',
+        '',
+        '## Validation',
+        '- test',
+        '',
+        '## Progress',
+        '- [x] Milestone one',
+        '- [x] Milestone two',
+        '',
+        '## Surprises and Adjustments',
+        '- None.',
+        '',
+        '## Handoff',
+        '- Complete.',
+      ].join('\n'),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) => issue.contains(
+          'Finished ExecPlans and completed roadmap trackers must move from active to completed:',
+        ),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when agent.md misses support routing to user guides', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
@@ -2210,7 +2343,7 @@ void main() {
       expect(
         issues.any(
           (issue) => issue.contains(
-            'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define roadmap/master-plan equivalence, SESSION_RESUME.md as the roadmap anchor file, stage/wave terminology, and exact-next-step closeout guidance.',
+            'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define roadmap/master-plan equivalence, SESSION_RESUME.md as the roadmap anchor file, stage/wave terminology, exact-next-step closeout guidance, and the archive-first resting state.',
           ),
         ),
         isTrue,
@@ -2877,6 +3010,7 @@ Directory _createValidFixture() {
       'Treat roadmap and master plan as equivalent user intents.',
       'Generate docs/assistant/SESSION_RESUME.md as the roadmap anchor file and stable fresh-session wrapper.',
       'Generate an active roadmap tracker and active wave ExecPlan.',
+      'When no roadmap is active, archive completed roadmap trackers and finished ExecPlans to docs/assistant/exec_plans/completed/.',
       'Stages are optional research/spec phases and waves are implementation slices.',
       'During in-flight work in a separate worktree, that separate worktree is authoritative for live roadmap state.',
       'Update order: active wave ExecPlan, active roadmap tracker, docs/assistant/SESSION_RESUME.md.',
@@ -3105,6 +3239,10 @@ Directory _createValidFixture() {
           'After roadmap detours, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third before resuming the sequence.',
       'roadmap_closeout_policy':
           'Every roadmap closeout must report current roadmap status and exact next step. When research stages are complete, say exactly `All research stages are complete; implementation continues by wave.` When the next action is a closeout step, say so explicitly instead of naming a new wave.',
+      'roadmap_resting_state_policy':
+          'When no roadmap is active, completed roadmap trackers and finished ExecPlans belong in docs/assistant/exec_plans/completed/, and docs/assistant/SESSION_RESUME.md should point to the latest completed roadmap tracker plus the relevant completed closeout plan.',
+      'execplan_archive_policy':
+          'Finished ExecPlans move from docs/assistant/exec_plans/active/ to docs/assistant/exec_plans/completed/. If a roadmap tracker is fully complete and no new roadmap has started, move that tracker to docs/assistant/exec_plans/completed/ too.',
       'plain_language_support_response_policy':
           'Support responses must be plain-language-first with numbered next steps and exact UI labels.',
       'term_definition_policy':
