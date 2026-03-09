@@ -33,7 +33,6 @@ class AppStrings {
     'my_quran_subtitle',
     'Keep your place, saved study, and listening setup together.',
   );
-  String get quranRadio => _t('quran_radio', 'Quran Radio');
   String get reciters => _t('reciters', 'Reciters');
   String get reader => _t('reader', 'Reader');
   String get bookmarks => _t('bookmarks', 'Saved verses');
@@ -54,7 +53,6 @@ class AppStrings {
   String get copy => _t('copy', 'Copy');
   String get share => _t('share', 'Share');
   String get more => _t('more', 'More');
-  String get comingSoon => _t('coming_soon', 'Coming soon.');
   String get myQuranContinueReadingTitle =>
       _t('my_quran_continue_reading_title', 'Continue reading');
   String get myQuranContinueReadingButton =>
@@ -1749,7 +1747,6 @@ class AppStrings {
           'Utilisez Configuration d’écoute si vous voulez changer de récitateur.',
       'on_label': 'activé',
       'off_label': 'désactivé',
-      'quran_radio': 'Radio Coran',
       'reciters': 'Récitateurs',
       'reader': 'Lecteur',
       'bookmarks': 'Versets sauvegardés',
@@ -2216,7 +2213,6 @@ class AppStrings {
           'Use Configuração de escuta se quiser mudar o recitador.',
       'on_label': 'ativado',
       'off_label': 'desativado',
-      'quran_radio': 'Rádio Alcorão',
       'reciters': 'Recitadores',
       'reader': 'Leitor',
       'bookmarks': 'Versículos salvos',
@@ -2673,7 +2669,6 @@ class AppStrings {
           'استخدم إعدادات الاستماع إذا أردت تغيير القارئ.',
       'on_label': 'مفعل',
       'off_label': 'متوقف',
-      'quran_radio': 'راديو القرآن',
       'reciters': 'القراء',
       'reader': 'القارئ',
       'bookmarks': 'الآيات المحفوظة',

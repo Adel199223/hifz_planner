@@ -67,7 +67,6 @@ You do not need these on day one:
 - `Advanced` in `My Plan`
 - `Calibration`
 - `Forecast`
-- `Quran Radio`
 - deep settings that are only for fine-tuning
 
 Safe beginner rule:
@@ -116,7 +115,6 @@ Right now, the app does not try to do everything.
 Important limits:
 - it does not listen to your recitation and score it with a microphone
 - it does not provide deep tafsir or a full explanation source inside the Reader
-- `Quran Radio` is still not a finished daily-use feature
 - some advanced planner tools are meant for later fine-tuning, not first-time setup
 - the reading resume feature uses a practical verse/page target, not an exact scroll-position memory
 

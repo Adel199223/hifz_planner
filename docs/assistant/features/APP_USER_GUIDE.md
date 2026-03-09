@@ -85,14 +85,12 @@ Inside `More`:
 - Reciters
 - Learn
 - My Quran
-- Quran Radio
 
 `More` is the top-right menu button.
 
 ## Known Limits and Placeholder Areas
 
 - `My Quran` is now a simple personal hub for where to continue, what you saved, your listening setup, and a few daily study defaults.
-- `Quran Radio` is still a placeholder/coming-soon surface.
 - `Reciters` is not a placeholder: it is a functional searchable reciter selector for playback preferences.
 
 ## What Each Area Is For

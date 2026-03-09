@@ -94,7 +94,6 @@ class LocalizationValidator {
       'read',
       'learn',
       'my_quran',
-      'quran_radio',
       'reciters',
     ];
 

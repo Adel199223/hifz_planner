@@ -163,7 +163,6 @@ class AppStrings {
       'read': 'Lire',
       'learn': 'Apprendre',
       'my_quran': 'Mon Coran',
-      'quran_radio': 'Radio Coran',
       'reciters': 'Récitateurs',
     },
     AppLanguage.portuguese: <String, String>{
@@ -190,7 +189,6 @@ class AppStrings {
       'read': 'Ler',
       'learn': 'Aprender',
       'my_quran': 'Meu Alcorão',
-      'quran_radio': 'Rádio Alcorão',
       'reciters': 'Recitadores',
     },
     AppLanguage.arabic: <String, String>{
@@ -217,7 +215,6 @@ class AppStrings {
       'read': 'اقرأ',
       'learn': 'تعلّم',
       'my_quran': 'قرآني',
-      'quran_radio': 'إذاعة القرآن',
       'reciters': 'القرّاء',
     },
   };

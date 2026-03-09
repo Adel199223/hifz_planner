@@ -11,7 +11,6 @@ import '../screens/library_screen.dart';
 import '../screens/my_quran_screen.dart';
 import '../screens/notes_screen.dart';
 import '../screens/plan_screen.dart';
-import '../screens/quran_radio_screen.dart';
 import '../screens/reader_screen.dart';
 import '../screens/reciters_screen.dart';
 import '../screens/settings_screen.dart';
@@ -90,10 +89,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/my-quran',
             builder: (context, state) => const MyQuranScreen(),
-          ),
-          GoRoute(
-            path: '/quran-radio',
-            builder: (context, state) => const QuranRadioScreen(),
           ),
           GoRoute(
             path: '/reciters',

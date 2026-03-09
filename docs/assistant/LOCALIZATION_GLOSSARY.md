@@ -45,7 +45,6 @@ Use this glossary to keep terminology consistent across Reader, planner/scheduli
 | `read` | Read | Lire | Ler | اقرأ |
 | `learn` | Learn | Apprendre | Aprender | تعلّم |
 | `my_quran` | My Quran | Mon Coran | Meu Alcorão | قرآني |
-| `quran_radio` | Quran Radio | Radio Coran | Rádio Alcorão | إذاعة القرآن |
 | `reciters` | Reciters | Récitateurs | Recitadores | القرّاء |
 
 ## Scheduling and Companion Terminology

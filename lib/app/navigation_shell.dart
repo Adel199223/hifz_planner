@@ -93,14 +93,6 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
         label: strings.myQuran,
         path: '/my-quran',
         icon: Icons.bookmark_border,
-        subtitle: strings.comingSoon,
-      ),
-      _GlobalMenuDestination(
-        key: const ValueKey('global_menu_item_quran_radio'),
-        label: strings.quranRadio,
-        path: '/quran-radio',
-        icon: Icons.headphones_outlined,
-        subtitle: strings.comingSoon,
       ),
     ];
 
@@ -306,14 +298,12 @@ class _GlobalMenuDestination {
     required this.label,
     required this.path,
     required this.icon,
-    this.subtitle,
   });
 
   final Key key;
   final String label;
   final String path;
   final IconData icon;
-  final String? subtitle;
 }
 
 class _DrawerSectionHeader extends StatelessWidget {
@@ -351,7 +341,6 @@ class _DrawerDestinationTile extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         leading: Icon(item.icon),
         title: Text(item.label, style: Theme.of(context).textTheme.titleMedium),
-        subtitle: item.subtitle == null ? null : Text(item.subtitle!),
         onTap: onTap,
       ),
     );
