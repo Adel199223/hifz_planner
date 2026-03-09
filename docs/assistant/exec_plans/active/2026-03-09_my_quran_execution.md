@@ -50,7 +50,7 @@
 ## Progress
 - [x] Start Wave 1
 - [x] Merge Wave 1
-- [ ] Start Wave 2
+- [x] Start Wave 2
 - [ ] Merge Wave 2
 - [ ] Start Wave 3
 - [ ] Merge Wave 3
@@ -75,7 +75,8 @@
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
 | Goals + Progress roadmap | merged | historical | removed | Supportive 4-wave goals roadmap completed before this roadmap started |
 | Reader Understanding roadmap | merged | historical | removed | Integrated 4-wave reader roadmap completed before this roadmap started |
-| My Quran Wave 1 | merged | `feat/my-quran-wave1-real-hub` | `/home/fa507/dev/hifz_planner_my_quran_wave1` | Three-card hub foundation merged to `main` in PR `#42`; active plan archived and roadmap now returns to Wave 2 |
+| My Quran Wave 1 | merged | historical | removed after merge | Three-card hub foundation merged to `main` in PR `#42`; active plan archived in `docs/assistant/exec_plans/completed/` |
+| My Quran Wave 2 | active | `feat/my-quran-wave2-saved-study-resume` | `/home/fa507/dev/hifz_planner_my_quran_wave2` | Saved-study previews and real resume depth are now the active implementation stream |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -100,5 +101,7 @@
   - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, app user guide, and issue memory so future restarts do not need to reconstruct the Wave 1 My Quran scope from source diffs.
   - 2026-03-09: Wave 1 feature work merged to `main` in PR `#42`.
   - 2026-03-09: Wave 1 active ExecPlan was archived to `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave1_hub_foundation.md`, so the roadmap can resume from Wave 2.
+  - 2026-03-09: Wave 1 closeout merged in PR `#43`, remote and local Wave 1 branches were deleted, and the Wave 1 worktree was removed.
+  - 2026-03-09: Wave 2 started in isolated worktree `/home/fa507/dev/hifz_planner_my_quran_wave2` on branch `feat/my-quran-wave2-saved-study-resume`.
 - Next recommended action:
   - Wave 2 - Saved Study and Resume Depth
