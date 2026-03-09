@@ -49,7 +49,7 @@
 
 ## Progress
 - [x] Start Wave 1
-- [ ] Merge Wave 1
+- [x] Merge Wave 1
 - [ ] Start Wave 2
 - [ ] Merge Wave 2
 - [ ] Start Wave 3
@@ -75,7 +75,7 @@
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
 | Goals + Progress roadmap | merged | historical | removed | Supportive 4-wave goals roadmap completed before this roadmap started |
 | Reader Understanding roadmap | merged | historical | removed | Integrated 4-wave reader roadmap completed before this roadmap started |
-| My Quran Wave 1 | active | `feat/my-quran-wave1-real-hub` | `/home/fa507/dev/hifz_planner_my_quran_wave1` | Three-card hub foundation implemented locally and awaiting closeout |
+| My Quran Wave 1 | merged | `feat/my-quran-wave1-real-hub` | `/home/fa507/dev/hifz_planner_my_quran_wave1` | Three-card hub foundation merged to `main` in PR `#42`; active plan archived and roadmap now returns to Wave 2 |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -98,5 +98,7 @@
   - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` before validation; the incidental churn was reverted so Wave 1 remains dependency-neutral.
   - 2026-03-09: Starting overlapping Flutter commands in the same worktree triggered the known local startup-lock pattern again; the trusted validation record uses sequential Flutter runs.
   - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, app user guide, and issue memory so future restarts do not need to reconstruct the Wave 1 My Quran scope from source diffs.
+  - 2026-03-09: Wave 1 feature work merged to `main` in PR `#42`.
+  - 2026-03-09: Wave 1 active ExecPlan was archived to `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave1_hub_foundation.md`, so the roadmap can resume from Wave 2.
 - Next recommended action:
-  - close Wave 1 with commit, PR, and merge
+  - Wave 2 - Saved Study and Resume Depth

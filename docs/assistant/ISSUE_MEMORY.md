@@ -81,7 +81,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 - evidence refs:
   - `docs/assistant/exec_plans/active/2026-03-08_goals_progress_execution.md`
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md`
-  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave1_hub_foundation.md`
+  - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave1_hub_foundation.md`
 
 ### `fresh_worktree_flutter_validation_lockfile_churn`
 
@@ -115,4 +115,4 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave2_weekly_progress.md`
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave3_coaching_adjustment_guidance.md`
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave4_cross_surface_consistency.md`
-  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave1_hub_foundation.md`
+  - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave1_hub_foundation.md`
