@@ -15,6 +15,13 @@ String _joinPath(String left, String right) {
   return '$left${Platform.pathSeparator}$normalizedRight';
 }
 
+String _resolvePathFrom(String baseDir, String candidate) {
+  if (candidate.startsWith('/')) {
+    return candidate;
+  }
+  return Directory(baseDir).uri.resolve(candidate).toFilePath();
+}
+
 String? _findRepoRootFrom(String startPath) {
   var directory = Directory(startPath);
   while (true) {
@@ -66,13 +73,23 @@ String _resolveGitDir(String repoRoot) {
   }
 
   final gitDirValue = content.substring(prefix.length).trim();
-  if (gitDirValue.startsWith('/')) {
-    return gitDirValue;
-  }
-  return _joinPath(repoRoot, gitDirValue);
+  return _resolvePathFrom(repoRoot, gitDirValue);
 }
 
-String _readGitRef(String gitDir, String ref) {
+String? _resolveCommonGitDir(String gitDir) {
+  final commondirFile = File(_joinPath(gitDir, 'commondir'));
+  if (!commondirFile.existsSync()) {
+    return null;
+  }
+
+  final commondirValue = commondirFile.readAsStringSync().trim();
+  if (commondirValue.isEmpty) {
+    return null;
+  }
+  return _resolvePathFrom(gitDir, commondirValue);
+}
+
+String? _readGitRefFromDir(String gitDir, String ref) {
   final looseRef = File(_joinPath(gitDir, ref));
   if (looseRef.existsSync()) {
     return looseRef.readAsStringSync().trim();
@@ -91,6 +108,23 @@ String _readGitRef(String gitDir, String ref) {
       if (parts.length == 2 && parts[1] == ref) {
         return parts[0];
       }
+    }
+  }
+
+  return null;
+}
+
+String _readGitRef(String gitDir, String ref) {
+  final localValue = _readGitRefFromDir(gitDir, ref);
+  if (localValue != null) {
+    return localValue;
+  }
+
+  final commonGitDir = _resolveCommonGitDir(gitDir);
+  if (commonGitDir != null && commonGitDir != gitDir) {
+    final commonValue = _readGitRefFromDir(commonGitDir, ref);
+    if (commonValue != null) {
+      return commonValue;
     }
   }
 

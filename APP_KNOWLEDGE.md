@@ -116,7 +116,7 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
   - saved-study follow-up with enough verse context to recognize what was saved
 - A top-right `More` drawer holds secondary tools and destinations:
   - Settings, About, Reciters
-  - `Explore` section: Learn, My Quran, Quran Radio
+  - `Explore` section: Learn, My Quran
 - `My Quran` is now a practical personal hub for:
   - continue reading
   - saved-study previews and counts
@@ -141,7 +141,6 @@ Defined in `lib/app/router.dart`:
 - `/plan`
 - `/learn`
 - `/my-quran`
-- `/quran-radio`
 - `/reciters`
 - `/today`
 - `/companion/chain`
@@ -657,8 +656,6 @@ Current capabilities:
   - routes into `/reader`, `/library`, and `/reciters`
   - uses one shared dashboard snapshot plus a lightweight last-reader location shape from app preferences
   - lets the learner toggle verse translation, word help, transliteration, and Practice from Memory autoplay inline without opening a full settings screen
-- `lib/screens/quran_radio_screen.dart`
-  - placeholder scaffold (`coming soon`)
 - `lib/screens/reciters_screen.dart`
   - functional searchable reciter selector with persisted selection
 - `lib/screens/settings_screen.dart`
@@ -820,15 +817,14 @@ Representative files:
 
 - Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
 - Reader meaning controls are implemented, but translation-source selection is still fixed to one default resource per app language.
-- My Quran Wave 4 is now implemented locally in the active roadmap worktree:
-  - normal Reader usage now persists a lightweight last-reader resume target
-  - `My Quran` can now show the latest saved-verse preview with a direct reopen path
-  - `My Quran` can now show the latest updated note preview with a direct reopen path
-  - `My Quran` now also shows a separate `Study setup` section with plain-language summary text plus inline toggles for translation, word help, transliteration, and Practice from Memory autoplay
-  - learner-facing saved-study wording is now aligned around `Save for later` and `Saved verses` across `Reader`, `My Quran`, and `Library`
-  - reciter changes still stay routed through `Listening setup` and `Reciters`
+- `My Quran` is fully merged on `main` as the practical personal hub:
+  - normal Reader usage persists a lightweight last-reader resume target
+  - the hub shows latest saved-verse and note previews with direct reopen paths
+  - the `Study setup` section exposes plain-language toggles for translation, word help, transliteration, and Practice from Memory autoplay
+  - learner-facing saved-study wording is aligned around `Save for later` and `Saved verses` across `Reader`, `My Quran`, and `Library`
+  - reciter changes stay routed through `Listening setup` and `Reciters`
   - when no saved reader target exists yet, the hub still falls back safely to `Open Reader`
-- Quran Radio is still a placeholder surface.
+- `Quran Radio` is not a current user-facing surface.
 - Web parity will require abstraction of `dart:io` usage in Quran.com cache/font services.
 - Quran.com parity work is active; visuals and interactions are close in many areas but still evolving.
 - No Python CI/tooling is configured because this repository currently has no Python code path; add Python configuration only when Python tooling is introduced.

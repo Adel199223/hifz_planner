@@ -49,6 +49,7 @@ dart tooling/print_build_identity.dart
 ```powershell
 dart tooling/validate_agent_docs.dart
 flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
+flutter test -j 1 -r expanded test/tooling/print_build_identity_test.dart
 ```
 
 ## Failure Modes and Fallback Steps
@@ -57,11 +58,13 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
    - Lock the latest approved baseline by branch and base SHA before continuing.
 2. Symptoms: the wrong GUI build is opened.
    - Run `dart tooling/print_build_identity.dart` and include the full identity packet in the handoff.
-3. Symptoms: feature work happens in multiple runnable worktrees.
+3. Symptoms: `dart tooling/print_build_identity.dart` fails in a worktree with "Could not resolve git ref ... inside .../.git/worktrees/...".
+   - Resolve the branch ref through the worktree `commondir` / common git dir fallback instead of assuming the loose ref lives inside the worktree-local gitdir.
+4. Symptoms: feature work happens in multiple runnable worktrees.
    - Treat side worktrees as source-only until one worktree is explicitly promoted.
-4. Symptoms: accepted behavior lives only on a side branch.
+5. Symptoms: accepted behavior lives only on a side branch.
    - Merge immediately into the approved base, then prune obsolete branch state.
-5. Symptoms: launch instructions are ambiguous.
+6. Symptoms: launch instructions are ambiguous.
    - Use the canonical workspace `/home/fa507/dev/hifz_planner-only.code-workspace` and restate the canonical launch command explicitly.
 
 ## Handoff Checklist
@@ -71,4 +74,5 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
 - canonical runnable build is `/home/fa507/dev/hifz_planner` opened through `/home/fa507/dev/hifz_planner-only.code-workspace`
 - side worktrees are treated as source-only unless explicitly promoted
 - runnable-build handoff includes worktree path, branch, HEAD SHA, workspace file, and launch command
+- `dart tooling/print_build_identity.dart` works from both normal repos and worktree gitdirs
 - accepted features are merged immediately after acceptance instead of remaining only on side branches

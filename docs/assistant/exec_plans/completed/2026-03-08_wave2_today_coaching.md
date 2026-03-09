@@ -50,10 +50,10 @@
 ## Progress
 - [x] Add Today coaching card and state-specific guidance
 - [x] Add/refresh targeted Today tests
-- [ ] Validate and publish branch
+- [x] Validate and publish branch
 
 ## Surprises and Adjustments
 - Record any missing Today planner inputs that would force Wave 3 or Wave 4 logic to move earlier.
 
 ## Handoff
-- Wave 2 should merge before starting the preset-first `My Plan` redesign in Wave 3.
+- This wave shipped on `main` in commit `bcb2f60` before the later planner redesign work continued.

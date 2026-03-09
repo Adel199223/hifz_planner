@@ -46,11 +46,11 @@
 ## Progress
 - [x] Port runtime fixes
 - [x] Add targeted regression tests
-- [ ] Validate and publish branch
+- [x] Validate and publish branch
 
 ## Surprises and Adjustments
 - Record any extra Wave 1 overlap found during the port.
 - `flutter analyze` refreshed `pubspec.lock` even without dependency changes; the incidental lock churn was reverted before commit.
 
 ## Handoff
-- This branch should merge before Wave 2 starts.
+- This fix set shipped on `main` in commit `40d8c28` before Wave 2 started.

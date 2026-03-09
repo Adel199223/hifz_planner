@@ -93,6 +93,7 @@ Do not promote one-off local/project issues into the global Codex bootstrap unle
   - adaptive thresholds for no-roadmap vs ExecPlan-only vs roadmap
   - active-worktree authority during in-flight wave work
   - `SESSION_RESUME.md` as the roadmap anchor file and stable fresh-session entrypoint
+  - archive-first resting state for completed roadmap trackers and finished ExecPlans
   - detour/closeout update order
 
 ## Required Validation

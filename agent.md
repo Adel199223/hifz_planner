@@ -98,8 +98,8 @@ Use this when a new chat session needs to continue the current roadmap.
    - `where did we leave off`
    - `what is the next roadmap step`
 5. After `docs/assistant/SESSION_RESUME.md`, open:
-   - the linked active roadmap tracker
-   - the linked active wave ExecPlan
+   - the linked active roadmap tracker and linked active wave ExecPlan when a roadmap is in flight
+   - if `docs/assistant/SESSION_RESUME.md` says no roadmap is active, the linked latest completed roadmap tracker and relevant completed closeout plan
 6. Answer with:
    - current roadmap status
    - exact next step
@@ -146,6 +146,7 @@ For major or multi-file work:
 2. Follow required structure from `docs/assistant/exec_plans/PLANS.md`.
 3. Keep the plan self-contained and update decisions/progress during implementation.
 4. Move finished plans to `docs/assistant/exec_plans/completed/`.
+5. If a roadmap tracker is fully complete and no new roadmap has started, move that tracker to `docs/assistant/exec_plans/completed/` too.
 
 ExecPlans are optional for minor isolated edits.
 
@@ -156,6 +157,7 @@ ExecPlans are optional for minor isolated edits.
 - The active wave ExecPlan is the implementation-detail source.
 - Use issue memory only for repeatable governance or workflow failures, not normal roadmap history.
 - While a wave is active in a separate worktree, that active worktree's `SESSION_RESUME.md`, roadmap tracker, and active wave ExecPlan are authoritative for live roadmap state.
+- When no roadmap is active, completed roadmap trackers and finished ExecPlans belong in `docs/assistant/exec_plans/completed/`, and `docs/assistant/SESSION_RESUME.md` should point to the latest completed roadmap tracker plus the relevant completed closeout plan.
 - `main` is the stable merged baseline, not the live source of in-progress wave state.
 
 ## Worktree Isolation
@@ -201,3 +203,4 @@ Use this whenever work belongs to the staged product-redesign roadmap.
    - `Next step: Wave X - <name>`
 5. If the next action is a closeout step instead of a new wave, end with:
    - `Next step: close Wave X with <closeout action>`
+6. When no roadmap is active, `docs/assistant/exec_plans/active/` should contain only genuinely live plans.

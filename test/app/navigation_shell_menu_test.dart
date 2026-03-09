@@ -54,13 +54,14 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey('global_menu_item_quran_radio')),
-      findsOneWidget,
-    );
-    expect(
       find.byKey(const ValueKey('global_menu_item_reciters')),
       findsOneWidget,
     );
+    expect(
+      find.byKey(const ValueKey('global_menu_item_quran_radio')),
+      findsNothing,
+    );
+    expect(find.text('Coming soon.'), findsNothing);
   });
 
   testWidgets('more drawer destinations navigate to expected routes', (
@@ -104,20 +105,6 @@ void main() {
     expect(find.byKey(const ValueKey('reciters_screen_root')), findsOneWidget);
 
     await openMenu();
-    await tester.tap(
-      find.byKey(const ValueKey('global_menu_item_quran_radio')),
-    );
-    await tester.pump();
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('quran_radio_screen_root')),
-    );
-    expect(
-      find.byKey(const ValueKey('quran_radio_screen_root')),
-      findsOneWidget,
-    );
-
-    await openMenu();
     await tester.tap(find.byKey(const ValueKey('global_menu_item_my_quran')));
     await tester.pump();
     await pumpUntilFound(
@@ -125,6 +112,7 @@ void main() {
       find.byKey(const ValueKey('my_quran_screen_root')),
     );
     expect(find.byKey(const ValueKey('my_quran_screen_root')), findsOneWidget);
+    expect(find.text('Coming soon.'), findsNothing);
   });
 
   testWidgets('core rail destinations use the simplified navigation model', (

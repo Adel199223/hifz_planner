@@ -23,7 +23,8 @@ One-page navigation guide for agent-facing documentation.
 4. Also route these intents there:
    - `where did we leave off`
    - `what is the next roadmap step`
-5. After that, open the linked active roadmap tracker and linked active wave ExecPlan.
+5. After that, open the linked active roadmap tracker and linked active wave ExecPlan when a roadmap is live.
+6. If `docs/assistant/SESSION_RESUME.md` says no roadmap is active, open the linked latest completed roadmap tracker and relevant completed closeout plan instead.
 
 ## Vendored Template Apply
 
