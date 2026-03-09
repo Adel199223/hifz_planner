@@ -85,5 +85,6 @@
   - `APP_KNOWLEDGE.md`
   - `docs/assistant/APP_KNOWLEDGE.md`
   - `docs/assistant/features/APP_USER_GUIDE.md`
+- Feature merged to `main` in PR `#36`.
 - Next action in this branch:
-  - close Wave 2 with commit, PR, and merge
+  - start Wave 3
