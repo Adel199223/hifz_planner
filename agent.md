@@ -20,7 +20,8 @@ Use this runbook to quickly route a task to the right files, commands, and tests
 10. `docs/assistant/LOCAL_CAPABILITIES.md` (discovered local tool inventory)
 11. `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` (launch/build identity)
 12. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
-13. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
+13. `docs/assistant/workflows/ROADMAP_WORKFLOW.md` (complex multi-wave roadmap governance)
+14. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
 
 Compatibility:
 - `AGENTS.md` is a short shim for tools that auto-open that filename.
@@ -48,6 +49,7 @@ Ask for explicit approval before commands that:
 | Build identity, launch/open app, parallel worktrees | `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` | `dart tooling/print_build_identity.dart` |
 | User support / non-technical app explanation | `docs/assistant/features/START_HERE_USER_GUIDE.md` first, then `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner questions); respond in plain language first and define unavoidable jargon once | `dart run tooling/validate_agent_docs.dart` when docs were edited |
 | Agent docs/structure | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
+| Long-running multi-wave redesign / “master plan” work | `docs/assistant/workflows/ROADMAP_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | CI workflow / branch merge hygiene | `docs/assistant/workflows/CI_REPO_WORKFLOW.md` | `flutter analyze --no-fatal-infos --no-fatal-warnings` |
 | Commit, stage, ignore, push, remote cleanup | `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` | `git status --short --branch` |
 
@@ -99,6 +101,14 @@ Use this when a new chat session needs to continue the current roadmap.
    - current roadmap status
    - exact next step
 
+## Roadmap Trigger Policy
+
+- Use no roadmap for small isolated work.
+- Use ExecPlan-only for bounded major work that should still land as one merge.
+- Use a roadmap for long-running, multi-wave, restart-sensitive work.
+- Treat `roadmap` and `master plan` as equivalent user intents.
+- If the user explicitly asks for a roadmap or master plan, use one even if a lighter planning mode might have been sufficient.
+
 ## Safe Working Rules
 
 1. Source code wins over docs if there is conflict.
@@ -132,6 +142,15 @@ For major or multi-file work:
 4. Move finished plans to `docs/assistant/exec_plans/completed/`.
 
 ExecPlans are optional for minor isolated edits.
+
+## Roadmap Artifact Authority
+
+- `docs/assistant/SESSION_RESUME.md` is the stable first fresh-session stop.
+- The active roadmap tracker is the sequence source.
+- The active wave ExecPlan is the implementation-detail source.
+- Use issue memory only for repeatable governance or workflow failures, not normal roadmap history.
+- While a wave is active in a separate worktree, that active worktree's `SESSION_RESUME.md`, roadmap tracker, and active wave ExecPlan are authoritative for live roadmap state.
+- `main` is the stable merged baseline, not the live source of in-progress wave state.
 
 ## Worktree Isolation
 

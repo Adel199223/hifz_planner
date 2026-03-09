@@ -130,6 +130,69 @@
         "docs/assistant/exec_plans/completed/2026-03-08_goals_wave4_cross_surface_consistency.md",
         "docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave1_hub_foundation.md"
       ]
+    },
+    {
+      "id": "roadmap_trigger_granularity_ambiguity",
+      "first_seen": "2026-03-09",
+      "last_seen": "2026-03-09",
+      "repeat_count": 1,
+      "status": "mitigated",
+      "trigger_source": "repeated complex feature programs mixed with smaller bounded tasks",
+      "symptoms": [
+        "it was unclear when to use a full roadmap versus a lighter ExecPlan-only flow",
+        "roadmap planning risked becoming heavier than necessary for smaller work"
+      ],
+      "likely_root_cause": "the repo had strong roadmap-return mechanics, but no explicit adaptive trigger thresholds for when roadmap mode was actually required",
+      "attempted_fix_history": [
+        "added a dedicated roadmap workflow that defines no-roadmap, ExecPlan-only, and roadmap-grade work",
+        "added validator coverage so routing docs keep the adaptive thresholds visible"
+      ],
+      "accepted_fix": "Keep adaptive roadmap trigger thresholds explicit: no roadmap for small isolated work, ExecPlan-only for bounded major work, and roadmap mode only for long-running multi-wave restart-sensitive work.",
+      "regressed_after_fix": false,
+      "affected_workflows": [
+        "roadmap_governance",
+        "assistant_docs_sync",
+        "future_restart_handoff"
+      ],
+      "bootstrap_relevance": "possible",
+      "docs_sync_relevance": "required",
+      "evidence_refs": [
+        "docs/assistant/workflows/ROADMAP_WORKFLOW.md",
+        "docs/assistant/exec_plans/PLANS.md",
+        "AGENTS.md",
+        "agent.md"
+      ]
+    },
+    {
+      "id": "active_worktree_resume_authority_confusion",
+      "first_seen": "2026-03-09",
+      "last_seen": "2026-03-09",
+      "repeat_count": 1,
+      "status": "mitigated",
+      "trigger_source": "fresh sessions resumed from the stable repo while active wave work lived in a separate worktree",
+      "symptoms": [
+        "a fresh session in the stable repo could mislead a beginner about where the real in-progress roadmap state lived",
+        "main looked clean and complete while the active wave state was actually in a feature worktree"
+      ],
+      "likely_root_cause": "resume routing existed, but the docs did not state strongly enough that the active worktree is authoritative during in-flight wave work",
+      "attempted_fix_history": [
+        "added an explicit active-worktree authority rule to the roadmap workflow, routing docs, and validator coverage",
+        "updated session-resume and roadmap docs to point back to the active worktree during live wave work"
+      ],
+      "accepted_fix": "Document and enforce that the active worktree's SESSION_RESUME.md, active roadmap tracker, and active wave ExecPlan are authoritative for live roadmap state while a wave is in progress.",
+      "regressed_after_fix": false,
+      "affected_workflows": [
+        "future_restart_handoff",
+        "roadmap_governance",
+        "worktree_build_identity"
+      ],
+      "bootstrap_relevance": "possible",
+      "docs_sync_relevance": "required",
+      "evidence_refs": [
+        "docs/assistant/workflows/ROADMAP_WORKFLOW.md",
+        "docs/assistant/SESSION_RESUME.md",
+        "docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md"
+      ]
     }
   ]
 }

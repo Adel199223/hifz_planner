@@ -25,7 +25,8 @@ Why both files exist:
 15. `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` (workspace performance)
 16. `docs/assistant/PERFORMANCE_BASELINES.md` (editor/perf defaults)
 17. `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` (parity reference policy)
-18. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/push/cleanup protocol)
+18. `docs/assistant/workflows/ROADMAP_WORKFLOW.md` (complex multi-wave roadmap governance)
+19. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/push/cleanup protocol)
 
 ## Non-Negotiables
 
@@ -89,6 +90,14 @@ Pause and ask for explicit user confirmation before commands that:
 - Follow structure in `docs/assistant/exec_plans/PLANS.md`.
 - Minor isolated edits may skip ExecPlan.
 
+## Roadmap Trigger Policy
+
+- Use no roadmap for small isolated work.
+- Use ExecPlan-only for bounded major work that should still land as one merge.
+- Use a roadmap for long-running, multi-wave, restart-sensitive work.
+- Treat `roadmap` and `master plan` as equivalent user intents.
+- If the user explicitly asks for a roadmap or master plan, use one even if a lighter planning mode might have been sufficient.
+
 ## Worktree Isolation
 
 - For parallel feature or automation threads, prefer `git worktree` isolation.
@@ -108,6 +117,15 @@ Pause and ask for explicit user confirmation before commands that:
 - Answer with:
   - current roadmap status
   - exact next step
+
+## Roadmap Artifact Authority
+
+- `docs/assistant/SESSION_RESUME.md` is the stable first fresh-session stop.
+- The active roadmap tracker is the sequence source.
+- The active wave ExecPlan is the implementation-detail source.
+- Use issue memory only for repeatable governance or workflow failures, not normal roadmap history.
+- While a wave is active in a separate worktree, that active worktree's `SESSION_RESUME.md`, roadmap tracker, and active wave ExecPlan are authoritative for live roadmap state.
+- `main` is the stable merged baseline, not the live source of in-progress wave state.
 
 ## Roadmap Return Protocol
 

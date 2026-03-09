@@ -64,6 +64,7 @@ Use when changes touch:
 - `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
 - `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
 - `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
+- `docs/assistant/workflows/ROADMAP_WORKFLOW.md`
 - `tooling/validate_agent_docs.dart`
 - `tooling/validate_localization.dart`
 - `tooling/validate_workspace_hygiene.dart`
@@ -111,6 +112,8 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
    - update `docs/assistant/SESSION_RESUME.md`, then confirm it points to the active roadmap tracker and active wave ExecPlan.
 11. Symptoms: the same workflow or tooling failure keeps recurring.
    - update `docs/assistant/ISSUE_MEMORY.md` and `docs/assistant/ISSUE_MEMORY.json`, then sync only the docs touched by that repeatable issue class.
+12. Symptoms: it is unclear whether a future improvement should use roadmap mode, ExecPlan-only, or a lighter flow.
+   - update `docs/assistant/workflows/ROADMAP_WORKFLOW.md`, then sync the routing docs and validator rules that encode roadmap triggering and active-worktree authority.
 
 ## Significant-Change Docs Sync Policy
 
@@ -135,6 +138,7 @@ Relevance matrix:
 - User-facing behavior copy/flow change -> update affected sections in `docs/assistant/features/APP_USER_GUIDE.md` and/or `docs/assistant/features/PLANNER_USER_GUIDE.md`
 - Beginner navigation/mental-model change -> update `docs/assistant/features/START_HERE_USER_GUIDE.md` and then only the touched sections of the broader user guides
 - Fresh-session roadmap resume change -> update `docs/assistant/SESSION_RESUME.md` and only the routing/validator docs needed to keep it discoverable
+- Roadmap governance or trigger-policy change -> update `docs/assistant/workflows/ROADMAP_WORKFLOW.md`, then the routing/manifest/validator docs needed to keep the roadmap system discoverable and enforceable
 - Do not update `docs/assistant/features/START_HERE_USER_GUIDE.md` for isolated deep/internal behavior changes that do not change beginner navigation or expectations
 
 ## Sync Order

@@ -27,6 +27,7 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
   'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
   'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+  'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
   'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
@@ -34,6 +35,7 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
   'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
+  'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
   'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
   'tooling/validate_workspace_hygiene.dart',
   'test/tooling/validate_workspace_hygiene_test.dart',
@@ -72,6 +74,7 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
   'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
   'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+  'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
   'docs/assistant/workflows/READER_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
@@ -120,11 +123,13 @@ class AgentDocsValidator {
     _validateUserGuideSupportRoutingPolicy(issues);
     _validateDocsMaintenanceUserGuideSyncPolicy(issues);
     _validateFreshSessionResumeRoutingPolicy(issues);
+    _validateRoadmapGovernanceRoutingPolicy(issues);
     _validateLocalizationRoutingPolicy(issues);
     _validatePerformanceRoutingPolicy(issues);
     _validateReferenceDiscoveryPolicy(issues);
     _validatePostChangeDocsSyncPolicy(issues);
     _validateTemplatePolicies(issues);
+    _validateBootstrapRoadmapGovernanceTemplate(issues);
     _validateTemplateNewbieLayer(issues);
     _validateNonCoderEntrypoints(issues);
     _validateGoldenAndExecPlanDiscoverability(issues);
@@ -164,8 +169,8 @@ class AgentDocsValidator {
     final version = manifest['version'];
     if (version is! int) {
       issues.add('Manifest key "version" must be an integer.');
-    } else if (version != 12) {
-      issues.add('Manifest key "version" must be 12.');
+    } else if (version != 13) {
+      issues.add('Manifest key "version" must be 13.');
     }
 
     final canonical = manifest['canonical'];
@@ -304,6 +309,12 @@ class AgentDocsValidator {
         workflowsById: workflowsById,
         requiredId: 'reference_discovery',
         expectedDoc: 'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+      );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
+        requiredId: 'roadmap_governance',
+        expectedDoc: 'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       );
       _validateRequiredWorkflowId(
         issues,
@@ -686,6 +697,57 @@ class AgentDocsValidator {
           'contracts.roadmap_resume_update_policy must reference the active wave ExecPlan, active roadmap tracker, and docs/assistant/SESSION_RESUME.md.',
         );
       }
+      final roadmapTriggerPolicy = contracts['roadmap_trigger_policy'];
+      if (roadmapTriggerPolicy is! String ||
+          !roadmapTriggerPolicy.toLowerCase().contains('small isolated work') ||
+          !roadmapTriggerPolicy.toLowerCase().contains('execplan-only') ||
+          !roadmapTriggerPolicy.toLowerCase().contains('master plan')) {
+        issues.add(
+          'contracts.roadmap_trigger_policy must define small isolated work, ExecPlan-only, and master plan/roadmap equivalence.',
+        );
+      }
+      final roadmapGranularityPolicy = contracts['roadmap_granularity_policy'];
+      if (roadmapGranularityPolicy is! String ||
+          !roadmapGranularityPolicy.contains('single-file fixes') ||
+          !roadmapGranularityPolicy.toLowerCase().contains('docs cleanup')) {
+        issues.add(
+          'contracts.roadmap_granularity_policy must distinguish roadmap-grade work from single-file fixes and docs cleanup.',
+        );
+      }
+      final roadmapAuthorityPolicy =
+          contracts['roadmap_artifact_authority_policy'];
+      if (roadmapAuthorityPolicy is! String ||
+          !roadmapAuthorityPolicy.contains('docs/assistant/SESSION_RESUME.md') ||
+          !roadmapAuthorityPolicy.toLowerCase().contains(
+            'active roadmap tracker',
+          ) ||
+          !roadmapAuthorityPolicy.toLowerCase().contains(
+            'active wave execplan',
+          ) ||
+          !roadmapAuthorityPolicy.toLowerCase().contains('separate worktree')) {
+        issues.add(
+          'contracts.roadmap_artifact_authority_policy must reference SESSION_RESUME.md, the active roadmap tracker, the active wave ExecPlan, and separate-worktree authority.',
+        );
+      }
+      final roadmapDetourPolicy = contracts['roadmap_detour_policy'];
+      if (roadmapDetourPolicy is! String ||
+          !roadmapDetourPolicy.contains('active wave ExecPlan') ||
+          !roadmapDetourPolicy.contains('active roadmap tracker') ||
+          !roadmapDetourPolicy.contains('docs/assistant/SESSION_RESUME.md')) {
+        issues.add(
+          'contracts.roadmap_detour_policy must reference the active wave ExecPlan, active roadmap tracker, and docs/assistant/SESSION_RESUME.md update order.',
+        );
+      }
+      final roadmapCloseoutPolicy = contracts['roadmap_closeout_policy'];
+      if (roadmapCloseoutPolicy is! String ||
+          !roadmapCloseoutPolicy.toLowerCase().contains(
+            'current roadmap status',
+          ) ||
+          !roadmapCloseoutPolicy.toLowerCase().contains('exact next step')) {
+        issues.add(
+          'contracts.roadmap_closeout_policy must require current roadmap status and exact next step in closeout messaging.',
+        );
+      }
       final plainLanguagePolicy =
           contracts['plain_language_support_response_policy'];
       if (plainLanguagePolicy is String &&
@@ -753,6 +815,7 @@ class AgentDocsValidator {
       'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
       'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
       'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+      'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
       'docs/assistant/workflows/PLANNER_WORKFLOW.md',
       'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
@@ -783,6 +846,7 @@ class AgentDocsValidator {
       'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
       'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
       'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+      'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
       'docs/assistant/workflows/PLANNER_WORKFLOW.md',
       'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
@@ -1096,6 +1160,89 @@ class AgentDocsValidator {
     }
   }
 
+  void _validateRoadmapGovernanceRoutingPolicy(List<String> issues) {
+    final roadmapWorkflow =
+        _resolveFile('docs/assistant/workflows/ROADMAP_WORKFLOW.md');
+    if (roadmapWorkflow.existsSync()) {
+      final text = roadmapWorkflow.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('ExecPlan-only') ||
+          !lowered.contains('small isolated work') ||
+          !lowered.contains('separate worktree') ||
+          !text.contains('docs/assistant/SESSION_RESUME.md')) {
+        issues.add(
+          'ROADMAP_WORKFLOW.md must define adaptive granularity, separate-worktree authority, and docs/assistant/SESSION_RESUME.md as the stable first stop.',
+        );
+      }
+    }
+
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('## Roadmap Trigger Policy') ||
+          !text.contains('## Roadmap Artifact Authority')) {
+        issues.add(
+          'AGENTS.md must include Roadmap Trigger Policy and Roadmap Artifact Authority sections.',
+        );
+      }
+      if (!text.contains('docs/assistant/workflows/ROADMAP_WORKFLOW.md') ||
+          !lowered.contains('small isolated work') ||
+          !text.contains('ExecPlan-only') ||
+          !lowered.contains('active worktree')) {
+        issues.add(
+          'AGENTS.md must reference ROADMAP_WORKFLOW.md, adaptive granularity, and active-worktree authority.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('## Roadmap Trigger Policy') ||
+          !text.contains('## Roadmap Artifact Authority')) {
+        issues.add(
+          'agent.md must include Roadmap Trigger Policy and Roadmap Artifact Authority sections.',
+        );
+      }
+      if (!text.contains('docs/assistant/workflows/ROADMAP_WORKFLOW.md') ||
+          !lowered.contains('small isolated work') ||
+          !text.contains('ExecPlan-only') ||
+          !lowered.contains('active worktree')) {
+        issues.add(
+          'agent.md must reference ROADMAP_WORKFLOW.md, adaptive granularity, and active-worktree authority.',
+        );
+      }
+    }
+
+    final plans = _resolveFile('docs/assistant/exec_plans/PLANS.md');
+    if (plans.existsSync()) {
+      final text = plans.readAsStringSync();
+      if (!text.contains('## Adaptive Planning Rule') ||
+          !text.contains('## Roadmap Artifact Authority') ||
+          !text.contains(
+            'long-running multi-wave, restart-sensitive work -> roadmap',
+          )) {
+        issues.add(
+          'PLANS.md must include adaptive planning guidance and roadmap artifact authority.',
+        );
+      }
+    }
+
+    final readme = _resolveFile('README.md');
+    if (readme.existsSync()) {
+      final text = readme.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('docs/assistant/workflows/ROADMAP_WORKFLOW.md') ||
+          !lowered.contains('active worktree')) {
+        issues.add(
+          'README.md must reference ROADMAP_WORKFLOW.md and explain that the active worktree is the live roadmap source during in-flight wave work.',
+        );
+      }
+    }
+  }
+
   void _validateCanonicalContracts(List<String> issues) {
     final agentsShim = _resolveFile('AGENTS.md');
     if (agentsShim.existsSync()) {
@@ -1193,6 +1340,88 @@ class AgentDocsValidator {
       if (text.contains('docs/assistant/templates/')) {
         issues.add(
           'INDEX.md must not route private template files as default docs.',
+        );
+      }
+    }
+  }
+
+  void _validateBootstrapRoadmapGovernanceTemplate(List<String> issues) {
+    final roadmapTemplate =
+        _resolveFile('docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md');
+    if (roadmapTemplate.existsSync()) {
+      final text = roadmapTemplate.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!lowered.contains('roadmap') ||
+          !lowered.contains('wave') ||
+          !text.contains('ExecPlan') ||
+          !text.contains('docs/assistant/SESSION_RESUME.md') ||
+          !lowered.contains('separate worktree')) {
+        issues.add(
+          'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define roadmap terminology, SESSION_RESUME.md, and separate-worktree authority.',
+        );
+      }
+      if (!lowered.contains('single-file fixes') ||
+          !lowered.contains('one-shot docs cleanup') ||
+          !text.contains('ExecPlan-only')) {
+        issues.add(
+          'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define adaptive thresholds for no-roadmap, ExecPlan-only, and roadmap-grade work.',
+        );
+      }
+    }
+
+    final templateMap =
+        _resolveFile('docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json');
+    if (templateMap.existsSync()) {
+      final text = templateMap.readAsStringSync();
+      if (!text.contains('"id": "roadmap_governance"') ||
+          !text.contains(
+            '"path": "docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md"',
+          )) {
+        issues.add(
+          'BOOTSTRAP_TEMPLATE_MAP.json must include the roadmap_governance module and BOOTSTRAP_ROADMAP_GOVERNANCE.md path.',
+        );
+      }
+    }
+
+    final modules =
+        _resolveFile('docs/assistant/templates/BOOTSTRAP_MODULES_AND_TRIGGERS.md');
+    if (modules.existsSync()) {
+      final text = modules.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('Roadmap Governance') ||
+          !text.contains('BOOTSTRAP_ROADMAP_GOVERNANCE.md') ||
+          !lowered.contains('single-file fixes') ||
+          !text.contains('ExecPlan-only')) {
+        issues.add(
+          'BOOTSTRAP_MODULES_AND_TRIGGERS.md must reference Roadmap Governance, BOOTSTRAP_ROADMAP_GOVERNANCE.md, and adaptive activation thresholds.',
+        );
+      }
+    }
+
+    final prompt =
+        _resolveFile('docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md');
+    if (prompt.existsSync()) {
+      final text = prompt.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('BOOTSTRAP_ROADMAP_GOVERNANCE.md') ||
+          !lowered.contains('long-running multi-wave') ||
+          !text.contains('SESSION_RESUME.md')) {
+        issues.add(
+          'CODEX_PROJECT_BOOTSTRAP_PROMPT.md must reference BOOTSTRAP_ROADMAP_GOVERNANCE.md, adaptive roadmap mode, and SESSION_RESUME.md generation.',
+        );
+      }
+    }
+
+    final updatePolicy =
+        _resolveFile('docs/assistant/templates/BOOTSTRAP_UPDATE_POLICY.md');
+    if (updatePolicy.existsSync()) {
+      final text = updatePolicy.readAsStringSync();
+      final lowered = text.toLowerCase();
+      if (!text.contains('BOOTSTRAP_ROADMAP_GOVERNANCE.md') ||
+          !lowered.contains('do not leak app-specific dates') ||
+          !lowered.contains('adaptive')) {
+        issues.add(
+          'BOOTSTRAP_UPDATE_POLICY.md must preserve adaptive roadmap governance and anti-overfitting rules for BOOTSTRAP_ROADMAP_GOVERNANCE.md.',
         );
       }
     }

@@ -2,6 +2,12 @@
 
 Use ExecPlans for major or multi-file features/refactors.
 
+## Adaptive Planning Rule
+
+- small isolated work -> no roadmap, ExecPlan optional
+- bounded major work -> ExecPlan only
+- long-running multi-wave, restart-sensitive work -> roadmap
+
 ## Trigger Rule
 
 Create an ExecPlan when work is any of the following:
@@ -105,3 +111,10 @@ Required rule:
    - `Next step: Wave X - <name>`
 8. If the next action is closeout instead of a new wave, end with:
    - `Next step: close Wave X with <closeout action>`
+
+## Roadmap Artifact Authority
+
+- `docs/assistant/SESSION_RESUME.md` is the stable first resume stop.
+- The active roadmap tracker is the sequence source.
+- The active wave ExecPlan is the implementation-detail source.
+- If a wave is active in a separate worktree, that active worktree is authoritative for live roadmap state.
