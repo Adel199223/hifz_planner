@@ -61,6 +61,18 @@ class ReaderLastLocation {
   final int? page;
   final int? targetSurah;
   final int? targetAyah;
+
+  bool sameAs({
+    required ReaderLastLocationMode mode,
+    int? page,
+    int? targetSurah,
+    int? targetAyah,
+  }) {
+    return this.mode == mode &&
+        this.page == page &&
+        this.targetSurah == targetSurah &&
+        this.targetAyah == targetAyah;
+  }
 }
 
 class AppPreferencesState {
@@ -201,6 +213,16 @@ class AppPreferencesNotifier extends Notifier<AppPreferencesState> {
     final normalizedAyah = targetAyah != null && targetAyah > 0
         ? targetAyah
         : null;
+    final currentLocation = state.readerLastLocation;
+    if (currentLocation != null &&
+        currentLocation.sameAs(
+          mode: mode,
+          page: normalizedPage,
+          targetSurah: normalizedSurah,
+          targetAyah: normalizedAyah,
+        )) {
+      return;
+    }
     final nextLocation = ReaderLastLocation(
       mode: mode,
       page: normalizedPage,

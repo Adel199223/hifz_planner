@@ -18,6 +18,7 @@ If local tools or WSL routing are unclear:
 
 ## Agent onboarding docs
 
+- `docs/assistant/SESSION_RESUME.md`
 - `AGENTS.md`
 - `agent.md`
 - `APP_KNOWLEDGE.md`
@@ -35,17 +36,30 @@ If local tools or WSL routing are unclear:
 Canonical source:
 - `APP_KNOWLEDGE.md` is the canonical app-level architecture/status brief.
 
+## Fresh Session Resume
+
+If a new Codex chat should continue the roadmap, start with `docs/assistant/SESSION_RESUME.md`.
+
+Explicit trigger phrase:
+- `resume master plan`
+
+Equivalent resume intents:
+- `where did we leave off`
+- `what is the next roadmap step`
+
 ## User-facing guidance docs
 
+- `docs/assistant/features/START_HERE_USER_GUIDE.md`
 - `docs/assistant/features/APP_USER_GUIDE.md`
 - `docs/assistant/features/PLANNER_USER_GUIDE.md`
 
 ## If You Are Not a Developer, Start Here
 
-1. Start with `docs/assistant/features/APP_USER_GUIDE.md` for a plain-language app walkthrough.
-2. If your question is about planning or daily assignments, open `docs/assistant/features/PLANNER_USER_GUIDE.md`.
-3. If you are still unsure where to look, open `docs/assistant/INDEX.md`.
-4. Use `APP_KNOWLEDGE.md` only when you need technical or canonical detail.
+1. Start with `docs/assistant/features/START_HERE_USER_GUIDE.md` for the shortest first-time path.
+2. Then use `docs/assistant/features/APP_USER_GUIDE.md` for the broader whole-app walkthrough.
+3. If your question is about planning or daily assignments, open `docs/assistant/features/PLANNER_USER_GUIDE.md`.
+4. If you are still unsure where to look, open `docs/assistant/INDEX.md`.
+5. Use `APP_KNOWLEDGE.md` only when you need technical or canonical detail.
 
 CI quality gates:
 - `.github/workflows/dart.yml`

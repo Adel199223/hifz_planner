@@ -10,9 +10,19 @@ One-page navigation guide for agent-facing documentation.
 
 ## Beginner Quick Path
 
-1. Start with `docs/assistant/features/APP_USER_GUIDE.md`.
-2. For planning or daily-assignment questions, open `docs/assistant/features/PLANNER_USER_GUIDE.md`.
-3. Open `APP_KNOWLEDGE.md` only if you need technical/canonical detail.
+1. Start with `docs/assistant/features/START_HERE_USER_GUIDE.md`.
+2. Then use `docs/assistant/features/APP_USER_GUIDE.md` for the broader whole-app support guide.
+3. For planning or daily-assignment questions, open `docs/assistant/features/PLANNER_USER_GUIDE.md`.
+4. Open `APP_KNOWLEDGE.md` only if you need technical/canonical detail.
+
+## Fresh Session Resume
+
+1. Start with `docs/assistant/SESSION_RESUME.md`.
+2. Use `resume master plan` as the explicit trigger phrase.
+3. Also route these intents there:
+   - `where did we leave off`
+   - `what is the next roadmap step`
+4. After that, open the linked active roadmap tracker and linked active wave ExecPlan.
 
 ## Agent Doc Map
 
@@ -28,8 +38,9 @@ One-page navigation guide for agent-facing documentation.
 | `docs/assistant/manifest.json` | You are an automated agent selecting docs/tests programmatically. | Human narrative context. | <1 min |
 | `docs/assistant/LOCAL_ENV_PROFILE.example.md` | You need to decide WSL-vs-Windows routing or populate the local machine overlay. | Shared canonical project behavior. | 1 min |
 | `docs/assistant/LOCAL_CAPABILITIES.md` | Tool availability or local capability assumptions are unclear. | Private machine secrets or universal rules. | 1 min |
-| `docs/assistant/features/PLANNER_USER_GUIDE.md` | You need a thorough, non-coder explanation of planning/scheduling behavior and user decisions. | Canonical architecture, DB internals, or implementation-level scheduler logic. | 3 min |
+| `docs/assistant/features/START_HERE_USER_GUIDE.md` | You need the first-time, low-overwhelm path for non-coders before the broader support guides. | Deep planner detail, technical canon, or long-form support reference. | 1 min |
 | `docs/assistant/features/APP_USER_GUIDE.md` | You need a non-technical whole-app explainer for user guidance and support conversations. | Canonical architecture truth, schema/migration details, or implementation/runbook constraints. | 2 min |
+| `docs/assistant/features/PLANNER_USER_GUIDE.md` | You need a thorough, non-coder explanation of planning/scheduling behavior and user decisions. | Canonical architecture, DB internals, or implementation-level scheduler logic. | 3 min |
 | `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` | Task changes labels/locales/RTL/translation-resource mapping. | DB schema or non-localization feature logic. | 2 min |
 | `docs/assistant/LOCALIZATION_GLOSSARY.md` | You need canonical terms across languages without duplication. | Runtime data/cache logic decisions. | 1 min |
 | `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` | Task targets VS Code lag, file watchers, indexing pressure, or workspace artifact placement. | Feature/domain logic implementation details. | 2 min |

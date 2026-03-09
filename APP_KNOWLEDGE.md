@@ -7,6 +7,7 @@ It explains what the app is, what is already implemented, where key logic lives,
 
 - This file is technical and canonical.
 - If you want a beginner-friendly explanation, start with:
+  - `docs/assistant/features/START_HERE_USER_GUIDE.md`
   - `docs/assistant/features/APP_USER_GUIDE.md`
   - `docs/assistant/features/PLANNER_USER_GUIDE.md` (for planning-specific questions)
 - If those guides and this file disagree, this file and source code are the final truth.
@@ -28,6 +29,7 @@ Documentation contract for contributors and AI agents:
 - Discovered capability inventory: `docs/assistant/LOCAL_CAPABILITIES.md`
 
 User-perspective guides:
+- Beginner start guide (non-coder): `docs/assistant/features/START_HERE_USER_GUIDE.md`
 - Planner deep guide (non-coder): `docs/assistant/features/PLANNER_USER_GUIDE.md`
 - Whole-app guide (non-coder): `docs/assistant/features/APP_USER_GUIDE.md`
 
@@ -815,7 +817,11 @@ Representative files:
 
 - Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
 - Reader meaning controls are implemented, but translation-source selection is still fixed to one default resource per app language.
-- My Quran Wave 1 is implemented, but normal Reader usage does not yet persist the last-reader snapshot; when no snapshot exists, the hub falls back to `Open Reader`.
+- My Quran Wave 2 is now implemented locally in the active roadmap worktree:
+  - normal Reader usage now persists a lightweight last-reader resume target
+  - `My Quran` can now show the latest bookmark preview with a direct reopen path
+  - `My Quran` can now show the latest updated note preview with a direct reopen path
+  - when no saved reader target exists yet, the hub still falls back safely to `Open Reader`
 - Quran Radio is still a placeholder surface.
 - Web parity will require abstraction of `dart:io` usage in Quran.com cache/font services.
 - Quran.com parity work is active; visuals and interactions are close in many areas but still evolving.
@@ -824,17 +830,20 @@ Representative files:
 ## Current My Quran Notes
 
 - `My Quran` is no longer a placeholder.
-- Wave 1 now provides exactly three summary cards:
+- it still uses the same three summary cards:
   - `Continue reading`
   - `Saved for later`
   - `Listening setup`
-- `Continue reading` uses a lightweight last-reader snapshot if one exists:
+- `Continue reading` now uses a lightweight last-reader snapshot persisted from normal Reader usage:
   - page mode with optional target ayah context
   - verse mode with target surah/ayah
 - if no snapshot exists yet, the hub stays useful and falls back to `Open Reader`
-- `Saved for later` currently summarizes bookmark and note counts, then routes into `Library`
+- `Saved for later` now also surfaces:
+  - the latest bookmark preview with direct reopen
+  - the latest updated note preview with direct reopen
+  - the full route into `Library`
 - `Listening setup` currently summarizes the selected reciter plus speed and repeat, then routes into `Reciters`
-- the hub is intentionally summary-first in Wave 1:
+- the hub is still intentionally summary-first in Wave 2:
   - no inline editing yet
   - no duplicate Library list
   - no duplicate Settings surface

@@ -56,6 +56,7 @@ Do not use this file as primary truth when there is a conflict.
 - `docs/assistant/LOCAL_ENV_PROFILE.example.md`
 - `docs/assistant/LOCAL_CAPABILITIES.md`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
+- `docs/assistant/features/START_HERE_USER_GUIDE.md`
 - `docs/assistant/features/APP_USER_GUIDE.md`
 - `docs/assistant/features/PLANNER_USER_GUIDE.md`
 
@@ -72,6 +73,7 @@ Do not use this file as primary truth when there is a conflict.
 - Top-right drawer is the `More` surface for `Settings`, `About`, `Reciters`, and the demoted Explore entries
 - `Learn` now includes a simple `Practice from Memory` hub plus the existing `Hifz Plan` card
 - `My Quran` is now a real support hub for `Continue reading`, `Saved for later`, and `Listening setup`
+- first-time non-coder orientation should now start with `docs/assistant/features/START_HERE_USER_GUIDE.md`, not the broader support guide
 - Reader top actions are now responsive, with the settings button on its own row to avoid narrow-layout collisions
 
 ## Current Stability Notes
@@ -133,7 +135,11 @@ Do not use this file as primary truth when there is a conflict.
   - last reading location when available
   - bookmark and note counts
   - reciter/speed/repeat setup
-- Wave 1 still falls back safely to `Open Reader` when no last-reading snapshot exists yet
+- Wave 2 in the active roadmap worktree deepens that hub with:
+  - a real last-reader resume target persisted from normal Reader usage
+  - latest bookmark preview with direct reopen
+  - latest note preview with direct reopen
+  - safe `Open Reader` fallback when no resume target exists yet
 
 ## Current Practice Entry Notes
 

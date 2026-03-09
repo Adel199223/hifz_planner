@@ -104,19 +104,27 @@ void main() {
     expect(find.byKey(const ValueKey('reciters_screen_root')), findsOneWidget);
 
     await openMenu();
-    await tester.tap(find.byKey(const ValueKey('global_menu_item_my_quran')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('my_quran_screen_root')), findsOneWidget);
-
-    await openMenu();
     await tester.tap(
       find.byKey(const ValueKey('global_menu_item_quran_radio')),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('quran_radio_screen_root')),
+    );
     expect(
       find.byKey(const ValueKey('quran_radio_screen_root')),
       findsOneWidget,
     );
+
+    await openMenu();
+    await tester.tap(find.byKey(const ValueKey('global_menu_item_my_quran')));
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('my_quran_screen_root')),
+    );
+    expect(find.byKey(const ValueKey('my_quran_screen_root')), findsOneWidget);
   });
 
   testWidgets('core rail destinations use the simplified navigation model', (

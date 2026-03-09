@@ -9,6 +9,7 @@ const List<String> _requiredFiles = <String>[
   '.github/workflows/dart.yml',
   'docs/assistant/APP_KNOWLEDGE.md',
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
+  'docs/assistant/features/START_HERE_USER_GUIDE.md',
   'docs/assistant/GOLDEN_PRINCIPLES.md',
   'docs/assistant/INDEX.md',
   'docs/assistant/ISSUE_MEMORY.md',
@@ -17,6 +18,7 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/LOCAL_ENV_PROFILE.example.md',
   'docs/assistant/LOCALIZATION_GLOSSARY.md',
   'docs/assistant/PERFORMANCE_BASELINES.md',
+  'docs/assistant/SESSION_RESUME.md',
   'docs/assistant/exec_plans/PLANS.md',
   'docs/assistant/exec_plans/active',
   'docs/assistant/exec_plans/completed',
@@ -63,6 +65,7 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/LOCAL_ENV_PROFILE.example.md',
   'docs/assistant/LOCALIZATION_GLOSSARY.md',
   'docs/assistant/PERFORMANCE_BASELINES.md',
+  'docs/assistant/SESSION_RESUME.md',
   'docs/assistant/exec_plans/PLANS.md',
   'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
@@ -107,6 +110,8 @@ class AgentDocsValidator {
     _validateWorkflowSections(issues);
     _validateWorkflowNegativeRouting(issues);
     _validateFeatureGuideSections(issues);
+    _validateStartHereGuideSections(issues);
+    _validateSessionResumeSections(issues);
     _validateCanonicalContracts(issues);
     _validateBranchSafetyPolicy(issues);
     _validateApprovalGatesPolicy(issues);
@@ -114,6 +119,7 @@ class AgentDocsValidator {
     _validateWorktreeIsolationPolicy(issues);
     _validateUserGuideSupportRoutingPolicy(issues);
     _validateDocsMaintenanceUserGuideSyncPolicy(issues);
+    _validateFreshSessionResumeRoutingPolicy(issues);
     _validateLocalizationRoutingPolicy(issues);
     _validatePerformanceRoutingPolicy(issues);
     _validateReferenceDiscoveryPolicy(issues);
@@ -158,8 +164,8 @@ class AgentDocsValidator {
     final version = manifest['version'];
     if (version is! int) {
       issues.add('Manifest key "version" must be an integer.');
-    } else if (version != 10) {
-      issues.add('Manifest key "version" must be 10.');
+    } else if (version != 12) {
+      issues.add('Manifest key "version" must be 12.');
     }
 
     final canonical = manifest['canonical'];
@@ -202,10 +208,27 @@ class AgentDocsValidator {
       }
     }
 
+    final sessionResume = manifest['session_resume'];
+    if (sessionResume is! String || sessionResume.trim().isEmpty) {
+      issues.add(
+          'Manifest key "session_resume" must be a non-empty string path.');
+    } else {
+      if (sessionResume != 'docs/assistant/SESSION_RESUME.md') {
+        issues.add(
+          'Manifest key "session_resume" must be docs/assistant/SESSION_RESUME.md.',
+        );
+      }
+      if (!_exists(sessionResume)) {
+        issues
+            .add('Manifest session_resume path does not exist: $sessionResume');
+      }
+    }
+
     final userGuides = manifest['user_guides'];
     if (userGuides is! List) {
       issues.add('Manifest key "user_guides" must be an array.');
     } else {
+      final values = <String>[];
       for (var i = 0; i < userGuides.length; i++) {
         final value = userGuides[i];
         if (value is! String || value.trim().isEmpty) {
@@ -213,9 +236,25 @@ class AgentDocsValidator {
               .add('Manifest user_guides[$i] must be a non-empty string path.');
           continue;
         }
+        values.add(value);
         if (!_exists(value)) {
           issues.add('Manifest user guide path does not exist: $value');
         }
+      }
+      const startHere = 'docs/assistant/features/START_HERE_USER_GUIDE.md';
+      const appGuide = 'docs/assistant/features/APP_USER_GUIDE.md';
+      const plannerGuide = 'docs/assistant/features/PLANNER_USER_GUIDE.md';
+      if (!values.contains(startHere) ||
+          !values.contains(appGuide) ||
+          !values.contains(plannerGuide)) {
+        issues.add(
+          'Manifest user_guides must include START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and PLANNER_USER_GUIDE.md.',
+        );
+      }
+      if (values.isNotEmpty && values.first != startHere) {
+        issues.add(
+          'Manifest user_guides must list START_HERE_USER_GUIDE.md first.',
+        );
       }
     }
 
@@ -576,10 +615,11 @@ class AgentDocsValidator {
       }
       final userGuideSupport = contracts['user_guides_support_usage_policy'];
       if (userGuideSupport is String &&
-          (!userGuideSupport.contains('APP_USER_GUIDE.md') ||
+          (!userGuideSupport.contains('START_HERE_USER_GUIDE.md') ||
+              !userGuideSupport.contains('APP_USER_GUIDE.md') ||
               !userGuideSupport.contains('PLANNER_USER_GUIDE.md'))) {
         issues.add(
-          'contracts.user_guides_support_usage_policy must reference both APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+          'contracts.user_guides_support_usage_policy must reference START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and PLANNER_USER_GUIDE.md.',
         );
       }
       final userGuideDeference =
@@ -592,18 +632,58 @@ class AgentDocsValidator {
       }
       final userGuideSync = contracts['user_guides_update_sync_policy'];
       if (userGuideSync is String &&
-          (!userGuideSync.contains('APP_USER_GUIDE.md') ||
+          (!userGuideSync.contains('START_HERE_USER_GUIDE.md') ||
+              !userGuideSync.contains('APP_USER_GUIDE.md') ||
               !userGuideSync.contains('PLANNER_USER_GUIDE.md'))) {
         issues.add(
-          'contracts.user_guides_update_sync_policy must reference APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md targeted updates.',
+          'contracts.user_guides_update_sync_policy must reference START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and PLANNER_USER_GUIDE.md targeted updates.',
         );
       }
       final nonCoderPolicy = contracts['non_coder_entrypoint_policy'];
       if (nonCoderPolicy is String &&
-          (!nonCoderPolicy.contains('APP_USER_GUIDE.md') ||
+          (!nonCoderPolicy.contains('START_HERE_USER_GUIDE.md') ||
+              !nonCoderPolicy.contains('APP_USER_GUIDE.md') ||
               !nonCoderPolicy.contains('PLANNER_USER_GUIDE.md'))) {
         issues.add(
-          'contracts.non_coder_entrypoint_policy must reference APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+          'contracts.non_coder_entrypoint_policy must reference START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and PLANNER_USER_GUIDE.md.',
+        );
+      }
+      final beginnerEntrypoint = contracts['beginner_guide_entrypoint_policy'];
+      if (beginnerEntrypoint is! String ||
+          !beginnerEntrypoint.contains('START_HERE_USER_GUIDE.md')) {
+        issues.add(
+          'contracts.beginner_guide_entrypoint_policy must reference START_HERE_USER_GUIDE.md.',
+        );
+      }
+      final beginnerSync = contracts['beginner_guide_sync_policy'];
+      if (beginnerSync is! String ||
+          !beginnerSync.contains('START_HERE_USER_GUIDE.md')) {
+        issues.add(
+          'contracts.beginner_guide_sync_policy must reference START_HERE_USER_GUIDE.md.',
+        );
+      }
+      final freshSessionResume = contracts['fresh_session_resume_policy'];
+      if (freshSessionResume is! String ||
+          !freshSessionResume.contains('docs/assistant/SESSION_RESUME.md')) {
+        issues.add(
+          'contracts.fresh_session_resume_policy must reference docs/assistant/SESSION_RESUME.md.',
+        );
+      }
+      final resumeTrigger = contracts['resume_trigger_policy'];
+      if (resumeTrigger is! String ||
+          !resumeTrigger.contains('resume master plan') ||
+          !resumeTrigger.contains('docs/assistant/SESSION_RESUME.md')) {
+        issues.add(
+          'contracts.resume_trigger_policy must reference `resume master plan` and docs/assistant/SESSION_RESUME.md.',
+        );
+      }
+      final roadmapResumeUpdate = contracts['roadmap_resume_update_policy'];
+      if (roadmapResumeUpdate is! String ||
+          !roadmapResumeUpdate.contains('active wave ExecPlan') ||
+          !roadmapResumeUpdate.contains('active roadmap tracker') ||
+          !roadmapResumeUpdate.contains('docs/assistant/SESSION_RESUME.md')) {
+        issues.add(
+          'contracts.roadmap_resume_update_policy must reference the active wave ExecPlan, active roadmap tracker, and docs/assistant/SESSION_RESUME.md.',
         );
       }
       final plainLanguagePolicy =
@@ -781,15 +861,75 @@ class AgentDocsValidator {
     }
   }
 
+  void _validateStartHereGuideSections(List<String> issues) {
+    const relativePath = 'docs/assistant/features/START_HERE_USER_GUIDE.md';
+    const requiredHeadings = <String>[
+      '## Quick Start (No Technical Background)',
+      '## What This App Helps You Do',
+      '## The Main Places You Need',
+      '## How The Parts Work Together',
+      '## What To Ignore At First',
+      '## Common Situations',
+      '## What This App Does Not Do Yet',
+      '## If You Want More Detail',
+    ];
+    final file = _resolveFile(relativePath);
+    if (!file.existsSync()) {
+      return;
+    }
+    final content = file.readAsStringSync();
+    for (final heading in requiredHeadings) {
+      if (!content.contains(heading)) {
+        issues.add(
+          'Beginner guide is missing required section "$heading": $relativePath',
+        );
+      }
+    }
+  }
+
+  void _validateSessionResumeSections(List<String> issues) {
+    const relativePath = 'docs/assistant/SESSION_RESUME.md';
+    const requiredHeadings = <String>[
+      '## Fresh Session Rule',
+      '## Resume Trigger',
+      '## Current Roadmap',
+      '## Current Wave',
+      '## Current Status',
+      '## Exact Next Step',
+      '## Active Worktree And Branch',
+      '## Read These Next',
+      '## Completed Roadmaps',
+      '## Detours And Open Notes',
+    ];
+    final file = _resolveFile(relativePath);
+    if (!file.existsSync()) {
+      return;
+    }
+    final content = file.readAsStringSync();
+    for (final heading in requiredHeadings) {
+      if (!content.contains(heading)) {
+        issues.add(
+          'Session resume doc is missing required section "$heading": $relativePath',
+        );
+      }
+    }
+    if (!content.contains('resume master plan')) {
+      issues.add(
+        'SESSION_RESUME.md must document `resume master plan` as the explicit trigger phrase.',
+      );
+    }
+  }
+
   void _validateUserGuideSupportRoutingPolicy(List<String> issues) {
     final agentsShim = _resolveFile('AGENTS.md');
     if (agentsShim.existsSync()) {
       final text = agentsShim.readAsStringSync();
       final lowered = text.toLowerCase();
-      if (!text.contains('APP_USER_GUIDE.md') ||
+      if (!text.contains('START_HERE_USER_GUIDE.md') ||
+          !text.contains('APP_USER_GUIDE.md') ||
           !text.contains('PLANNER_USER_GUIDE.md')) {
         issues.add(
-          'AGENTS.md must route support/non-technical tasks to APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+          'AGENTS.md must route support/non-technical tasks to START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and PLANNER_USER_GUIDE.md.',
         );
       }
       if (!lowered.contains('plain language') &&
@@ -820,10 +960,11 @@ class AgentDocsValidator {
     if (runbook.existsSync()) {
       final text = runbook.readAsStringSync();
       final lowered = text.toLowerCase();
-      if (!text.contains('APP_USER_GUIDE.md') ||
+      if (!text.contains('START_HERE_USER_GUIDE.md') ||
+          !text.contains('APP_USER_GUIDE.md') ||
           !text.contains('PLANNER_USER_GUIDE.md')) {
         issues.add(
-          'agent.md quick routing must include APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md for support/non-technical tasks.',
+          'agent.md quick routing must include START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and PLANNER_USER_GUIDE.md for support/non-technical tasks.',
         );
       }
       if (!lowered.contains('plain language') &&
@@ -858,10 +999,11 @@ class AgentDocsValidator {
       return;
     }
     final text = file.readAsStringSync();
-    if (!text.contains('APP_USER_GUIDE.md') ||
+    if (!text.contains('START_HERE_USER_GUIDE.md') ||
+        !text.contains('APP_USER_GUIDE.md') ||
         !text.contains('PLANNER_USER_GUIDE.md')) {
       issues.add(
-        'DOCS_MAINTENANCE_WORKFLOW.md must include user-guide sync guidance for APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+        'DOCS_MAINTENANCE_WORKFLOW.md must include user-guide sync guidance for START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and PLANNER_USER_GUIDE.md.',
       );
     }
     final lowered = text.toLowerCase();
@@ -876,6 +1018,81 @@ class AgentDocsValidator {
       issues.add(
         'DOCS_MAINTENANCE_WORKFLOW.md must require preserving/updating beginner-focused sections (Quick Start, Terms in Plain English).',
       );
+    }
+    if (!text.contains('docs/assistant/SESSION_RESUME.md') ||
+        !text.toLowerCase().contains('active roadmap') ||
+        !text.toLowerCase().contains('next step')) {
+      issues.add(
+        'DOCS_MAINTENANCE_WORKFLOW.md must include SESSION_RESUME.md update guidance for roadmap state and next-step changes.',
+      );
+    }
+  }
+
+  void _validateFreshSessionResumeRoutingPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      if (!text.contains('## Fresh Session Resume Protocol')) {
+        issues.add(
+          'AGENTS.md must include "## Fresh Session Resume Protocol" section.',
+        );
+      }
+      if (!text.contains('docs/assistant/SESSION_RESUME.md') ||
+          !text.contains('resume master plan')) {
+        issues.add(
+          'AGENTS.md must route fresh-session roadmap resume to docs/assistant/SESSION_RESUME.md and mention `resume master plan`.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      if (!text.contains('## Fresh Session Resume Protocol')) {
+        issues.add(
+          'agent.md must include "## Fresh Session Resume Protocol" section.',
+        );
+      }
+      if (!text.contains('docs/assistant/SESSION_RESUME.md') ||
+          !text.contains('resume master plan')) {
+        issues.add(
+          'agent.md must route fresh-session roadmap resume to docs/assistant/SESSION_RESUME.md and mention `resume master plan`.',
+        );
+      }
+    }
+
+    final readme = _resolveFile('README.md');
+    if (readme.existsSync()) {
+      final text = readme.readAsStringSync();
+      if (!text.contains('## Fresh Session Resume') ||
+          !text.contains('docs/assistant/SESSION_RESUME.md') ||
+          !text.contains('resume master plan')) {
+        issues.add(
+          'README.md must include a Fresh Session Resume section that links docs/assistant/SESSION_RESUME.md and mentions `resume master plan`.',
+        );
+      }
+    }
+
+    final index = _resolveFile('docs/assistant/INDEX.md');
+    if (index.existsSync()) {
+      final text = index.readAsStringSync();
+      if (!text.contains('## Fresh Session Resume') ||
+          !text.contains('docs/assistant/SESSION_RESUME.md') ||
+          !text.contains('resume master plan')) {
+        issues.add(
+          'INDEX.md must include a Fresh Session Resume section that routes to docs/assistant/SESSION_RESUME.md and mentions `resume master plan`.',
+        );
+      }
+    }
+
+    final plans = _resolveFile('docs/assistant/exec_plans/PLANS.md');
+    if (plans.existsSync()) {
+      final text = plans.readAsStringSync();
+      if (!text.contains('docs/assistant/SESSION_RESUME.md')) {
+        issues.add(
+          'PLANS.md roadmap return protocol must require updating docs/assistant/SESSION_RESUME.md.',
+        );
+      }
     }
   }
 
@@ -1062,11 +1279,21 @@ class AgentDocsValidator {
           'README.md must include "## If You Are Not a Developer, Start Here" entrypoint section.',
         );
       }
-      if (!text.contains('docs/assistant/features/APP_USER_GUIDE.md') ||
+      if (!text.contains('docs/assistant/features/START_HERE_USER_GUIDE.md') ||
+          !text.contains('docs/assistant/features/APP_USER_GUIDE.md') ||
           !text.contains('docs/assistant/features/PLANNER_USER_GUIDE.md') ||
           !text.contains('docs/assistant/INDEX.md')) {
         issues.add(
-          'README.md non-coder entrypoint section must link APP_USER_GUIDE.md, PLANNER_USER_GUIDE.md, and docs/assistant/INDEX.md.',
+          'README.md non-coder entrypoint section must link START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, PLANNER_USER_GUIDE.md, and docs/assistant/INDEX.md.',
+        );
+      }
+      final startIndex =
+          text.indexOf('docs/assistant/features/START_HERE_USER_GUIDE.md');
+      final appIndex =
+          text.indexOf('docs/assistant/features/APP_USER_GUIDE.md');
+      if (startIndex == -1 || appIndex == -1 || startIndex > appIndex) {
+        issues.add(
+          'README.md non-coder entrypoint section must mention START_HERE_USER_GUIDE.md before APP_USER_GUIDE.md.',
         );
       }
     }
@@ -1079,10 +1306,11 @@ class AgentDocsValidator {
           'APP_KNOWLEDGE.md must include "## If You Are Not a Developer (Read This First)" section.',
         );
       }
-      if (!text.contains('docs/assistant/features/APP_USER_GUIDE.md') ||
+      if (!text.contains('docs/assistant/features/START_HERE_USER_GUIDE.md') ||
+          !text.contains('docs/assistant/features/APP_USER_GUIDE.md') ||
           !text.contains('docs/assistant/features/PLANNER_USER_GUIDE.md')) {
         issues.add(
-          'APP_KNOWLEDGE.md non-coder section must route readers to APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+          'APP_KNOWLEDGE.md non-coder section must route readers to START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and PLANNER_USER_GUIDE.md.',
         );
       }
     }
@@ -1095,11 +1323,19 @@ class AgentDocsValidator {
           'INDEX.md must include "## Beginner Quick Path" section.',
         );
       }
-      if (!text.contains('APP_USER_GUIDE.md') ||
+      if (!text.contains('START_HERE_USER_GUIDE.md') ||
+          !text.contains('APP_USER_GUIDE.md') ||
           !text.contains('PLANNER_USER_GUIDE.md') ||
           !text.contains('APP_KNOWLEDGE.md')) {
         issues.add(
-          'INDEX.md Beginner Quick Path must include APP_USER_GUIDE.md, PLANNER_USER_GUIDE.md, and APP_KNOWLEDGE.md routing.',
+          'INDEX.md Beginner Quick Path must include START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, PLANNER_USER_GUIDE.md, and APP_KNOWLEDGE.md routing.',
+        );
+      }
+      final startIndex = text.indexOf('START_HERE_USER_GUIDE.md');
+      final appIndex = text.indexOf('APP_USER_GUIDE.md');
+      if (startIndex == -1 || appIndex == -1 || startIndex > appIndex) {
+        issues.add(
+          'INDEX.md Beginner Quick Path must mention START_HERE_USER_GUIDE.md before APP_USER_GUIDE.md.',
         );
       }
     }

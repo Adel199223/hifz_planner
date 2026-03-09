@@ -9,6 +9,8 @@ class MyQuranDashboardSnapshot {
     required this.lastReaderLocation,
     required this.bookmarkCount,
     required this.noteCount,
+    required this.latestBookmark,
+    required this.latestNote,
     required this.reciterDisplayName,
     required this.speed,
     required this.repeatCount,
@@ -17,6 +19,8 @@ class MyQuranDashboardSnapshot {
   final ReaderLastLocation? lastReaderLocation;
   final int bookmarkCount;
   final int noteCount;
+  final MyQuranBookmarkPreview? latestBookmark;
+  final MyQuranNotePreview? latestNote;
   final String reciterDisplayName;
   final double speed;
   final int repeatCount;
@@ -25,7 +29,8 @@ class MyQuranDashboardSnapshot {
 final myQuranSnapshotServiceProvider = Provider<MyQuranSnapshotService>((ref) {
   final bookmarkRepo = ref.watch(bookmarkRepoProvider);
   final noteRepo = ref.watch(noteRepoProvider);
-  return MyQuranSnapshotService(bookmarkRepo, noteRepo);
+  final quranRepo = ref.watch(quranRepoProvider);
+  return MyQuranSnapshotService(bookmarkRepo, noteRepo, quranRepo);
 });
 
 final myQuranSavedItemsSnapshotProvider =
@@ -45,6 +50,8 @@ final myQuranDashboardSnapshotProvider =
       lastReaderLocation: appPreferences.readerLastLocation,
       bookmarkCount: savedItems.bookmarkCount,
       noteCount: savedItems.noteCount,
+      latestBookmark: savedItems.latestBookmark,
+      latestNote: savedItems.latestNote,
       reciterDisplayName: audioPreferences.reciterDisplayName,
       speed: audioPreferences.speed,
       repeatCount: audioPreferences.repeatCount,

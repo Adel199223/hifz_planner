@@ -8,18 +8,19 @@ Use this runbook to quickly route a task to the right files, commands, and tests
 
 ## Canonical Docs Stack
 
-1. `APP_KNOWLEDGE.md` (canonical app status and architecture)
-2. `docs/assistant/manifest.json` (machine-readable routing map)
-3. `docs/assistant/INDEX.md` (human doc index)
-4. `docs/assistant/ISSUE_MEMORY.md` (repeatable issue registry)
-5. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical style/invariant rules)
-6. `docs/assistant/exec_plans/PLANS.md` (major-work execution plans)
-7. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB and Drift deep reference)
-8. `docs/assistant/LOCAL_ENV_PROFILE.example.md` (WSL-vs-Windows routing format)
-9. `docs/assistant/LOCAL_CAPABILITIES.md` (discovered local tool inventory)
-10. `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` (launch/build identity)
-11. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
-12. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
+1. `docs/assistant/SESSION_RESUME.md` (fresh-session roadmap resume entrypoint)
+2. `APP_KNOWLEDGE.md` (canonical app status and architecture)
+3. `docs/assistant/manifest.json` (machine-readable routing map)
+4. `docs/assistant/INDEX.md` (human doc index)
+5. `docs/assistant/ISSUE_MEMORY.md` (repeatable issue registry)
+6. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical style/invariant rules)
+7. `docs/assistant/exec_plans/PLANS.md` (major-work execution plans)
+8. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB and Drift deep reference)
+9. `docs/assistant/LOCAL_ENV_PROFILE.example.md` (WSL-vs-Windows routing format)
+10. `docs/assistant/LOCAL_CAPABILITIES.md` (discovered local tool inventory)
+11. `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` (launch/build identity)
+12. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
+13. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
 
 Compatibility:
 - `AGENTS.md` is a short shim for tools that auto-open that filename.
@@ -45,7 +46,7 @@ Ask for explicit approval before commands that:
 | Planning/scheduling/calibration | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart` |
 | "Like X"/"same as X"/parity inspired by named app/site | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | Build identity, launch/open app, parallel worktrees | `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` | `dart tooling/print_build_identity.dart` |
-| User support / non-technical app explanation | `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner questions); respond in plain language first and define unavoidable jargon once | `dart run tooling/validate_agent_docs.dart` when docs were edited |
+| User support / non-technical app explanation | `docs/assistant/features/START_HERE_USER_GUIDE.md` first, then `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner questions); respond in plain language first and define unavoidable jargon once | `dart run tooling/validate_agent_docs.dart` when docs were edited |
 | Agent docs/structure | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | CI workflow / branch merge hygiene | `docs/assistant/workflows/CI_REPO_WORKFLOW.md` | `flutter analyze --no-fatal-infos --no-fatal-warnings` |
 | Commit, stage, ignore, push, remote cleanup | `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` | `git status --short --branch` |
@@ -58,11 +59,12 @@ Ask for explicit approval before commands that:
 ## Non-Coder Communication Mode
 
 For user support or explanation tasks:
-1. Start with `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner topics).
-2. Answer in plain language first, then give numbered steps with exact UI labels.
-3. If you must use a technical term, define it in one short line.
-4. Verify technical claims with `APP_KNOWLEDGE.md` before asserting them.
-5. Mention uncertainty explicitly when behavior may still be evolving.
+1. Start with `docs/assistant/features/START_HERE_USER_GUIDE.md`.
+2. Then use `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner topics).
+3. Answer in plain language first, then give numbered steps with exact UI labels.
+4. If you must use a technical term, define it in one short line.
+5. Verify technical claims with `APP_KNOWLEDGE.md` before asserting them.
+6. Mention uncertainty explicitly when behavior may still be evolving.
 
 ## 5-Minute Bootstrap
 
@@ -80,6 +82,22 @@ For user support or explanation tasks:
    - `lib/ui/qcf/qcf_font_manager.dart`
 5. Run docs validator:
    - `dart run tooling/validate_agent_docs.dart`
+
+## Fresh Session Resume Protocol
+
+Use this when a new chat session needs to continue the current roadmap.
+
+1. Open `docs/assistant/SESSION_RESUME.md` first.
+2. Treat `resume master plan` as the explicit trigger phrase.
+3. Also treat these as equivalent resume intents:
+   - `where did we leave off`
+   - `what is the next roadmap step`
+4. After `docs/assistant/SESSION_RESUME.md`, open:
+   - the linked active roadmap tracker
+   - the linked active wave ExecPlan
+5. Answer with:
+   - current roadmap status
+   - exact next step
 
 ## Safe Working Rules
 
@@ -151,8 +169,9 @@ Use this whenever work belongs to the staged product-redesign roadmap.
    - `All research stages are complete; implementation continues by wave.`
 3. After any detour for bugfixes, tooling, docs, or environment:
    - update the active wave ExecPlan first
-   - update `docs/assistant/exec_plans/active/2026-03-08_product_redesign_execution.md` second
-   - resume from the tracker unless it records a sequence change
+   - update the active roadmap tracker second
+   - update `docs/assistant/SESSION_RESUME.md` third
+   - resume from `docs/assistant/SESSION_RESUME.md` unless the active roadmap tracker records a sequence change
 4. Every roadmap closeout message must end with:
    - `Next step: Wave X - <name>`
 5. If the next action is a closeout step instead of a new wave, end with:

@@ -1,17 +1,19 @@
 {
-  "version": 10,
+  "version": 12,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
     "db_knowledge": "docs/assistant/DB_DRIFT_KNOWLEDGE.md"
   },
+  "session_resume": "docs/assistant/SESSION_RESUME.md",
   "bridges": [
     "AGENTS.md",
     "docs/assistant/APP_KNOWLEDGE.md"
   ],
   "user_guides": [
-    "docs/assistant/features/PLANNER_USER_GUIDE.md",
-    "docs/assistant/features/APP_USER_GUIDE.md"
+    "docs/assistant/features/START_HERE_USER_GUIDE.md",
+    "docs/assistant/features/APP_USER_GUIDE.md",
+    "docs/assistant/features/PLANNER_USER_GUIDE.md"
   ],
   "workflows": [
     {
@@ -369,12 +371,17 @@
     "approval_gates_policy": "AGENTS.md and agent.md must include Approval Gates that require explicit user confirmation for destructive, force-push, publish, risky DB, or non-essential network actions.",
     "worktree_isolation_policy": "For parallel implementation streams, prefer git worktree isolation and avoid mixing unrelated feature threads in one working tree.",
     "doc_gardening_policy": "Run docs validators regularly and apply targeted docs maintenance to prevent routing/contract drift.",
-    "user_guides_support_usage_policy": "For support/non-technical explanations, start with docs/assistant/features/APP_USER_GUIDE.md and use docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.",
-    "user_guides_canonical_deference_policy": "Feature guides are explanatory docs; if they conflict with technical docs, APP_KNOWLEDGE.md and source code win.",
-    "user_guides_update_sync_policy": "When user-facing behavior copy/flow changes, update only affected sections in APP_USER_GUIDE.md and/or PLANNER_USER_GUIDE.md.",
-    "non_coder_entrypoint_policy": "Non-coders should start with docs/assistant/features/APP_USER_GUIDE.md (or PLANNER_USER_GUIDE.md for planner topics) before technical docs.",
-    "plain_language_support_response_policy": "Support responses must be plain-language-first with numbered next steps and exact UI labels.",
-    "term_definition_policy": "If a technical term is unavoidable in support replies, define it in one short sentence."
-  },
-  "last_updated": "2026-03-08"
+      "user_guides_support_usage_policy": "For support/non-technical explanations, start with docs/assistant/features/START_HERE_USER_GUIDE.md for first-time orientation, then use docs/assistant/features/APP_USER_GUIDE.md for broader support and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.",
+      "user_guides_canonical_deference_policy": "Feature guides are explanatory docs; if they conflict with technical docs, APP_KNOWLEDGE.md and source code win.",
+      "user_guides_update_sync_policy": "When user-facing behavior copy/flow changes, update only affected sections in START_HERE_USER_GUIDE.md, APP_USER_GUIDE.md, and/or PLANNER_USER_GUIDE.md based on scope.",
+      "non_coder_entrypoint_policy": "Non-coders should start with docs/assistant/features/START_HERE_USER_GUIDE.md before moving to APP_USER_GUIDE.md or PLANNER_USER_GUIDE.md.",
+      "beginner_guide_entrypoint_policy": "First-time users and future restarts should start with docs/assistant/features/START_HERE_USER_GUIDE.md before the broader support guides.",
+      "beginner_guide_sync_policy": "When main navigation, first-run mental model, primary user journeys, what-to-ignore-at-first guidance, or the role of Today, Read, My Plan, Practice from Memory, Library, or My Quran changes, update START_HERE_USER_GUIDE.md during Assistant Docs Sync.",
+      "fresh_session_resume_policy": "Fresh sessions that need roadmap continuity should resume from docs/assistant/SESSION_RESUME.md before opening any active roadmap tracker or wave ExecPlan.",
+      "resume_trigger_policy": "Use `resume master plan` as the explicit resume trigger phrase; equivalent intents like `where did we leave off` and `what is the next roadmap step` should route to docs/assistant/SESSION_RESUME.md too.",
+      "roadmap_resume_update_policy": "After roadmap detours or changes to active wave, next step, closeout state, branch, or worktree, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third.",
+      "plain_language_support_response_policy": "Support responses must be plain-language-first with numbered next steps and exact UI labels.",
+      "term_definition_policy": "If a technical term is unavoidable in support replies, define it in one short sentence."
+    },
+  "last_updated": "2026-03-09"
 }

@@ -111,6 +111,69 @@ void main() {
     expect(find.text('رَبِّ ٱلْعَٰلَمِينَ'), findsNothing);
   });
 
+  testWidgets('reader persists verse-mode resume targets', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final store = _FakeAppPreferencesStore();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(store),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      screen: const ReaderScreen(targetSurah: 2, targetAyah: 1),
+    );
+    await tester.pumpAndSettle();
+
+    expect(store._stored.lastReaderMode, 'verse');
+    expect(store._stored.lastReaderSurah, 2);
+    expect(store._stored.lastReaderAyah, 1);
+    expect(store._stored.lastReaderPage, equals(null));
+  });
+
+  testWidgets('reader persists page-mode resume targets', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final store = _FakeAppPreferencesStore();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(store),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      screen: const ReaderScreen(
+        mode: 'page',
+        page: 2,
+        targetSurah: 2,
+        targetAyah: 1,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(store._stored.lastReaderMode, 'page');
+    expect(store._stored.lastReaderPage, 2);
+    expect(store._stored.lastReaderSurah, 2);
+    expect(store._stored.lastReaderAyah, 1);
+  });
+
   testWidgets(
     'page mode without metadata still exposes 1..604 page navigation',
     (tester) async {
