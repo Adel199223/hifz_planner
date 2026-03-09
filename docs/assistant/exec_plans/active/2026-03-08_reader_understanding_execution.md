@@ -56,8 +56,8 @@
 - [x] Start Wave 3
 - [x] Merge Wave 3
 - [x] Start Wave 4
-- [ ] Merge Wave 4
-- [ ] Close the roadmap
+- [x] Merge Wave 4
+- [x] Close the roadmap
 
 ## Surprises and Adjustments
 - Use this section for sequence changes, blockers, or scope corrections discovered during implementation.
@@ -98,7 +98,7 @@
 | Reader Wave 1 | merged | historical | removed | Persistent Reader meaning controls are now in `main` after PR `#33`; closeout cleanup was corrected in PR `#35` |
 | Reader Wave 2 | merged | historical | removed | Verse study sheet and meaning-first actions are now in `main` after PR `#36` and closeout PR `#37` |
 | Reader Wave 3 | merged | historical | removed after closeout | Library-connected study review is now in `main` after PR `#38` and this closeout archives the active plan |
-| Reader Wave 4 | active | `feat/reader-wave4-placeholder-cleanup` | `/home/fa507/dev/hifz_planner_reader_wave4` | Placeholder cleanup and cross-surface consistency is implemented locally and ready for docs sync / closeout |
+| Reader Wave 4 | merged | historical | removed after closeout | Placeholder cleanup and cross-surface consistency is now in `main` after PR `#40` and this closeout archives the active plan |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -162,5 +162,6 @@
   - 2026-03-09: Starting overlapping `flutter test` commands in the same fresh worktree triggered the known local Flutter startup/plugin race pattern again; the trusted Wave 4 validation record uses sequential Flutter test runs.
   - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation; the incidental churn was reverted so Wave 4 remains dependency-neutral.
   - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, and app user guide so the final Reader vocabulary cleanup is documented without widening into unrelated areas.
+  - 2026-03-09: Wave 4 feature work merged to `main` in PR `#40`.
 - Next recommended action:
-  - close Wave 4 with docs sync and PR merge
+  - define the next backlog or a new roadmap
