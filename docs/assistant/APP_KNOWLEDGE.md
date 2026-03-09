@@ -133,14 +133,15 @@ Do not use this file as primary truth when there is a conflict.
 - `My Quran` is no longer placeholder-only
 - it now summarizes:
   - last reading location when available
-  - bookmark and note counts
+  - saved-verse and note counts
   - reciter/speed/repeat setup
-- Wave 3 in the active roadmap worktree deepens that hub with:
+- Wave 4 in the active roadmap worktree deepens that hub with:
   - a real last-reader resume target persisted from normal Reader usage
-  - latest bookmark preview with direct reopen
+  - latest saved-verse preview with direct reopen
   - latest note preview with direct reopen
   - a separate `Study setup` section with plain-language status plus inline toggles for translation, word help, transliteration, and Practice from Memory autoplay
   - reciter changes still routed through `Listening setup` and `Reciters`
+  - learner-facing saved-study wording now aligned around `Save for later` and `Saved verses` across `Reader`, `My Quran`, and `Library`
   - safe `Open Reader` fallback when no resume target exists yet
 
 ## Current Practice Entry Notes

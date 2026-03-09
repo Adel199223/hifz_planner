@@ -121,7 +121,7 @@ What `Continue reading` means:
 - if not, it still gives you a clear `Open Reader` button instead of leaving the page blank
 
 What `Saved for later` means:
-- it shows how many bookmarks and notes you currently have
+- it shows how many saved verses and notes you currently have
 - it sends you into `Library` when you want the full saved list
 
 What `Listening setup` means:
@@ -162,7 +162,7 @@ What `Study this verse` does:
 - if some meaning data is missing, it says so calmly instead of pretending extra explanation exists
 
 What happens later in `Library`:
-- `Bookmarks` now show a short saved-for-later-study cue and an Arabic verse preview when the local verse text is available
+- `Saved verses` now show a short saved-for-later-study cue and an Arabic verse preview when the local verse text is available
 - `Notes` now show the note plus the linked Arabic verse preview, so you can recognize the study context before opening the note
 - the main button now says `Reopen in Reader`, which takes you back to that verse
 
@@ -353,7 +353,7 @@ If some remote assets fail temporarily:
 - I missed sessions and need a safe recovery path -> Today -> Recovery assistant
 - I need to start a memorization session -> Practice from Memory
 - I want pure Quran reading/listening -> Read
-- I need to revisit a saved verse and remember why I saved it -> Library -> Bookmarks
+- I need to revisit a saved verse and remember why I saved it -> Library -> Saved verses
 - I want to reopen a verse-linked note with verse context -> Library -> Notes
 - I need language/theme adjustments -> More -> Settings
 - I want forecast or pace calibration tools -> My Plan -> Advanced

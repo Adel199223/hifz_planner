@@ -154,7 +154,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 
 - first seen: 2026-03-08
 - last seen: 2026-03-09
-- repeat count: 4
+- repeat count: 5
 - status: mitigated
 - trigger source:
   - first Flutter validation in a fresh isolated worktree
@@ -167,6 +167,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
   - Wave 3: the first fresh-worktree test run touched `pubspec.lock` again, and the incidental change was reverted after validation
   - Wave 4: `flutter test` touched `pubspec.lock` again in a fresh worktree, and the incidental change was reverted before closeout
   - My Quran Wave 1: fresh-worktree Flutter bootstrap touched `pubspec.lock` again, and the incidental change was reverted before docs sync
+  - My Quran Wave 4: fresh-worktree Flutter bootstrap touched `pubspec.lock` again, and the incidental change was reverted before docs sync
 - accepted fix:
   - treat lockfile churn as incidental unless dependencies were intentionally changed, and revert it before closeout
 - regressed after fix:
@@ -183,6 +184,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave3_coaching_adjustment_guidance.md`
   - `docs/assistant/exec_plans/completed/2026-03-08_goals_wave4_cross_surface_consistency.md`
   - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave1_hub_foundation.md`
+  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave4_cross_surface_consistency_closeout.md`
 
 ### `roadmap_trigger_granularity_ambiguity`
 

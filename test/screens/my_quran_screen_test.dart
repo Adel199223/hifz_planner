@@ -74,7 +74,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Bookmarks: 0 · Notes: 0'), findsOneWidget);
+    expect(find.text('Saved verses: 0 · Notes: 0'), findsOneWidget);
     expect(
       find.text(
         'No saved items yet. Use Save for later or notes while you read.',
@@ -221,7 +221,7 @@ void main() {
         child: MaterialApp.router(routerConfig: router),
       ),
     );
-    await pumpUntilFound(tester, find.text('Bookmarks: 1 · Notes: 1'));
+    await pumpUntilFound(tester, find.text('Saved verses: 1 · Notes: 1'));
 
     expect(
       find.text('Open Library to revisit saved verses and notes.'),
@@ -315,7 +315,7 @@ void main() {
       find.byKey(const ValueKey('my_quran_latest_bookmark_section')),
     );
 
-    expect(find.text('Latest bookmark'), findsOneWidget);
+    expect(find.text('Latest saved verse'), findsOneWidget);
     expect(find.text('Surah 2, Ayah 255'), findsOneWidget);
     expect(find.text('اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ'), findsOneWidget);
     expect(find.text('Page 42'), findsOneWidget);
