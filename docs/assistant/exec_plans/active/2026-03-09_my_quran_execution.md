@@ -53,7 +53,7 @@
 - [x] Start Wave 2
 - [x] Merge Wave 2
 - [x] Start Wave 3
-- [ ] Merge Wave 3
+- [x] Merge Wave 3
 - [ ] Start Wave 4
 - [ ] Merge Wave 4
 - [ ] Close the roadmap
@@ -77,7 +77,7 @@
 | Reader Understanding roadmap | merged | historical | removed | Integrated 4-wave reader roadmap completed before this roadmap started |
 | My Quran Wave 1 | merged | historical | removed after merge | Three-card hub foundation merged to `main` in PR `#42`; active plan archived in `docs/assistant/exec_plans/completed/` |
 | My Quran Wave 2 | merged | historical | removed after merge | Saved-study previews, real resume depth, beginner-guide routing, and fresh-session resume routing merged to `main` in PR `#44`; active plan archived in `docs/assistant/exec_plans/completed/` |
-| My Quran Wave 3 | active | `feat/my-quran-wave3-setup-shortcuts` | `/home/fa507/dev/hifz_planner_my_quran_wave3` | Personal setup shortcuts are implemented, locally green, and docs-synced; PR closeout is next |
+| My Quran Wave 3 | merged | historical | removed after merge | Personal setup shortcuts merged to `main` in PR `#47`; active plan archived in `docs/assistant/exec_plans/completed/` |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -137,5 +137,7 @@
 - 2026-03-09: A docs-governance detour added explicit roadmap governance, adaptive trigger thresholds, and active-worktree authority so future complex work can choose between no-roadmap, ExecPlan-only, and roadmap mode without relying on chat memory.
 - 2026-03-09: The reusable UCBS roadmap-governance module is now merged to `main`, and the active Wave 3 worktree has been rebased onto that baseline so the local project harness matches the template-layer contracts without widening Wave 3 scope.
 - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical app brief, assistant bridge, broader app user guide, and beginner start guide so Wave 3 study-setup behavior is durable in both technical and non-technical support docs.
+- 2026-03-09: Wave 3 feature work merged to `main` in PR `#47`.
+- 2026-03-09: Wave 3 active ExecPlan is now archived to `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave3_personal_setup_shortcuts.md`.
 - Next recommended action:
-  - close Wave 3 with PR merge
+  - Wave 4 - Cross-Surface Consistency and Closeout
