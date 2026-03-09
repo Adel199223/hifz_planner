@@ -5,7 +5,7 @@ This module adds adaptive roadmap governance to generated project harnesses for 
 
 Use it to generate one consistent system for:
 - deciding when roadmap mode is justified
-- keeping fresh-session resume safe
+- keeping fresh-session resume safe through one roadmap anchor file
 - preserving live-state authority during active worktree execution
 - handling detours and roadmap closeout without relying on chat memory
 
@@ -28,7 +28,8 @@ Do not activate it by default for:
 For bounded major work, prefer ExecPlan-only instead of roadmap mode.
 
 ## Terminology
-- `roadmap`: a multi-wave program for a complex improvement
+- `roadmap`: a multi-wave or stage-plus-wave program for a complex improvement
+- `master plan`: equivalent to `roadmap`
 - `wave`: one implementation slice inside a roadmap
 - `stage`: an optional research/specification phase before implementation
 - `ExecPlan`: the execution plan for either a roadmap wave or a standalone major task
@@ -43,6 +44,8 @@ When this module is activated, generated repos should include:
 Generated manifest/routing docs should also point fresh sessions to:
 - `docs/assistant/SESSION_RESUME.md`
 
+`docs/assistant/SESSION_RESUME.md` is the roadmap anchor file and the stable resume anchor for fresh sessions.
+
 ## Generated Routing Rules
 Generated repos should route fresh resume intent like this:
 - open `docs/assistant/SESSION_RESUME.md` first
@@ -56,10 +59,12 @@ Generated repos should route fresh resume intent like this:
 
 ## Artifact Authority Rule
 Generated repos should document one authority model:
-- `docs/assistant/SESSION_RESUME.md` is the stable first resume stop
+- `docs/assistant/SESSION_RESUME.md` is the roadmap anchor file and stable first resume stop
 - the active roadmap tracker is the sequence source
 - the active wave ExecPlan is the implementation-detail source
 - issue memory is only for repeatable governance/workflow failures, not normal roadmap history
+
+Generated repos should also allow the active roadmap tracker to resequence future stages or waves when new discoveries, blockers, or detours force a better order.
 
 If a wave is active in a separate worktree:
 - that worktree's `SESSION_RESUME.md`, active roadmap tracker, and active wave ExecPlan are authoritative for live roadmap state
@@ -77,6 +82,9 @@ Resume from `docs/assistant/SESSION_RESUME.md` unless the active roadmap tracker
 Generated repos using this module should require roadmap closeouts to report:
 - current roadmap status
 - exact next step
+
+If research stages are already complete, closeout wording should allow:
+- `All research stages are complete; implementation continues by wave.`
 
 If the next action is a closeout step instead of a new wave, the closeout should say that explicitly.
 

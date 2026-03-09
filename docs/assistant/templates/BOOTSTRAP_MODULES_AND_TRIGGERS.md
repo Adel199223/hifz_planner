@@ -24,6 +24,7 @@ The goal is to keep the universal core small while still letting new repos activ
 | Staged Execution | Conditional, mandatory when triggered | When risk is medium/high or at least two stage-gate trigger conditions are present |
 | OpenAI Docs + Citation | Conditional | When OpenAI products/APIs or unstable external facts are in scope |
 | Issue Memory System | Always On | For every project; generate project issue memory, docs-sync routing, and bootstrap filtering by default |
+| Project Harness Sync | Always On | For every bootstrapped repo; generate local apply routing for vendored template files and keep template edits protected |
 | Local Environment Overlay | Conditional | When the bootstrap is being tailored for a known personal machine or dual-host setup |
 | Capability Discovery | Conditional | When skills, MCPs, or local tools may materially change the project harness |
 | Worktree / Build Identity | Auto-Conditional | Automatically when the project has a runnable app, GUI, local desktop workflow, or explicit multi-worktree risk |
@@ -48,6 +49,21 @@ Hard rule:
 - `UCBS` is accepted as shorthand, but `update codex bootstrap` remains the canonical wording in docs and examples.
 - Normal project feature work must not edit `docs/assistant/templates/*` unless one of the canonical bootstrap triggers above was explicitly invoked.
 - When bootstrap maintenance is active, consult project issue memory first and only generalize entries whose bootstrap relevance is `possible` or `required`.
+
+## Canonical Project Harness Apply Triggers
+When the task targets a repo's local harness rather than the reusable bootstrap source, use these triggers:
+
+| Trigger | Meaning |
+|---|---|
+| `implement the template files` | Read vendored template files and apply them to the repo harness without editing the vendored template files |
+| `sync project harness` | Accepted technical alias for the same local apply behavior |
+| `audit project harness` | Inspect/report local harness drift only |
+| `check project harness` | Validate local harness integrity only |
+
+Hard rule:
+- Vendored `docs/assistant/templates/*` files are committed project assets, not cleanup candidates.
+- `implement the template files` must not edit `docs/assistant/templates/*`.
+- `update bootstrap` is ambiguous and must be clarified between global bootstrap maintenance and local harness application.
 
 ## Issue Memory System Rule
 Generated projects should always include issue memory by default.
@@ -110,11 +126,14 @@ When this module is activated, generated repos should include:
 - an active wave ExecPlan in `docs/assistant/exec_plans/active/`
 
 Generated repos should also document:
+- `docs/assistant/SESSION_RESUME.md` as the roadmap anchor file
+- stages as optional research/spec phases and waves as implementation slices
 - the active-worktree authority rule for live roadmap state
 - the update order:
   1. active wave ExecPlan
   2. active roadmap tracker
   3. `docs/assistant/SESSION_RESUME.md`
+- the right to resequence future stages or waves when new discoveries force a better sequence
 - the rule that roadmap mode is not the default for every task
 
 ## Stage-Gate Rules
