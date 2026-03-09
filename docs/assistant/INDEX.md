@@ -46,6 +46,7 @@ One-page navigation guide for agent-facing documentation.
 | `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` | Task targets VS Code lag, file watchers, indexing pressure, or workspace artifact placement. | Feature/domain logic implementation details. | 2 min |
 | `docs/assistant/PERFORMANCE_BASELINES.md` | You need canonical watcher/search excludes and environment placement defaults. | CI release logic or runtime architecture decisions. | 1 min |
 | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | Task requires parity/inspiration from named apps/sites and external reference selection. | Direct implementation details without external-source analysis. | 2 min |
+| `docs/assistant/workflows/ROADMAP_WORKFLOW.md` | Work is a long-running multi-wave program and needs adaptive roadmap governance, detour handling, and fresh-session continuity. | Small isolated changes or one-merge bounded work that should stay lighter. | 2 min |
 | `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md` | Task needs launch identity, parallel worktree discipline, or deterministic GUI handoff. | Small single-worktree edits with no runnable-build ambiguity. | 2 min |
 | `docs/assistant/DB_DRIFT_KNOWLEDGE.md` | You are changing schema/migrations/repos/planner persistence. | Reader-only UI behavior changes. | 3 min |
 | `docs/assistant/workflows/READER_WORKFLOW.md` | Task targets Verse by Verse / Reading UI, shared Quran word rendering, and interaction parity. | Planner internals or DB migrations. | 2 min |

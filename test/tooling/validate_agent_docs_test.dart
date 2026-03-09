@@ -93,6 +93,16 @@ void main() {
       'path': 'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
       'needle': 'WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
     },
+    <String, String>{
+      'description': 'roadmap workflow doc',
+      'path': 'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
+      'needle': 'ROADMAP_WORKFLOW.md',
+    },
+    <String, String>{
+      'description': 'bootstrap roadmap governance template',
+      'path': 'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+      'needle': 'BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+    },
   ]) {
     test('validator fails when ${missingFileCase['description']} is missing',
         () {
@@ -283,6 +293,38 @@ void main() {
     );
   });
 
+  test('validator fails when manifest misses roadmap_governance workflow', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final workflows = (manifest['workflows'] as List<dynamic>)
+        .whereType<Map<String, dynamic>>()
+        .where((workflow) => workflow['id'] != 'roadmap_governance')
+        .toList();
+    manifest['workflows'] = workflows;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Manifest must include required workflow id') &&
+            issue.contains('roadmap_governance'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when manifest misses worktree_build_identity workflow',
       () {
     final fixture = _createValidFixture();
@@ -316,7 +358,7 @@ void main() {
     );
   });
 
-  test('validator fails when manifest version is not 12', () {
+  test('validator fails when manifest version is not 13', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
 
@@ -335,7 +377,7 @@ void main() {
 
     expect(
       issues
-          .any((issue) => issue.contains('Manifest key "version" must be 12.')),
+          .any((issue) => issue.contains('Manifest key "version" must be 13.')),
       isTrue,
       reason: issues.join('\n'),
     );
@@ -990,6 +1032,62 @@ void main() {
               'AGENTS.md must route fresh-session roadmap resume to docs/assistant/SESSION_RESUME.md and mention `resume master plan`.',
             ),
           ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when AGENTS.md misses roadmap trigger policy', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final agentsFile = File(_joinPath(fixture.path, 'AGENTS.md'));
+    final mutated = agentsFile
+        .readAsStringSync()
+        .replaceAll('## Roadmap Trigger Policy', '## Trigger Policy')
+        .replaceAll('ExecPlan-only', 'ExecPlan only')
+        .replaceAll('small isolated work', 'small work');
+    agentsFile.writeAsStringSync(mutated);
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) => issue.contains(
+          'AGENTS.md must include Roadmap Trigger Policy and Roadmap Artifact Authority sections.',
+        ),
+      ) ||
+          issues.any(
+            (issue) => issue.contains(
+              'AGENTS.md must reference ROADMAP_WORKFLOW.md, adaptive granularity, and active-worktree authority.',
+            ),
+          ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when README.md misses roadmap live-source guidance', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final readme = File(_joinPath(fixture.path, 'README.md'));
+    final updated = readme
+        .readAsStringSync()
+        .replaceAll('docs/assistant/workflows/ROADMAP_WORKFLOW.md', 'docs/assistant/workflows/PLANNER_WORKFLOW.md')
+        .replaceAll('active worktree is authoritative during live roadmap work', 'main is enough');
+    readme.writeAsStringSync(updated);
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) => issue.contains(
+          'README.md must reference ROADMAP_WORKFLOW.md and explain that the active worktree is the live roadmap source during in-flight wave work.',
+        ),
+      ),
       isTrue,
       reason: issues.join('\n'),
     );
@@ -1854,6 +1952,11 @@ void main() {
     'worktree_build_identity_policy',
     'commit_shorthand_policy',
     'push_shorthand_policy',
+    'roadmap_trigger_policy',
+    'roadmap_granularity_policy',
+    'roadmap_artifact_authority_policy',
+    'roadmap_detour_policy',
+    'roadmap_closeout_policy',
   ]) {
     test('validator fails when $contractKey key is missing', () {
       final fixture = _createValidFixture();
@@ -1914,6 +2017,69 @@ void main() {
       reason: issues.join('\n'),
     );
   });
+
+  test('validator fails when bootstrap roadmap template misses adaptive rules',
+      () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final template = File(
+      _joinPath(
+        fixture.path,
+        'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+      ),
+    );
+    final updated = template
+        .readAsStringSync()
+        .replaceAll('single-file fixes', 'small fixes')
+        .replaceAll('one-shot docs cleanup', 'docs work')
+        .replaceAll('ExecPlan-only', 'ExecPlan only');
+    template.writeAsStringSync(updated);
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) => issue.contains(
+          'BOOTSTRAP_ROADMAP_GOVERNANCE.md must define adaptive thresholds for no-roadmap, ExecPlan-only, and roadmap-grade work.',
+        ),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when bootstrap template map misses roadmap module', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final templateMap = File(
+      _joinPath(
+        fixture.path,
+        'docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json',
+      ),
+    );
+    templateMap.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+        'version': 2,
+        'modules': <Map<String, dynamic>>[],
+      }),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) => issue.contains(
+          'BOOTSTRAP_TEMPLATE_MAP.json must include the roadmap_governance module and BOOTSTRAP_ROADMAP_GOVERNANCE.md path.',
+        ),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
 }
 
 Directory _createValidFixture() {
@@ -1937,6 +2103,11 @@ Directory _createValidFixture() {
       'Ask for approval before destructive, force-push, publish, risky DB, or non-essential network actions.',
       '## ExecPlans',
       'Major and multi-file work uses docs/assistant/exec_plans/active/ with docs/assistant/exec_plans/PLANS.md.',
+      '## Roadmap Trigger Policy',
+      'Use no roadmap for small isolated work.',
+      'Use ExecPlan-only for bounded major work.',
+      'Use a roadmap for long-running multi-wave restart-sensitive work.',
+      'See docs/assistant/workflows/ROADMAP_WORKFLOW.md for adaptive thresholds.',
       '## Worktree Isolation',
       'Use git worktree isolation for parallel streams.',
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
@@ -1946,6 +2117,8 @@ Directory _createValidFixture() {
       'For a new chat that asks to continue, resume, or asks what the next roadmap step is, open docs/assistant/SESSION_RESUME.md first.',
       'Use `resume master plan` as the explicit trigger phrase.',
       'After docs/assistant/SESSION_RESUME.md, open the linked active roadmap tracker and linked active wave ExecPlan.',
+      '## Roadmap Artifact Authority',
+      'During in-flight roadmap work, the active worktree is authoritative for live roadmap state.',
       'For user support/non-technical explanation tasks, start with docs/assistant/features/START_HERE_USER_GUIDE.md; then use docs/assistant/features/APP_USER_GUIDE.md for broader support and docs/assistant/features/PLANNER_USER_GUIDE.md for planner behavior/support. Respond in plain language first and run a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
       '## Non-Coder Communication Mode',
       'For support tasks, start with docs/assistant/features/START_HERE_USER_GUIDE.md, then docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-specific support.',
@@ -1968,6 +2141,11 @@ Directory _createValidFixture() {
       'Ask for approval before destructive, force-push, publish, risky DB, or non-essential network actions.',
       '## ExecPlans',
       'Major and multi-file work uses docs/assistant/exec_plans/active/ with docs/assistant/exec_plans/PLANS.md.',
+      '## Roadmap Trigger Policy',
+      'Use no roadmap for small isolated work.',
+      'Use ExecPlan-only for bounded major work.',
+      'Use a roadmap for long-running multi-wave restart-sensitive work.',
+      'See docs/assistant/workflows/ROADMAP_WORKFLOW.md for adaptive thresholds.',
       '## Worktree Isolation',
       'Use git worktree isolation for parallel streams.',
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
@@ -1977,6 +2155,8 @@ Directory _createValidFixture() {
       'Open docs/assistant/SESSION_RESUME.md first when a new chat needs roadmap continuity.',
       'Use `resume master plan` as the explicit trigger phrase.',
       'After docs/assistant/SESSION_RESUME.md, open the linked active roadmap tracker and linked active wave ExecPlan.',
+      '## Roadmap Artifact Authority',
+      'During in-flight roadmap work, the active worktree is authoritative for live roadmap state.',
       'Support/non-technical explanation routing: docs/assistant/features/START_HERE_USER_GUIDE.md, docs/assistant/features/APP_USER_GUIDE.md, and docs/assistant/features/PLANNER_USER_GUIDE.md. Use plain language first and perform a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
       '## Non-Coder Communication Mode',
       'For support tasks, start with docs/assistant/features/START_HERE_USER_GUIDE.md, then docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-specific support.',
@@ -2012,6 +2192,8 @@ Directory _createValidFixture() {
       '## Fresh Session Resume',
       '- docs/assistant/SESSION_RESUME.md',
       '- `resume master plan`',
+      '- docs/assistant/workflows/ROADMAP_WORKFLOW.md',
+      '- active worktree is authoritative during live roadmap work',
       '## If You Are Not a Developer, Start Here',
       '- docs/assistant/features/START_HERE_USER_GUIDE.md',
       '- docs/assistant/features/APP_USER_GUIDE.md',
@@ -2151,12 +2333,25 @@ Directory _createValidFixture() {
     [
       '# PLANS',
       '',
+      '## Adaptive Planning Rule',
+      '',
+      'small isolated work -> no roadmap, ExecPlan optional',
+      'bounded major work -> ExecPlan only',
+      'long-running multi-wave, restart-sensitive work -> roadmap',
+      '',
       '## Roadmap Return Protocol',
       '',
       'Update the active wave ExecPlan first.',
       'Update the active roadmap tracker second.',
       'Update docs/assistant/SESSION_RESUME.md third.',
       'Resume from docs/assistant/SESSION_RESUME.md unless the active roadmap tracker changes sequence.',
+      '',
+      '## Roadmap Artifact Authority',
+      '',
+      'docs/assistant/SESSION_RESUME.md is the stable first resume stop.',
+      'The active roadmap tracker is the sequence source.',
+      'The active wave ExecPlan is the implementation-detail source.',
+      'If a wave is active in a separate worktree, that active worktree is authoritative for live roadmap state.',
     ].join('\n'),
   );
   writeFile('docs/assistant/exec_plans/active/.gitkeep', '');
@@ -2165,6 +2360,11 @@ Directory _createValidFixture() {
     'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
     [
       '# Template',
+      '',
+      'Template files to apply:',
+      '- docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+      'Use adaptive roadmap mode for long-running multi-wave restart-sensitive work.',
+      'Generate docs/assistant/SESSION_RESUME.md when roadmap mode is active.',
       '',
       '## Newbie-First Layer (Optional: remove for developer-first repos)',
       '- Assume user is a complete beginner/non-coder unless this section is removed or user explicitly requests technical depth.',
@@ -2223,6 +2423,103 @@ Directory _createValidFixture() {
     'docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md',
     workflowTemplate,
   );
+  writeFile(
+    'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
+    [
+      '## What This Workflow Is For',
+      '',
+      'Roadmap purpose.',
+      '',
+      '## Expected Outputs',
+      '',
+      '- Adaptive roadmap output.',
+      '',
+      '## When To Use',
+      '',
+      'Use for long-running multi-wave, restart-sensitive work.',
+      'Use ExecPlan-only for bounded major work.',
+      'Use no roadmap for small isolated work.',
+      '',
+      '## What Not To Do',
+      '',
+      'Don\'t use this workflow when a small isolated change can stay lighter. Instead use docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md.',
+      'Do not treat main as the live roadmap source while a wave is active in a separate worktree.',
+      '',
+      '## Primary Files',
+      '',
+      '- docs/assistant/SESSION_RESUME.md',
+      '- docs/assistant/exec_plans/PLANS.md',
+      '',
+      '## Minimal Commands',
+      '',
+      'git worktree list',
+      'git status --short --branch',
+      '',
+      '## Targeted Tests',
+      '',
+      'flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart',
+      '',
+      '## Failure Modes and Fallback Steps',
+      '',
+      'Fallback.',
+      '',
+      '## Handoff Checklist',
+      '',
+      'Use ExecPlan-only when work is bounded.',
+      'Use the active worktree as the live roadmap authority during in-flight wave work.',
+      'Keep docs/assistant/SESSION_RESUME.md as the stable first stop.',
+    ].join('\n'),
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+    [
+      '# BOOTSTRAP ROADMAP GOVERNANCE',
+      '',
+      'Use roadmap mode for long-running multi-wave, restart-sensitive work.',
+      'Use ExecPlan-only for bounded major work.',
+      'Use no roadmap for single-file fixes or one-shot docs cleanup.',
+      'Treat roadmap and master plan as equivalent user intents.',
+      'Generate docs/assistant/SESSION_RESUME.md as the stable fresh-session wrapper.',
+      'Generate an active roadmap tracker and active wave ExecPlan.',
+      'During in-flight work in a separate worktree, that separate worktree is authoritative for live roadmap state.',
+      'Update order: active wave ExecPlan, active roadmap tracker, docs/assistant/SESSION_RESUME.md.',
+      'Reusable issue classes include roadmap_trigger_granularity_ambiguity and active_worktree_resume_authority_confusion.',
+    ].join('\n'),
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json',
+    const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+      'version': 2,
+      'modules': <Map<String, dynamic>>[
+        <String, dynamic>{
+          'id': 'roadmap_governance',
+          'path': 'docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+        },
+      ],
+    }),
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_MODULES_AND_TRIGGERS.md',
+    [
+      '# BOOTSTRAP MODULES AND TRIGGERS',
+      '',
+      'Roadmap Governance -> docs/assistant/templates/BOOTSTRAP_ROADMAP_GOVERNANCE.md',
+      'Use no roadmap for single-file fixes.',
+      'Use ExecPlan-only for bounded major work.',
+      'Use roadmap mode for long-running multi-wave restart-sensitive work.',
+    ].join('\n'),
+  );
+  writeFile(
+    'docs/assistant/templates/BOOTSTRAP_UPDATE_POLICY.md',
+    [
+      '# BOOTSTRAP UPDATE POLICY',
+      '',
+      'Promote reusable governance/process patterns only.',
+      'Use BOOTSTRAP_ROADMAP_GOVERNANCE.md for adaptive roadmap rules.',
+      'Do not leak app-specific dates, branch names, tracker filenames, or domain language into UCBS.',
+      'Keep adaptive trigger thresholds general.',
+    ].join('\n'),
+  );
 
   writeFile('tooling/validate_agent_docs.dart', '// placeholder');
   writeFile('tooling/validate_workspace_hygiene.dart', '// placeholder');
@@ -2231,7 +2528,7 @@ Directory _createValidFixture() {
       'test/tooling/validate_workspace_hygiene_test.dart', '// placeholder');
 
   final manifest = <String, dynamic>{
-    'version': 12,
+    'version': 13,
     'canonical': <String, dynamic>{
       'agent_runbook': 'agent.md',
       'app_knowledge': 'APP_KNOWLEDGE.md',
@@ -2267,6 +2564,10 @@ Directory _createValidFixture() {
       _manifestWorkflow(
         id: 'reference_discovery',
         doc: 'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
+      ),
+      _manifestWorkflow(
+        id: 'roadmap_governance',
+        doc: 'docs/assistant/workflows/ROADMAP_WORKFLOW.md',
       ),
       _manifestWorkflow(
         id: 'planner_scheduler',
@@ -2364,12 +2665,22 @@ Directory _createValidFixture() {
           'Use `resume master plan` as the explicit resume trigger phrase; equivalent intents like `where did we leave off` and `what is the next roadmap step` should route to docs/assistant/SESSION_RESUME.md too.',
       'roadmap_resume_update_policy':
           'After roadmap detours or changes to active wave, next step, closeout state, branch, or worktree, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third.',
+      'roadmap_trigger_policy':
+          'Use no roadmap for small isolated work, use ExecPlan-only for bounded major work, and use roadmap mode for long-running multi-wave restart-sensitive work. Treat master plan and roadmap as equivalent user intents.',
+      'roadmap_granularity_policy':
+          'Do not open a roadmap for single-file fixes, narrow bug fixes, small UI text tweaks, or one-shot docs cleanup. Prefer the lightest planning mode that is still safe.',
+      'roadmap_artifact_authority_policy':
+          'During in-flight roadmap work, docs/assistant/SESSION_RESUME.md is the stable first resume stop, the active roadmap tracker is the sequence source, and the active wave ExecPlan is the implementation-detail source. If a wave is active in a separate worktree, that worktree\'s roadmap files are authoritative for live roadmap state.',
+      'roadmap_detour_policy':
+          'After roadmap detours, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third before resuming the sequence.',
+      'roadmap_closeout_policy':
+          'Every roadmap closeout must report current roadmap status and exact next step. When the next action is a closeout step, say so explicitly instead of naming a new wave.',
       'plain_language_support_response_policy':
           'Support responses must be plain-language-first with numbered next steps and exact UI labels.',
       'term_definition_policy':
           'If a technical term is unavoidable in support replies, define it in one short sentence.',
     },
-    'last_updated': '2026-03-08',
+    'last_updated': '2026-03-09',
   };
 
   writeFile(

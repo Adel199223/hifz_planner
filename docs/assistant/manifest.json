@@ -1,5 +1,5 @@
 {
-  "version": 12,
+  "version": 13,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
@@ -210,6 +210,28 @@
       ]
     },
     {
+      "id": "roadmap_governance",
+      "doc": "docs/assistant/workflows/ROADMAP_WORKFLOW.md",
+      "scope": "Adaptive roadmap triggering, active-worktree authority, fresh-session continuity, and detour/closeout governance for long-running multi-wave work.",
+      "primary_files": [
+        "docs/assistant/SESSION_RESUME.md",
+        "docs/assistant/exec_plans/PLANS.md",
+        "docs/assistant/workflows/ROADMAP_WORKFLOW.md",
+        "docs/assistant/manifest.json",
+        "AGENTS.md",
+        "agent.md"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "git worktree list",
+        "git status --short --branch",
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
+      ]
+    },
+    {
       "id": "worktree_build_identity",
       "doc": "docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md",
       "scope": "Latest approved baseline locking, runnable-build identity, and deterministic launch handoff for parallel worktrees.",
@@ -380,6 +402,11 @@
       "fresh_session_resume_policy": "Fresh sessions that need roadmap continuity should resume from docs/assistant/SESSION_RESUME.md before opening any active roadmap tracker or wave ExecPlan.",
       "resume_trigger_policy": "Use `resume master plan` as the explicit resume trigger phrase; equivalent intents like `where did we leave off` and `what is the next roadmap step` should route to docs/assistant/SESSION_RESUME.md too.",
       "roadmap_resume_update_policy": "After roadmap detours or changes to active wave, next step, closeout state, branch, or worktree, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third.",
+      "roadmap_trigger_policy": "Use no roadmap for small isolated work, use ExecPlan-only for bounded major work, and use roadmap mode for long-running multi-wave restart-sensitive work. Treat master plan and roadmap as equivalent user intents.",
+      "roadmap_granularity_policy": "Do not open a roadmap for single-file fixes, narrow bug fixes, small UI text tweaks, or one-shot docs cleanup. Prefer the lightest planning mode that is still safe.",
+      "roadmap_artifact_authority_policy": "During in-flight roadmap work, docs/assistant/SESSION_RESUME.md is the stable first resume stop, the active roadmap tracker is the sequence source, and the active wave ExecPlan is the implementation-detail source. If a wave is active in a separate worktree, that worktree's roadmap files are authoritative for live roadmap state.",
+      "roadmap_detour_policy": "After roadmap detours, update the active wave ExecPlan first, the active roadmap tracker second, and docs/assistant/SESSION_RESUME.md third before resuming the sequence.",
+      "roadmap_closeout_policy": "Every roadmap closeout must report current roadmap status and exact next step. When the next action is a closeout step, say so explicitly instead of naming a new wave.",
       "plain_language_support_response_policy": "Support responses must be plain-language-first with numbered next steps and exact UI labels.",
       "term_definition_policy": "If a technical term is unavoidable in support replies, define it in one short sentence."
     },

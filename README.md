@@ -47,6 +47,10 @@ Equivalent resume intents:
 - `where did we leave off`
 - `what is the next roadmap step`
 
+For complex multi-wave work, open `docs/assistant/workflows/ROADMAP_WORKFLOW.md`.
+
+While a wave is active in a separate worktree, that active worktree's `docs/assistant/SESSION_RESUME.md`, active roadmap tracker, and active wave ExecPlan are the live source of roadmap state.
+
 ## User-facing guidance docs
 
 - `docs/assistant/features/START_HERE_USER_GUIDE.md`
