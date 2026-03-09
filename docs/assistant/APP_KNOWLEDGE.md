@@ -72,7 +72,7 @@ Do not use this file as primary truth when there is a conflict.
 - `Library` is now also the study-follow-up surface for saved verses and verse notes, not just generic storage
 - Top-right drawer is the `More` surface for `Settings`, `About`, `Reciters`, and the demoted Explore entries
 - `Learn` now includes a simple `Practice from Memory` hub plus the existing `Hifz Plan` card
-- `My Quran` is now a real support hub for `Continue reading`, `Saved for later`, and `Listening setup`
+- `My Quran` is now a real support hub for `Continue reading`, `Saved for later`, `Listening setup`, and lightweight `Study setup` shortcuts
 - first-time non-coder orientation should now start with `docs/assistant/features/START_HERE_USER_GUIDE.md`, not the broader support guide
 - Reader top actions are now responsive, with the settings button on its own row to avoid narrow-layout collisions
 
@@ -135,10 +135,12 @@ Do not use this file as primary truth when there is a conflict.
   - last reading location when available
   - bookmark and note counts
   - reciter/speed/repeat setup
-- Wave 2 in the active roadmap worktree deepens that hub with:
+- Wave 3 in the active roadmap worktree deepens that hub with:
   - a real last-reader resume target persisted from normal Reader usage
   - latest bookmark preview with direct reopen
   - latest note preview with direct reopen
+  - a separate `Study setup` section with plain-language status plus inline toggles for translation, word help, transliteration, and Practice from Memory autoplay
+  - reciter changes still routed through `Listening setup` and `Reciters`
   - safe `Open Reader` fallback when no resume target exists yet
 
 ## Current Practice Entry Notes

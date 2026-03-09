@@ -77,7 +77,7 @@
 | Reader Understanding roadmap | merged | historical | removed | Integrated 4-wave reader roadmap completed before this roadmap started |
 | My Quran Wave 1 | merged | historical | removed after merge | Three-card hub foundation merged to `main` in PR `#42`; active plan archived in `docs/assistant/exec_plans/completed/` |
 | My Quran Wave 2 | merged | historical | removed after merge | Saved-study previews, real resume depth, beginner-guide routing, and fresh-session resume routing merged to `main` in PR `#44`; active plan archived in `docs/assistant/exec_plans/completed/` |
-| My Quran Wave 3 | active | `feat/my-quran-wave3-setup-shortcuts` | `/home/fa507/dev/hifz_planner_my_quran_wave3` | Personal setup shortcuts are the new active wave; startup ExecPlan created and ready for implementation |
+| My Quran Wave 3 | active | `feat/my-quran-wave3-setup-shortcuts` | `/home/fa507/dev/hifz_planner_my_quran_wave3` | Personal setup shortcuts are implemented, locally green, and docs-synced; PR closeout is next |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -124,5 +124,18 @@
 - 2026-03-09: Wave 2 closeout merged in PR `#45`, active tracker and session-resume state now point forward from merged `main`.
 - 2026-03-09: Wave 3 started in isolated worktree `/home/fa507/dev/hifz_planner_my_quran_wave3` on branch `feat/my-quran-wave3-setup-shortcuts`.
 - 2026-03-09: Wave 3 startup ExecPlan created at `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave3_personal_setup_shortcuts.md`.
+- 2026-03-09: Wave 3 adds a separate `Study setup` section to `My Quran` with a plain-language summary plus inline toggles for translation, word help, transliteration, and Practice from Memory autoplay.
+- 2026-03-09: Wave 3 validation is green in the isolated worktree:
+  - `flutter test -j 1 -r expanded test/screens/my_quran_screen_test.dart`
+  - `flutter test -j 1 -r expanded test/app/app_preferences_test.dart`
+  - `flutter test -j 1 -r expanded test/app/app_preferences_store_test.dart`
+  - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+  - `dart tooling/validate_localization.dart`
+  - `dart tooling/validate_agent_docs.dart`
+  - `dart tooling/validate_workspace_hygiene.dart`
+- 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` before validation again; the incidental churn was reverted so Wave 3 remains dependency-neutral.
+- 2026-03-09: A docs-governance detour added explicit roadmap governance, adaptive trigger thresholds, and active-worktree authority so future complex work can choose between no-roadmap, ExecPlan-only, and roadmap mode without relying on chat memory.
+- 2026-03-09: The reusable UCBS roadmap-governance module is now merged to `main`, and the active Wave 3 worktree has been rebased onto that baseline so the local project harness matches the template-layer contracts without widening Wave 3 scope.
+- 2026-03-09: Narrow Assistant Docs Sync completed for the canonical app brief, assistant bridge, broader app user guide, and beginner start guide so Wave 3 study-setup behavior is durable in both technical and non-technical support docs.
 - Next recommended action:
-  - Wave 3 - Personal Setup Shortcuts
+  - close Wave 3 with PR merge

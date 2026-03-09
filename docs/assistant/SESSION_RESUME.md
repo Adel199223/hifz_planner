@@ -34,12 +34,13 @@ For any of those, open these docs in order:
 ## Current Status
 
 - Wave 2 is merged to `main`.
-- Wave 3 is started in an isolated worktree.
-- The roadmap is now actively implementing Wave 3.
+- Wave 3 is implemented, locally validated, and docs-synced in an isolated worktree.
+- The project harness now inherits the reusable UCBS roadmap-governance module from `main`, including the template-layer upgrade and active-worktree authority rules.
+- PR merge closeout is the next action before Wave 4.
 
 ## Exact Next Step
 
-- `Wave 3 - Personal Setup Shortcuts`
+- `close Wave 3 with PR merge`
 
 ## Active Worktree And Branch
 
@@ -63,4 +64,6 @@ For any of those, open these docs in order:
 
 - A docs-governance detour added `docs/assistant/features/START_HERE_USER_GUIDE.md` and the related docs-routing/validator support before Wave 2 publish.
 - Fresh-session resume routing is now in place so future chats do not need to reconstruct roadmap state from scattered trackers.
+- Roadmap governance is now explicit in `docs/assistant/workflows/ROADMAP_WORKFLOW.md`, including adaptive trigger thresholds and the rule that the active worktree is authoritative during in-flight wave work.
+- The reusable UCBS roadmap-governance template module is now merged to `main`, and this active worktree has been rebased onto that baseline so the live project harness matches the reusable template contracts.
 - Keep this file summary-level only. The active roadmap tracker and active wave plan remain the deeper execution sources.

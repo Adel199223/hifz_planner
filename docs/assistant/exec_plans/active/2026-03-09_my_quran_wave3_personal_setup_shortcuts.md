@@ -55,16 +55,24 @@
 
 ## Progress
 - [x] Create Wave 3 ExecPlan
-- [ ] Add study-setup summary to My Quran
-- [ ] Add lightweight inline study-default controls
-- [ ] Add focused tests
-- [ ] Run targeted validation
+- [x] Add study-setup summary to My Quran
+- [x] Add lightweight inline study-default controls
+- [x] Add focused tests
+- [x] Run targeted validation
+- [x] Run Assistant Docs Sync
 
 ## Surprises and Adjustments
-- Use this section for scope corrections, detours, or repeated workflow issues discovered while implementing Wave 3.
+- 2026-03-09: The cleanest shape was to keep the original three primary My Quran cards and add `Study setup` as a separate section underneath them, so the hub stays personal without breaking the Wave 1 three-card promise.
+- 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` before validation again; the incidental churn was reverted so Wave 3 remains dependency-neutral.
+- 2026-03-09: The trusted validation record uses sequential Flutter commands in this worktree.
+- 2026-03-09: A docs-governance detour codified adaptive roadmap triggering, active-worktree authority, and validator coverage for future multi-wave work; the implementation sequence still returns to Wave 3 closeout.
+- 2026-03-09: The reusable UCBS roadmap-governance module is now merged to `main`, and this worktree has been rebased onto that baseline so the project harness and template-layer contracts are aligned before Wave 3 closeout.
 
 ## Handoff
 - Final state summary:
-  - pending
+  - `My Quran` now includes a separate `Study setup` section with a plain-language summary and inline toggles for verse translation, word help, transliteration, and Practice from Memory autoplay.
+  - Reciter selection still routes through `Listening setup` and `/reciters`; Wave 3 does not duplicate full reciter selection or deeper global settings.
+  - Narrow Assistant Docs Sync is complete for `APP_KNOWLEDGE.md`, `docs/assistant/APP_KNOWLEDGE.md`, `docs/assistant/features/APP_USER_GUIDE.md`, and `docs/assistant/features/START_HERE_USER_GUIDE.md`.
+  - Wave 3 implementation is complete, validated locally, and docs-synced; the next step is PR closeout.
 - Follow-up risks:
   - The shortcut list should stay narrow; if this starts duplicating full Settings behavior, cut scope back immediately.

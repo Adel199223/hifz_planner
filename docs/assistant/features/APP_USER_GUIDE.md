@@ -91,7 +91,7 @@ Inside `More`:
 
 ## Known Limits and Placeholder Areas
 
-- `My Quran` is now a simple personal hub for where to continue, what you saved, and your listening setup.
+- `My Quran` is now a simple personal hub for where to continue, what you saved, your listening setup, and a few daily study defaults.
 - `Quran Radio` is still a placeholder/coming-soon surface.
 - `Reciters` is not a placeholder: it is a functional searchable reciter selector for playback preferences.
 
@@ -102,7 +102,7 @@ Inside `More`:
 - My Plan: start with a guided plan setup, then open `Advanced` only when you need expert controls.
 - Library: reopen saved verses and verse notes with enough context to keep studying.
 - Learn: open the simple `Practice from Memory` hub or go to `Hifz Plan`.
-- My Quran: see where to continue reading, how many items are saved for later, and which listening setup is active.
+- My Quran: see where to continue reading, reopen recent saved study, check which listening setup is active, and quickly switch a few study defaults.
 - Practice from Memory: start the right memorization session without needing internal stage names.
 - More: open settings, reciters, about, and secondary exploration areas.
 
@@ -114,6 +114,7 @@ What it now shows:
 - `Continue reading`
 - `Saved for later`
 - `Listening setup`
+- `Study setup`
 
 What `Continue reading` means:
 - if the app has a saved reading place, it gives you one button to go back there
@@ -127,6 +128,11 @@ What `Listening setup` means:
 - it shows your current reciter
 - it shows your playback speed and repeat setting
 - it sends you to `Reciters` when you want to change reciter-related listening choices
+
+What `Study setup` means:
+- it shows whether translation, word help, transliteration, and Practice from Memory autoplay are on or off
+- it lets you switch those simple defaults without opening a deeper settings screen
+- it does not replace full settings or reciter selection
 
 ## Core User Journeys
 
