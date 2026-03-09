@@ -29,28 +29,28 @@ For any of those, open these docs in order:
 
 ## Current Wave
 
-- `Wave 3 - Personal Setup Shortcuts`
+- `Wave 4 - Cross-Surface Consistency and Closeout`
 
 ## Current Status
 
-- Wave 2 is merged to `main`.
-- Wave 3 is implemented, locally validated, and docs-synced in an isolated worktree.
+- Wave 3 is merged to `main`.
+- The Wave 3 active plan is archived.
 - The project harness now inherits the reusable UCBS roadmap-governance module from `main`, including the template-layer upgrade and active-worktree authority rules.
-- PR merge closeout is the next action before Wave 4.
+- The roadmap is ready to continue from Wave 4.
 
 ## Exact Next Step
 
-- `close Wave 3 with PR merge`
+- `Wave 4 - Cross-Surface Consistency and Closeout`
 
 ## Active Worktree And Branch
 
-- Worktree: `/home/fa507/dev/hifz_planner_my_quran_wave3`
-- Branch: `feat/my-quran-wave3-setup-shortcuts`
+- Worktree: `/home/fa507/dev/hifz_planner`
+- Branch: `main`
 
 ## Read These Next
 
 1. `docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md`
-2. `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave3_personal_setup_shortcuts.md`
+2. the next Wave 4 ExecPlan once it exists
 3. `docs/assistant/ISSUE_MEMORY.md`
 
 ## Completed Roadmaps
