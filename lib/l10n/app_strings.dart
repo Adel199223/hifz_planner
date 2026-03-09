@@ -114,6 +114,40 @@ class AppStrings {
       _t('my_quran_open_reciters', 'Open Reciters');
   String get myQuranLoadFailed =>
       _t('my_quran_load_failed', 'Failed to load My Quran.');
+  String get myQuranStudySetupTitle =>
+      _t('my_quran_study_setup_title', 'Study setup');
+  String get myQuranStudySetupDescription => _t(
+    'my_quran_study_setup_description',
+    'Choose the meaning help you want in Reader and whether Practice from Memory should autoplay the next ayah.',
+  );
+  String myQuranMeaningSetupSummary(
+    String translation,
+    String wordHelp,
+    String transliteration,
+  ) => _fmt(
+    _t(
+      'my_quran_meaning_setup_summary',
+      'Meaning help: translation {translation}, word help {wordHelp}, transliteration {transliteration}.',
+    ),
+    <String, Object>{
+      'translation': translation,
+      'wordHelp': wordHelp,
+      'transliteration': transliteration,
+    },
+  );
+  String myQuranPracticeSetupSummary(String autoplay) => _fmt(
+    _t(
+      'my_quran_practice_setup_summary',
+      'Practice from Memory: autoplay {autoplay}.',
+    ),
+    <String, Object>{'autoplay': autoplay},
+  );
+  String get myQuranStudySetupReciterHint => _t(
+    'my_quran_study_setup_reciter_hint',
+    'Use Listening setup if you want to change reciter.',
+  );
+  String get onLabel => _t('on_label', 'On');
+  String get offLabel => _t('off_label', 'Off');
   String get unknown => _t('unknown', 'Unknown');
   String get practiceFromMemoryTitle =>
       _t('practice_from_memory_title', 'Practice from Memory');
@@ -1700,6 +1734,17 @@ class AppStrings {
       'my_quran': 'Mon Coran',
       'my_quran_subtitle':
           "Gardez votre place, vos éléments sauvegardés et votre configuration d'écoute ensemble.",
+      'my_quran_study_setup_title': "Configuration d'étude",
+      'my_quran_study_setup_description':
+          "Choisissez l’aide de sens à afficher dans Lecture et si Pratique par cœur doit lancer automatiquement l’ayah suivante.",
+      'my_quran_meaning_setup_summary':
+          'Aide de sens : traduction {translation}, aide mot à mot {wordHelp}, translittération {transliteration}.',
+      'my_quran_practice_setup_summary':
+          'Pratique par cœur : lecture auto {autoplay}.',
+      'my_quran_study_setup_reciter_hint':
+          'Utilisez Configuration d’écoute si vous voulez changer de récitateur.',
+      'on_label': 'activé',
+      'off_label': 'désactivé',
       'quran_radio': 'Radio Coran',
       'reciters': 'Récitateurs',
       'reader': 'Lecteur',
@@ -2148,6 +2193,17 @@ class AppStrings {
       'my_quran': 'Meu Alcorão',
       'my_quran_subtitle':
           'Mantenha seu lugar, seus estudos salvos e sua configuração de escuta juntos.',
+      'my_quran_study_setup_title': 'Configuração de estudo',
+      'my_quran_study_setup_description':
+          'Escolha a ajuda de significado que você quer no Leitor e se Praticar de Memória deve reproduzir automaticamente a próxima ayah.',
+      'my_quran_meaning_setup_summary':
+          'Ajuda de significado: tradução {translation}, ajuda palavra por palavra {wordHelp}, transliteração {transliteration}.',
+      'my_quran_practice_setup_summary':
+          'Praticar de Memória: reprodução automática {autoplay}.',
+      'my_quran_study_setup_reciter_hint':
+          'Use Configuração de escuta se quiser mudar o recitador.',
+      'on_label': 'ativado',
+      'off_label': 'desativado',
       'quran_radio': 'Rádio Alcorão',
       'reciters': 'Recitadores',
       'reader': 'Leitor',
@@ -2588,6 +2644,17 @@ class AppStrings {
       'my_quran': 'قرآني',
       'my_quran_subtitle':
           'اجمع موضعك والعناصر المحفوظة وإعدادات الاستماع في مكان واحد.',
+      'my_quran_study_setup_title': 'إعداد الدراسة',
+      'my_quran_study_setup_description':
+          'اختر وسائل المعنى التي تريدها في القارئ وما إذا كانت ممارسة الحفظ ستشغّل الآية التالية تلقائياً.',
+      'my_quran_meaning_setup_summary':
+          'وسائل المعنى: الترجمة {translation}، مساعدة الكلمات {wordHelp}، النقل الصوتي {transliteration}.',
+      'my_quran_practice_setup_summary':
+          'ممارسة الحفظ: التشغيل التلقائي {autoplay}.',
+      'my_quran_study_setup_reciter_hint':
+          'استخدم إعدادات الاستماع إذا أردت تغيير القارئ.',
+      'on_label': 'مفعل',
+      'off_label': 'متوقف',
       'quran_radio': 'راديو القرآن',
       'reciters': 'القراء',
       'reader': 'القارئ',

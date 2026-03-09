@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,76 +45,96 @@ class MyQuranScreen extends ConsumerWidget {
                   const Center(child: CircularProgressIndicator())
                 else
                   dashboardAsync.when(
-                    data: (snapshot) => Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
+                    data: (snapshot) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _MyQuranCard(
-                          cardKey: const ValueKey('my_quran_continue_card'),
-                          icon: Icons.menu_book_outlined,
-                          title: strings.myQuranContinueReadingTitle,
-                          summary: _continueReadingSummary(
-                            strings,
-                            snapshot.lastReaderLocation,
-                          ),
-                          description: snapshot.lastReaderLocation == null
-                              ? strings.myQuranNoRecentReading
-                              : strings.myQuranContinueReadingDescription,
-                          buttonKey: const ValueKey('my_quran_continue_button'),
-                          buttonLabel: snapshot.lastReaderLocation == null
-                              ? strings.myQuranOpenReader
-                              : strings.myQuranContinueReadingButton,
-                          onPressed: () {
-                            context.go(
-                              _buildContinueReadingRoute(
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 16,
+                          children: [
+                            _MyQuranCard(
+                              cardKey: const ValueKey('my_quran_continue_card'),
+                              icon: Icons.menu_book_outlined,
+                              title: strings.myQuranContinueReadingTitle,
+                              summary: _continueReadingSummary(
+                                strings,
                                 snapshot.lastReaderLocation,
                               ),
-                            );
-                          },
-                          extraContent: _buildContinueReadingPreview(
-                            context,
-                            strings,
-                            snapshot.lastReaderLocation,
-                          ),
+                              description: snapshot.lastReaderLocation == null
+                                  ? strings.myQuranNoRecentReading
+                                  : strings.myQuranContinueReadingDescription,
+                              buttonKey: const ValueKey(
+                                'my_quran_continue_button',
+                              ),
+                              buttonLabel: snapshot.lastReaderLocation == null
+                                  ? strings.myQuranOpenReader
+                                  : strings.myQuranContinueReadingButton,
+                              onPressed: () {
+                                context.go(
+                                  _buildContinueReadingRoute(
+                                    snapshot.lastReaderLocation,
+                                  ),
+                                );
+                              },
+                              extraContent: _buildContinueReadingPreview(
+                                context,
+                                strings,
+                                snapshot.lastReaderLocation,
+                              ),
+                            ),
+                            _MyQuranCard(
+                              cardKey: const ValueKey('my_quran_saved_card'),
+                              icon: Icons.bookmark_border,
+                              title: strings.myQuranSavedForLaterTitle,
+                              summary: strings.myQuranSavedCounts(
+                                snapshot.bookmarkCount,
+                                snapshot.noteCount,
+                              ),
+                              description:
+                                  snapshot.bookmarkCount == 0 &&
+                                      snapshot.noteCount == 0
+                                  ? strings.myQuranNoSavedItems
+                                  : strings.myQuranSavedForLaterDescription,
+                              buttonKey: const ValueKey(
+                                'my_quran_library_button',
+                              ),
+                              buttonLabel: strings.myQuranOpenLibrary,
+                              onPressed: () {
+                                context.go('/library');
+                              },
+                              extraContent: _buildSavedStudyPreview(
+                                context,
+                                strings,
+                                snapshot,
+                              ),
+                            ),
+                            _MyQuranCard(
+                              cardKey: const ValueKey(
+                                'my_quran_listening_card',
+                              ),
+                              icon: Icons.graphic_eq_outlined,
+                              title: strings.myQuranListeningSetupTitle,
+                              summary: snapshot.reciterDisplayName,
+                              description: strings.myQuranListeningSetupSummary(
+                                _formatSpeed(snapshot.speed),
+                                _repeatLabel(strings, snapshot.repeatCount),
+                              ),
+                              buttonKey: const ValueKey(
+                                'my_quran_reciters_button',
+                              ),
+                              buttonLabel: strings.myQuranOpenReciters,
+                              onPressed: () {
+                                context.go('/reciters');
+                              },
+                            ),
+                          ],
                         ),
-                        _MyQuranCard(
-                          cardKey: const ValueKey('my_quran_saved_card'),
-                          icon: Icons.bookmark_border,
-                          title: strings.myQuranSavedForLaterTitle,
-                          summary: strings.myQuranSavedCounts(
-                            snapshot.bookmarkCount,
-                            snapshot.noteCount,
-                          ),
-                          description:
-                              snapshot.bookmarkCount == 0 &&
-                                  snapshot.noteCount == 0
-                              ? strings.myQuranNoSavedItems
-                              : strings.myQuranSavedForLaterDescription,
-                          buttonKey: const ValueKey('my_quran_library_button'),
-                          buttonLabel: strings.myQuranOpenLibrary,
-                          onPressed: () {
-                            context.go('/library');
-                          },
-                          extraContent: _buildSavedStudyPreview(
-                            context,
-                            strings,
-                            snapshot,
-                          ),
-                        ),
-                        _MyQuranCard(
-                          cardKey: const ValueKey('my_quran_listening_card'),
-                          icon: Icons.graphic_eq_outlined,
-                          title: strings.myQuranListeningSetupTitle,
-                          summary: snapshot.reciterDisplayName,
-                          description: strings.myQuranListeningSetupSummary(
-                            _formatSpeed(snapshot.speed),
-                            _repeatLabel(strings, snapshot.repeatCount),
-                          ),
-                          buttonKey: const ValueKey('my_quran_reciters_button'),
-                          buttonLabel: strings.myQuranOpenReciters,
-                          onPressed: () {
-                            context.go('/reciters');
-                          },
+                        const SizedBox(height: 16),
+                        _buildStudySetupSection(
+                          context,
+                          ref,
+                          strings,
+                          preferences,
                         ),
                       ],
                     ),
@@ -269,6 +291,98 @@ class MyQuranScreen extends ConsumerWidget {
       return '/reader?mode=page&page=$page&targetSurah=$surah&targetAyah=$ayah';
     }
     return '/reader?targetSurah=$surah&targetAyah=$ayah';
+  }
+
+  Widget _buildStudySetupSection(
+    BuildContext context,
+    WidgetRef ref,
+    AppStrings strings,
+    AppPreferencesState preferences,
+  ) {
+    final notifier = ref.read(appPreferencesProvider.notifier);
+    String onOff(bool value) => value ? strings.onLabel : strings.offLabel;
+
+    return Card(
+      key: const ValueKey('my_quran_study_setup_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.myQuranStudySetupTitle,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              strings.myQuranMeaningSetupSummary(
+                onOff(preferences.readerShowVerseTranslation),
+                onOff(preferences.readerShowWordHelp),
+                onOff(preferences.readerShowTransliteration),
+              ),
+              key: const ValueKey('my_quran_study_setup_meaning_summary'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.myQuranPracticeSetupSummary(
+                onOff(preferences.companionAutoReciteEnabled),
+              ),
+              key: const ValueKey('my_quran_study_setup_practice_summary'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              strings.myQuranStudySetupDescription,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.myQuranStudySetupReciterHint,
+              key: const ValueKey('my_quran_study_setup_reciter_hint'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile.adaptive(
+              key: const ValueKey('my_quran_study_translation_toggle'),
+              contentPadding: EdgeInsets.zero,
+              value: preferences.readerShowVerseTranslation,
+              title: Text(strings.showVerseTranslation),
+              onChanged: (value) {
+                unawaited(notifier.setReaderShowVerseTranslation(value));
+              },
+            ),
+            SwitchListTile.adaptive(
+              key: const ValueKey('my_quran_study_word_help_toggle'),
+              contentPadding: EdgeInsets.zero,
+              value: preferences.readerShowWordHelp,
+              title: Text(strings.showWordHelp),
+              onChanged: (value) {
+                unawaited(notifier.setReaderShowWordHelp(value));
+              },
+            ),
+            SwitchListTile.adaptive(
+              key: const ValueKey('my_quran_study_transliteration_toggle'),
+              contentPadding: EdgeInsets.zero,
+              value: preferences.readerShowTransliteration,
+              title: Text(strings.showTransliteration),
+              onChanged: (value) {
+                unawaited(notifier.setReaderShowTransliteration(value));
+              },
+            ),
+            SwitchListTile.adaptive(
+              key: const ValueKey('my_quran_study_autoplay_toggle'),
+              contentPadding: EdgeInsets.zero,
+              value: preferences.companionAutoReciteEnabled,
+              title: Text(strings.companionAutoplayNextAyah),
+              onChanged: (value) {
+                unawaited(notifier.setCompanionAutoReciteEnabled(value));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   String _buildLatestNoteBody(
