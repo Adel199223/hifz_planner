@@ -195,7 +195,7 @@ The reader has two views (internal enum names kept for backward compatibility):
 Both views use one unified shell:
 - Left pane: Surah / Verse / Juz / Page navigation tabs
 - Center pane: context + top actions + content
-- Right pane: settings drawer (`Arabic`, `Translation`, `Word By Word`) with real Reader meaning controls
+- Right pane: settings drawer (`Arabic`, `Translation`, `Word help`) with real Reader meaning controls
 
 ### 3.1 Verse by Verse view
 
@@ -220,7 +220,7 @@ Behavior:
   - Arabic text
   - current translation
   - available word help / transliteration
-  - existing bookmark and note actions
+  - existing `Save for later` and note actions
 - Library follow-up is now study-oriented too:
   - bookmarks show a short saved-for-later-study cue and an Arabic verse preview when local ayah text is available
   - notes show the linked Arabic verse preview directly in the list beside the saved note body
@@ -264,7 +264,7 @@ Translation behavior:
   - `Show word help` -> default `on`
   - `Show transliteration` -> default `off`
 - The Translation tab now controls whether verse translation is visible.
-- The Word By Word tab now controls whether word help and transliteration are shown where existing data supports them.
+- The `Word help` tab now controls whether word help and transliteration are shown where existing data supports them.
 - The study sheet uses the same current translation resource that Reader already follows for the active app language.
 - Fallback text: `Translation unavailable`
 

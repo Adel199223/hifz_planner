@@ -111,45 +111,47 @@ void main() {
     expect(find.text('رَبِّ ٱلْعَٰلَمِينَ'), findsNothing);
   });
 
-  testWidgets('page mode without metadata still exposes 1..604 page navigation',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
+  testWidgets(
+    'page mode without metadata still exposes 1..604 page navigation',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
 
-    await db.into(db.ayah).insert(
-          AyahCompanion.insert(
-            surah: 1,
-            ayah: 1,
-            textUthmani: 'ٱلْحَمْدُ لِلَّٰهِ',
-          ),
-        );
+      await db
+          .into(db.ayah)
+          .insert(
+            AyahCompanion.insert(
+              surah: 1,
+              ayah: 1,
+              textUthmani: 'ٱلْحَمْدُ لِلَّٰهِ',
+            ),
+          );
 
-    await _pumpReader(
-      tester,
-      container,
-      screen: const ReaderScreen(mode: 'page'),
-    );
+      await _pumpReader(
+        tester,
+        container,
+        screen: const ReaderScreen(mode: 'page'),
+      );
 
-    final pageList = find.byKey(const ValueKey('reader_page_list'));
-    expect(pageList, findsOneWidget);
-    expect(find.byKey(const ValueKey('reader_page_1')), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('reader_page_2')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('reader_page_2')), findsOneWidget);
-  });
+      final pageList = find.byKey(const ValueKey('reader_page_list'));
+      expect(pageList, findsOneWidget);
+      expect(find.byKey(const ValueKey('reader_page_1')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('reader_page_2')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('reader_page_2')), findsOneWidget);
+    },
+  );
 
-  testWidgets('ayah rows use hover wrapper and RTL text', (
-    tester,
-  ) async {
+  testWidgets('ayah rows use hover wrapper and RTL text', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -197,11 +199,7 @@ void main() {
     _registerPumpCleanup(tester);
 
     await _seedAyahs(db);
-    await _pumpReader(
-      tester,
-      container,
-      locale: const Locale('fr'),
-    );
+    await _pumpReader(tester, container, locale: const Locale('fr'));
 
     expect(find.text('Ayah par Ayah'), findsOneWidget);
     expect(find.text('Lecture'), findsOneWidget);
@@ -213,8 +211,9 @@ void main() {
     expect(find.text('Réflexions'), findsNothing);
   });
 
-  testWidgets('reader labels localize to Portuguese terminology',
-      (tester) async {
+  testWidgets('reader labels localize to Portuguese terminology', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -233,11 +232,7 @@ void main() {
     _registerPumpCleanup(tester);
 
     await _seedAyahs(db);
-    await _pumpReader(
-      tester,
-      container,
-      locale: const Locale('pt'),
-    );
+    await _pumpReader(tester, container, locale: const Locale('pt'));
 
     expect(find.text('Verso por verso'), findsOneWidget);
     expect(find.text('Lendo'), findsOneWidget);
@@ -271,11 +266,7 @@ void main() {
     _registerPumpCleanup(tester);
 
     await _seedAyahs(db);
-    await _pumpReader(
-      tester,
-      container,
-      locale: const Locale('ar'),
-    );
+    await _pumpReader(tester, container, locale: const Locale('ar'));
     await tester.pumpAndSettle();
 
     expect(find.text('آية بآية'), findsOneWidget);
@@ -287,13 +278,15 @@ void main() {
     expect(find.text('فوائد'), findsNothing);
     expect(find.text('تدبرات'), findsNothing);
 
-    final context =
-        tester.element(find.byKey(const ValueKey('reader_view_toggle')));
+    final context = tester.element(
+      find.byKey(const ValueKey('reader_view_toggle')),
+    );
     expect(Directionality.of(context), TextDirection.rtl);
   });
 
-  testWidgets('verse chapter header uses Quran.com title/subtitle and layout',
-      (tester) async {
+  testWidgets('verse chapter header uses Quran.com title/subtitle and layout', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -328,12 +321,15 @@ void main() {
 
     await _seedAyahs(db);
     await _pumpReader(tester, container);
-    final iconFinder =
-        find.byKey(const ValueKey('reader_verse_chapter_icon_1'));
-    final titleFinder =
-        find.byKey(const ValueKey('reader_verse_chapter_title_1'));
-    final subtitleFinder =
-        find.byKey(const ValueKey('reader_verse_chapter_subtitle_1'));
+    final iconFinder = find.byKey(
+      const ValueKey('reader_verse_chapter_icon_1'),
+    );
+    final titleFinder = find.byKey(
+      const ValueKey('reader_verse_chapter_title_1'),
+    );
+    final subtitleFinder = find.byKey(
+      const ValueKey('reader_verse_chapter_subtitle_1'),
+    );
     await pumpUntilFound(tester, titleFinder);
     expect(iconFinder, findsOneWidget);
     expect(titleFinder, findsOneWidget);
@@ -366,126 +362,127 @@ void main() {
     await _seedAyahs(db);
     await _pumpReader(tester, container);
 
-    expect(find.byKey(const ValueKey('reader_verse_tajweed_legend')),
-        findsNothing);
-    expect(find.byKey(const ValueKey('reader_verse_tajweed_colors')),
-        findsOneWidget);
-
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_settings_button')));
-    await tester.pumpAndSettle();
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('reader_verse_tajweed_legend')),
-        findsOneWidget);
-    expect(find.text('Silent letter'), findsOneWidget);
-  });
-
-  testWidgets(
-      'arabic locale localizes surah search/list and keeps translation LTR',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-        appPreferencesStoreProvider.overrideWithValue(
-          _FakeAppPreferencesStore(
-            initial: const StoredAppPreferences(languageCode: 'ar'),
-          ),
-        ),
-        quranComChaptersServiceProvider.overrideWithValue(
-          _FakeQuranComChaptersService(
-            byLanguageCode: <String, List<QuranComChapterEntry>>{
-              'ar': const <QuranComChapterEntry>[
-                QuranComChapterEntry(
-                  id: 1,
-                  nameSimple: 'Al-Fatihah',
-                  nameArabic: 'الفاتحة',
-                  translatedName: 'سورة الفاتحة',
-                  translatedLanguageName: 'arabic',
-                ),
-              ],
-            },
-          ),
-        ),
-      ],
+    expect(
+      find.byKey(const ValueKey('reader_verse_tajweed_legend')),
+      findsNothing,
     );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
-
-    await _seedAyahs(db);
-    await _pumpReader(
-      tester,
-      container,
-      locale: const Locale('ar'),
-    );
-    await pumpUntilFound(tester, find.text('ابحث عن سورة'));
-    expect(find.text('ابحث عن سورة'), findsOneWidget);
-    final firstSurahTile =
-        find.byKey(const ValueKey('reader_mushaf_nav_surah_1'));
-    await pumpUntilFound(tester, firstSurahTile);
-    final firstSurahLabel = tester.widget<Text>(
-      find.descendant(of: firstSurahTile, matching: find.byType(Text)).first,
-    );
-    expect(firstSurahLabel.data, contains('الفاتحة'));
-    expect(find.text('سورة 1'), findsNothing);
-
-    final translationDirection = find.ancestor(
-      of: find.byKey(const ValueKey('reader_verse_translation_1:1')),
-      matching: find.byWidgetPredicate(
-        (widget) =>
-            widget is Directionality &&
-            widget.textDirection == TextDirection.ltr,
-      ),
-    );
-    expect(translationDirection, findsOneWidget);
-  });
-
-  testWidgets(
-      'tajweed toggle from settings falls back to plain when mapping is empty',
-      (
-    tester,
-  ) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-        tajweedTagsServiceProvider.overrideWithValue(
-          TajweedTagsService(
-            loadAssetText: (_) async => '{}',
-          ),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
-
-    await _seedAyahs(db);
-    await _pumpReader(
-      tester,
-      container,
+    expect(
+      find.byKey(const ValueKey('reader_verse_tajweed_colors')),
+      findsOneWidget,
     );
 
     await tester.tap(
       find.byKey(const ValueKey('reader_verse_settings_button')),
     );
     await tester.pumpAndSettle();
-
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('ٱلْحَمْدُ لِلَّٰهِ'), findsOneWidget);
-    expect(tester.takeException(), equals(null));
+    expect(
+      find.byKey(const ValueKey('reader_verse_tajweed_legend')),
+      findsOneWidget,
+    );
+    expect(find.text('Silent letter'), findsOneWidget);
   });
+
+  testWidgets(
+    'arabic locale localizes surah search/list and keeps translation LTR',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          appPreferencesStoreProvider.overrideWithValue(
+            _FakeAppPreferencesStore(
+              initial: const StoredAppPreferences(languageCode: 'ar'),
+            ),
+          ),
+          quranComChaptersServiceProvider.overrideWithValue(
+            _FakeQuranComChaptersService(
+              byLanguageCode: <String, List<QuranComChapterEntry>>{
+                'ar': const <QuranComChapterEntry>[
+                  QuranComChapterEntry(
+                    id: 1,
+                    nameSimple: 'Al-Fatihah',
+                    nameArabic: 'الفاتحة',
+                    translatedName: 'سورة الفاتحة',
+                    translatedLanguageName: 'arabic',
+                  ),
+                ],
+              },
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container, locale: const Locale('ar'));
+      await pumpUntilFound(tester, find.text('ابحث عن سورة'));
+      expect(find.text('ابحث عن سورة'), findsOneWidget);
+      final firstSurahTile = find.byKey(
+        const ValueKey('reader_mushaf_nav_surah_1'),
+      );
+      await pumpUntilFound(tester, firstSurahTile);
+      final firstSurahLabel = tester.widget<Text>(
+        find.descendant(of: firstSurahTile, matching: find.byType(Text)).first,
+      );
+      expect(firstSurahLabel.data, contains('الفاتحة'));
+      expect(find.text('سورة 1'), findsNothing);
+
+      final translationDirection = find.ancestor(
+        of: find.byKey(const ValueKey('reader_verse_translation_1:1')),
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Directionality &&
+              widget.textDirection == TextDirection.ltr,
+        ),
+      );
+      expect(translationDirection, findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'tajweed toggle from settings falls back to plain when mapping is empty',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          tajweedTagsServiceProvider.overrideWithValue(
+            TajweedTagsService(loadAssetText: (_) async => '{}'),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+
+      await tester.tap(
+        find.byKey(const ValueKey('reader_verse_settings_button')),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('ٱلْحَمْدُ لِلَّٰهِ'), findsOneWidget);
+      expect(tester.takeException(), equals(null));
+    },
+  );
 
   testWidgets('verse action icon opens actions sheet', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -503,21 +500,24 @@ void main() {
     await _seedAyahs(db);
     await _pumpReader(tester, container);
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_action_more_1:1')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_action_more_1:1')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Study this verse'), findsOneWidget);
-    expect(find.text('Bookmark verse'), findsOneWidget);
+    expect(find.text('Save for later'), findsOneWidget);
     expect(find.text('Add/Edit note'), findsOneWidget);
     expect(find.text('Copy text (Uthmani)'), findsOneWidget);
   });
 
-  testWidgets('study action opens verse study sheet with meaning data',
-      (tester) async {
+  testWidgets('study action opens verse study sheet with meaning data', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildVerseStudySheetDataFixture());
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildVerseStudySheetDataFixture(),
+    );
     final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
@@ -539,7 +539,9 @@ void main() {
       find.byKey(const ValueKey('reader_verse_action_more_1:1')),
     );
 
-    await tester.tap(find.byKey(const ValueKey('reader_verse_action_more_1:1')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_action_more_1:1')),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('action_study')));
     await tester.pumpAndSettle();
@@ -568,52 +570,54 @@ void main() {
       find.byKey(const ValueKey('reader_study_bookmark_1:1')),
       findsOneWidget,
     );
-    expect(
-      find.byKey(const ValueKey('reader_study_note_1:1')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('reader_study_note_1:1')), findsOneWidget);
   });
 
-  testWidgets('study sheet keeps calm fallbacks when meaning data is unavailable',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildVerseStudySheetFallbackFixture());
-    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-        quranComApiProvider.overrideWithValue(fakeApi),
-        qcfFontManagerProvider.overrideWithValue(fakeFonts),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
+  testWidgets(
+    'study sheet keeps calm fallbacks when meaning data is unavailable',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeApi = _FakeQuranComApi.withData(
+        _buildVerseStudySheetFallbackFixture(),
+      );
+      final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          quranComApiProvider.overrideWithValue(fakeApi),
+          qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
 
-    await _seedAyahs(db);
-    await _pumpReader(tester, container);
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('reader_verse_action_more_1:1')),
-    );
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+      await pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('reader_verse_action_more_1:1')),
+      );
 
-    await tester.tap(find.byKey(const ValueKey('reader_verse_action_more_1:1')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('action_study')));
-    await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('reader_verse_action_more_1:1')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('action_study')));
+      await tester.pumpAndSettle();
 
-    final translationText = tester.widget<Text>(
-      find.byKey(const ValueKey('reader_study_translation_1:1')),
-    );
-    expect(translationText.data, 'Translation unavailable');
-    expect(
-      find.byKey(const ValueKey('reader_study_word_help_empty_1:1')),
-      findsOneWidget,
-    );
-  });
+      final translationText = tester.widget<Text>(
+        find.byKey(const ValueKey('reader_study_translation_1:1')),
+      );
+      expect(translationText.data, 'Translation unavailable');
+      expect(
+        find.byKey(const ValueKey('reader_study_word_help_empty_1:1')),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets(
     'verse row play button calls playAyah with verse coordinates',
@@ -638,8 +642,9 @@ void main() {
       await _seedAyahs(db);
       await _pumpReader(tester, container);
 
-      await tester
-          .tap(find.byKey(const ValueKey('reader_verse_action_play_1:1')));
+      await tester.tap(
+        find.byKey(const ValueKey('reader_verse_action_play_1:1')),
+      );
       await tester.pump();
 
       expect(fakeAudio.playAyahCalls.length, 1);
@@ -723,11 +728,14 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byKey(const ValueKey('reader_audio_mini_player')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('reader_audio_mini_player')),
+        findsOneWidget,
+      );
 
-      await tester
-          .tap(find.byKey(const ValueKey('reader_audio_play_pause_button')));
+      await tester.tap(
+        find.byKey(const ValueKey('reader_audio_play_pause_button')),
+      );
       await tester.pump();
       expect(fakeAudio.pauseCalls, 1);
 
@@ -747,8 +755,9 @@ void main() {
         ),
       );
       await tester.pump();
-      await tester
-          .tap(find.byKey(const ValueKey('reader_audio_play_pause_button')));
+      await tester.tap(
+        find.byKey(const ValueKey('reader_audio_play_pause_button')),
+      );
       await tester.pump();
       expect(fakeAudio.resumeCalls, 1);
 
@@ -768,8 +777,9 @@ void main() {
       expect(fakeAudio.seekToCalls, 1);
       expect(fakeAudio.lastSeekTo, const Duration(seconds: 10));
 
-      await tester
-          .tap(find.byKey(const ValueKey('reader_audio_options_button')));
+      await tester.tap(
+        find.byKey(const ValueKey('reader_audio_options_button')),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('reader_audio_option_speed')));
       await tester.pumpAndSettle();
@@ -778,11 +788,13 @@ void main() {
       expect(fakeAudio.speedChanges, isNotEmpty);
       expect(fakeAudio.speedChanges.last, 1.25);
 
-      await tester
-          .tap(find.byKey(const ValueKey('reader_audio_options_button')));
+      await tester.tap(
+        find.byKey(const ValueKey('reader_audio_options_button')),
+      );
       await tester.pumpAndSettle();
-      await tester
-          .tap(find.byKey(const ValueKey('reader_audio_option_repeat')));
+      await tester.tap(
+        find.byKey(const ValueKey('reader_audio_option_repeat')),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('2x').last);
       await tester.pumpAndSettle();
@@ -792,8 +804,9 @@ void main() {
     timeout: const Timeout(Duration(seconds: 30)),
   );
 
-  testWidgets('reader audio reciter menu option disables while switching',
-      (tester) async {
+  testWidgets('reader audio reciter menu option disables while switching', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeAudio = _FakeAyahAudioService();
     final container = ProviderContainer(
@@ -909,15 +922,17 @@ void main() {
     final repo = BookmarkRepo(db);
     await _pumpReader(tester, container);
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_action_bookmark_1:1')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_action_bookmark_1:1')),
+    );
     await tester.pumpAndSettle();
 
     final firstCount = await repo.getBookmarks();
     expect(firstCount.length, 1);
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_action_bookmark_1:1')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_action_bookmark_1:1')),
+    );
     await tester.pumpAndSettle();
 
     final secondCount = await repo.getBookmarks();
@@ -944,13 +959,11 @@ void main() {
       container,
       screen: const ReaderScreen(mode: 'page', page: 1),
     );
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('ayah_row_1:1')),
-    );
+    await pumpUntilFound(tester, find.byKey(const ValueKey('ayah_row_1:1')));
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_action_bookmark_1:1')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_action_bookmark_1:1')),
+    );
     await tester.pumpAndSettle();
 
     final bookmarks = await repo.getBookmarks();
@@ -976,8 +989,9 @@ void main() {
     final noteRepo = NoteRepo(db);
     await _pumpReader(tester, container);
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_action_note_1:1')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_action_note_1:1')),
+    );
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -991,8 +1005,9 @@ void main() {
     expect(notesAfterCreate.length, 1);
     expect(notesAfterCreate.first.body, 'First note');
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_action_note_1:1')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_action_note_1:1')),
+    );
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -1030,10 +1045,7 @@ void main() {
 
     await _seedAyahs(db);
     await _pumpReader(tester, container);
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('ayah_row_1:1')),
-    );
+    await pumpUntilFound(tester, find.byKey(const ValueKey('ayah_row_1:1')));
 
     await tester.tap(
       find.byKey(const ValueKey('reader_verse_action_copy_1:1')),
@@ -1073,10 +1085,7 @@ void main() {
 
     await _seedAyahs(db);
     await _pumpReader(tester, container);
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('ayah_row_1:1')),
-    );
+    await pumpUntilFound(tester, find.byKey(const ValueKey('ayah_row_1:1')));
 
     await tester.tap(
       find.byKey(const ValueKey('reader_verse_action_copy_1:1')),
@@ -1104,27 +1113,16 @@ void main() {
 
       await _seedAyahs(db);
       await db.batch((batch) {
-        batch.insertAll(
-          db.ayah,
-          [
-            for (var i = 4; i <= 40; i++)
-              AyahCompanion.insert(
-                surah: 1,
-                ayah: i,
-                textUthmani: 'ayah $i',
-              ),
-          ],
-          mode: InsertMode.insertOrIgnore,
-        );
+        batch.insertAll(db.ayah, [
+          for (var i = 4; i <= 40; i++)
+            AyahCompanion.insert(surah: 1, ayah: i, textUthmani: 'ayah $i'),
+        ], mode: InsertMode.insertOrIgnore);
       });
 
       await _pumpReader(
         tester,
         container,
-        screen: const ReaderScreen(
-          targetSurah: 1,
-          targetAyah: 30,
-        ),
+        screen: const ReaderScreen(targetSurah: 1, targetAyah: 30),
       );
 
       final rowFinder = find.byKey(const ValueKey('ayah_row_1:30'));
@@ -1148,59 +1146,55 @@ void main() {
     },
   );
 
-  testWidgets(
-    'page mode target jump highlights row then clears',
-    (tester) async {
-      final db = AppDatabase(NativeDatabase.memory());
-      final container = ProviderContainer(
-        overrides: [
-          appDatabaseProvider.overrideWith((ref) {
-            ref.onDispose(db.close);
-            return db;
-          }),
-        ],
-      );
-      addTearDown(container.dispose);
-      _registerPumpCleanup(tester);
-
-      await _seedAyahs(db);
-      await _pumpReader(
-        tester,
-        container,
-        screen: const ReaderScreen(
-          mode: 'page',
-          page: 2,
-          targetSurah: 1,
-          targetAyah: 3,
-        ),
-      );
-
-      final materialFinder = find.byKey(const ValueKey('ayah_material_1:3'));
-      await pumpUntilFound(
-        tester,
-        materialFinder,
-      );
-      expect(materialFinder, findsOneWidget);
-      await _pumpUntilAyahHighlighted(tester, materialFinder);
-
-      final highlightedMaterial = tester.widget<Material>(materialFinder);
-      expect(highlightedMaterial.color, isNot(Colors.transparent));
-
-      await tester.pump(const Duration(milliseconds: 1700));
-
-      final clearedMaterial = tester.widget<Material>(materialFinder);
-      expect(clearedMaterial.color, Colors.transparent);
-    },
-  );
-
-  testWidgets('verse by verse plain uses mushaf=1 and renders word widgets',
-      (tester) async {
+  testWidgets('page mode target jump highlights row then clears', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
     );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(
+      tester,
+      container,
+      screen: const ReaderScreen(
+        mode: 'page',
+        page: 2,
+        targetSurah: 1,
+        targetAyah: 3,
+      ),
+    );
+
+    final materialFinder = find.byKey(const ValueKey('ayah_material_1:3'));
+    await pumpUntilFound(tester, materialFinder);
+    expect(materialFinder, findsOneWidget);
+    await _pumpUntilAyahHighlighted(tester, materialFinder);
+
+    final highlightedMaterial = tester.widget<Material>(materialFinder);
+    expect(highlightedMaterial.color, isNot(Colors.transparent));
+
+    await tester.pump(const Duration(milliseconds: 1700));
+
+    final clearedMaterial = tester.widget<Material>(materialFinder);
+    expect(clearedMaterial.color, Colors.transparent);
+  });
+
+  testWidgets('verse by verse plain uses mushaf=1 and renders word widgets', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildSimpleQuranComDataFixture(),
+    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1220,10 +1214,7 @@ void main() {
       tester,
       find.byKey(const ValueKey('ayah_qurancom_text_1:1')),
     );
-    expect(
-      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('reader_verse_word_1:1_0')), findsNothing);
     expect(
       find.byKey(const ValueKey('reader_verse_word_1:1_1')),
       findsOneWidget,
@@ -1234,11 +1225,10 @@ void main() {
 
   testWidgets('verse by verse tajweed uses mushaf=19', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildSimpleQuranComDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1254,11 +1244,13 @@ void main() {
 
     await _seedAyahs(db);
     await _pumpReader(tester, container);
-    await tester
-        .tap(find.byKey(const ValueKey('reader_verse_settings_button')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_settings_button')),
+    );
     await tester.pumpAndSettle();
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_tajweed_toggle')),
+    );
     await tester.pumpAndSettle();
 
     expect(fakeApi.calls, isNotEmpty);
@@ -1266,49 +1258,50 @@ void main() {
   });
 
   testWidgets(
-      'verse by verse hover tooltip uses word translation when available',
-      (tester) async {
+    'verse by verse hover tooltip uses word translation when available',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeApi = _FakeQuranComApi.withData(
+        _buildInteractiveMushafDataFixture(),
+      );
+      final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          quranComApiProvider.overrideWithValue(fakeApi),
+          qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+      await pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+      );
+
+      final tooltipFinder = find.byKey(
+        const ValueKey('reader_verse_word_tooltip_1:1_0'),
+      );
+      expect(tooltipFinder, findsOneWidget);
+      final tooltip = tester.widget<Tooltip>(tooltipFinder);
+      expect(tooltip.message, 'All praise and thanks');
+    },
+  );
+
+  testWidgets('verse translation toggle hides translation and saves setting', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildSimpleQuranComDataFixture(),
     );
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-        quranComApiProvider.overrideWithValue(fakeApi),
-        qcfFontManagerProvider.overrideWithValue(fakeFonts),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
-
-    await _seedAyahs(db);
-    await _pumpReader(tester, container);
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
-    );
-
-    final tooltipFinder =
-        find.byKey(const ValueKey('reader_verse_word_tooltip_1:1_0'));
-    expect(tooltipFinder, findsOneWidget);
-    final tooltip = tester.widget<Tooltip>(tooltipFinder);
-    expect(tooltip.message, 'All praise and thanks');
-  });
-
-  testWidgets('verse translation toggle hides translation and saves setting',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final store = _FakeAppPreferencesStore();
     final container = ProviderContainer(
       overrides: [
@@ -1330,10 +1323,14 @@ void main() {
       tester,
       find.byKey(const ValueKey('reader_verse_translation_1:1')),
     );
-    expect(find.byKey(const ValueKey('reader_verse_translation_1:1')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('reader_verse_translation_1:1')),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.byKey(const ValueKey('reader_verse_settings_button')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_verse_settings_button')),
+    );
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey('reader_mushaf_settings_tab_translation')),
@@ -1344,19 +1341,21 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('reader_verse_translation_1:1')),
-        findsNothing);
+    expect(
+      find.byKey(const ValueKey('reader_verse_translation_1:1')),
+      findsNothing,
+    );
     expect(store.savedReaderShowVerseTranslation, isFalse);
   });
 
-  testWidgets('word help toggle hides verse by verse word tooltips',
-      (tester) async {
+  testWidgets('word help toggle hides verse by verse word tooltips', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1389,14 +1388,50 @@ void main() {
   });
 
   testWidgets(
-      'verse by verse hover tooltip falls back when translation missing',
-      (tester) async {
+    'verse by verse hover tooltip falls back when translation missing',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeApi = _FakeQuranComApi.withData(
+        _buildSimpleQuranComDataFixture(),
+      );
+      final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          quranComApiProvider.overrideWithValue(fakeApi),
+          qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+      await pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('reader_verse_word_1:1_1')),
+      );
+
+      final tooltipFinder = find.byKey(
+        const ValueKey('reader_verse_word_tooltip_1:1_1'),
+      );
+      expect(tooltipFinder, findsOneWidget);
+      final tooltip = tester.widget<Tooltip>(tooltipFinder);
+      expect(tooltip.message, 'Translation unavailable');
+    },
+  );
+
+  testWidgets('verse by verse suppresses end-marker circle tokens', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildSimpleQuranComDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1417,45 +1452,7 @@ void main() {
       find.byKey(const ValueKey('reader_verse_word_1:1_1')),
     );
 
-    final tooltipFinder =
-        find.byKey(const ValueKey('reader_verse_word_tooltip_1:1_1'));
-    expect(tooltipFinder, findsOneWidget);
-    final tooltip = tester.widget<Tooltip>(tooltipFinder);
-    expect(tooltip.message, 'Translation unavailable');
-  });
-
-  testWidgets('verse by verse suppresses end-marker circle tokens',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-        quranComApiProvider.overrideWithValue(fakeApi),
-        qcfFontManagerProvider.overrideWithValue(fakeFonts),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
-
-    await _seedAyahs(db);
-    await _pumpReader(tester, container);
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('reader_verse_word_1:1_1')),
-    );
-
-    expect(
-      find.byKey(const ValueKey('reader_verse_word_1:1_0')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('reader_verse_word_1:1_0')), findsNothing);
     expect(
       find.byKey(const ValueKey('reader_verse_word_1:1_1')),
       findsOneWidget,
@@ -1464,11 +1461,10 @@ void main() {
 
   testWidgets('verse by verse basmala words do not overlap', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildSimpleQuranComDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildSimpleQuranComDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1502,13 +1498,12 @@ void main() {
     expect(firstWordRect.overlaps(secondWordRect), isFalse);
   });
 
-  testWidgets('mushaf chrome replaces center segmented controls',
-      (tester) async {
+  testWidgets('mushaf chrome replaces center segmented controls', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1537,16 +1532,17 @@ void main() {
       findsNothing,
     );
     expect(
-        find.byKey(const ValueKey('reader_mushaf_nav_tabs')), findsOneWidget);
+      find.byKey(const ValueKey('reader_mushaf_nav_tabs')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('mushaf context row shows page juz hizb', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildMushafDataWithContextMetaFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildMushafDataWithContextMetaFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1564,8 +1560,10 @@ void main() {
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
 
-    expect(find.byKey(const ValueKey('reader_mushaf_context_row')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('reader_mushaf_context_row')),
+      findsOneWidget,
+    );
     expect(
       tester.widget<Text>(find.byKey(const ValueKey('reader_page_label'))).data,
       'Page 1',
@@ -1588,9 +1586,7 @@ void main() {
         MushafJuzNavEntry(juzNumber: 3, page: 3, verseKey: '2:2'),
       ],
     );
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1619,9 +1615,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('reader_mushaf_nav_tab_verse')));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(const ValueKey('reader_mushaf_nav_verse_2_2')),
-    );
+    await tester.tap(find.byKey(const ValueKey('reader_mushaf_nav_verse_2_2')));
     await tester.pumpAndSettle();
     expect(
       tester.widget<Text>(find.byKey(const ValueKey('reader_page_label'))).data,
@@ -1648,14 +1642,14 @@ void main() {
     );
   });
 
-  testWidgets('mushaf settings drawer tabs render real meaning controls',
-      (tester) async {
+  testWidgets('mushaf settings drawer tabs render real meaning controls', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1673,14 +1667,19 @@ void main() {
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_settings_button')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_settings_button')),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('reader_mushaf_settings_tabs')),
-        findsOneWidget);
-    expect(find.byKey(const ValueKey('reader_mushaf_settings_preview')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('reader_mushaf_settings_tabs')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('reader_mushaf_settings_preview')),
+      findsOneWidget,
+    );
 
     await tester.tap(
       find.byKey(const ValueKey('reader_mushaf_settings_tab_translation')),
@@ -1699,7 +1698,10 @@ void main() {
       find.byKey(const ValueKey('reader_mushaf_settings_tab_word_by_word')),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('reader_word_help_toggle')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('reader_word_help_toggle')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const ValueKey('reader_transliteration_toggle')),
       findsOneWidget,
@@ -1710,14 +1712,14 @@ void main() {
     );
   });
 
-  testWidgets('mushaf controls render without selected check icons',
-      (tester) async {
+  testWidgets('mushaf controls render without selected check icons', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1734,8 +1736,9 @@ void main() {
     await _seedAyahs(db);
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_settings_button')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_settings_button')),
+    );
     await tester.pumpAndSettle();
 
     expect(
@@ -1770,11 +1773,10 @@ void main() {
 
   testWidgets('mushaf selector labels stay single-line', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1791,18 +1793,13 @@ void main() {
     await _seedAyahs(db);
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_settings_button')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_settings_button')),
+    );
     await tester.pumpAndSettle();
 
-    void expectSingleLineLabel({
-      required Finder scope,
-      required String label,
-    }) {
-      final finder = find.descendant(
-        of: scope,
-        matching: find.text(label),
-      );
+    void expectSingleLineLabel({required Finder scope, required String label}) {
+      final finder = find.descendant(of: scope, matching: find.text(label));
       expect(finder, findsOneWidget);
       final textWidget = tester.widget<Text>(finder);
       expect(textWidget.maxLines, 1);
@@ -1820,7 +1817,7 @@ void main() {
     );
     expectSingleLineLabel(
       scope: find.byKey(const ValueKey('reader_mushaf_settings_tabs')),
-      label: 'Word By Word',
+      label: 'Word help',
     );
     expectSingleLineLabel(
       scope: find.byKey(const ValueKey('reader_mushaf_script_tabs')),
@@ -1831,9 +1828,7 @@ void main() {
   testWidgets('arabic font stepper changes mushaf scale', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1850,8 +1845,9 @@ void main() {
     await _seedAyahs(db);
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_settings_button')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_settings_button')),
+    );
     await tester.pumpAndSettle();
 
     final baselineHeight = tester
@@ -1875,9 +1871,7 @@ void main() {
   testWidgets('settings done and reset behavior', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1894,8 +1888,9 @@ void main() {
     await _seedAyahs(db);
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_settings_button')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_settings_button')),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(
@@ -1916,8 +1911,9 @@ void main() {
       '6',
     );
 
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_settings_reset')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_settings_reset')),
+    );
     await tester.pumpAndSettle();
     expect(
       tester
@@ -1928,17 +1924,18 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('reader_mushaf_settings_done')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('reader_mushaf_settings_tabs')),
-        findsNothing);
+    expect(
+      find.byKey(const ValueKey('reader_mushaf_settings_tabs')),
+      findsNothing,
+    );
   });
 
   testWidgets('hover preview wiring updates settings preview', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -1955,12 +1952,14 @@ void main() {
     await _seedAyahs(db);
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
-    await tester
-        .tap(find.byKey(const ValueKey('reader_mushaf_settings_button')));
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_settings_button')),
+    );
     await tester.pumpAndSettle();
 
-    final hoveredWord =
-        find.byKey(const ValueKey('reader_mushaf_word_1_0_1:1'));
+    final hoveredWord = find.byKey(
+      const ValueKey('reader_mushaf_word_1_0_1:1'),
+    );
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);
     await mouse.addPointer(location: tester.getCenter(hoveredWord));
@@ -1977,14 +1976,14 @@ void main() {
     );
   });
 
-  testWidgets('mushaf words render as independent interactive widgets',
-      (tester) async {
+  testWidgets('mushaf words render as independent interactive widgets', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2018,11 +2017,10 @@ void main() {
 
   testWidgets('mushaf word hover changes hovered word style', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2042,14 +2040,13 @@ void main() {
 
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     addTearDown(mouse.removePointer);
-    final hoveredWord =
-        find.byKey(const ValueKey('reader_mushaf_word_1_0_1:1'));
-    final wordInVerse12 =
-        find.byKey(const ValueKey('reader_mushaf_word_2_0_1:2'));
-    final beforeHoverColor = _wordTextColor(
-      tester,
-      wordFinder: hoveredWord,
+    final hoveredWord = find.byKey(
+      const ValueKey('reader_mushaf_word_1_0_1:1'),
     );
+    final wordInVerse12 = find.byKey(
+      const ValueKey('reader_mushaf_word_2_0_1:2'),
+    );
+    final beforeHoverColor = _wordTextColor(tester, wordFinder: hoveredWord);
 
     await mouse.addPointer(location: tester.getCenter(hoveredWord));
     await tester.pump();
@@ -2057,10 +2054,7 @@ void main() {
     await mouse.moveTo(tester.getCenter(hoveredWord));
     await tester.pump();
 
-    final afterHoverColor = _wordTextColor(
-      tester,
-      wordFinder: hoveredWord,
-    );
+    final afterHoverColor = _wordTextColor(tester, wordFinder: hoveredWord);
     expect(afterHoverColor, isNot(equals(beforeHoverColor)));
 
     final highlightedVerse11 = _wordHighlightColor(
@@ -2075,14 +2069,14 @@ void main() {
     expect(highlightedVerse12, equals(null));
   });
 
-  testWidgets('mushaf marker click opens existing actions for verse',
-      (tester) async {
+  testWidgets('mushaf marker click opens existing actions for verse', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2101,26 +2095,24 @@ void main() {
     await _switchToMushafView(tester);
 
     await tester.tap(
-      find.byKey(
-        const ValueKey('reader_mushaf_marker_1_1:1_1'),
-      ),
+      find.byKey(const ValueKey('reader_mushaf_marker_1_1:1_1')),
       warnIfMissed: false,
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Bookmark verse'), findsOneWidget);
+    expect(find.text('Save for later'), findsOneWidget);
     expect(find.text('Add/Edit note'), findsOneWidget);
     expect(find.text('Copy text (Uthmani)'), findsOneWidget);
   });
 
-  testWidgets('mushaf marker selection clears after actions close',
-      (tester) async {
+  testWidgets('mushaf marker selection clears after actions close', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2139,9 +2131,7 @@ void main() {
     await _switchToMushafView(tester);
 
     await tester.tap(
-      find.byKey(
-        const ValueKey('reader_mushaf_marker_1_1:1_1'),
-      ),
+      find.byKey(const ValueKey('reader_mushaf_marker_1_1:1_1')),
       warnIfMissed: false,
     );
     await tester.pumpAndSettle();
@@ -2155,7 +2145,7 @@ void main() {
     await tester.tapAt(const Offset(8, 8));
     await tester.pumpAndSettle();
 
-    expect(find.text('Bookmark verse'), findsNothing);
+    expect(find.text('Save for later'), findsNothing);
     final clearedColor = _wordHighlightColor(
       tester,
       wordFinder: find.byKey(const ValueKey('reader_mushaf_word_1_0_1:1')),
@@ -2163,14 +2153,14 @@ void main() {
     expect(clearedColor, equals(null));
   });
 
-  testWidgets('mushaf marker click uses correct ayah for bookmark',
-      (tester) async {
+  testWidgets('mushaf marker click uses correct ayah for bookmark', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2190,14 +2180,12 @@ void main() {
     await _switchToMushafView(tester);
 
     await tester.tap(
-      find.byKey(
-        const ValueKey('reader_mushaf_marker_1_1:1_1'),
-      ),
+      find.byKey(const ValueKey('reader_mushaf_marker_1_1:1_1')),
       warnIfMissed: false,
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Bookmark verse'));
+    await tester.tap(find.text('Save for later'));
     await tester.pumpAndSettle();
 
     final bookmarks = await bookmarkRepo.getBookmarks();
@@ -2206,14 +2194,14 @@ void main() {
     expect(bookmarks.first.ayah, 1);
   });
 
-  testWidgets('mushaf word click opens word popover not verse actions',
-      (tester) async {
+  testWidgets('mushaf word click opens word popover not verse actions', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2232,9 +2220,7 @@ void main() {
     await _switchToMushafView(tester);
 
     await tester.tap(
-      find.byKey(
-        const ValueKey('reader_mushaf_word_1_0_1:1'),
-      ),
+      find.byKey(const ValueKey('reader_mushaf_word_1_0_1:1')),
       warnIfMissed: false,
     );
     await tester.pumpAndSettle();
@@ -2243,17 +2229,17 @@ void main() {
       find.byKey(const ValueKey('reader_mushaf_word_popover_1_0')),
       findsOneWidget,
     );
-    expect(find.text('Bookmark verse'), findsNothing);
+    expect(find.text('Save for later'), findsNothing);
   });
 
-  testWidgets('mushaf hover tooltip uses word translation when available',
-      (tester) async {
+  testWidgets('mushaf hover tooltip uses word translation when available', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2271,21 +2257,22 @@ void main() {
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
 
-    final tooltipFinder =
-        find.byKey(const ValueKey('reader_mushaf_word_tooltip_1_0'));
+    final tooltipFinder = find.byKey(
+      const ValueKey('reader_mushaf_word_tooltip_1_0'),
+    );
     expect(tooltipFinder, findsOneWidget);
     final tooltip = tester.widget<Tooltip>(tooltipFinder);
     expect(tooltip.message, 'All praise and thanks');
   });
 
-  testWidgets('transliteration toggle shows transliteration in word popover',
-      (tester) async {
+  testWidgets('transliteration toggle shows transliteration in word popover', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2310,9 +2297,7 @@ void main() {
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
 
-    await tester.tap(
-      find.byKey(const ValueKey('reader_mushaf_word_1_0_1:1')),
-    );
+    await tester.tap(find.byKey(const ValueKey('reader_mushaf_word_1_0_1:1')));
     await tester.pumpAndSettle();
 
     expect(
@@ -2323,14 +2308,14 @@ void main() {
     expect(find.text('Al-hamdu'), findsOneWidget);
   });
 
-  testWidgets('mushaf hover tooltip falls back when translation is missing',
-      (tester) async {
+  testWidgets('mushaf hover tooltip falls back when translation is missing', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveQcfLikeMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveQcfLikeMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2348,8 +2333,9 @@ void main() {
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
 
-    final tooltipFinder =
-        find.byKey(const ValueKey('reader_mushaf_word_tooltip_1_0'));
+    final tooltipFinder = find.byKey(
+      const ValueKey('reader_mushaf_word_tooltip_1_0'),
+    );
     expect(tooltipFinder, findsOneWidget);
     final tooltip = tester.widget<Tooltip>(tooltipFinder);
     expect(tooltip.message, 'Translation unavailable');
@@ -2358,9 +2344,7 @@ void main() {
   testWidgets('mushaf gap click between words does nothing', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildSpacingMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2388,23 +2372,25 @@ void main() {
 
     final gapPoint =
         (tester.getRect(firstWord).center + tester.getRect(secondWord).center) /
-            2;
+        2;
     await tester.tapAt(gapPoint, kind: PointerDeviceKind.mouse);
     await tester.pumpAndSettle();
 
-    expect(find.text('Bookmark verse'), findsNothing);
-    expect(find.byKey(const ValueKey('reader_mushaf_word_popover_1_0')),
-        findsNothing);
+    expect(find.text('Save for later'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('reader_mushaf_word_popover_1_0')),
+      findsNothing,
+    );
   });
 
-  testWidgets('mushaf interaction degrades gracefully on verse mismatch',
-      (tester) async {
+  testWidgets('mushaf interaction degrades gracefully on verse mismatch', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildMismatchMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildMismatchMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2431,57 +2417,57 @@ void main() {
   });
 
   testWidgets(
-      'mushaf uses vertical scroll instead of fit-to-height compression',
-      (tester) async {
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.binding.setSurfaceSize(const Size(1200, 340));
+    'mushaf uses vertical scroll instead of fit-to-height compression',
+    (tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(1200, 340));
 
-    final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-        quranComApiProvider.overrideWithValue(fakeApi),
-        qcfFontManagerProvider.overrideWithValue(fakeFonts),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
+      final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          quranComApiProvider.overrideWithValue(fakeApi),
+          qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
 
-    await _seedAyahs(db);
-    await _pumpReader(tester, container);
-    await _switchToMushafView(tester);
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+      await _switchToMushafView(tester);
 
-    final scrollContainer = find.byKey(const ValueKey('reader_mushaf_scroll'));
-    expect(scrollContainer, findsOneWidget);
+      final scrollContainer = find.byKey(
+        const ValueKey('reader_mushaf_scroll'),
+      );
+      expect(scrollContainer, findsOneWidget);
 
-    final scrollableState = _mushafScrollableState(tester);
-    expect(scrollableState.position.maxScrollExtent, greaterThan(0));
+      final scrollableState = _mushafScrollableState(tester);
+      expect(scrollableState.position.maxScrollExtent, greaterThan(0));
 
-    final offsetBefore = scrollableState.position.pixels;
-    await tester.drag(scrollContainer, const Offset(0, -180));
-    await tester.pumpAndSettle();
-    final offsetAfter = _mushafScrollableState(tester).position.pixels;
+      final offsetBefore = scrollableState.position.pixels;
+      await tester.drag(scrollContainer, const Offset(0, -180));
+      await tester.pumpAndSettle();
+      final offsetAfter = _mushafScrollableState(tester).position.pixels;
 
-    expect(offsetAfter, greaterThan(offsetBefore));
-  });
+      expect(offsetAfter, greaterThan(offsetBefore));
+    },
+  );
 
-  testWidgets('mushaf line height remains baseline under constrained height',
-      (tester) async {
+  testWidgets('mushaf line height remains baseline under constrained height', (
+    tester,
+  ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(1200, 400));
 
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2499,8 +2485,9 @@ void main() {
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
 
-    final canvasContext =
-        tester.element(find.byKey(const ValueKey('reader_mushaf_canvas')));
+    final canvasContext = tester.element(
+      find.byKey(const ValueKey('reader_mushaf_canvas')),
+    );
     final viewportHeight = MediaQuery.sizeOf(canvasContext).height;
     final lineHeight = tester
         .getSize(find.byKey(const ValueKey('reader_mushaf_line_1')))
@@ -2508,16 +2495,15 @@ void main() {
     expect(lineHeight, closeTo(viewportHeight * 0.061, 1.0));
   });
 
-  testWidgets('mushaf canvas width stays bounded and responsive',
-      (tester) async {
+  testWidgets('mushaf canvas width stays bounded and responsive', (
+    tester,
+  ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(1600, 900));
 
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2547,56 +2533,60 @@ void main() {
     expect(narrowCanvasWidth, lessThanOrEqualTo(wideCanvasWidth));
   });
 
-  testWidgets('mushaf surah-start page uses SurahNames header and svg basmala',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildSurahStartMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-        quranComApiProvider.overrideWithValue(fakeApi),
-        qcfFontManagerProvider.overrideWithValue(fakeFonts),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
+  testWidgets(
+    'mushaf surah-start page uses SurahNames header and svg basmala',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeApi = _FakeQuranComApi.withData(
+        _buildSurahStartMushafDataFixture(),
+      );
+      final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          quranComApiProvider.overrideWithValue(fakeApi),
+          qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
 
-    await _seedAyahs(db);
-    await _pumpReader(tester, container);
-    await _switchToPageMode(tester);
-    await _switchToMushafView(tester);
-    await tester.tap(find.byKey(const ValueKey('reader_page_2')));
-    await tester.pumpAndSettle();
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+      await _switchToPageMode(tester);
+      await _switchToMushafView(tester);
+      await tester.tap(find.byKey(const ValueKey('reader_page_2')));
+      await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(const ValueKey('reader_mushaf_chapter_header_2')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('reader_mushaf_external_basmala_2')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('reader_mushaf_chapter_header_2')),
-        matching: find.byType(SvgPicture),
-      ),
-      findsOneWidget,
-    );
-    final icon = tester.widget<Text>(
-      find.byKey(const ValueKey('reader_mushaf_chapter_icon_2')),
-    );
-    expect(icon.style?.fontFamily, 'SurahNames');
-    expect(icon.style?.fontSize, 96);
-    expect(find.byKey(const ValueKey<String>('basmala_header')), findsNothing);
-  });
+      expect(
+        find.byKey(const ValueKey('reader_mushaf_chapter_header_2')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('reader_mushaf_external_basmala_2')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('reader_mushaf_chapter_header_2')),
+          matching: find.byType(SvgPicture),
+        ),
+        findsOneWidget,
+      );
+      final icon = tester.widget<Text>(
+        find.byKey(const ValueKey('reader_mushaf_chapter_icon_2')),
+      );
+      expect(icon.style?.fontFamily, 'SurahNames');
+      expect(icon.style?.fontSize, 96);
+      expect(
+        find.byKey(const ValueKey<String>('basmala_header')),
+        findsNothing,
+      );
+    },
+  );
 
   testWidgets('mushaf header scrolls with text', (tester) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -2604,9 +2594,7 @@ void main() {
 
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2624,8 +2612,9 @@ void main() {
     await _pumpReader(tester, container);
     await _switchToMushafView(tester);
 
-    final headerFinder =
-        find.byKey(const ValueKey('reader_mushaf_chapter_header_2'));
+    final headerFinder = find.byKey(
+      const ValueKey('reader_mushaf_chapter_header_2'),
+    );
     expect(headerFinder, findsOneWidget);
     final headerTopBefore = tester.getTopLeft(headerFinder).dy;
 
@@ -2639,18 +2628,15 @@ void main() {
     expect(headerTopAfter, lessThan(headerTopBefore));
   });
 
-  testWidgets('mushaf chapter 1 and 9 headers omit external basmala',
-      (tester) async {
+  testWidgets('mushaf chapter 1 and 9 headers omit external basmala', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi = _FakeQuranComApi.byPage(
-      <int, MushafPageData>{
-        1: _buildInteractiveMushafDataFixture(),
-        2: _buildChapterNineStartMushafDataFixture(),
-      },
-    );
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeApi = _FakeQuranComApi.byPage(<int, MushafPageData>{
+      1: _buildInteractiveMushafDataFixture(),
+      2: _buildChapterNineStartMushafDataFixture(),
+    });
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2692,46 +2678,49 @@ void main() {
     );
   });
 
-  testWidgets('surah-start page does not render synthetic leading blank lines',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildSurahStartMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-        quranComApiProvider.overrideWithValue(fakeApi),
-        qcfFontManagerProvider.overrideWithValue(fakeFonts),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
+  testWidgets(
+    'surah-start page does not render synthetic leading blank lines',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeApi = _FakeQuranComApi.withData(
+        _buildSurahStartMushafDataFixture(),
+      );
+      final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          quranComApiProvider.overrideWithValue(fakeApi),
+          qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
 
-    await _seedAyahs(db);
-    await _pumpReader(tester, container);
-    await _switchToPageMode(tester);
-    await _switchToMushafView(tester);
-    await tester.tap(find.byKey(const ValueKey('reader_page_2')));
-    await tester.pumpAndSettle();
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+      await _switchToPageMode(tester);
+      await _switchToMushafView(tester);
+      await tester.tap(find.byKey(const ValueKey('reader_page_2')));
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('reader_mushaf_line_1')), findsNothing);
-    expect(find.byKey(const ValueKey('reader_mushaf_line_2')), findsNothing);
-    expect(find.byKey(const ValueKey('reader_mushaf_line_3')), findsOneWidget);
-  });
+      expect(find.byKey(const ValueKey('reader_mushaf_line_1')), findsNothing);
+      expect(find.byKey(const ValueKey('reader_mushaf_line_2')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('reader_mushaf_line_3')),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('mushaf preserves verse code_v2 spacing', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildVerseSpacingMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildVerseSpacingMushafDataFixture(),
     );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2755,50 +2744,51 @@ void main() {
     expect(find.text('A  B C'), findsNothing);
   });
 
-  testWidgets('mushaf marker click resolves visible verse with qcf-like glyphs',
-      (tester) async {
+  testWidgets(
+    'mushaf marker click resolves visible verse with qcf-like glyphs',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeApi = _FakeQuranComApi.withData(
+        _buildInteractiveQcfLikeMushafDataFixture(),
+      );
+      final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          quranComApiProvider.overrideWithValue(fakeApi),
+          qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+      await _switchToMushafView(tester);
+
+      await tester.tap(
+        find.byKey(const ValueKey('reader_mushaf_marker_1_1:1_1')),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Save for later'), findsOneWidget);
+      expect(find.text('Add/Edit note'), findsOneWidget);
+      expect(find.text('Copy text (Uthmani)'), findsOneWidget);
+    },
+  );
+
+  testWidgets('mushaf word click does not trigger verse action sheet', (
+    tester,
+  ) async {
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveQcfLikeMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
+    final fakeApi = _FakeQuranComApi.withData(
+      _buildInteractiveQcfLikeMushafDataFixture(),
     );
-    final container = ProviderContainer(
-      overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          ref.onDispose(db.close);
-          return db;
-        }),
-        quranComApiProvider.overrideWithValue(fakeApi),
-        qcfFontManagerProvider.overrideWithValue(fakeFonts),
-      ],
-    );
-    addTearDown(container.dispose);
-    _registerPumpCleanup(tester);
-
-    await _seedAyahs(db);
-    await _pumpReader(tester, container);
-    await _switchToMushafView(tester);
-
-    await tester.tap(
-      find.byKey(const ValueKey('reader_mushaf_marker_1_1:1_1')),
-      warnIfMissed: false,
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Bookmark verse'), findsOneWidget);
-    expect(find.text('Add/Edit note'), findsOneWidget);
-    expect(find.text('Copy text (Uthmani)'), findsOneWidget);
-  });
-
-  testWidgets('mushaf word click does not trigger verse action sheet',
-      (tester) async {
-    final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi =
-        _FakeQuranComApi.withData(_buildInteractiveQcfLikeMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2822,28 +2812,25 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Bookmark verse'), findsNothing);
+    expect(find.text('Save for later'), findsNothing);
     expect(
       find.byKey(const ValueKey('reader_mushaf_word_popover_1_0')),
       findsOneWidget,
     );
   });
 
-  testWidgets('mushaf line size stability between page1 and page2',
-      (tester) async {
+  testWidgets('mushaf line size stability between page1 and page2', (
+    tester,
+  ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(1200, 900));
 
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi = _FakeQuranComApi.byPage(
-      <int, MushafPageData>{
-        1: _buildMushafDataFixture(),
-        2: _buildSurahStartMushafDataFixture(),
-      },
-    );
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeApi = _FakeQuranComApi.byPage(<int, MushafPageData>{
+      1: _buildMushafDataFixture(),
+      2: _buildSurahStartMushafDataFixture(),
+    });
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2884,9 +2871,7 @@ void main() {
   testWidgets('mushaf mode renders fixed 15 lines', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2919,9 +2904,7 @@ void main() {
   testWidgets('mushaf plain uses mushaf=1 and v2 font', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2955,9 +2938,7 @@ void main() {
   testWidgets('mushaf tajweed uses mushaf=19 and v4 font', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -2999,9 +2980,7 @@ void main() {
   testWidgets('mushaf uses QCF font for code_v2 end token', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -3035,9 +3014,7 @@ void main() {
   testWidgets('each mushaf line renders as a word row', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -3075,9 +3052,7 @@ void main() {
 
     final db = AppDatabase(NativeDatabase.memory());
     final fakeApi = _FakeQuranComApi.withData(_buildMushafDataFixture());
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -3119,22 +3094,21 @@ void main() {
     expect(baselineCanvasWidth, inInclusiveRange(400.0, 540.0));
     expect(baselineFontSize, inInclusiveRange(16.0, 34.0));
     expect(
-        largerViewportCanvasWidth, greaterThanOrEqualTo(baselineCanvasWidth));
+      largerViewportCanvasWidth,
+      greaterThanOrEqualTo(baselineCanvasWidth),
+    );
     expect(largerViewportFontSize, greaterThanOrEqualTo(baselineFontSize));
   });
 
-  testWidgets('mushaf non-centered line uses spaceBetween word layout',
-      (tester) async {
+  testWidgets('mushaf non-centered line uses spaceBetween word layout', (
+    tester,
+  ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(720, 820));
 
     final db = AppDatabase(NativeDatabase.memory());
-    final fakeApi = _FakeQuranComApi.withData(
-      _buildSpacingMushafDataFixture(),
-    );
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeApi = _FakeQuranComApi.withData(_buildSpacingMushafDataFixture());
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -3156,16 +3130,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      _lineMainAxisAlignment(
-        tester,
-        lineNumber: 1,
-      ),
+      _lineMainAxisAlignment(tester, lineNumber: 1),
       MainAxisAlignment.spaceBetween,
     );
   });
 
-  testWidgets('mushaf center map centers page 2 and not page 3 line 1',
-      (tester) async {
+  testWidgets('mushaf center map centers page 2 and not page 3 line 1', (
+    tester,
+  ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(1200, 900));
 
@@ -3173,9 +3145,7 @@ void main() {
     final fakeApi = _FakeQuranComApi.withData(
       _buildDenseMushafDataFixture(denseWordCount: 80),
     );
-    final fakeFonts = _FakeQcfFontManager(
-      familyName: 'qcf_test_family',
-    );
+    final fakeFonts = _FakeQcfFontManager(familyName: 'qcf_test_family');
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -3197,10 +3167,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      _lineMainAxisAlignment(
-        tester,
-        lineNumber: 1,
-      ),
+      _lineMainAxisAlignment(tester, lineNumber: 1),
       MainAxisAlignment.center,
     );
 
@@ -3208,10 +3175,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      _lineMainAxisAlignment(
-        tester,
-        lineNumber: 1,
-      ),
+      _lineMainAxisAlignment(tester, lineNumber: 1),
       MainAxisAlignment.spaceBetween,
     );
   });
@@ -3235,41 +3199,38 @@ void _mockClipboard(
 
 Future<void> _seedAyahs(AppDatabase db) async {
   await db.batch((batch) {
-    batch.insertAll(
-      db.ayah,
-      [
-        AyahCompanion.insert(
-          surah: 1,
-          ayah: 1,
-          textUthmani: 'ٱلْحَمْدُ لِلَّٰهِ',
-          pageMadina: const Value(1),
-        ),
-        AyahCompanion.insert(
-          surah: 1,
-          ayah: 2,
-          textUthmani: 'رَبِّ ٱلْعَٰلَمِينَ',
-          pageMadina: const Value(1),
-        ),
-        AyahCompanion.insert(
-          surah: 1,
-          ayah: 3,
-          textUthmani: 'مَٰلِكِ يَوْمِ ٱلدِّينِ',
-          pageMadina: const Value(2),
-        ),
-        AyahCompanion.insert(
-          surah: 2,
-          ayah: 1,
-          textUthmani: 'الم',
-          pageMadina: const Value(2),
-        ),
-        AyahCompanion.insert(
-          surah: 2,
-          ayah: 2,
-          textUthmani: 'ذَٰلِكَ ٱلْكِتَٰبُ',
-          pageMadina: const Value(3),
-        ),
-      ],
-    );
+    batch.insertAll(db.ayah, [
+      AyahCompanion.insert(
+        surah: 1,
+        ayah: 1,
+        textUthmani: 'ٱلْحَمْدُ لِلَّٰهِ',
+        pageMadina: const Value(1),
+      ),
+      AyahCompanion.insert(
+        surah: 1,
+        ayah: 2,
+        textUthmani: 'رَبِّ ٱلْعَٰلَمِينَ',
+        pageMadina: const Value(1),
+      ),
+      AyahCompanion.insert(
+        surah: 1,
+        ayah: 3,
+        textUthmani: 'مَٰلِكِ يَوْمِ ٱلدِّينِ',
+        pageMadina: const Value(2),
+      ),
+      AyahCompanion.insert(
+        surah: 2,
+        ayah: 1,
+        textUthmani: 'الم',
+        pageMadina: const Value(2),
+      ),
+      AyahCompanion.insert(
+        surah: 2,
+        ayah: 2,
+        textUthmani: 'ذَٰلِكَ ٱلْكِتَٰبُ',
+        pageMadina: const Value(3),
+      ),
+    ]);
   });
 }
 
@@ -3299,13 +3260,7 @@ MushafPageData _buildMushafDataFixture() {
   }
   return MushafPageData(
     words: words,
-    verses: [
-      MushafVerseData(
-        verseKey: '2:1',
-        codeV2: 'X',
-        words: words,
-      ),
-    ],
+    verses: [MushafVerseData(verseKey: '2:1', codeV2: 'X', words: words)],
     meta: const MushafPageMeta(
       firstChapterId: 2,
       firstVerseNumber: 1,
@@ -3372,21 +3327,10 @@ MushafPageData _buildInteractiveMushafDataFixture() {
   ];
 
   return MushafPageData(
-    words: const [
-      ...verse11Words,
-      ...verse12Words,
-    ],
+    words: const [...verse11Words, ...verse12Words],
     verses: const [
-      MushafVerseData(
-        verseKey: '1:1',
-        codeV2: 'A ۝',
-        words: verse11Words,
-      ),
-      MushafVerseData(
-        verseKey: '1:2',
-        codeV2: 'B ۝',
-        words: verse12Words,
-      ),
+      MushafVerseData(verseKey: '1:1', codeV2: 'A ۝', words: verse11Words),
+      MushafVerseData(verseKey: '1:2', codeV2: 'B ۝', words: verse12Words),
     ],
     meta: const MushafPageMeta(
       firstChapterId: 1,
@@ -3499,22 +3443,14 @@ MushafPageData _buildSimpleQuranComDataFixture() {
   ];
 
   return MushafPageData(
-    words: const [
-      ...verse11Words,
-      ...verse12Words,
-      ...verse13Words,
-    ],
+    words: const [...verse11Words, ...verse12Words, ...verse13Words],
     verses: const [
       MushafVerseData(
         verseKey: '1:1',
         codeV2: '۝ ٱلْحَمْدُ',
         words: verse11Words,
       ),
-      MushafVerseData(
-        verseKey: '1:2',
-        codeV2: 'A رَبِّ',
-        words: verse12Words,
-      ),
+      MushafVerseData(verseKey: '1:2', codeV2: 'A رَبِّ', words: verse12Words),
       MushafVerseData(
         verseKey: '1:3',
         codeV2: 'B مَٰلِكِ',
@@ -3572,10 +3508,7 @@ MushafPageData _buildVerseStudySheetDataFixture() {
   ];
 
   return MushafPageData(
-    words: const [
-      ...verse11Words,
-      ...verse12Words,
-    ],
+    words: const [...verse11Words, ...verse12Words],
     verses: const [
       MushafVerseData(
         verseKey: '1:1',
@@ -3593,10 +3526,7 @@ MushafPageData _buildVerseStudySheetDataFixture() {
         codeV2: 'رَبِّ',
         words: verse12Words,
         translations: <MushafVerseTranslation>[
-          MushafVerseTranslation(
-            resourceId: 85,
-            text: 'Lord of the worlds.',
-          ),
+          MushafVerseTranslation(resourceId: 85, text: 'Lord of the worlds.'),
         ],
       ),
     ],
@@ -3629,9 +3559,7 @@ MushafPageData _buildVerseStudySheetFallbackFixture() {
   ];
 
   return MushafPageData(
-    words: const [
-      ...verse11Words,
-    ],
+    words: const [...verse11Words],
     verses: const [
       MushafVerseData(
         verseKey: '1:1',
@@ -3694,21 +3622,10 @@ MushafPageData _buildSurahStartMushafDataFixture() {
   ];
 
   return MushafPageData(
-    words: const [
-      ...verse21Words,
-      ...verse22Words,
-    ],
+    words: const [...verse21Words, ...verse22Words],
     verses: const [
-      MushafVerseData(
-        verseKey: '2:1',
-        codeV2: 'ﱁ ﱂ',
-        words: verse21Words,
-      ),
-      MushafVerseData(
-        verseKey: '2:2',
-        codeV2: 'ﱃ ﱄ  ﱌ',
-        words: verse22Words,
-      ),
+      MushafVerseData(verseKey: '2:1', codeV2: 'ﱁ ﱂ', words: verse21Words),
+      MushafVerseData(verseKey: '2:2', codeV2: 'ﱃ ﱄ  ﱌ', words: verse22Words),
     ],
     meta: const MushafPageMeta(
       firstChapterId: 2,
@@ -3740,11 +3657,7 @@ MushafPageData _buildChapterNineStartMushafDataFixture() {
   return MushafPageData(
     words: verse91Words,
     verses: const [
-      MushafVerseData(
-        verseKey: '9:1',
-        codeV2: 'Z ۝',
-        words: verse91Words,
-      ),
+      MushafVerseData(verseKey: '9:1', codeV2: 'Z ۝', words: verse91Words),
     ],
     meta: const MushafPageMeta(
       firstChapterId: 9,
@@ -3785,11 +3698,7 @@ MushafPageData _buildVerseSpacingMushafDataFixture() {
   return MushafPageData(
     words: verseWords,
     verses: const [
-      MushafVerseData(
-        verseKey: '1:1',
-        codeV2: 'A  B C',
-        words: verseWords,
-      ),
+      MushafVerseData(verseKey: '1:1', codeV2: 'A  B C', words: verseWords),
     ],
     meta: const MushafPageMeta(
       firstChapterId: 1,
@@ -3822,11 +3731,7 @@ MushafPageData _buildInteractiveQcfLikeMushafDataFixture() {
   return MushafPageData(
     words: verseWords,
     verses: const [
-      MushafVerseData(
-        verseKey: '1:1',
-        codeV2: 'ﱁ ﱂ',
-        words: verseWords,
-      ),
+      MushafVerseData(verseKey: '1:1', codeV2: 'ﱁ ﱂ', words: verseWords),
     ],
     meta: const MushafPageMeta(
       firstChapterId: 1,
@@ -3864,13 +3769,7 @@ MushafPageData _buildDenseMushafDataFixture({required int denseWordCount}) {
   }
   return MushafPageData(
     words: words,
-    verses: [
-      MushafVerseData(
-        verseKey: '2:2',
-        codeV2: 'G i i G',
-        words: words,
-      ),
-    ],
+    verses: [MushafVerseData(verseKey: '2:2', codeV2: 'G i i G', words: words)],
     meta: const MushafPageMeta(
       firstChapterId: 2,
       firstVerseNumber: 2,
@@ -4060,19 +3959,19 @@ class _FakeQuranComApi extends QuranComApi {
     this._data, {
     List<MushafJuzNavEntry>? juzEntries,
     bool throwJuzError = false,
-  })  : _byPage = null,
-        _juzEntries = juzEntries,
-        _throwJuzError = throwJuzError;
+  }) : _byPage = null,
+       _juzEntries = juzEntries,
+       _throwJuzError = throwJuzError;
 
   _FakeQuranComApi.byPage(
     Map<int, MushafPageData> byPage, {
     List<MushafJuzNavEntry>? juzEntries,
     bool throwJuzError = false,
-  })  : assert(byPage.isNotEmpty),
-        _data = byPage.values.first,
-        _byPage = Map<int, MushafPageData>.from(byPage),
-        _juzEntries = juzEntries,
-        _throwJuzError = throwJuzError;
+  }) : assert(byPage.isNotEmpty),
+       _data = byPage.values.first,
+       _byPage = Map<int, MushafPageData>.from(byPage),
+       _juzEntries = juzEntries,
+       _throwJuzError = throwJuzError;
 
   final MushafPageData _data;
   final Map<int, MushafPageData>? _byPage;
@@ -4136,12 +4035,7 @@ class _FakeQuranComApi extends QuranComApi {
     required int page,
     required int mushafId,
   }) async {
-    calls.add(
-      _FakeQuranComApiCall(
-        page: page,
-        mushafId: mushafId,
-      ),
-    );
+    calls.add(_FakeQuranComApiCall(page: page, mushafId: mushafId));
     return _resolve(page);
   }
 
@@ -4186,9 +4080,7 @@ class _FakeQuranComApi extends QuranComApi {
   }
 
   @override
-  Future<List<MushafJuzNavEntry>> getJuzIndex({
-    required int mushafId,
-  }) async {
+  Future<List<MushafJuzNavEntry>> getJuzIndex({required int mushafId}) async {
     juzCalls.add(mushafId);
     if (_throwJuzError) {
       throw const QuranComApiException('Failed to load juz index.');
@@ -4208,8 +4100,8 @@ class _FakeQuranComApi extends QuranComApi {
 class _FakeQuranComChaptersService extends QuranComChaptersService {
   _FakeQuranComChaptersService({
     required Map<String, List<QuranComChapterEntry>> byLanguageCode,
-  })  : _byLanguageCode = byLanguageCode,
-        super();
+  }) : _byLanguageCode = byLanguageCode,
+       super();
 
   final Map<String, List<QuranComChapterEntry>> _byLanguageCode;
 
@@ -4236,19 +4128,14 @@ class _FakeQuranComChaptersService extends QuranComChaptersService {
 }
 
 class _FakeQcfFontCall {
-  const _FakeQcfFontCall({
-    required this.page,
-    required this.variant,
-  });
+  const _FakeQcfFontCall({required this.page, required this.variant});
 
   final int page;
   final QcfFontVariant variant;
 }
 
 class _FakeQcfFontManager extends QcfFontManager {
-  _FakeQcfFontManager({
-    required this.familyName,
-  });
+  _FakeQcfFontManager({required this.familyName});
 
   final String familyName;
   final List<_FakeQcfFontCall> calls = <_FakeQcfFontCall>[];
@@ -4268,9 +4155,8 @@ class _FakeQcfFontManager extends QcfFontManager {
 }
 
 class _FakeAppPreferencesStore implements AppPreferencesStore {
-  _FakeAppPreferencesStore({
-    StoredAppPreferences? initial,
-  }) : _stored = initial ?? const StoredAppPreferences();
+  _FakeAppPreferencesStore({StoredAppPreferences? initial})
+    : _stored = initial ?? const StoredAppPreferences();
 
   StoredAppPreferences _stored;
   bool? savedReaderShowVerseTranslation;
@@ -4421,8 +4307,10 @@ double _lineQcfFontSize(
   required String familyName,
 }) {
   final lineFinder = find.byKey(ValueKey('reader_mushaf_line_$lineNumber'));
-  final textFinder =
-      find.descendant(of: lineFinder, matching: find.byType(Text));
+  final textFinder = find.descendant(
+    of: lineFinder,
+    matching: find.byType(Text),
+  );
   final texts = tester.widgetList<Text>(textFinder).toList(growable: false);
   final qcfText = texts.firstWhere(
     (text) => text.style?.fontFamily == familyName,
@@ -4439,10 +4327,7 @@ ScrollableState _mushafScrollableState(WidgetTester tester) {
   return tester.state<ScrollableState>(scrollFinder);
 }
 
-Color? _wordHighlightColor(
-  WidgetTester tester, {
-  required Finder wordFinder,
-}) {
+Color? _wordHighlightColor(WidgetTester tester, {required Finder wordFinder}) {
   final containerFinder = find.ancestor(
     of: wordFinder,
     matching: find.byType(AnimatedContainer),
@@ -4456,10 +4341,7 @@ Color? _wordHighlightColor(
   return decoration.color;
 }
 
-Color? _wordTextColor(
-  WidgetTester tester, {
-  required Finder wordFinder,
-}) {
+Color? _wordTextColor(WidgetTester tester, {required Finder wordFinder}) {
   final text = tester.widget<Text>(wordFinder);
   return text.style?.color;
 }

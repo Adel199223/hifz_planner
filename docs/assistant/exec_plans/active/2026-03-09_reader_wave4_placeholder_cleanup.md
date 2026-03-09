@@ -41,6 +41,7 @@
 ## Decision Log
 - 2026-03-09: Wave 4 starts only after Wave 3 has been fully merged and archived on `main`.
 - 2026-03-09: Wave 4 remains cleanup-and-consistency work, not a hidden expansion into download/share/tafsir infrastructure.
+- 2026-03-09: The highest-value cleanup is truthful vocabulary alignment, because the obvious unfinished Reader study actions were already hidden in earlier waves.
 
 ## Validation
 - `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart`
@@ -53,13 +54,34 @@
 
 ## Progress
 - [x] Start Wave 4 ExecPlan
-- [ ] Audit Reader placeholder friction
-- [ ] Remove or hide misleading placeholders
-- [ ] Align cross-surface vocabulary
-- [ ] Validate and prepare for docs sync / closeout
+- [x] Audit Reader placeholder friction
+- [x] Remove or hide misleading placeholders
+- [x] Align cross-surface vocabulary
+- [x] Validate and prepare for docs sync / closeout
 
 ## Surprises and Adjustments
-- Use this section for blockers, scope corrections, or test-loop issues discovered during implementation.
+- 2026-03-09: Earlier waves had already removed the most misleading unfinished Reader study actions, so Wave 4 focused on the remaining user-facing label drift instead of a larger action-menu cleanup.
+- 2026-03-09: Starting overlapping `flutter test` commands in the same fresh worktree triggered the known local Flutter startup/plugin race pattern again; the trusted validation record for Wave 4 uses sequential Flutter test runs.
+- 2026-03-09: Fresh-worktree Flutter validation touched `pubspec.lock` again before the test run. The incidental lockfile churn was reverted so Wave 4 stays dependency-neutral.
+
+## Implementation Summary
+- The Reader settings tab label now says `Word help` instead of the more technical `Word By Word`.
+- The Reader save action now says `Save for later` instead of `Bookmark verse` across verse actions, study sheet actions, and mushaf marker actions.
+- The underlying routes, storage, and bookmark/note behavior are unchanged; this wave is vocabulary cleanup only.
+
+## Validation Status
+- Green on 2026-03-09:
+  - `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/bookmarks_screen_test.dart`
+  - `flutter test -j 1 -r expanded test/screens/notes_screen_test.dart`
+  - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+  - `dart tooling/validate_localization.dart`
+  - `dart tooling/validate_agent_docs.dart`
+  - `dart tooling/validate_workspace_hygiene.dart`
+- Narrow Assistant Docs Sync completed on 2026-03-09 for:
+  - `APP_KNOWLEDGE.md`
+  - `docs/assistant/APP_KNOWLEDGE.md`
+  - `docs/assistant/features/APP_USER_GUIDE.md`
 
 ## Handoff
 - Wave 4 should end with:
