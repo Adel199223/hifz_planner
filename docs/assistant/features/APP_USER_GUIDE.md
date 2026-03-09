@@ -112,7 +112,7 @@ Typical actions:
 - turn meaning help on or off from the Reader settings drawer
 - use translation, word help, and transliteration where available
 - open `Study this verse` from the verse actions when you want one focused study view
-- add bookmarks/notes from the Reader, then revisit them later in `Library`
+- use `Save for later` or notes from the Reader, then revisit them later in `Library`
 
 What the Reader meaning controls do:
 - `Show verse translation`: show or hide the translation line under each verse
@@ -124,7 +124,7 @@ What the Reader meaning controls do:
 What `Study this verse` does:
 - it opens one focused study sheet for that verse
 - it shows the Arabic text, the current translation, and available word help
-- it keeps the existing bookmark and note actions in the same place so you can save the verse for later
+- it keeps the existing `Save for later` and note actions in the same place so you can return to the verse later
 - if some meaning data is missing, it says so calmly instead of pretending extra explanation exists
 
 What happens later in `Library`:

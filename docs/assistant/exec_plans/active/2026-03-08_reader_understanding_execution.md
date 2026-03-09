@@ -55,7 +55,7 @@
 - [x] Merge Wave 2
 - [x] Start Wave 3
 - [x] Merge Wave 3
-- [ ] Start Wave 4
+- [x] Start Wave 4
 - [ ] Merge Wave 4
 - [ ] Close the roadmap
 
@@ -98,6 +98,7 @@
 | Reader Wave 1 | merged | historical | removed | Persistent Reader meaning controls are now in `main` after PR `#33`; closeout cleanup was corrected in PR `#35` |
 | Reader Wave 2 | merged | historical | removed | Verse study sheet and meaning-first actions are now in `main` after PR `#36` and closeout PR `#37` |
 | Reader Wave 3 | merged | historical | removed after closeout | Library-connected study review is now in `main` after PR `#38` and this closeout archives the active plan |
+| Reader Wave 4 | active | `feat/reader-wave4-placeholder-cleanup` | `/home/fa507/dev/hifz_planner_reader_wave4` | Placeholder cleanup and cross-surface consistency is implemented locally and ready for docs sync / closeout |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -144,5 +145,22 @@
   - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation; the incidental churn was reverted so Wave 3 remains dependency-neutral.
   - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, and app user guide so the Library saved-study follow-up flow is documented without widening into unrelated planner docs.
   - 2026-03-09: Wave 3 feature work merged to `main` in PR `#38`.
+  - 2026-03-09: Wave 3 closeout merged in PR `#39`.
+  - 2026-03-09: Wave 4 started in isolated worktree `/home/fa507/dev/hifz_planner_reader_wave4` on branch `feat/reader-wave4-placeholder-cleanup`.
+  - 2026-03-09: Wave 4 now finishes the Reader roadmap with low-risk vocabulary cleanup:
+    - the Reader settings tab now says `Word help` instead of `Word By Word`
+    - the Reader save action now says `Save for later` instead of `Bookmark verse`
+    - routes, storage, and bookmark/note behavior stay unchanged
+  - 2026-03-09: Wave 4 validation is green in the isolated worktree:
+    - `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart`
+    - `flutter test -j 1 -r expanded test/screens/bookmarks_screen_test.dart`
+    - `flutter test -j 1 -r expanded test/screens/notes_screen_test.dart`
+    - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+    - `dart tooling/validate_localization.dart`
+    - `dart tooling/validate_agent_docs.dart`
+    - `dart tooling/validate_workspace_hygiene.dart`
+  - 2026-03-09: Starting overlapping `flutter test` commands in the same fresh worktree triggered the known local Flutter startup/plugin race pattern again; the trusted Wave 4 validation record uses sequential Flutter test runs.
+  - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation; the incidental churn was reverted so Wave 4 remains dependency-neutral.
+  - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, and app user guide so the final Reader vocabulary cleanup is documented without widening into unrelated areas.
 - Next recommended action:
-  - start Wave 4 - Placeholder Cleanup and Cross-Surface Consistency
+  - close Wave 4 with docs sync and PR merge

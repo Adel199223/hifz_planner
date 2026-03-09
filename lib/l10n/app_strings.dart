@@ -103,12 +103,12 @@ class AppStrings {
       _t('tajweed_legend_tafkhim_heavy', 'Tafkhim (heavy)');
   String get translation => _t('translation', 'Translation');
   String get arabic => _t('arabic', 'Arabic');
-  String get wordByWord => _t('word_by_word', 'Word By Word');
+  String get wordByWord => _t('word_by_word', 'Word help');
   String get tafsirs => _t('tafsirs', 'Tafsirs');
   String get lessons => _t('lessons', 'Lessons');
   String get reflections => _t('reflections', 'Reflections');
 
-  String get bookmarkVerse => _t('bookmark_verse', 'Bookmark verse');
+  String get bookmarkVerse => _t('bookmark_verse', 'Save for later');
   String get addEditNote => _t('add_edit_note', 'Add/Edit note');
   String get copyTextUthmani => _t('copy_text_uthmani', 'Copy text (Uthmani)');
   String get studyThisVerse => _t('study_this_verse', 'Study this verse');
@@ -1691,7 +1691,7 @@ class AppStrings {
       'reflections': 'Réflexions',
       'translation': 'Traduction',
       'arabic': 'Arabe',
-      'word_by_word': 'Mot à mot',
+      'word_by_word': 'Aide mot à mot',
       'script_style': "Style d'écriture",
       'show_tajweed_rules_while_reading':
           'Afficher les règles de tajwid pendant la lecture',
@@ -1703,6 +1703,7 @@ class AppStrings {
       'meaning_unavailable': 'Sens indisponible pour ce mot.',
       'meaning_aids_off': 'Les aides de sens sont désactivées.',
       'study_this_verse': 'Étudier ce verset',
+      'bookmark_verse': 'Enregistrer pour plus tard',
       'transliteration': 'Translittération',
       'show_verse_translation': 'Afficher la traduction du verset',
       'show_word_help': 'Afficher l’aide mot à mot',
@@ -2113,7 +2114,7 @@ class AppStrings {
       'tajweed_legend_tafkhim_heavy': 'Tafkhim (pesado)',
       'translation': 'Tradução',
       'arabic': 'Árabe',
-      'word_by_word': 'Palavra por palavra',
+      'word_by_word': 'Ajuda palavra por palavra',
       'tafsirs': 'Tafsirs',
       'lessons': 'Lições',
       'reflections': 'Reflexões',
@@ -2123,6 +2124,7 @@ class AppStrings {
       'meaning_unavailable': 'Significado indisponível para esta palavra.',
       'meaning_aids_off': 'As ajudas de significado estão desativadas.',
       'study_this_verse': 'Estudar este versículo',
+      'bookmark_verse': 'Salvar para depois',
       'transliteration': 'Transliteração',
       'show_verse_translation': 'Mostrar tradução do versículo',
       'show_word_help': 'Mostrar ajuda palavra por palavra',
@@ -2532,11 +2534,11 @@ class AppStrings {
       'tajweed_legend_tafkhim_heavy': 'تفخيم الصوت',
       'translation': 'الترجمة',
       'arabic': 'العربية',
-      'word_by_word': 'كلمة بكلمة',
+      'word_by_word': 'مساعدة الكلمات',
       'tafsirs': 'تفاسير',
       'lessons': 'فوائد',
       'reflections': 'تدبرات',
-      'bookmark_verse': 'حفظ الآية',
+      'bookmark_verse': 'احفظها لوقت لاحق',
       'add_edit_note': 'إضافة/تعديل ملاحظة',
       'copy_text_uthmani': 'نسخ النص (عثماني)',
       'study_this_verse': 'ادرس هذه الآية',
