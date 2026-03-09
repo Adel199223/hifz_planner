@@ -29,28 +29,28 @@ For any of those, open these docs in order:
 
 ## Current Wave
 
-- `Wave 4 - Cross-Surface Consistency and Closeout`
+- `No active wave; roadmap complete`
 
 ## Current Status
 
-- Wave 3 is merged to `main`.
-- Wave 4 is implemented, locally validated, and docs-synced in an isolated worktree.
+- Wave 4 is merged to `main`.
+- The Wave 4 active plan is archived.
+- The My Quran Personal Hub roadmap is complete on stable `main`.
 - The project harness now inherits the reusable UCBS roadmap-governance module from `main`, including the template-layer upgrade and active-worktree authority rules.
-- PR merge closeout is the next action after Wave 4 implementation.
 
 ## Exact Next Step
 
-- `close Wave 4 with PR merge`
+- `define the next backlog or a new roadmap`
 
 ## Active Worktree And Branch
 
-- Worktree: `/home/fa507/dev/hifz_planner_my_quran_wave4`
-- Branch: `feat/my-quran-wave4-consistency-closeout`
+- Worktree: `/home/fa507/dev/hifz_planner`
+- Branch: `main`
 
 ## Read These Next
 
 1. `docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md`
-2. `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave4_cross_surface_consistency_closeout.md`
+2. `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave4_cross_surface_consistency_closeout.md`
 3. `docs/assistant/ISSUE_MEMORY.md`
 
 ## Completed Roadmaps
@@ -66,4 +66,5 @@ For any of those, open these docs in order:
 - Fresh-session resume routing is now in place so future chats do not need to reconstruct roadmap state from scattered trackers.
 - Roadmap governance is now explicit in `docs/assistant/workflows/ROADMAP_WORKFLOW.md`, including adaptive trigger thresholds and the rule that the active worktree is authoritative during in-flight wave work.
 - The reusable UCBS roadmap-governance template module is now merged to `main`, and this active worktree has been rebased onto that baseline so the live project harness matches the reusable template contracts.
+- The repeated fresh-worktree Flutter lockfile-churn issue also surfaced during the final Wave 4 closeout validation; the incidental change was reverted and issue memory now points at the archived plan.
 - Keep this file summary-level only. The active roadmap tracker and active wave plan remain the deeper execution sources.

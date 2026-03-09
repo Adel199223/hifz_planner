@@ -55,8 +55,8 @@
 - [x] Start Wave 3
 - [x] Merge Wave 3
 - [x] Start Wave 4
-- [ ] Merge Wave 4
-- [ ] Close the roadmap
+- [x] Merge Wave 4
+- [x] Close the roadmap
 
 ## Surprises and Adjustments
 - Use this section for sequence changes, blockers, or scope corrections discovered during implementation.
@@ -78,7 +78,7 @@
 | My Quran Wave 1 | merged | historical | removed after merge | Three-card hub foundation merged to `main` in PR `#42`; active plan archived in `docs/assistant/exec_plans/completed/` |
 | My Quran Wave 2 | merged | historical | removed after merge | Saved-study previews, real resume depth, beginner-guide routing, and fresh-session resume routing merged to `main` in PR `#44`; active plan archived in `docs/assistant/exec_plans/completed/` |
 | My Quran Wave 3 | merged | historical | removed after merge | Personal setup shortcuts merged to `main` in PR `#47`; active plan archived in `docs/assistant/exec_plans/completed/` |
-| My Quran Wave 4 | active | `feat/my-quran-wave4-consistency-closeout` | `/home/fa507/dev/hifz_planner_my_quran_wave4` | Cross-surface consistency pass is implemented, locally green, and docs-synced; PR closeout is next |
+| My Quran Wave 4 | merged | `feat/my-quran-wave4-consistency-closeout` | removed after merge | Cross-surface consistency pass and roadmap closeout merged to `main` in PR `#49`; active plan archived in `docs/assistant/exec_plans/completed/` |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -157,5 +157,8 @@
 - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` before validation again; the incidental churn was reverted so Wave 4 remains dependency-neutral.
 - 2026-03-09: Wave 4 also refreshed `test/widget_test.dart` because the old smoke test still assumed a direct bookmark destination instead of the current `Library` -> saved-verses flow.
 - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical app brief, assistant bridge, broader app user guide, beginner guide, and issue memory so the final saved-study vocabulary and repeated lockfile-churn evidence are durable outside runtime code.
+- 2026-03-09: Wave 4 feature work merged to `main` in PR `#49`.
+- 2026-03-09: The first Flutter docs-validation test in the closeout worktree touched `pubspec.lock` again; the incidental change was reverted before publish, and issue memory now points at the archived Wave 4 plan path.
+- 2026-03-09: This closeout archives the active Wave 4 plan and marks the My Quran roadmap complete.
 - Next recommended action:
-  - close Wave 4 with PR merge
+  - define the next backlog or a new roadmap
