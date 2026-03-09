@@ -101,7 +101,7 @@
       "id": "fresh_worktree_flutter_validation_lockfile_churn",
       "first_seen": "2026-03-08",
       "last_seen": "2026-03-09",
-      "repeat_count": 5,
+      "repeat_count": 6,
       "status": "mitigated",
       "trigger_source": "first Flutter validation in a fresh isolated worktree",
       "symptoms": [
@@ -115,7 +115,8 @@
         "Wave 3 reverted incidental pubspec.lock churn after the first fresh-worktree validation run touched it again",
         "Wave 4 reverted incidental pubspec.lock churn after fresh-worktree Flutter validation touched it again",
         "My Quran Wave 1 reverted incidental pubspec.lock churn before docs sync",
-        "My Quran Wave 4 reverted incidental pubspec.lock churn before docs sync"
+        "My Quran Wave 4 reverted incidental pubspec.lock churn before docs sync",
+        "My Quran Wave 4 closeout reverted incidental pubspec.lock churn before publish after the first Flutter docs-validation test touched it again"
       ],
       "accepted_fix": "Treat lockfile churn as incidental unless dependencies were intentionally changed, and revert it before closeout.",
       "regressed_after_fix": false,
@@ -130,7 +131,7 @@
         "docs/assistant/exec_plans/completed/2026-03-08_goals_wave3_coaching_adjustment_guidance.md",
         "docs/assistant/exec_plans/completed/2026-03-08_goals_wave4_cross_surface_consistency.md",
         "docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave1_hub_foundation.md",
-        "docs/assistant/exec_plans/active/2026-03-09_my_quran_wave4_cross_surface_consistency_closeout.md"
+        "docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave4_cross_surface_consistency_closeout.md"
       ]
     },
     {

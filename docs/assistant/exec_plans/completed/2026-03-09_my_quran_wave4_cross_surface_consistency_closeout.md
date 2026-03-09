@@ -63,12 +63,15 @@
 - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` before validation again; the incidental churn was reverted so Wave 4 remains dependency-neutral.
 - 2026-03-09: The trusted validation record uses sequential Flutter commands in this worktree.
 - 2026-03-09: Narrow Assistant Docs Sync updated the canonical brief, assistant bridge, app user guide, beginner guide, and issue memory so the final saved-study vocabulary stays consistent outside runtime code too.
+- 2026-03-09: The first Flutter docs-validation test in the closeout worktree touched `pubspec.lock` again; the incidental churn was reverted before publish so the closeout remains docs-only.
 
 ## Handoff
 - Final state summary:
   - learner-facing saved-study wording is now aligned around `Save for later` and `Saved verses` across `Reader`, `My Quran`, `Library`, and the saved-verses screen while internal bookmark routes and storage names stay unchanged.
   - French, Portuguese, and Arabic overrides now match the new saved-verses wording for the touched Wave 4 strings instead of falling back to stale bookmark terms.
   - Narrow Assistant Docs Sync is complete for the canonical brief, assistant bridge, app user guide, beginner guide, and repeatable workflow issue memory.
-  - Wave 4 implementation is complete, validated locally, and docs-synced; the next step is PR closeout.
+  - Wave 4 implementation is complete, validated locally, docs-synced, and merged to `main` via PR `#49`.
+  - This closeout archives the Wave 4 plan and closes the My Quran roadmap on stable `main`.
 - Follow-up risks:
   - If user-facing wording starts fighting localized terminology quality, favor localization clarity over literal English parity.
+- Next step: define the next backlog or a new roadmap
