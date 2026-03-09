@@ -33,7 +33,7 @@ The app is trying to help you build steady long-term retention, not just finish 
 - `Practice from Memory`: where you actually do memorization practice, review practice, and delayed checks.
 - `Read`: where you read Quran with translation, word help, transliteration, and verse study tools.
 - `Library`: where you reopen verses and notes you saved for later.
-- `My Quran`: your personal hub for continuing reading, reopening recent saved study items, and checking your listening setup.
+- `My Quran`: your personal hub for continuing reading, reopening recent saved study items, checking your listening setup, and adjusting a few simple study defaults.
 
 ## How The Parts Work Together
 
@@ -49,6 +49,7 @@ The app works best in this order:
    - continue reading
    - reopen your latest saved study items
    - check your current reciter, repeat, and speed setup
+   - switch simple study defaults like translation, word help, transliteration, or autoplay
 
 What each main area is trying to achieve:
 
@@ -57,7 +58,7 @@ What each main area is trying to achieve:
 - `Practice from Memory`: turn memorization into a guided session instead of a vague “study more” instruction.
 - `Read`: help you understand what you are reading, not only view Arabic text.
 - `Library`: make saved verses and notes useful later, not just stored somewhere.
-- `My Quran`: give you one personal place to resume and reconnect with your current study setup.
+- `My Quran`: give you one personal place to resume and reconnect with your current study setup without digging through deeper settings first.
 
 ## What To Ignore At First
 
@@ -106,6 +107,7 @@ Safe beginner rule:
 2. Use `Continue reading` if a recent reading target is available.
 3. If there is no saved reading target yet, use `Open Reader`.
 4. In the same screen, use the saved-study preview if you want to reopen your latest bookmark or note directly.
+5. Use `Study setup` there if you want to quickly turn translation, word help, transliteration, or autoplay on or off.
 
 ## What This App Does Not Do Yet
 

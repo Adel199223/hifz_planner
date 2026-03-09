@@ -119,8 +119,9 @@ Primary target right now is desktop (Windows-first), while keeping architecture 
   - `Explore` section: Learn, My Quran, Quran Radio
 - `My Quran` is now a practical personal hub for:
   - continue reading
-  - saved-for-later counts
+  - saved-study previews and counts
   - listening setup summary
+  - lightweight study setup shortcuts
 - `Learn` now includes:
   - a simple `Practice from Memory` hub
   - the existing `Hifz Plan` card
@@ -652,8 +653,10 @@ Current capabilities:
     - `Continue reading`
     - `Saved for later`
     - `Listening setup`
+    - separate `Study setup` section
   - routes into `/reader`, `/library`, and `/reciters`
   - uses one shared dashboard snapshot plus a lightweight last-reader location shape from app preferences
+  - lets the learner toggle verse translation, word help, transliteration, and Practice from Memory autoplay inline without opening a full settings screen
 - `lib/screens/quran_radio_screen.dart`
   - placeholder scaffold (`coming soon`)
 - `lib/screens/reciters_screen.dart`
@@ -817,10 +820,12 @@ Representative files:
 
 - Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
 - Reader meaning controls are implemented, but translation-source selection is still fixed to one default resource per app language.
-- My Quran Wave 2 is now implemented locally in the active roadmap worktree:
+- My Quran Wave 3 is now implemented locally in the active roadmap worktree:
   - normal Reader usage now persists a lightweight last-reader resume target
   - `My Quran` can now show the latest bookmark preview with a direct reopen path
   - `My Quran` can now show the latest updated note preview with a direct reopen path
+  - `My Quran` now also shows a separate `Study setup` section with plain-language summary text plus inline toggles for translation, word help, transliteration, and Practice from Memory autoplay
+  - reciter changes still stay routed through `Listening setup` and `Reciters`
   - when no saved reader target exists yet, the hub still falls back safely to `Open Reader`
 - Quran Radio is still a placeholder surface.
 - Web parity will require abstraction of `dart:io` usage in Quran.com cache/font services.
@@ -843,10 +848,16 @@ Representative files:
   - the latest updated note preview with direct reopen
   - the full route into `Library`
 - `Listening setup` currently summarizes the selected reciter plus speed and repeat, then routes into `Reciters`
-- the hub is still intentionally summary-first in Wave 2:
-  - no inline editing yet
+- `Study setup` now sits underneath the three summary cards and lets the learner quickly switch:
+  - verse translation
+  - word help
+  - transliteration
+  - Practice from Memory autoplay
+- reciter changes still go through `Listening setup` and `Reciters`
+- the hub is still intentionally summary-first in Wave 3:
+  - no full settings duplication
   - no duplicate Library list
-  - no duplicate Settings surface
+  - no inline reciter picker
 
 ## 13) Where to Edit What
 

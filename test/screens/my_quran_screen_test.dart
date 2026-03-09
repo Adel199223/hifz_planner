@@ -63,6 +63,10 @@ void main() {
       find.byKey(const ValueKey('my_quran_listening_card')),
       findsOneWidget,
     );
+    expect(
+      find.byKey(const ValueKey('my_quran_study_setup_card')),
+      findsOneWidget,
+    );
     expect(find.text('Start from Reader'), findsOneWidget);
     expect(
       find.text(
@@ -79,6 +83,24 @@ void main() {
     );
     expect(find.text('Mishari Rashid al-`Afasy'), findsOneWidget);
     expect(find.text('Speed 1x · Repeat Off'), findsOneWidget);
+    expect(
+      find.text('Meaning help: translation On, word help On, transliteration Off.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Practice from Memory: autoplay Off.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'Choose the meaning help you want in Reader and whether Practice from Memory should autoplay the next ayah.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Use Listening setup if you want to change reciter.'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(const ValueKey('my_quran_continue_button')));
     await pumpUntilFound(tester, find.text('Route /reader'));
@@ -340,6 +362,95 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('shows study setup summary and updates shortcuts inline', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final store = _FakeAppPreferencesStore(
+      initial: const StoredAppPreferences(
+        companionAutoReciteEnabled: true,
+        readerShowVerseTranslation: false,
+        readerShowWordHelp: false,
+        readerShowTransliteration: true,
+      ),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        appPreferencesStoreProvider.overrideWithValue(store),
+        ayahAudioPreferencesStoreProvider.overrideWithValue(
+          _FakeAudioPreferencesStore(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    final router = _buildRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('my_quran_study_setup_card')),
+    );
+
+    expect(
+      find.text(
+        'Meaning help: translation Off, word help Off, transliteration On.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Practice from Memory: autoplay On.'),
+      findsOneWidget,
+    );
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('my_quran_study_translation_toggle')),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('my_quran_study_translation_toggle')),
+    );
+    await tester.pump();
+
+    await tester.tap(
+      find.byKey(const ValueKey('my_quran_study_word_help_toggle')),
+    );
+    await tester.pump();
+
+    await tester.tap(
+      find.byKey(const ValueKey('my_quran_study_transliteration_toggle')),
+    );
+    await tester.pump();
+
+    await tester.tap(
+      find.byKey(const ValueKey('my_quran_study_autoplay_toggle')),
+    );
+    await tester.pump();
+
+    expect(
+      find.text('Meaning help: translation On, word help On, transliteration Off.'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Practice from Memory: autoplay Off.'),
+      findsOneWidget,
+    );
+    expect(store.savedReaderShowVerseTranslation, isTrue);
+    expect(store.savedReaderShowWordHelp, isTrue);
+    expect(store.savedReaderShowTransliteration, isFalse);
+    expect(store.savedCompanionAutoReciteEnabled, isFalse);
+  });
 }
 
 void _registerTestCleanup(WidgetTester tester) {
@@ -381,7 +492,11 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   _FakeAppPreferencesStore({StoredAppPreferences? initial})
       : _stored = initial ?? const StoredAppPreferences();
 
-  final StoredAppPreferences _stored;
+  StoredAppPreferences _stored;
+  bool? savedCompanionAutoReciteEnabled;
+  bool? savedReaderShowVerseTranslation;
+  bool? savedReaderShowWordHelp;
+  bool? savedReaderShowTransliteration;
 
   @override
   Future<StoredAppPreferences> load() async => _stored;
@@ -390,7 +505,21 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   Future<void> clearLastReaderLocation() async {}
 
   @override
-  Future<void> saveCompanionAutoReciteEnabled(bool value) async {}
+  Future<void> saveCompanionAutoReciteEnabled(bool value) async {
+    savedCompanionAutoReciteEnabled = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: value,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
+    );
+  }
 
   @override
   Future<void> saveLanguageCode(String code) async {}
@@ -404,13 +533,55 @@ class _FakeAppPreferencesStore implements AppPreferencesStore {
   }) async {}
 
   @override
-  Future<void> saveReaderShowTransliteration(bool value) async {}
+  Future<void> saveReaderShowTransliteration(bool value) async {
+    savedReaderShowTransliteration = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: value,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
+    );
+  }
 
   @override
-  Future<void> saveReaderShowVerseTranslation(bool value) async {}
+  Future<void> saveReaderShowVerseTranslation(bool value) async {
+    savedReaderShowVerseTranslation = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: value,
+      readerShowWordHelp: _stored.readerShowWordHelp,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
+    );
+  }
 
   @override
-  Future<void> saveReaderShowWordHelp(bool value) async {}
+  Future<void> saveReaderShowWordHelp(bool value) async {
+    savedReaderShowWordHelp = value;
+    _stored = StoredAppPreferences(
+      languageCode: _stored.languageCode,
+      themeCode: _stored.themeCode,
+      companionAutoReciteEnabled: _stored.companionAutoReciteEnabled,
+      readerShowVerseTranslation: _stored.readerShowVerseTranslation,
+      readerShowWordHelp: value,
+      readerShowTransliteration: _stored.readerShowTransliteration,
+      lastReaderMode: _stored.lastReaderMode,
+      lastReaderPage: _stored.lastReaderPage,
+      lastReaderSurah: _stored.lastReaderSurah,
+      lastReaderAyah: _stored.lastReaderAyah,
+    );
+  }
 
   @override
   Future<void> saveThemeCode(String code) async {}
