@@ -52,7 +52,7 @@
 - [x] Start Wave 1
 - [x] Merge Wave 1
 - [x] Start Wave 2
-- [ ] Merge Wave 2
+- [x] Merge Wave 2
 - [ ] Start Wave 3
 - [ ] Merge Wave 3
 - [ ] Start Wave 4
@@ -96,7 +96,7 @@
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
 | Goals + Progress roadmap | merged | historical | removed | Supportive 4-wave goals roadmap completed before this roadmap started |
 | Reader Wave 1 | merged | historical | removed | Persistent Reader meaning controls are now in `main` after PR `#33`; closeout cleanup was corrected in PR `#35` |
-| Reader Wave 2 | active | `feat/reader-wave2-verse-study-sheet` | `/home/fa507/dev/hifz_planner_reader_wave2` | Verse study sheet and meaning-first actions are now the live stream |
+| Reader Wave 2 | merged | historical | cleanup pending | Verse study sheet and meaning-first actions are now in `main` after PR `#36` |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -126,5 +126,6 @@
     - `dart tooling/validate_workspace_hygiene.dart`
   - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation; the incidental churn was reverted so Wave 2 remains dependency-neutral.
   - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, and app user guide so the study-sheet flow is documented without reopening the source diff.
+  - 2026-03-09: Wave 2 feature work merged to `main` in PR `#36`.
 - Next recommended action:
-  - close Wave 2 with commit, PR, and merge
+  - start Wave 3 - Library-Connected Study Review
