@@ -81,7 +81,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 - evidence refs:
   - `docs/assistant/SESSION_RESUME.md`
   - `docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md`
-  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave2_saved_study_resume.md`
+  - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave2_saved_study_resume.md`
 
 ### `user_support_guide_density_after_multi_wave_growth`
 
@@ -112,7 +112,7 @@ If bootstrap maintenance is ever requested explicitly, only consider entries who
 - docs sync relevance:
   - required
 - evidence refs:
-  - `docs/assistant/exec_plans/active/2026-03-09_my_quran_wave2_saved_study_resume.md`
+  - `docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave2_saved_study_resume.md`
   - `docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md`
   - `docs/assistant/features/APP_USER_GUIDE.md`
 

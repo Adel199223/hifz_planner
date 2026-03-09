@@ -31,7 +31,7 @@
       "evidence_refs": [
         "docs/assistant/SESSION_RESUME.md",
         "docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md",
-        "docs/assistant/exec_plans/active/2026-03-09_my_quran_wave2_saved_study_resume.md"
+        "docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave2_saved_study_resume.md"
       ]
     },
     {
@@ -60,7 +60,7 @@
       "bootstrap_relevance": "possible",
       "docs_sync_relevance": "required",
       "evidence_refs": [
-        "docs/assistant/exec_plans/active/2026-03-09_my_quran_wave2_saved_study_resume.md",
+        "docs/assistant/exec_plans/completed/2026-03-09_my_quran_wave2_saved_study_resume.md",
         "docs/assistant/exec_plans/active/2026-03-09_my_quran_execution.md",
         "docs/assistant/features/APP_USER_GUIDE.md"
       ]
