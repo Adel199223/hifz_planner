@@ -58,13 +58,16 @@
 
 ## Progress
 - [x] Start Wave 2 ExecPlan
-- [ ] Build the verse study sheet entry path
-- [ ] Show existing meaning data in the study sheet
-- [ ] Update focused Reader tests
-- [ ] Validate and prepare for docs sync / closeout
+- [x] Build the verse study sheet entry path
+- [x] Show existing meaning data in the study sheet
+- [x] Update focused Reader tests
+- [x] Validate Wave 2
+- [x] Run narrow Assistant Docs Sync
+- [x] Prepare for closeout
 
 ## Surprises and Adjustments
-- Use this section for scope corrections, blockers, or test-loop issues found during implementation.
+- 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation. The incidental lockfile churn was reverted so Wave 2 stays dependency-neutral.
+- 2026-03-09: The first study-sheet assertion failed because the same translation text remained visible in the Reader behind the sheet; the focused test was tightened to the keyed study widgets instead of broad text matching.
 
 ## Handoff
 - Wave 2 should end with:
@@ -72,3 +75,15 @@
   - a meaning-first study sheet using existing data only
   - bookmark and note actions preserved inside the study flow
   - focused Reader tests covering the new study path
+- Validation completed in `/home/fa507/dev/hifz_planner_reader_wave2`:
+  - `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart`
+  - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+  - `dart tooling/validate_localization.dart`
+  - `dart tooling/validate_agent_docs.dart`
+  - `dart tooling/validate_workspace_hygiene.dart`
+- Narrow Assistant Docs Sync completed for:
+  - `APP_KNOWLEDGE.md`
+  - `docs/assistant/APP_KNOWLEDGE.md`
+  - `docs/assistant/features/APP_USER_GUIDE.md`
+- Next action in this branch:
+  - close Wave 2 with commit, PR, and merge

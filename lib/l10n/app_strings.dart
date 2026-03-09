@@ -111,6 +111,7 @@ class AppStrings {
   String get bookmarkVerse => _t('bookmark_verse', 'Bookmark verse');
   String get addEditNote => _t('add_edit_note', 'Add/Edit note');
   String get copyTextUthmani => _t('copy_text_uthmani', 'Copy text (Uthmani)');
+  String get studyThisVerse => _t('study_this_verse', 'Study this verse');
   String get openSettings => _t('open_settings', 'Open settings');
   String get closeSettings => _t('close_settings', 'Close settings');
   String get translationUnavailable =>
@@ -137,6 +138,11 @@ class AppStrings {
   String get showWordHelp => _t('show_word_help', 'Show word help');
   String get showTransliteration =>
       _t('show_transliteration', 'Show transliteration');
+  String get wordHelp => _t('word_help', 'Word help');
+  String get wordHelpUnavailableForVerse => _t(
+    'word_help_unavailable_for_verse',
+    'Word help is unavailable for this verse right now.',
+  );
   String get wordHelpDescription => _t(
     'word_help_description',
     'Word help appears when you hover or tap a word in Reading mode.',
@@ -1695,10 +1701,14 @@ class AppStrings {
       'translation_unavailable': 'Traduction indisponible',
       'meaning_unavailable': 'Sens indisponible pour ce mot.',
       'meaning_aids_off': 'Les aides de sens sont désactivées.',
+      'study_this_verse': 'Étudier ce verset',
       'transliteration': 'Translittération',
       'show_verse_translation': 'Afficher la traduction du verset',
       'show_word_help': 'Afficher l’aide mot à mot',
       'show_transliteration': 'Afficher la translittération',
+      'word_help': 'Aide mot à mot',
+      'word_help_unavailable_for_verse':
+          'L’aide mot à mot est indisponible pour ce verset pour le moment.',
       'word_help_description':
           'L’aide mot à mot apparaît quand vous survolez ou touchez un mot en mode Lecture.',
       'hover_word_to_preview_meaning':
@@ -2110,10 +2120,14 @@ class AppStrings {
       'translation_unavailable': 'Tradução indisponível',
       'meaning_unavailable': 'Significado indisponível para esta palavra.',
       'meaning_aids_off': 'As ajudas de significado estão desativadas.',
+      'study_this_verse': 'Estudar este versículo',
       'transliteration': 'Transliteração',
       'show_verse_translation': 'Mostrar tradução do versículo',
       'show_word_help': 'Mostrar ajuda palavra por palavra',
       'show_transliteration': 'Mostrar transliteração',
+      'word_help': 'Ajuda palavra por palavra',
+      'word_help_unavailable_for_verse':
+          'A ajuda palavra por palavra está indisponível para este versículo no momento.',
       'word_help_description':
           'A ajuda palavra por palavra aparece quando você passa o cursor ou toca em uma palavra no modo Leitura.',
       'hover_word_to_preview_meaning':
@@ -2522,6 +2536,7 @@ class AppStrings {
       'bookmark_verse': 'حفظ الآية',
       'add_edit_note': 'إضافة/تعديل ملاحظة',
       'copy_text_uthmani': 'نسخ النص (عثماني)',
+      'study_this_verse': 'ادرس هذه الآية',
       'translation_unavailable': 'الترجمة غير متاحة',
       'meaning_unavailable': 'المعنى غير متاح لهذه الكلمة.',
       'meaning_aids_off': 'وسائل المعنى متوقفة.',
@@ -2529,6 +2544,9 @@ class AppStrings {
       'show_verse_translation': 'إظهار ترجمة الآية',
       'show_word_help': 'إظهار مساعدة الكلمة',
       'show_transliteration': 'إظهار النقل الصوتي',
+      'word_help': 'مساعدة الكلمات',
+      'word_help_unavailable_for_verse':
+          'مساعدة الكلمات غير متاحة لهذه الآية الآن.',
       'word_help_description':
           'تظهر مساعدة الكلمة عند المرور فوق الكلمة أو لمسها في وضع القراءة.',
       'hover_word_to_preview_meaning':

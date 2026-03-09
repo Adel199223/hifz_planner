@@ -1326,6 +1326,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
+                key: const ValueKey('action_study'),
+                leading: const Icon(Icons.menu_book_outlined),
+                title: Text(_strings.studyThisVerse),
+                onTap: () => Navigator.of(sheetContext).pop(_AyahAction.study),
+              ),
+              ListTile(
                 key: const ValueKey('action_bookmark'),
                 leading: const Icon(Icons.bookmark_add_outlined),
                 title: Text(_strings.bookmarkVerse),
@@ -1355,6 +1361,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
 
     switch (action) {
+      case _AyahAction.study:
+        await _showVerseStudySheet(ayah);
+        break;
       case _AyahAction.bookmark:
         await _bookmarkAyah(ayah);
         break;
@@ -1365,6 +1374,282 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         await _copyText(ayah);
         break;
     }
+  }
+
+  Future<_VerseByVerseRowRenderData?> _loadVerseStudySheetData(
+    AyahData ayah,
+  ) async {
+    final future = _getSimpleQuranComVerseFuture(ayah);
+    if (future == null) {
+      return null;
+    }
+    try {
+      return await future;
+    } catch (error, stackTrace) {
+      developer.log(
+        'loading verse study sheet data',
+        name: 'reader_screen',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return null;
+    }
+  }
+
+  Iterable<MushafWord> _studyMeaningWords(List<MushafWord> words) sync* {
+    for (final word in words) {
+      if (word.charTypeName == 'end') {
+        continue;
+      }
+      final arabicText = (word.textQpcHafs ?? word.codeV2 ?? '').trim();
+      if (arabicText.isEmpty) {
+        continue;
+      }
+      final translation = _cleanTranslationText(word.translationText);
+      final transliteration = (word.transliterationText ?? '').trim();
+      if (translation.isEmpty && transliteration.isEmpty) {
+        continue;
+      }
+      yield word;
+    }
+  }
+
+  Future<void> _showVerseStudySheet(AyahData ayah) async {
+    if (!mounted) {
+      return;
+    }
+    final ayahKey = _ayahKey(ayah);
+    final preferences = ref.read(appPreferencesProvider);
+    final translationResourceId = _translationResourceIdForLanguage(
+      preferences.language,
+    );
+    final translationLabel = _translationResourceLabelForId(
+      translationResourceId,
+    );
+    final studyFuture = _loadVerseStudySheetData(ayah);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: FractionallySizedBox(
+            heightFactor: 0.92,
+            child: FutureBuilder<_VerseByVerseRowRenderData?>(
+              future: studyFuture,
+              builder: (context, snapshot) {
+                final studyData = snapshot.data;
+                final meaningWords = _studyMeaningWords(
+                  studyData?.words ?? const <MushafWord>[],
+                ).toList(growable: false);
+                final translationText =
+                    studyData?.translationText ?? _strings.translationUnavailable;
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _strings.studyThisVerse,
+                                  key: ValueKey(
+                                    'reader_verse_study_title_$ayahKey',
+                                  ),
+                                  style: Theme.of(context).textTheme.headlineSmall,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  ayahKey,
+                                  style: Theme.of(context).textTheme.labelLarge,
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            key: ValueKey('reader_verse_study_close_$ayahKey'),
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            icon: const Icon(Icons.close),
+                            tooltip: _strings.close,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            key: ValueKey('reader_verse_study_sheet_$ayahKey'),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Align(
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: Directionality(
+                                  textDirection: TextDirection.rtl,
+                                  child: Text(
+                                    ayah.textUthmani,
+                                    key: ValueKey(
+                                      'reader_study_arabic_$ayahKey',
+                                    ),
+                                    textAlign: TextAlign.right,
+                                    style: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall
+                                            ?.copyWith(
+                                              fontFamily: 'UthmanicHafs',
+                                              fontSize: 30,
+                                              height: 1.7,
+                                            ) ??
+                                        const TextStyle(
+                                          fontFamily: 'UthmanicHafs',
+                                          fontSize: 30,
+                                          height: 1.7,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _strings.translation,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                translationText,
+                                key: ValueKey('reader_study_translation_$ayahKey'),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _strings.translationFollowsAppLanguage(
+                                  translationLabel,
+                                ),
+                                key: ValueKey(
+                                  'reader_study_translation_note_$ayahKey',
+                                ),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
+                                _strings.wordHelp,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) ...[
+                                const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: CircularProgressIndicator(
+                                      key: ValueKey('reader_study_loading'),
+                                    ),
+                                  ),
+                                ),
+                              ] else if (meaningWords.isEmpty) ...[
+                                Text(
+                                  _strings.wordHelpUnavailableForVerse,
+                                  key: ValueKey(
+                                    'reader_study_word_help_empty_$ayahKey',
+                                  ),
+                                ),
+                              ] else ...[
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  children: [
+                                    for (var index = 0;
+                                        index < meaningWords.length;
+                                        index++)
+                                      _buildStudyWordCard(
+                                        ayahKey: ayahKey,
+                                        index: index,
+                                        word: meaningWords[index],
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          OutlinedButton.icon(
+                            key: ValueKey('reader_study_bookmark_$ayahKey'),
+                            onPressed: () => unawaited(_bookmarkAyah(ayah)),
+                            icon: const Icon(Icons.bookmark_add_outlined),
+                            label: Text(_strings.bookmarkVerse),
+                          ),
+                          OutlinedButton.icon(
+                            key: ValueKey('reader_study_note_$ayahKey'),
+                            onPressed: () => unawaited(_addOrEditNote(ayah)),
+                            icon: const Icon(Icons.note_alt_outlined),
+                            label: Text(_strings.addEditNote),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStudyWordCard({
+    required String ayahKey,
+    required int index,
+    required MushafWord word,
+  }) {
+    final arabicText = (word.textQpcHafs ?? word.codeV2 ?? '').trim();
+    final translation = _cleanTranslationText(word.translationText);
+    final transliteration = (word.transliterationText ?? '').trim();
+    return Container(
+      key: ValueKey('reader_study_word_card_${ayahKey}_$index'),
+      constraints: const BoxConstraints(minWidth: 140, maxWidth: 220),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              arabicText,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontFamily: 'UthmanicHafs',
+                fontSize: 24,
+                height: 1.5,
+              ),
+            ),
+          ),
+          if (translation.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(translation),
+          ],
+          if (transliteration.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${_strings.transliteration}: $transliteration',
+              key: ValueKey('reader_study_word_transliteration_${ayahKey}_$index'),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   Future<void> _bookmarkAyah(AyahData ayah) async {
@@ -5086,7 +5371,7 @@ class _MushafDisplayLine {
   final List<_MushafLineWord> words;
 }
 
-enum _AyahAction { bookmark, note, copy }
+enum _AyahAction { study, bookmark, note, copy }
 
 class _NoteDraft {
   const _NoteDraft({required this.title, required this.body});

@@ -117,5 +117,14 @@
   - 2026-03-08: Wave 1 feature work merged to `main` in PR `#33`.
   - 2026-03-09: Wave 1 closeout merged in PR `#34`, then a follow-up docs fix PR `#35` removed the accidentally duplicated active Wave 1 plan so the roadmap state is clean again on `main`.
   - 2026-03-09: Wave 2 started in isolated worktree `/home/fa507/dev/hifz_planner_reader_wave2` on branch `feat/reader-wave2-verse-study-sheet`.
+  - 2026-03-09: Wave 2 now adds a meaning-first `Study this verse` path from the Reader action sheet, backed by one verse study sheet that uses existing Arabic text, current translation, available word help/transliteration, and existing bookmark/note actions.
+  - 2026-03-09: Wave 2 validation is green in the isolated worktree:
+    - `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart`
+    - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+    - `dart tooling/validate_localization.dart`
+    - `dart tooling/validate_agent_docs.dart`
+    - `dart tooling/validate_workspace_hygiene.dart`
+  - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation; the incidental churn was reverted so Wave 2 remains dependency-neutral.
+  - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, and app user guide so the study-sheet flow is documented without reopening the source diff.
 - Next recommended action:
-  - implement Wave 2 - Verse Study Sheet and Meaning-First Actions
+  - close Wave 2 with commit, PR, and merge
