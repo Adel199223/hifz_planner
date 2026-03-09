@@ -36,10 +36,7 @@ void main() {
         child: MaterialApp.router(routerConfig: router),
       ),
     );
-    await pumpUntilFound(
-      tester,
-      find.text('No bookmarks yet.'),
-    );
+    await pumpUntilFound(tester, find.text('No bookmarks yet.'));
 
     expect(find.text('No bookmarks yet.'), findsOneWidget);
   });
@@ -62,21 +59,20 @@ void main() {
     addTearDown(container.dispose);
     _registerTestCleanup(tester);
 
-    await db.into(db.ayah).insert(
+    await db
+        .into(db.ayah)
+        .insert(
           AyahCompanion.insert(
             surah: 2,
             ayah: 255,
-            textUthmani: 'Ayah',
+            textUthmani: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ',
             pageMadina: const Value(42),
           ),
         );
 
-    await db.into(db.bookmark).insert(
-          BookmarkCompanion.insert(
-            surah: 2,
-            ayah: 255,
-          ),
-        );
+    await db
+        .into(db.bookmark)
+        .insert(BookmarkCompanion.insert(surah: 2, ayah: 255));
 
     final router = _buildRouter();
     addTearDown(router.dispose);
@@ -87,18 +83,22 @@ void main() {
         child: MaterialApp.router(routerConfig: router),
       ),
     );
-    await pumpUntilFound(
-      tester,
-      find.text('Surah 2, Ayah 255'),
-    );
+    await pumpUntilFound(tester, find.text('Surah 2, Ayah 255'));
     await pumpUntilFound(
       tester,
       find.byKey(const ValueKey('bookmark_page_2:255')),
     );
 
     expect(find.text('Surah 2, Ayah 255'), findsOneWidget);
+    expect(find.text('Saved for later study'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('bookmark_ayah_preview_2:255')),
+      findsOneWidget,
+    );
+    expect(find.text('اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ'), findsOneWidget);
     expect(find.byKey(const ValueKey('bookmark_page_2:255')), findsOneWidget);
     expect(find.text('Page 42'), findsOneWidget);
+    expect(find.text('Reopen in Reader'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('bookmark_go_2:255')));
     await pumpUntilFound(
@@ -106,8 +106,10 @@ void main() {
       find.text('Reader route mode=page page=42 target=2:255'),
     );
 
-    expect(find.text('Reader route mode=page page=42 target=2:255'),
-        findsOneWidget);
+    expect(
+      find.text('Reader route mode=page page=42 target=2:255'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('go to page navigates to page mode route', (tester) async {
@@ -126,7 +128,9 @@ void main() {
     addTearDown(container.dispose);
     _registerTestCleanup(tester);
 
-    await db.into(db.ayah).insert(
+    await db
+        .into(db.ayah)
+        .insert(
           AyahCompanion.insert(
             surah: 36,
             ayah: 58,
@@ -134,12 +138,9 @@ void main() {
             pageMadina: const Value(445),
           ),
         );
-    await db.into(db.bookmark).insert(
-          BookmarkCompanion.insert(
-            surah: 36,
-            ayah: 58,
-          ),
-        );
+    await db
+        .into(db.bookmark)
+        .insert(BookmarkCompanion.insert(surah: 36, ayah: 58));
 
     final router = _buildRouter();
     addTearDown(router.dispose);
@@ -165,8 +166,10 @@ void main() {
       find.text('Reader route mode=page page=445 target=36:58'),
     );
 
-    expect(find.text('Reader route mode=page page=445 target=36:58'),
-        findsOneWidget);
+    expect(
+      find.text('Reader route mode=page page=445 target=36:58'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('missing page metadata falls back and disables go to page', (
@@ -187,19 +190,12 @@ void main() {
     addTearDown(container.dispose);
     _registerTestCleanup(tester);
 
-    await db.into(db.ayah).insert(
-          AyahCompanion.insert(
-            surah: 3,
-            ayah: 7,
-            textUthmani: 'Ayah',
-          ),
-        );
-    await db.into(db.bookmark).insert(
-          BookmarkCompanion.insert(
-            surah: 3,
-            ayah: 7,
-          ),
-        );
+    await db
+        .into(db.ayah)
+        .insert(AyahCompanion.insert(surah: 3, ayah: 7, textUthmani: 'Ayah'));
+    await db
+        .into(db.bookmark)
+        .insert(BookmarkCompanion.insert(surah: 3, ayah: 7));
 
     final router = _buildRouter();
     addTearDown(router.dispose);
@@ -226,8 +222,10 @@ void main() {
       find.text('Reader route mode=none page=none target=3:7'),
     );
 
-    expect(find.text('Reader route mode=none page=none target=3:7'),
-        findsOneWidget);
+    expect(
+      find.text('Reader route mode=none page=none target=3:7'),
+      findsOneWidget,
+    );
   });
 }
 

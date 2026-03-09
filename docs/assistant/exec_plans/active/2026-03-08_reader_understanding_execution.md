@@ -53,7 +53,7 @@
 - [x] Merge Wave 1
 - [x] Start Wave 2
 - [x] Merge Wave 2
-- [ ] Start Wave 3
+- [x] Start Wave 3
 - [ ] Merge Wave 3
 - [ ] Start Wave 4
 - [ ] Merge Wave 4
@@ -96,7 +96,8 @@
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
 | Goals + Progress roadmap | merged | historical | removed | Supportive 4-wave goals roadmap completed before this roadmap started |
 | Reader Wave 1 | merged | historical | removed | Persistent Reader meaning controls are now in `main` after PR `#33`; closeout cleanup was corrected in PR `#35` |
-| Reader Wave 2 | merged | historical | cleanup pending | Verse study sheet and meaning-first actions are now in `main` after PR `#36` |
+| Reader Wave 2 | merged | historical | removed | Verse study sheet and meaning-first actions are now in `main` after PR `#36` and closeout PR `#37` |
+| Reader Wave 3 | active | `feat/reader-wave3-library-study-review` | `/home/fa507/dev/hifz_planner_reader_wave3` | Library-connected study review is implemented locally and ready for docs sync / closeout |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -127,5 +128,20 @@
   - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation; the incidental churn was reverted so Wave 2 remains dependency-neutral.
   - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, and app user guide so the study-sheet flow is documented without reopening the source diff.
   - 2026-03-09: Wave 2 feature work merged to `main` in PR `#36`.
+  - 2026-03-09: Wave 2 closeout merged in PR `#37`.
+  - 2026-03-09: Wave 3 started in isolated worktree `/home/fa507/dev/hifz_planner_reader_wave3` on branch `feat/reader-wave3-library-study-review`.
+  - 2026-03-09: Wave 3 now makes Library study follow-up clearer without adding new destinations or filters:
+    - `Library` descriptions now frame bookmarks and notes as study follow-up.
+    - Bookmarks now show an Arabic verse preview when local ayah text exists, a saved-for-later-study cue, and a clearer `Reopen in Reader` action.
+    - Notes now show the linked Arabic verse preview directly in the list so saved study items are easier to recognize.
+  - 2026-03-09: Wave 3 validation is green in the isolated worktree:
+    - `flutter test -j 1 -r expanded test/screens/bookmarks_screen_test.dart`
+    - `flutter test -j 1 -r expanded test/screens/notes_screen_test.dart`
+    - `flutter analyze --no-fatal-infos --no-fatal-warnings`
+    - `dart tooling/validate_localization.dart`
+    - `dart tooling/validate_agent_docs.dart`
+    - `dart tooling/validate_workspace_hygiene.dart`
+  - 2026-03-09: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation; the incidental churn was reverted so Wave 3 remains dependency-neutral.
+  - 2026-03-09: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, and app user guide so the Library saved-study follow-up flow is documented without widening into unrelated planner docs.
 - Next recommended action:
-  - start Wave 3 - Library-Connected Study Review
+  - close Wave 3 with docs sync and PR merge

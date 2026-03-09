@@ -68,6 +68,7 @@ Do not use this file as primary truth when there is a conflict.
 
 - Primary rail: `Today`, `Read`, `My Plan`, `Library`
 - `Library` routes users to `Bookmarks` and `Notes`
+- `Library` is now also the study-follow-up surface for saved verses and verse notes, not just generic storage
 - Top-right drawer is the `More` surface for `Settings`, `About`, `Reciters`, and the demoted Explore entries
 - `Learn` now includes a simple `Practice from Memory` hub plus the existing `Hifz Plan` card
 - Reader top actions are now responsive, with the settings button on its own row to avoid narrow-layout collisions
@@ -148,6 +149,10 @@ Do not use this file as primary truth when there is a conflict.
 - Verse-by-verse translation and word-help display now follow those local preferences instead of placeholder settings tabs.
 - Mushaf word preview/popover meaning details also follow those toggles and keep calm fallback text when enabled data is unavailable.
 - Reader verse actions now expose a meaning-first `Study this verse` sheet that reuses existing Arabic text, current translation, available word help/transliteration, and the existing bookmark/note actions.
+- Saved study follow-up is now clearer in `Library`:
+  - bookmarks show an Arabic verse preview plus a saved-for-later-study cue
+  - notes show the linked Arabic verse preview in the list
+  - the main reopen action now says `Reopen in Reader`
 - `lib/screens/reader_screen.dart`
 - `lib/data/services/qurancom_api.dart`
 - `lib/data/services/qurancom_chapters_service.dart`

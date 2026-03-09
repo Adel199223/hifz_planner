@@ -37,9 +37,7 @@ class NotesScreen extends ConsumerWidget {
                   }
 
                   if (snapshot.hasError) {
-                    return Center(
-                      child: Text(strings.failedToLoadNotes),
-                    );
+                    return Center(child: Text(strings.failedToLoadNotes));
                   }
 
                   final notes = snapshot.data ?? const <NoteData>[];
@@ -54,13 +52,15 @@ class NotesScreen extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final note = notes[index];
                       final title = (note.title ?? '').trim();
-                      final displayTitle =
-                          title.isEmpty ? strings.untitled : title;
+                      final displayTitle = title.isEmpty
+                          ? strings.untitled
+                          : title;
 
                       return FutureBuilder<AyahData?>(
                         future: quranRepo.getAyah(note.surah, note.ayah),
                         builder: (context, snapshot) {
-                          final page = snapshot.data?.pageMadina;
+                          final ayah = snapshot.data;
+                          final page = ayah?.pageMadina;
 
                           return ListTile(
                             key: ValueKey('note_row_${note.id}'),
@@ -75,6 +75,22 @@ class NotesScreen extends ConsumerWidget {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
+                                  if (ayah != null) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      ayah.textUthmani,
+                                      key: ValueKey(
+                                        'note_ayah_preview_${note.id}',
+                                      ),
+                                      textAlign: TextAlign.right,
+                                      textDirection: TextDirection.rtl,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium,
+                                    ),
+                                  ],
                                   const SizedBox(height: 4),
                                   Text(
                                     strings.surahAyahListLabel(
@@ -130,11 +146,7 @@ class NotesScreen extends ConsumerWidget {
     final result = await showDialog<_NoteEditorResult>(
       context: context,
       builder: (dialogContext) {
-        return _NotesEditorDialog(
-          note: note,
-          page: page,
-          strings: strings,
-        );
+        return _NotesEditorDialog(note: note, page: page, strings: strings);
       },
     );
 
@@ -175,11 +187,9 @@ class NotesScreen extends ConsumerWidget {
     }
 
     try {
-      final updated = await ref.read(noteRepoProvider).updateNote(
-            id: note.id,
-            title: result.title,
-            body: result.body!,
-          );
+      final updated = await ref
+          .read(noteRepoProvider)
+          .updateNote(id: note.id, title: result.title, body: result.body!);
       if (!context.mounted) {
         return;
       }
@@ -194,9 +204,9 @@ class NotesScreen extends ConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.failedToUpdateNote)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(strings.failedToUpdateNote)));
     }
   }
 
@@ -215,11 +225,7 @@ class NotesScreen extends ConsumerWidget {
     required int? page,
   }) {
     if (page != null) {
-      return _buildGoToPageRoute(
-        surah: surah,
-        ayah: ayah,
-        page: page,
-      );
+      return _buildGoToPageRoute(surah: surah, ayah: ayah, page: page);
     }
     return '/reader?targetSurah=$surah&targetAyah=$ayah';
   }
@@ -233,11 +239,7 @@ class NotesScreen extends ConsumerWidget {
   }
 }
 
-enum _NoteEditorAction {
-  save,
-  goToVerse,
-  goToPage,
-}
+enum _NoteEditorAction { save, goToVerse, goToPage }
 
 class _NotesEditorDialog extends StatefulWidget {
   const _NotesEditorDialog({
@@ -293,10 +295,7 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
 
     final title = _titleController.text.trim();
     _popWithResult(
-      _NoteEditorResult.save(
-        title: title.isEmpty ? null : title,
-        body: body,
-      ),
+      _NoteEditorResult.save(title: title.isEmpty ? null : title, body: body),
     );
   }
 
@@ -307,10 +306,7 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
     return AlertDialog(
       title: Text(widget.strings.editNote),
       content: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 460,
-          maxHeight: 420,
-        ),
+        constraints: const BoxConstraints(maxWidth: 460, maxHeight: 420),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -340,9 +336,7 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
                 const SizedBox(height: 8),
                 Text(
                   _errorMessage!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ],
               const SizedBox(height: 16),
@@ -396,20 +390,18 @@ class _NotesEditorDialogState extends State<_NotesEditorDialog> {
 }
 
 class _NoteEditorResult {
-  const _NoteEditorResult.save({
-    required this.title,
-    required this.body,
-  }) : action = _NoteEditorAction.save;
+  const _NoteEditorResult.save({required this.title, required this.body})
+    : action = _NoteEditorAction.save;
 
   const _NoteEditorResult.goToVerse()
-      : action = _NoteEditorAction.goToVerse,
-        title = null,
-        body = null;
+    : action = _NoteEditorAction.goToVerse,
+      title = null,
+      body = null;
 
   const _NoteEditorResult.goToPage()
-      : action = _NoteEditorAction.goToPage,
-        title = null,
-        body = null;
+    : action = _NoteEditorAction.goToPage,
+      title = null,
+      body = null;
 
   final _NoteEditorAction action;
   final String? title;

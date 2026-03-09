@@ -118,8 +118,7 @@ class AppStrings {
       _t('translation_unavailable', 'Translation unavailable');
   String get meaningUnavailable =>
       _t('meaning_unavailable', 'Meaning unavailable for this word.');
-  String get meaningAidsOff =>
-      _t('meaning_aids_off', 'Meaning aids are off.');
+  String get meaningAidsOff => _t('meaning_aids_off', 'Meaning aids are off.');
   String get scriptStyle => _t('script_style', 'Script style');
   String get uthmani => _t('uthmani', 'Uthmani');
   String get tajweed => _t('tajweed', 'Tajweed');
@@ -247,11 +246,11 @@ class AppStrings {
       _t('library_subtitle', 'Keep your saved places and notes together.');
   String get libraryBookmarksDescription => _t(
     'library_bookmarks_description',
-    'Return to your saved verses and pages quickly.',
+    'Reopen saved verses and continue studying where you left off.',
   );
   String get libraryNotesDescription => _t(
     'library_notes_description',
-    'Review your verse-linked notes and reflections.',
+    'Review your verse notes with enough context to keep studying.',
   );
   String get todayOtherPracticeModesTitle =>
       _t('today_other_practice_modes_title', 'Other practice modes today');
@@ -270,11 +269,13 @@ class AppStrings {
     _t('saved_label', 'Saved {timestamp}'),
     <String, Object>{'timestamp': timestamp},
   );
+  String get savedForLaterStudy =>
+      _t('saved_for_later_study', 'Saved for later study');
   String surahAyahListLabel(int surahNumber, int ayahNumber) => _fmt(
     _t('surah_ayah_list_label', 'Surah {surah}, Ayah {ayah}'),
     <String, Object>{'surah': surahNumber, 'ayah': ayahNumber},
   );
-  String get goToVerse => _t('go_to_verse', 'Go to verse');
+  String get goToVerse => _t('go_to_verse', 'Reopen in Reader');
   String get goToPage => _t('go_to_page', 'Go to page');
 
   String get notesTitle => _t('notes_title', 'Notes');
@@ -1741,16 +1742,17 @@ class AppStrings {
       'library_subtitle':
           'Gardez vos emplacements enregistrés et vos notes au même endroit.',
       'library_bookmarks_description':
-          'Revenez rapidement à vos versets et pages enregistrés.',
+          'Rouvrez vos versets enregistrés et reprenez votre étude là où vous vous êtes arrêté.',
       'library_notes_description':
-          'Relisez vos notes et réflexions liées aux versets.',
+          'Relisez vos notes sur les versets avec assez de contexte pour continuer à étudier.',
       'open_bookmarks': 'Ouvrir les signets',
       'open_notes': 'Ouvrir les notes',
       'failed_to_load_bookmarks': 'Échec du chargement des signets.',
       'no_bookmarks_yet': 'Aucun signet pour le moment.',
       'saved_label': 'Enregistré {timestamp}',
+      'saved_for_later_study': 'Enregistré pour plus tard',
       'surah_ayah_list_label': 'Sourate {surah}, Ayah {ayah}',
-      'go_to_verse': "Aller à l'ayah",
+      'go_to_verse': 'Rouvrir dans le lecteur',
       'go_to_page': 'Aller à la page',
       'notes_title': 'Notes',
       'failed_to_load_notes': 'Échec du chargement des notes.',
@@ -2156,16 +2158,17 @@ class AppStrings {
       'library_subtitle':
           'Mantenha seus lugares salvos e notas no mesmo lugar.',
       'library_bookmarks_description':
-          'Volte rapidamente aos versículos e páginas salvos.',
+          'Reabra os versículos salvos e continue estudando de onde você parou.',
       'library_notes_description':
-          'Revise suas notas e reflexões ligadas aos versículos.',
+          'Revise suas notas de versículos com contexto suficiente para continuar estudando.',
       'open_bookmarks': 'Abrir favoritos',
       'open_notes': 'Abrir notas',
       'failed_to_load_bookmarks': 'Falha ao carregar favoritos.',
       'no_bookmarks_yet': 'Ainda não há favoritos.',
       'saved_label': 'Salvo {timestamp}',
+      'saved_for_later_study': 'Salvo para estudar depois',
       'surah_ayah_list_label': 'Surah {surah}, Ayah {ayah}',
-      'go_to_verse': 'Ir para versículo',
+      'go_to_verse': 'Reabrir no Leitor',
       'go_to_page': 'Ir para página',
       'notes_title': 'Notas',
       'failed_to_load_notes': 'Falha ao carregar notas.',
@@ -2586,15 +2589,17 @@ class AppStrings {
       'library_title': 'المكتبة',
       'library_subtitle': 'احتفظ بمواضعك المحفوظة وملاحظاتك في مكان واحد.',
       'library_bookmarks_description':
-          'ارجع بسرعة إلى الآيات والصفحات المحفوظة.',
-      'library_notes_description': 'راجع ملاحظاتك وتأملاتك المرتبطة بالآيات.',
+          'أعد فتح الآيات المحفوظة وتابع الدراسة من حيث توقفت.',
+      'library_notes_description':
+          'راجع ملاحظاتك على الآيات مع سياق كافٍ لمواصلة الدراسة.',
       'open_bookmarks': 'فتح العلامات',
       'open_notes': 'فتح الملاحظات',
       'failed_to_load_bookmarks': 'تعذر تحميل العلامات.',
       'no_bookmarks_yet': 'لا توجد علامات بعد.',
       'saved_label': 'تم الحفظ {timestamp}',
+      'saved_for_later_study': 'محفوظة للدراسة لاحقًا',
       'surah_ayah_list_label': 'سورة {surah}، آية {ayah}',
-      'go_to_verse': 'الانتقال إلى الآية',
+      'go_to_verse': 'إعادة فتحها في القارئ',
       'go_to_page': 'الانتقال إلى الصفحة',
       'notes_title': 'الملاحظات',
       'failed_to_load_notes': 'تعذر تحميل الملاحظات.',

@@ -37,9 +37,7 @@ class BookmarksScreen extends ConsumerWidget {
                   }
 
                   if (snapshot.hasError) {
-                    return Center(
-                      child: Text(strings.failedToLoadBookmarks),
-                    );
+                    return Center(child: Text(strings.failedToLoadBookmarks));
                   }
 
                   final bookmarks = snapshot.data ?? const <BookmarkData>[];
@@ -61,7 +59,8 @@ class BookmarksScreen extends ConsumerWidget {
                           bookmark.ayah,
                         ),
                         builder: (context, snapshot) {
-                          final page = snapshot.data?.pageMadina;
+                          final ayah = snapshot.data;
+                          final page = ayah?.pageMadina;
 
                           return ListTile(
                             key: ValueKey('bookmark_row_$ayahKey'),
@@ -74,6 +73,29 @@ class BookmarksScreen extends ConsumerWidget {
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Text(
+                                  strings.savedForLaterStudy,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.labelMedium,
+                                ),
+                                if (ayah != null) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    ayah.textUthmani,
+                                    key: ValueKey(
+                                      'bookmark_ayah_preview_$ayahKey',
+                                    ),
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                ],
+                                const SizedBox(height: 6),
                                 Text(
                                   strings.savedLabel(
                                     _formatDateTime(bookmark.createdAt),
@@ -94,10 +116,9 @@ class BookmarksScreen extends ConsumerWidget {
                                       onPressed: () async {
                                         final resolvedPage =
                                             (await quranRepo.getAyah(
-                                          bookmark.surah,
-                                          bookmark.ayah,
-                                        ))
-                                                ?.pageMadina;
+                                              bookmark.surah,
+                                              bookmark.ayah,
+                                            ))?.pageMadina;
                                         if (!context.mounted) {
                                           return;
                                         }
@@ -112,8 +133,9 @@ class BookmarksScreen extends ConsumerWidget {
                                       child: Text(strings.goToVerse),
                                     ),
                                     OutlinedButton(
-                                      key:
-                                          ValueKey('bookmark_go_page_$ayahKey'),
+                                      key: ValueKey(
+                                        'bookmark_go_page_$ayahKey',
+                                      ),
                                       onPressed: page == null
                                           ? null
                                           : () {
@@ -160,11 +182,7 @@ class BookmarksScreen extends ConsumerWidget {
     required int? page,
   }) {
     if (page != null) {
-      return _buildGoToPageRoute(
-        surah: surah,
-        ayah: ayah,
-        page: page,
-      );
+      return _buildGoToPageRoute(surah: surah, ayah: ayah, page: page);
     }
     return '/reader?targetSurah=$surah&targetAyah=$ayah';
   }
