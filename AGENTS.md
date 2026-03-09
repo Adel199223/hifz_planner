@@ -8,7 +8,7 @@ Why both files exist:
 
 ## Use These Docs In Order
 
-1. `docs/assistant/SESSION_RESUME.md` (fresh-session roadmap resume entrypoint)
+1. `docs/assistant/SESSION_RESUME.md` (roadmap anchor file and fresh-session resume entrypoint)
 2. `agent.md` (primary runbook)
 3. `APP_KNOWLEDGE.md` (canonical app knowledge)
 4. `docs/assistant/manifest.json` (machine-readable routing)
@@ -25,8 +25,9 @@ Why both files exist:
 15. `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` (workspace performance)
 16. `docs/assistant/PERFORMANCE_BASELINES.md` (editor/perf defaults)
 17. `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` (parity reference policy)
-18. `docs/assistant/workflows/ROADMAP_WORKFLOW.md` (complex multi-wave roadmap governance)
-19. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/push/cleanup protocol)
+18. `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` (vendored template apply and local harness alignment)
+19. `docs/assistant/workflows/ROADMAP_WORKFLOW.md` (complex multi-wave roadmap governance)
+20. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/push/cleanup protocol)
 
 ## Non-Negotiables
 
@@ -48,6 +49,8 @@ Why both files exist:
   - `tooling/print_build_identity.dart`
 - Use `docs/assistant/ISSUE_MEMORY.md` and `docs/assistant/ISSUE_MEMORY.json` for repeatable workflow issues; do not seed fake incidents.
 - Use `docs/assistant/LOCAL_CAPABILITIES.md` and `docs/assistant/LOCAL_ENV_PROFILE.example.md` when tool availability or WSL-vs-Windows routing is unclear.
+- If the repo carries vendored `docs/assistant/templates/*` files and the user says `implement the template files` or `sync project harness`, route to `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`.
+- Vendored `docs/assistant/templates/*` files are committed project assets. Do not suggest removing or ignoring them by default during commit triage.
 - For user support/non-technical explanation tasks:
   - start with `docs/assistant/features/START_HERE_USER_GUIDE.md`
   - then use `docs/assistant/features/APP_USER_GUIDE.md` for broader support
@@ -59,6 +62,7 @@ Why both files exist:
   - If user agrees, update only relevant assistant docs for changed scope.
 - `docs/assistant/templates/*` is read-on-demand only.
 - Only open or update `docs/assistant/templates/*` when the user explicitly asks for template/prompt creation or updates.
+- When the user says `implement the template files`, read vendored templates as local input but do not edit them unless the user explicitly asks to update the template folder itself.
 
 ## Non-Coder Communication Mode
 
@@ -82,6 +86,7 @@ Pause and ask for explicit user confirmation before commands that:
 
 - Bare `commit` means full pending-tree triage, logical grouped commits, and immediate push suggestion unless the user narrows scope.
 - Bare `push` means Push+PR+Merge+Cleanup unless the user narrows scope explicitly.
+- Bare `commit` should treat vendored `docs/assistant/templates/*` files as intentional tracked scope, not cleanup clutter.
 
 ## ExecPlans
 
@@ -107,6 +112,7 @@ Pause and ask for explicit user confirmation before commands that:
 ## Fresh Session Resume Protocol
 
 - For a new chat that asks to continue, resume, or asks what the next roadmap step is, open `docs/assistant/SESSION_RESUME.md` first.
+- Treat `docs/assistant/SESSION_RESUME.md` as the roadmap anchor file and stable resume anchor.
 - Treat `resume master plan` as the explicit trigger phrase.
 - Also treat these as equivalent resume intents:
   - `where did we leave off`
@@ -120,7 +126,7 @@ Pause and ask for explicit user confirmation before commands that:
 
 ## Roadmap Artifact Authority
 
-- `docs/assistant/SESSION_RESUME.md` is the stable first fresh-session stop.
+- `docs/assistant/SESSION_RESUME.md` is the roadmap anchor file and stable first fresh-session stop.
 - The active roadmap tracker is the sequence source.
 - The active wave ExecPlan is the implementation-detail source.
 - Use issue memory only for repeatable governance or workflow failures, not normal roadmap history.

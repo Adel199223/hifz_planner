@@ -25,6 +25,7 @@ Use when changes touch:
 
 - Don't use this workflow when the task is runtime feature implementation edits. Instead use the relevant feature/data workflow.
 - Don't use this workflow for commit-stage/publish requests. Instead use `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`.
+- Don't use this workflow when the task is `implement the template files` or `sync project harness`. Instead use `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`.
 - Don't use this workflow to bypass targeted docs sync scope after feature work. Instead apply only touched-scope updates.
 - Do not rewrite entire user guides when only one user journey changed; update touched sections only.
 - Do not widen the beginner start guide unless the change affects first-run mental model, primary navigation, or the role of the main user surfaces.
@@ -61,6 +62,7 @@ Use when changes touch:
 - `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`
 - `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
+- `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`
 - `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
 - `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
 - `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
@@ -114,6 +116,8 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
    - update `docs/assistant/ISSUE_MEMORY.md` and `docs/assistant/ISSUE_MEMORY.json`, then sync only the docs touched by that repeatable issue class.
 12. Symptoms: it is unclear whether a future improvement should use roadmap mode, ExecPlan-only, or a lighter flow.
    - update `docs/assistant/workflows/ROADMAP_WORKFLOW.md`, then sync the routing docs and validator rules that encode roadmap triggering and active-worktree authority.
+13. Symptoms: the repo has vendored templates and the task is to apply them locally.
+   - use `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` instead of widening generic docs-maintenance scope.
 
 ## Significant-Change Docs Sync Policy
 

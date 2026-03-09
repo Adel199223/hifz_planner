@@ -24,6 +24,7 @@ If local tools or WSL routing are unclear:
 - `APP_KNOWLEDGE.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
+- `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`
 - `docs/assistant/GOLDEN_PRINCIPLES.md`
 - `docs/assistant/exec_plans/PLANS.md`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
@@ -39,6 +40,7 @@ Canonical source:
 ## Fresh Session Resume
 
 If a new Codex chat should continue the roadmap, start with `docs/assistant/SESSION_RESUME.md`.
+Treat it as the roadmap anchor file and stable resume anchor.
 
 Explicit trigger phrase:
 - `resume master plan`
@@ -50,6 +52,15 @@ Equivalent resume intents:
 For complex multi-wave work, open `docs/assistant/workflows/ROADMAP_WORKFLOW.md`.
 
 While a wave is active in a separate worktree, that active worktree's `docs/assistant/SESSION_RESUME.md`, active roadmap tracker, and active wave ExecPlan are the live source of roadmap state.
+
+## Vendored Bootstrap Apply
+
+If this repo carries copied `docs/assistant/templates/*` files and you want to apply them locally, use:
+- `implement the template files`
+- `sync project harness`
+
+That routes to `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`.
+Vendored template files are committed project assets. Do not remove or ignore them by default, and do not edit them unless the task is explicitly to update the template folder itself.
 
 ## User-facing guidance docs
 

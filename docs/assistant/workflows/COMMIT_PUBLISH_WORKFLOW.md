@@ -24,6 +24,7 @@ Use when requests include:
 - Don't use this workflow when the request is runtime feature implementation without commit intent. Instead use the relevant feature workflow first.
 - Don't use this workflow when CI policy/contracts are being redesigned. Instead use `docs/assistant/workflows/CI_REPO_WORKFLOW.md`.
 - Don't use this workflow to perform broad assistant-doc rewrites after implementation. Instead apply targeted docs sync via `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`.
+- Don't suggest removing or ignoring vendored `docs/assistant/templates/*` files by default. They are committed project assets when present.
 - Do not commit blindly with `git add .` unless the user explicitly wants every change.
 - Do not include unrelated files in the same commit.
 - Do not force-push to `main`.
@@ -38,6 +39,8 @@ Use when requests include:
 - `docs/assistant/workflows/WORKTREE_BUILD_IDENTITY_WORKFLOW.md`
 - `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
+- `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`
+- `docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json`
 - `.gitignore`
 - `tooling/print_build_identity.dart`
 
@@ -80,6 +83,10 @@ git fetch --prune origin
 
 Treat `commit` as full pending-tree triage:
 - inspect modified tracked files, staged files, untracked files, and temp artifacts
+- treat vendored `docs/assistant/templates/*` files that match the template inventory as intentional tracked scope, not cleanup clutter
+- if vendored templates and project-harness files changed together, split the result into logical commits:
+  - vendored template sync
+  - harness implementation from vendored templates
 - split the result into logical grouped commits
 - validate each commit scope before committing
 - suggest push immediately after the commits are complete
@@ -114,15 +121,17 @@ flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
    - Stop and ask whether to split commits or include all changes.
 2. Symptoms: files should be ignored but are untracked.
    - verify with `git check-ignore -v <path>` and update `.gitignore` if appropriate.
-3. Symptoms: push to `main` rejected.
+3. Symptoms: vendored `docs/assistant/templates/*` files appear untracked after a template copy/update.
+   - treat them as intentional scope, verify they are not ignored, and stage them as template-sync changes instead of suggesting removal.
+4. Symptoms: push to `main` rejected.
    - push feature branch and open a PR instead of forcing.
-4. Symptoms: non-fast-forward merge failure.
+5. Symptoms: non-fast-forward merge failure.
    - re-fetch and re-check divergence before any merge.
-5. Symptoms: remote branch deletion denied.
+6. Symptoms: remote branch deletion denied.
    - keep branch and report the denied deletion explicitly.
-6. Symptoms: parallel feature streams keep polluting staged scope.
+7. Symptoms: parallel feature streams keep polluting staged scope.
    - move each stream to its own `git worktree` and recommit from isolated working trees.
-7. Symptoms: runnable build identity is unclear before commit/push handoff.
+8. Symptoms: runnable build identity is unclear before commit/push handoff.
    - run `dart tooling/print_build_identity.dart` and include the resulting packet in the handoff.
 
 ## Significant-Change Docs Sync Policy

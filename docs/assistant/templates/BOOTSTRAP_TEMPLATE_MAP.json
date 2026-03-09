@@ -42,6 +42,18 @@
       ]
     },
     {
+      "id": "project_harness_sync",
+      "path": "docs/assistant/templates/BOOTSTRAP_PROJECT_HARNESS_SYNC_POLICY.md",
+      "required": true,
+      "topics": [
+        "vendored template files",
+        "implement the template files trigger",
+        "sync project harness alias",
+        "local harness apply order",
+        "template-edit protection"
+      ]
+    },
+    {
       "id": "local_env_overlay",
       "path": "docs/assistant/templates/BOOTSTRAP_LOCAL_ENV_OVERLAY.md",
       "required": false,
