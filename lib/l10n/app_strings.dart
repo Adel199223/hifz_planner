@@ -36,7 +36,7 @@ class AppStrings {
   String get quranRadio => _t('quran_radio', 'Quran Radio');
   String get reciters => _t('reciters', 'Reciters');
   String get reader => _t('reader', 'Reader');
-  String get bookmarks => _t('bookmarks', 'Bookmarks');
+  String get bookmarks => _t('bookmarks', 'Saved verses');
   String get notes => _t('notes', 'Notes');
   String get plan => _t('plan', 'Plan');
   String get myPlan => _t('my_plan', 'My Plan');
@@ -84,7 +84,10 @@ class AppStrings {
   String get myQuranSavedForLaterTitle =>
       _t('my_quran_saved_for_later_title', 'Saved for later');
   String myQuranSavedCounts(int bookmarks, int notes) => _fmt(
-    _t('my_quran_saved_counts', 'Bookmarks: {bookmarks} · Notes: {notes}'),
+    _t(
+      'my_quran_saved_counts',
+      'Saved verses: {bookmarks} · Notes: {notes}',
+    ),
     <String, Object>{'bookmarks': bookmarks, 'notes': notes},
   );
   String get myQuranNoSavedItems => _t(
@@ -96,7 +99,7 @@ class AppStrings {
     'Open Library to revisit saved verses and notes.',
   );
   String get myQuranLatestBookmark =>
-      _t('my_quran_latest_bookmark', 'Latest bookmark');
+      _t('my_quran_latest_bookmark', 'Latest saved verse');
   String get myQuranLatestNote =>
       _t('my_quran_latest_note', 'Latest note');
   String myQuranLatestNoteSummary(String title, String body) => _fmt(
@@ -337,10 +340,10 @@ class AppStrings {
   String get openHifzPlan => _t('open_hifz_plan', 'Open Hifz Plan');
   String get aboutTitle => _t('about_title', 'About');
 
-  String get bookmarksTitle => _t('bookmarks_title', 'Bookmarks');
+  String get bookmarksTitle => _t('bookmarks_title', 'Saved verses');
   String get libraryTitle => _t('library_title', 'Library');
   String get librarySubtitle =>
-      _t('library_subtitle', 'Keep your saved places and notes together.');
+      _t('library_subtitle', 'Keep your saved verses and notes together.');
   String get libraryBookmarksDescription => _t(
     'library_bookmarks_description',
     'Reopen saved verses and continue studying where you left off.',
@@ -355,13 +358,14 @@ class AppStrings {
     'today_other_practice_modes_hint',
     'If you still have time, you can switch to one of these next.',
   );
-  String get openBookmarks => _t('open_bookmarks', 'Open Bookmarks');
+  String get openBookmarks => _t('open_bookmarks', 'Open Saved Verses');
   String get openNotes => _t('open_notes', 'Open Notes');
   String get failedToLoadBookmarks =>
-      _t('failed_to_load_bookmarks', 'Failed to load bookmarks.');
+      _t('failed_to_load_bookmarks', 'Failed to load saved verses.');
   String get failedToLoadReciters =>
       _t('failed_to_load_reciters', 'Failed to load reciters.');
-  String get noBookmarksYet => _t('no_bookmarks_yet', 'No bookmarks yet.');
+  String get noBookmarksYet =>
+      _t('no_bookmarks_yet', 'No saved verses yet.');
   String savedLabel(String timestamp) => _fmt(
     _t('saved_label', 'Saved {timestamp}'),
     <String, Object>{'timestamp': timestamp},
@@ -1656,10 +1660,10 @@ class AppStrings {
     <String, Object>{'ayah': ayahNumber, 'surah': surahNumber},
   );
   String get verseAlreadyBookmarked =>
-      _t('verse_already_bookmarked', 'Verse already bookmarked.');
-  String get bookmarkSaved => _t('bookmark_saved', 'Bookmark saved.');
+      _t('verse_already_bookmarked', 'Verse already saved for later.');
+  String get bookmarkSaved => _t('bookmark_saved', 'Verse saved for later.');
   String get failedToSaveBookmark =>
-      _t('failed_to_save_bookmark', 'Failed to save bookmark.');
+      _t('failed_to_save_bookmark', 'Failed to save verse for later.');
   String get noteAdded => _t('note_added', 'Note added.');
   String get copiedVerseText => _t('copied_verse_text', 'Copied verse text.');
   String get failedToCopyVerseText =>
@@ -1748,7 +1752,7 @@ class AppStrings {
       'quran_radio': 'Radio Coran',
       'reciters': 'Récitateurs',
       'reader': 'Lecteur',
-      'bookmarks': 'Signets',
+      'bookmarks': 'Versets sauvegardés',
       'notes': 'Notes',
       'plan': 'Plan',
       'my_plan': 'Mon plan',
@@ -1773,7 +1777,9 @@ class AppStrings {
       'my_quran_resume_from_page': 'Reprendre à la page {page}',
       'my_quran_open_reader': 'Ouvrir le Lecteur',
       'my_quran_saved_for_later_title': 'Sauvegardé pour plus tard',
-      'my_quran_saved_counts': 'Signets : {bookmarks} · Notes : {notes}',
+      'my_quran_saved_counts':
+          'Versets sauvegardés : {bookmarks} · Notes : {notes}',
+      'my_quran_latest_bookmark': 'Dernier verset sauvegardé',
       'my_quran_no_saved_items':
           "Aucun élément sauvegardé pour l'instant. Utilisez Sauvegarder pour plus tard ou les notes pendant votre lecture.",
       'my_quran_saved_for_later_description':
@@ -1868,23 +1874,29 @@ class AppStrings {
       'ayah_label': 'Ayah {ayah}',
       'search_surah': 'Rechercher une sourate',
       'learn_title': "Plans d'apprentissage",
-      'bookmarks_title': 'Signets',
+      'bookmarks_title': 'Versets sauvegardés',
       'library_title': 'Bibliothèque',
       'library_subtitle':
-          'Gardez vos emplacements enregistrés et vos notes au même endroit.',
+          'Gardez vos versets sauvegardés et vos notes au même endroit.',
       'library_bookmarks_description':
           'Rouvrez vos versets enregistrés et reprenez votre étude là où vous vous êtes arrêté.',
       'library_notes_description':
           'Relisez vos notes sur les versets avec assez de contexte pour continuer à étudier.',
-      'open_bookmarks': 'Ouvrir les signets',
+      'open_bookmarks': 'Ouvrir les versets sauvegardés',
       'open_notes': 'Ouvrir les notes',
-      'failed_to_load_bookmarks': 'Échec du chargement des signets.',
-      'no_bookmarks_yet': 'Aucun signet pour le moment.',
+      'failed_to_load_bookmarks':
+          'Échec du chargement des versets sauvegardés.',
+      'no_bookmarks_yet': 'Aucun verset sauvegardé pour le moment.',
       'saved_label': 'Enregistré {timestamp}',
       'saved_for_later_study': 'Enregistré pour plus tard',
       'surah_ayah_list_label': 'Sourate {surah}, Ayah {ayah}',
       'go_to_verse': 'Rouvrir dans le lecteur',
       'go_to_page': 'Aller à la page',
+      'verse_already_bookmarked':
+          'Ce verset est déjà enregistré pour plus tard.',
+      'bookmark_saved': 'Verset enregistré pour plus tard.',
+      'failed_to_save_bookmark':
+          'Échec de l’enregistrement du verset pour plus tard.',
       'notes_title': 'Notes',
       'failed_to_load_notes': 'Échec du chargement des notes.',
       'no_notes_yet': 'Aucune note pour le moment.',
@@ -2207,7 +2219,7 @@ class AppStrings {
       'quran_radio': 'Rádio Alcorão',
       'reciters': 'Recitadores',
       'reader': 'Leitor',
-      'bookmarks': 'Favoritos',
+      'bookmarks': 'Versículos salvos',
       'notes': 'Notas',
       'plan': 'Plano',
       'my_plan': 'Meu plano',
@@ -2232,7 +2244,9 @@ class AppStrings {
       'my_quran_resume_from_page': 'Retomar na página {page}',
       'my_quran_open_reader': 'Abrir Leitor',
       'my_quran_saved_for_later_title': 'Salvo para depois',
-      'my_quran_saved_counts': 'Favoritos: {bookmarks} · Notas: {notes}',
+      'my_quran_saved_counts':
+          'Versículos salvos: {bookmarks} · Notas: {notes}',
+      'my_quran_latest_bookmark': 'Último versículo salvo',
       'my_quran_no_saved_items':
           'Nenhum item salvo ainda. Use Salvar para depois ou notas enquanto lê.',
       'my_quran_saved_for_later_description':
@@ -2319,23 +2333,27 @@ class AppStrings {
       'page_label': 'Página {page}',
       'search_surah': 'Pesquisar Surah',
       'learn_title': 'Planos de aprendizado',
-      'bookmarks_title': 'Favoritos',
+      'bookmarks_title': 'Versículos salvos',
       'library_title': 'Biblioteca',
       'library_subtitle':
-          'Mantenha seus lugares salvos e notas no mesmo lugar.',
+          'Mantenha seus versículos salvos e notas no mesmo lugar.',
       'library_bookmarks_description':
           'Reabra os versículos salvos e continue estudando de onde você parou.',
       'library_notes_description':
           'Revise suas notas de versículos com contexto suficiente para continuar estudando.',
-      'open_bookmarks': 'Abrir favoritos',
+      'open_bookmarks': 'Abrir versículos salvos',
       'open_notes': 'Abrir notas',
-      'failed_to_load_bookmarks': 'Falha ao carregar favoritos.',
-      'no_bookmarks_yet': 'Ainda não há favoritos.',
+      'failed_to_load_bookmarks': 'Falha ao carregar versículos salvos.',
+      'no_bookmarks_yet': 'Ainda não há versículos salvos.',
       'saved_label': 'Salvo {timestamp}',
       'saved_for_later_study': 'Salvo para estudar depois',
       'surah_ayah_list_label': 'Surah {surah}, Ayah {ayah}',
       'go_to_verse': 'Reabrir no Leitor',
       'go_to_page': 'Ir para página',
+      'verse_already_bookmarked': 'Este versículo já foi salvo para depois.',
+      'bookmark_saved': 'Versículo salvo para depois.',
+      'failed_to_save_bookmark':
+          'Falha ao salvar o versículo para depois.',
       'notes_title': 'Notas',
       'failed_to_load_notes': 'Falha ao carregar notas.',
       'no_notes_yet': 'Ainda não há notas.',
@@ -2658,7 +2676,7 @@ class AppStrings {
       'quran_radio': 'راديو القرآن',
       'reciters': 'القراء',
       'reader': 'القارئ',
-      'bookmarks': 'العلامات',
+      'bookmarks': 'الآيات المحفوظة',
       'notes': 'الملاحظات',
       'plan': 'الخطة',
       'my_plan': 'خطتي',
@@ -2683,7 +2701,9 @@ class AppStrings {
       'my_quran_resume_from_page': 'المتابعة من الصفحة {page}',
       'my_quran_open_reader': 'فتح القارئ',
       'my_quran_saved_for_later_title': 'محفوظ لوقت لاحق',
-      'my_quran_saved_counts': 'العلامات: {bookmarks} · الملاحظات: {notes}',
+      'my_quran_saved_counts':
+          'الآيات المحفوظة: {bookmarks} · الملاحظات: {notes}',
+      'my_quran_latest_bookmark': 'آخر آية محفوظة',
       'my_quran_no_saved_items':
           'لا توجد عناصر محفوظة بعد. استخدم "احفظ لوقت لاحق" أو الملاحظات أثناء القراءة.',
       'my_quran_saved_for_later_description':
@@ -2784,22 +2804,25 @@ class AppStrings {
       'ayah_label': 'آية {ayah}',
       'search_surah': 'ابحث عن سورة',
       'learn_title': 'خطط التعلّم',
-      'bookmarks_title': 'العلامات',
+      'bookmarks_title': 'الآيات المحفوظة',
       'library_title': 'المكتبة',
-      'library_subtitle': 'احتفظ بمواضعك المحفوظة وملاحظاتك في مكان واحد.',
+      'library_subtitle': 'احتفظ بآياتك المحفوظة وملاحظاتك في مكان واحد.',
       'library_bookmarks_description':
           'أعد فتح الآيات المحفوظة وتابع الدراسة من حيث توقفت.',
       'library_notes_description':
           'راجع ملاحظاتك على الآيات مع سياق كافٍ لمواصلة الدراسة.',
-      'open_bookmarks': 'فتح العلامات',
+      'open_bookmarks': 'فتح الآيات المحفوظة',
       'open_notes': 'فتح الملاحظات',
-      'failed_to_load_bookmarks': 'تعذر تحميل العلامات.',
-      'no_bookmarks_yet': 'لا توجد علامات بعد.',
+      'failed_to_load_bookmarks': 'تعذر تحميل الآيات المحفوظة.',
+      'no_bookmarks_yet': 'لا توجد آيات محفوظة بعد.',
       'saved_label': 'تم الحفظ {timestamp}',
       'saved_for_later_study': 'محفوظة للدراسة لاحقًا',
       'surah_ayah_list_label': 'سورة {surah}، آية {ayah}',
       'go_to_verse': 'إعادة فتحها في القارئ',
       'go_to_page': 'الانتقال إلى الصفحة',
+      'verse_already_bookmarked': 'هذه الآية محفوظة لوقت لاحق بالفعل.',
+      'bookmark_saved': 'تم حفظ الآية لوقت لاحق.',
+      'failed_to_save_bookmark': 'تعذر حفظ الآية لوقت لاحق.',
       'notes_title': 'الملاحظات',
       'failed_to_load_notes': 'تعذر تحميل الملاحظات.',
       'no_notes_yet': 'لا توجد ملاحظات بعد.',

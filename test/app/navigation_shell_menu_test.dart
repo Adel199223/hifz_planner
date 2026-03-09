@@ -157,7 +157,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('library_open_bookmarks')));
     await tester.pumpAndSettle();
-    expect(find.text('Bookmarks'), findsOneWidget);
+    expect(find.text('Saved verses'), findsOneWidget);
 
     await tester.tap(find.text('Library').first);
     await tester.pumpAndSettle();

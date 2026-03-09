@@ -49,7 +49,7 @@ void main() {
     expect(find.text('Planned Reviews'), findsOneWidget);
   });
 
-  testWidgets('navigates to Bookmarks from rail', (tester) async {
+  testWidgets('navigates to saved verses from Library', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -74,12 +74,14 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.byIcon(Icons.bookmark_border));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Library').first);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('library_open_bookmarks')));
+    await tester.pumpAndSettle();
 
     expect(find.byType(BookmarksScreen), findsOneWidget);
-    expect(find.text('No bookmarks yet.'), findsOneWidget);
+    expect(find.text('No saved verses yet.'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.today_outlined));
     await tester.pump();

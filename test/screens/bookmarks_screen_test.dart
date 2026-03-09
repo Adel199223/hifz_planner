@@ -12,7 +12,7 @@ import 'package:hifz_planner/screens/bookmarks_screen.dart';
 import '../helpers/pump_until_found.dart';
 
 void main() {
-  testWidgets('shows empty state when there are no bookmarks', (tester) async {
+  testWidgets('shows empty state when there are no saved verses', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [
@@ -36,9 +36,9 @@ void main() {
         child: MaterialApp.router(routerConfig: router),
       ),
     );
-    await pumpUntilFound(tester, find.text('No bookmarks yet.'));
+    await pumpUntilFound(tester, find.text('No saved verses yet.'));
 
-    expect(find.text('No bookmarks yet.'), findsOneWidget);
+    expect(find.text('No saved verses yet.'), findsOneWidget);
   });
 
   testWidgets('go to verse prefers page mode when page metadata exists', (
