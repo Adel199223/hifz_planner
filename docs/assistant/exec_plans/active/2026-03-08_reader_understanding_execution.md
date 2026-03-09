@@ -50,7 +50,7 @@
 
 ## Progress
 - [x] Start Wave 1
-- [ ] Merge Wave 1
+- [x] Merge Wave 1
 - [ ] Start Wave 2
 - [ ] Merge Wave 2
 - [ ] Start Wave 3
@@ -95,7 +95,7 @@
 | Previous planner roadmap | merged | historical | removed | Wave 1-7 completed before this roadmap started |
 | Practice from Memory roadmap | merged | historical | removed | Focused 4-wave practice roadmap completed before this roadmap started |
 | Goals + Progress roadmap | merged | historical | removed | Supportive 4-wave goals roadmap completed before this roadmap started |
-| Reader Wave 1 | active | `feat/reader-wave1-meaning-controls` | `/home/fa507/dev/hifz_planner_reader_wave1` | Persistent Reader meaning controls are implemented, validated, and docs-synced; waiting on closeout |
+| Reader Wave 1 | merged | historical | cleanup pending | Persistent Reader meaning controls are now in `main` after PR `#33` |
 
 - Current blockers:
   - No blocker is recorded at roadmap start.
@@ -113,5 +113,6 @@
     - `dart tooling/validate_workspace_hygiene.dart`
   - 2026-03-08: Fresh-worktree Flutter bootstrap touched `pubspec.lock` again before validation; the incidental churn was reverted so Wave 1 remains dependency-neutral.
   - 2026-03-08: Narrow Assistant Docs Sync completed for the canonical brief, assistant bridge, and app user guide so future restarts do not need to reconstruct the Reader meaning-controls scope from source diffs.
+  - 2026-03-08: Wave 1 feature work merged to `main` in PR `#33`.
 - Next recommended action:
-  - close Wave 1 with commit, PR, and merge
+  - start Wave 2 - Verse Study Sheet and Meaning-First Actions
