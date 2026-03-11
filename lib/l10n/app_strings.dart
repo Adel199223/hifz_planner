@@ -156,6 +156,43 @@ class AppStrings {
         'learn_subtitle',
         'Build your long-term Quran routine and track progress over time.',
       );
+  String get myQuranSubtitle => _t(
+        'my_quran_subtitle',
+        'Resume your next target, review your backlog, and revisit saved places.',
+      );
+  String get myQuranResumeTitle =>
+      _t('my_quran_resume_title', 'Resume Your Next Target');
+  String myQuranNextTarget(int surahNumber, int ayahNumber) => _fmt(
+        _t('my_quran_next_target', 'Next target: Surah {surah}, Ayah {ayah}'),
+        <String, Object>{'surah': surahNumber, 'ayah': ayahNumber},
+      );
+  String get myQuranOpenReaderAction =>
+      _t('my_quran_open_reader_action', 'Open in Reader');
+  String get myQuranOpenTodayAction =>
+      _t('my_quran_open_today_action', 'Open Today');
+  String get myQuranStatsTitle => _t('my_quran_stats_title', 'Your Snapshot');
+  String get myQuranQuickActionsTitle =>
+      _t('my_quran_quick_actions_title', 'Quick Actions');
+  String get myQuranOpenPlanAction =>
+      _t('my_quran_open_plan_action', 'Open Plan');
+  String get myQuranOpenBookmarksAction =>
+      _t('my_quran_open_bookmarks_action', 'Open Bookmarks');
+  String get myQuranOpenNotesAction =>
+      _t('my_quran_open_notes_action', 'Open Notes');
+  String get myQuranRecentBookmarksTitle =>
+      _t('my_quran_recent_bookmarks_title', 'Recent Bookmarks');
+  String get myQuranRecentNotesTitle =>
+      _t('my_quran_recent_notes_title', 'Recent Notes');
+  String get myQuranStatMemorizationUnits => _t(
+        'my_quran_stat_memorization_units',
+        'Memorization units',
+      );
+  String get myQuranStatDueReviews =>
+      _t('my_quran_stat_due_reviews', 'Due reviews');
+  String get myQuranStatStage4Due =>
+      _t('my_quran_stat_stage4_due', 'Stage-4 due');
+  String get myQuranStatBookmarks => _t('my_quran_stat_bookmarks', 'Bookmarks');
+  String get myQuranStatNotes => _t('my_quran_stat_notes', 'Notes');
   String get hifzPlanTitle => _t('hifz_plan_title', 'Hifz Plan');
   String get hifzPlanSubtitle => _t(
         'hifz_plan_subtitle',
@@ -165,6 +202,8 @@ class AppStrings {
   String get aboutTitle => _t('about_title', 'About');
 
   String get bookmarksTitle => _t('bookmarks_title', 'Bookmarks');
+  String get failedToLoadMyQuran =>
+      _t('failed_to_load_my_quran', 'Failed to load My Quran.');
   String get failedToLoadBookmarks =>
       _t('failed_to_load_bookmarks', 'Failed to load bookmarks.');
   String get failedToLoadReciters =>
@@ -1142,7 +1181,26 @@ class AppStrings {
       'ayah_label': 'Ayah {ayah}',
       'search_surah': 'Rechercher une sourate',
       'learn_title': "Plans d'apprentissage",
+      'my_quran_subtitle':
+          'Reprenez votre prochaine cible, revoyez le retard, et retrouvez vos elements enregistres.',
+      'my_quran_resume_title': 'Reprendre la prochaine cible',
+      'my_quran_next_target': 'Prochaine cible : Sourate {surah}, Ayah {ayah}',
+      'my_quran_open_reader_action': 'Ouvrir dans le lecteur',
+      'my_quran_open_today_action': "Ouvrir Aujourd'hui",
+      'my_quran_stats_title': 'Votre apercu',
+      'my_quran_quick_actions_title': 'Actions rapides',
+      'my_quran_open_plan_action': 'Ouvrir le plan',
+      'my_quran_open_bookmarks_action': 'Ouvrir les signets',
+      'my_quran_open_notes_action': 'Ouvrir les notes',
+      'my_quran_recent_bookmarks_title': 'Signets recents',
+      'my_quran_recent_notes_title': 'Notes recentes',
+      'my_quran_stat_memorization_units': 'Unites de memorisation',
+      'my_quran_stat_due_reviews': 'Revisions dues',
+      'my_quran_stat_stage4_due': 'Etape 4 due',
+      'my_quran_stat_bookmarks': 'Signets',
+      'my_quran_stat_notes': 'Notes',
       'bookmarks_title': 'Signets',
+      'failed_to_load_my_quran': 'Echec du chargement de Mon Coran.',
       'failed_to_load_bookmarks': 'Échec du chargement des signets.',
       'no_bookmarks_yet': 'Aucun signet pour le moment.',
       'saved_label': 'Enregistré {timestamp}',
@@ -1411,7 +1469,26 @@ class AppStrings {
       'page_label': 'Página {page}',
       'search_surah': 'Pesquisar Surah',
       'learn_title': 'Planos de aprendizado',
+      'my_quran_subtitle':
+          'Retome seu proximo alvo, veja seu backlog e revisite seus itens salvos.',
+      'my_quran_resume_title': 'Retomar o proximo alvo',
+      'my_quran_next_target': 'Proximo alvo: Surah {surah}, Ayah {ayah}',
+      'my_quran_open_reader_action': 'Abrir no leitor',
+      'my_quran_open_today_action': 'Abrir Hoje',
+      'my_quran_stats_title': 'Seu panorama',
+      'my_quran_quick_actions_title': 'Acoes rapidas',
+      'my_quran_open_plan_action': 'Abrir Plano',
+      'my_quran_open_bookmarks_action': 'Abrir Favoritos',
+      'my_quran_open_notes_action': 'Abrir Notas',
+      'my_quran_recent_bookmarks_title': 'Favoritos recentes',
+      'my_quran_recent_notes_title': 'Notas recentes',
+      'my_quran_stat_memorization_units': 'Unidades de memorizacao',
+      'my_quran_stat_due_reviews': 'Revisoes pendentes',
+      'my_quran_stat_stage4_due': 'Etapa 4 pendente',
+      'my_quran_stat_bookmarks': 'Favoritos',
+      'my_quran_stat_notes': 'Notas',
       'bookmarks_title': 'Favoritos',
+      'failed_to_load_my_quran': 'Falha ao carregar Meu Alcorao.',
       'failed_to_load_bookmarks': 'Falha ao carregar favoritos.',
       'no_bookmarks_yet': 'Ainda não há favoritos.',
       'saved_label': 'Salvo {timestamp}',
@@ -1694,7 +1771,26 @@ class AppStrings {
       'ayah_label': 'آية {ayah}',
       'search_surah': 'ابحث عن سورة',
       'learn_title': 'خطط التعلّم',
+      'my_quran_subtitle':
+          'استأنف هدفك التالي، وراجع التراكم، وارجع إلى العناصر المحفوظة.',
+      'my_quran_resume_title': 'استئناف الهدف التالي',
+      'my_quran_next_target': 'الهدف التالي: سورة {surah}، آية {ayah}',
+      'my_quran_open_reader_action': 'افتح في القارئ',
+      'my_quran_open_today_action': 'افتح اليوم',
+      'my_quran_stats_title': 'ملخصك',
+      'my_quran_quick_actions_title': 'إجراءات سريعة',
+      'my_quran_open_plan_action': 'افتح الخطة',
+      'my_quran_open_bookmarks_action': 'افتح العلامات',
+      'my_quran_open_notes_action': 'افتح الملاحظات',
+      'my_quran_recent_bookmarks_title': 'العلامات الأخيرة',
+      'my_quran_recent_notes_title': 'الملاحظات الأخيرة',
+      'my_quran_stat_memorization_units': 'وحدات الحفظ',
+      'my_quran_stat_due_reviews': 'المراجعات المستحقة',
+      'my_quran_stat_stage4_due': 'استحقاق المرحلة 4',
+      'my_quran_stat_bookmarks': 'العلامات',
+      'my_quran_stat_notes': 'الملاحظات',
       'bookmarks_title': 'العلامات',
+      'failed_to_load_my_quran': 'تعذر تحميل قرآني.',
       'failed_to_load_bookmarks': 'تعذر تحميل العلامات.',
       'no_bookmarks_yet': 'لا توجد علامات بعد.',
       'saved_label': 'تم الحفظ {timestamp}',

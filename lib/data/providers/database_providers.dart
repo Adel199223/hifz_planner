@@ -18,6 +18,7 @@ import '../services/companion/stage1_auto_check_engine.dart';
 import '../services/companion/verse_evaluator.dart';
 import '../services/daily_planner.dart';
 import '../services/forecast_simulation_service.dart';
+import '../services/my_quran_overview_service.dart';
 import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
 import '../services/qurancom_api.dart';
@@ -81,6 +82,23 @@ final reviewCompletionServiceProvider =
     db,
     reviewLogRepo,
     scheduleRepo,
+    companionRepo,
+  );
+});
+
+final myQuranOverviewServiceProvider = Provider<MyQuranOverviewService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final bookmarkRepo = ref.watch(bookmarkRepoProvider);
+  final noteRepo = ref.watch(noteRepoProvider);
+  final progressRepo = ref.watch(progressRepoProvider);
+  final quranRepo = ref.watch(quranRepoProvider);
+  final companionRepo = ref.watch(companionRepoProvider);
+  return MyQuranOverviewService(
+    db,
+    bookmarkRepo,
+    noteRepo,
+    progressRepo,
+    quranRepo,
     companionRepo,
   );
 });
