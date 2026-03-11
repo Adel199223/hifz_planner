@@ -384,6 +384,7 @@ Important repos/services:
   - `quran_text_importer_service.dart`
   - `page_metadata_importer_service.dart`
   - `daily_planner.dart`
+  - `my_quran_overview_service.dart`
   - `spaced_repetition_scheduler.dart`
   - `calibration_service.dart`
   - `forecast_simulation_service.dart`
@@ -448,7 +449,7 @@ Current capabilities:
 - `lib/screens/learn_screen.dart`
   - Learn container page; includes Hifz Plan entry card linking to `/plan`
 - `lib/screens/my_quran_screen.dart`
-  - placeholder scaffold (`coming soon`)
+  - local dashboard surface for resume context, snapshot counts, recent bookmarks/notes, and quick links into Reader/Today/Plan/Bookmarks/Notes
 - `lib/screens/quran_radio_screen.dart`
   - placeholder scaffold (`coming soon`)
 - `lib/screens/reciters_screen.dart`
@@ -609,7 +610,8 @@ Representative files:
 
 - Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
 - `Translation` and `Word By Word` settings tabs are scaffolded but not fully implemented.
-- My Quran and Quran Radio screens are placeholders.
+- Quran Radio remains a placeholder surface.
+- My Quran is implemented as a local dashboard surface backed by `my_quran_overview_service.dart`.
 - Web parity will require abstraction of `dart:io` usage in Quran.com cache/font services.
 - Quran.com parity work is active; visuals and interactions are close in many areas but still evolving.
 - No Python CI/tooling is configured because this repository currently has no Python code path; add Python configuration only when Python tooling is introduced.

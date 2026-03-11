@@ -82,7 +82,8 @@ Additional top-right menu areas:
 
 ## Known Limits and Placeholder Areas
 
-- `My Quran` and `Quran Radio` are currently placeholder/coming-soon surfaces.
+- `My Quran` is a working dashboard for resuming your next target, checking your current snapshot, and reopening saved places quickly.
+- `Quran Radio` is still a placeholder/coming-soon surface.
 - `Reciters` is not a placeholder: it is a functional searchable reciter selector for playback preferences.
 
 ## What Each Area Is For
@@ -92,6 +93,7 @@ Additional top-right menu areas:
 - Notes: capture reflections or reminders linked to verses.
 - Plan: configure memorization workload and scheduling rules.
 - Today: execute the day’s work in priority order.
+- My Quran: reopen your next target, check counts for due work/bookmarks/notes, and jump back into related areas.
 - Companion chain: run the memorization stages for specific units.
 - Settings: language/theme and data/import controls.
 
