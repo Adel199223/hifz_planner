@@ -63,6 +63,7 @@ The app lifecycle is:
 - `Today` -> execute what is due (reviews, new memorization, delayed checks)
 - `Companion` -> run memorization/retrieval stages for each unit
 - Delayed consolidation checks -> verify stability after time has passed (especially next day)
+- Maintenance reviews -> keep strong units strong over time after they become stable
 
 Planner is the system that decides how much to assign and in what order, so your memorization load stays sustainable.
 
@@ -256,8 +257,9 @@ Execution order is designed to protect retention quality:
 - these are high priority because they verify durability after delay
 
 ### Planned reviews section
-- review rows with grading actions
+- review rows with grading actions and a small lifecycle badge
 - supports immediate scheduler updates based on your quality
+- same review can also be saved from the Companion review summary if you open it there first
 
 ### Planned new section
 - new unit rows with actions:
@@ -271,6 +273,7 @@ You may see new memorization blocked by default when mandatory delayed checks ar
 Why this happens:
 - the app protects retention quality first
 - unresolved delayed checks are a strong signal that stability needs attention
+- lifecycle badges alone do not block new memorization; only due Stage-4 delayed checks can do that in the current version
 
 Override behavior:
 - you can override once and continue to new memorization
@@ -296,6 +299,11 @@ When not to overuse override:
 
 ### Delayed durability
 - delayed checks reduce false confidence from same-session fluency.
+
+### Maintenance after stability
+- once a unit passes Stage 4, it becomes stable
+- a later good scheduled review can move it to maintained
+- a weaker later review can lower it back to stable or ready without reopening Stage 4 automatically
 
 ## 9) Real-Life Usage Playbooks
 

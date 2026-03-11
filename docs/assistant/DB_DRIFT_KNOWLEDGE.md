@@ -34,6 +34,7 @@ Do not rely on this doc alone when:
   - `lib/data/repositories/*.dart`
 - Planner/scheduler services:
   - `lib/data/services/daily_planner.dart`
+  - `lib/data/services/review_completion_service.dart`
   - `lib/data/services/spaced_repetition_scheduler.dart`
   - `lib/data/services/calibration_service.dart`
   - `lib/data/services/forecast_simulation_service.dart`
@@ -155,6 +156,7 @@ Tables:
   - carries due days (`stage4_pre_sleep_due_day`, `stage4_next_day_due_day`, `stage4_retry_due_day`)
   - carries unresolved/risk payloads (`stage4_unresolved_targets_json`, `stage4_risk_json`)
   - tracks override and missed counts for Stage-4 prioritization
+  - scheduled review lifecycle governance is handled above this table by `ReviewCompletionService`; no extra Stage-5 table exists in this phase
 - `companion_stage4_session` stores Stage-4 run-level outcomes and diagnostics.
   - `due_kind` constrained: `pre_sleep_optional|next_day_required|retry_required`
   - `outcome` constrained: `pass|partial|fail|abandoned`
@@ -210,6 +212,7 @@ For any schema change:
 
 ### Service ownership
 - `daily_planner.dart`: plan generation from settings/progress/schedule
+- `review_completion_service.dart`: shared scheduled-review transaction (review log -> scheduler -> lifecycle transition)
 - `spaced_repetition_scheduler.dart`: due-date and interval calculations
 - `calibration_service.dart`: applies sample-derived parameter updates
 - `forecast_simulation_service.dart`: deterministic projection from current state
@@ -243,12 +246,30 @@ Validate:
 
 Likely files:
 - `lib/screens/today_screen.dart`
+- `lib/screens/companion_chain_screen.dart`
+- `lib/data/services/review_completion_service.dart`
 - `lib/data/repositories/review_log_repo.dart`
 - `lib/data/repositories/schedule_repo.dart`
+- `lib/data/repositories/companion_repo.dart`
 - `lib/data/services/spaced_repetition_scheduler.dart`
+
+Shared transaction contract:
+- `ReviewCompletionService.completeScheduledReview(...)` must:
+  - insert `review_log`
+  - apply `schedule_repo.applyReviewWithScheduler(...)`
+  - read/update `companion_lifecycle_state`
+- lifecycle tier policy on scheduled reviews:
+  - `stable + q>=3 -> maintained`
+  - `maintained + q>=4 -> maintained`
+  - `maintained + q=3 -> stable`
+  - `stable|maintained + q<3 -> ready`
+  - `ready` never auto-promotes from scheduled reviews
+- scheduled review lifecycle changes do not reopen Stage 4 in this phase
 
 Validate:
 - today screen tests
+- companion screen tests
+- review completion service tests
 - schedule repo tests
 - scheduler tests
 
@@ -282,6 +303,6 @@ flutter test -j 1 -r expanded test/screens/today_screen_test.dart
 
 ```powershell
 rg -n "schemaVersion|MigrationStrategy|ensureSingletonRows" lib/data/database
-rg -n "class .*Repo|updateSettings|applyReviewWithScheduler|planToday" lib/data
+rg -n "class .*Repo|updateSettings|applyReviewWithScheduler|completeScheduledReview|planToday" lib/data
 rg -n "mem_unit|schedule_state|review_log|app_settings|mem_progress" test/data
 ```

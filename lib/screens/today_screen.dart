@@ -7,8 +7,8 @@ import 'package:drift/drift.dart' show Value;
 import '../app/app_preferences.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
-import '../data/repositories/schedule_repo.dart';
 import '../data/services/daily_planner.dart';
+import '../data/services/review_completion_service.dart';
 import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
 import '../l10n/app_strings.dart';
@@ -27,7 +27,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   String? _errorMessage;
   TodayPlan? _plan;
   List<Stage4DueItem> _remainingStage4Due = const <Stage4DueItem>[];
-  List<DueUnitRow> _remainingReviews = const <DueUnitRow>[];
+  List<PlannedReviewRow> _remainingReviews = const <PlannedReviewRow>[];
   List<MemUnitData> _remainingNewUnits = const <MemUnitData>[];
   final Set<int> _busyUnitIds = <int>{};
 
@@ -58,7 +58,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       setState(() {
         _plan = plan;
         _remainingStage4Due = List<Stage4DueItem>.from(plan.plannedStage4Due);
-        _remainingReviews = List<DueUnitRow>.from(plan.plannedReviews);
+        _remainingReviews = List<PlannedReviewRow>.from(plan.plannedReviews);
         _remainingNewUnits = List<MemUnitData>.from(plan.plannedNewUnits);
         _isLoading = false;
       });
@@ -160,28 +160,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final tsSeconds = nowLocalSecondsSinceMidnight(nowLocal);
 
     try {
-      final db = ref.read(appDatabaseProvider);
-      final reviewLogRepo = ref.read(reviewLogRepoProvider);
-      final scheduleRepo = ref.read(scheduleRepoProvider);
-
-      await db.transaction(() async {
-        await reviewLogRepo.insert(
-          unitId: unitId,
-          tsDay: tsDay,
-          tsSeconds: tsSeconds,
-          gradeQ: gradeQ,
-          durationSeconds: null,
-          mistakesCount: null,
-        );
-        final updated = await scheduleRepo.applyReviewWithScheduler(
-          unitId: unitId,
-          todayDay: tsDay,
-          gradeQ: gradeQ,
-        );
-        if (!updated) {
-          throw StateError('Schedule state not found for unit $unitId');
-        }
-      });
+      final result = await ref
+          .read(reviewCompletionServiceProvider)
+          .completeScheduledReview(
+            unitId: unitId,
+            gradeQ: gradeQ,
+            completedDay: tsDay,
+            completedSeconds: tsSeconds,
+          );
 
       if (!mounted) {
         return;
@@ -191,7 +177,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         onSuccessRemove();
         _busyUnitIds.remove(unitId);
       });
-      _showSnackBar(strings.gradeSaved);
+      _showSnackBar(_reviewCompletionMessage(strings, result));
     } catch (_) {
       if (!mounted) {
         return;
@@ -258,6 +244,53 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     }
     messenger.showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+
+  String _reviewCompletionMessage(
+    AppStrings strings,
+    ReviewCompletionResult result,
+  ) {
+    final lifecycleMessage = _reviewLifecycleMessage(strings, result);
+    if (lifecycleMessage == null) {
+      return strings.gradeSaved;
+    }
+    return '${strings.gradeSaved} $lifecycleMessage';
+  }
+
+  String? _reviewLifecycleMessage(
+    AppStrings strings,
+    ReviewCompletionResult result,
+  ) {
+    return switch (result.lifecycleTransition) {
+      ReviewLifecycleTransition.promotedToMaintained =>
+        strings.reviewLifecyclePromotedToMaintained,
+      ReviewLifecycleTransition.demotedToStable =>
+        strings.reviewLifecycleDemotedToStable,
+      ReviewLifecycleTransition.demotedToReady =>
+        strings.reviewLifecycleDemotedToReady,
+      ReviewLifecycleTransition.unchanged => null,
+    };
+  }
+
+  Widget _buildLifecycleBadge({
+    required int unitId,
+    required String lifecycleTier,
+    required AppStrings strings,
+  }) {
+    return DecoratedBox(
+      key: ValueKey('today_review_lifecycle_badge_$unitId'),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: Text(
+          strings.lifecycleTierLabel(lifecycleTier),
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
+      ),
     );
   }
 
@@ -433,8 +466,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     );
   }
 
-  Widget _buildReviewRow(DueUnitRow dueRow, AppStrings strings) {
-    final unit = dueRow.unit;
+  Widget _buildReviewRow(PlannedReviewRow reviewRow, AppStrings strings) {
+    final unit = reviewRow.unit;
     final unitId = unit.id;
     final busy = _busyUnitIds.contains(unitId);
 
@@ -458,7 +491,13 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             const SizedBox(height: 4),
             Text(_formatRange(unit, strings)),
             const SizedBox(height: 4),
-            Text(strings.dueDayLabel(dueRow.schedule.dueDay)),
+            _buildLifecycleBadge(
+              unitId: unitId,
+              lifecycleTier: reviewRow.lifecycleTier,
+              strings: strings,
+            ),
+            const SizedBox(height: 6),
+            Text(strings.dueDayLabel(reviewRow.schedule.dueDay)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,

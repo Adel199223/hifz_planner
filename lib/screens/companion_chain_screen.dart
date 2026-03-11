@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../app/app_preferences.dart';
 import '../data/database/app_database.dart';
@@ -10,7 +11,9 @@ import '../data/providers/database_providers.dart';
 import '../data/services/ayah_audio_service.dart';
 import '../data/services/companion/companion_models.dart';
 import '../data/services/companion/progressive_reveal_chain_engine.dart';
+import '../data/services/review_completion_service.dart';
 import '../data/services/companion/verse_evaluator.dart';
+import '../data/time/local_day_time.dart';
 import '../data/services/quran_wording.dart';
 import '../data/services/qurancom_api.dart';
 import '../l10n/app_strings.dart';
@@ -39,6 +42,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
   bool _isLoading = true;
   bool _isSubmitting = false;
   bool _isChangingStage = false;
+  bool _isSavingReviewGrade = false;
+  bool _reviewGradeSaved = false;
+  ReviewCompletionResult? _reviewCompletionResult;
   bool _tajweedEnabled = true;
   String? _lastAutoRecitedVerseKey;
   String? _selectedAutoCheckOptionId;
@@ -134,6 +140,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         _isLoading = false;
         _tajweedEnabled = tajweedEnabled;
         _summary = null;
+        _isSavingReviewGrade = false;
+        _reviewGradeSaved = false;
+        _reviewCompletionResult = null;
         _syncAutoCheckSelection(state);
       });
       unawaited(_loadWordRenderData(ayahs));
@@ -346,6 +355,85 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         !state.completed &&
         state.stage4 != null &&
         !state.isReviewMode;
+  }
+
+  Future<void> _submitReviewGrade(int gradeQ) async {
+    final state = _state;
+    if (state == null ||
+        !state.completed ||
+        widget.launchMode != CompanionLaunchMode.review ||
+        _isSavingReviewGrade ||
+        _reviewGradeSaved) {
+      return;
+    }
+
+    final nowLocal = DateTime.now().toLocal();
+    final completedDay = localDayIndex(nowLocal);
+    final completedSeconds = nowLocalSecondsSinceMidnight(nowLocal);
+
+    setState(() {
+      _isSavingReviewGrade = true;
+    });
+
+    try {
+      final result = await ref
+          .read(reviewCompletionServiceProvider)
+          .completeScheduledReview(
+            unitId: widget.unitId,
+            gradeQ: gradeQ,
+            completedDay: completedDay,
+            completedSeconds: completedSeconds,
+          );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isSavingReviewGrade = false;
+        _reviewGradeSaved = result.scheduleUpdated;
+        _reviewCompletionResult = result;
+      });
+      _showSnackBar(_reviewCompletionMessage(result));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isSavingReviewGrade = false;
+      });
+      _showSnackBar(_strings.failedToSaveGrade);
+    }
+  }
+
+  List<_CompanionReviewGradeOption> _reviewGradeOptions() {
+    return <_CompanionReviewGradeOption>[
+      _CompanionReviewGradeOption(label: _strings.gradeGood, q: 5),
+      _CompanionReviewGradeOption(label: _strings.gradeMedium, q: 4),
+      _CompanionReviewGradeOption(label: _strings.gradeHard, q: 3),
+      _CompanionReviewGradeOption(label: _strings.gradeVeryHard, q: 2),
+      _CompanionReviewGradeOption(label: _strings.gradeFail, q: 0),
+    ];
+  }
+
+  String _reviewCompletionMessage(ReviewCompletionResult result) {
+    final lifecycleMessage = _reviewLifecycleMessage(result);
+    if (lifecycleMessage == null) {
+      return _strings.gradeSaved;
+    }
+    return '${_strings.gradeSaved} $lifecycleMessage';
+  }
+
+  String? _reviewLifecycleMessage(ReviewCompletionResult result) {
+    return switch (result.lifecycleTransition) {
+      ReviewLifecycleTransition.promotedToMaintained =>
+        _strings.reviewLifecyclePromotedToMaintained,
+      ReviewLifecycleTransition.demotedToStable =>
+        _strings.reviewLifecycleDemotedToStable,
+      ReviewLifecycleTransition.demotedToReady =>
+        _strings.reviewLifecycleDemotedToReady,
+      ReviewLifecycleTransition.unchanged => null,
+    };
   }
 
   bool _isHintLockedByStage1(ChainRunState state) {
@@ -1013,7 +1101,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
           ? _stage3CueText(state, verse)
           : _isStage4RuntimeActive(state)
               ? _stage4CueText(state, verse)
-          : (verse.revealed ? verse.verse.text : null),
+              : (verse.revealed ? verse.verse.text : null),
     };
   }
 
@@ -1043,7 +1131,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
           : _isStage4RuntimeActive(state)
               ? (identical(verse, state.currentVerse) &&
                   _effectiveHintLevel(state) == HintLevel.fullText)
-          : verse.revealed,
+              : verse.revealed,
     };
   }
 
@@ -1264,7 +1352,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
             ? 'companion_stage3_auto_check'
             : _isStage4RuntimeActive(state)
                 ? 'companion_stage4_auto_check'
-            : 'companion_stage1_auto_check';
+                : 'companion_stage1_auto_check';
 
     return Card(
       key: ValueKey('${keyPrefix}_card'),
@@ -1583,11 +1671,12 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
                             ? _strings.companionStage1CorrectionAction
                             : isStage2Correction
                                 ? _strings.companionStage2CorrectionAction
-                            : isStage3Correction
-                                ? _strings.companionStage3CorrectionAction
-                                : isStage4Correction
-                                    ? _strings.companionStage4CorrectionAction
-                                    : _strings.companionRecordStart,
+                                : isStage3Correction
+                                    ? _strings.companionStage3CorrectionAction
+                                    : isStage4Correction
+                                        ? _strings
+                                            .companionStage4CorrectionAction
+                                        : _strings.companionRecordStart,
                   ),
                 ),
                 OutlinedButton(
@@ -1704,6 +1793,8 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
   }
 
   Widget _buildSummaryCard(ChainResultSummary summary) {
+    final showReviewGradeFlow = widget.launchMode == CompanionLaunchMode.review;
+
     return Card(
       key: const ValueKey('companion_summary_card'),
       child: Padding(
@@ -1732,6 +1823,52 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
                 summary.averageRetrievalStrength.toStringAsFixed(2),
               ),
             ),
+            if (showReviewGradeFlow) ...[
+              const SizedBox(height: 12),
+              if (_reviewGradeSaved) ...[
+                Text(
+                  _strings.companionReviewSavedToSchedule,
+                  key: const ValueKey('companion_review_saved_message'),
+                ),
+                if (_reviewCompletionResult != null &&
+                    _reviewCompletionResult!.lifecycleChanged) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    _reviewLifecycleMessage(_reviewCompletionResult!)!,
+                    key: const ValueKey(
+                      'companion_review_lifecycle_message',
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                FilledButton(
+                  key: const ValueKey('companion_back_to_today_button'),
+                  onPressed: () => context.go('/today'),
+                  child: Text(_strings.companionBackToToday),
+                ),
+              ] else ...[
+                Text(
+                  _strings.companionReviewGradePrompt,
+                  key: const ValueKey('companion_review_grade_prompt'),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  key: const ValueKey('companion_review_grade_actions'),
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final option in _reviewGradeOptions())
+                      OutlinedButton(
+                        key: ValueKey('companion_review_grade_${option.q}'),
+                        onPressed: _isSavingReviewGrade
+                            ? null
+                            : () => _submitReviewGrade(option.q),
+                        child: Text(option.label),
+                      ),
+                  ],
+                ),
+              ],
+            ],
           ],
         ),
       ),
@@ -1747,4 +1884,14 @@ class _CompanionVerseWordRenderData {
 
   final String qcfFamilyName;
   final List<MushafWord> words;
+}
+
+class _CompanionReviewGradeOption {
+  const _CompanionReviewGradeOption({
+    required this.label,
+    required this.q,
+  });
+
+  final String label;
+  final int q;
 }

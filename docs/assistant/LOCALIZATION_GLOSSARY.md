@@ -68,7 +68,14 @@ Use this glossary to keep terminology consistent across Reader, planner/scheduli
 | `companion_stage_hidden_reveal` | Hidden reveal | Revelation cachee | Revelacao oculta | كشف مخفي |
 | `stage4_due_section_title` | Stage-4 delayed checks | Verifications differees etape 4 | Verificacoes adiadas etapa 4 | تحققات المرحلة 4 المؤجلة |
 | `stage4_no_due_items` | No Stage-4 delayed checks are due. | Aucune verification differee etape 4 due. | Nenhuma verificacao adiada da etapa 4 pendente. | لا توجد تحققات مرحلة 4 مؤجلة مستحقة. |
-| `stage4_tier_summary` | Stage-4 quality snapshot - Stable: {stable}, Ready: {ready}, Emerging: {emerging} | Apercu qualite etape 4 - Stable: {stable}, Pret: {ready}, Emergent: {emerging} | Panorama de qualidade etapa 4 - Estavel: {stable}, Pronto: {ready}, Emergente: {emerging} | لقطة جودة المرحلة 4 - ثابت: {stable}، جاهز: {ready}، ناشئ: {emerging} |
+| `stage4_tier_summary` | Tiers - Emerging: {emerging}, Ready: {ready}, Stable: {stable}, Maintained: {maintained} | Paliers - Emergente: {emerging}, Prete: {ready}, Stable: {stable}, En maintien: {maintained} | Niveis - Emergente: {emerging}, Pronta: {ready}, Estavel: {stable}, Em manutencao: {maintained} | المستويات - ناشئة: {emerging}، جاهزة: {ready}، مستقرة: {stable}، قيد الصيانة: {maintained} |
+| `lifecycle_tier_emerging` | Emerging | Emergente | Emergente | ناشئة |
+| `lifecycle_tier_ready` | Ready | Prete | Pronta | جاهزة |
+| `lifecycle_tier_stable` | Stable | Stable | Estavel | مستقرة |
+| `lifecycle_tier_maintained` | Maintained | En maintien | Em manutencao | قيد الصيانة |
+| `review_lifecycle_promoted_to_maintained` | This unit moved to maintained. | Cette unite est passee en maintien. | Esta unidade passou para manutencao. | انتقلت هذه الوحدة إلى مستوى الصيانة. |
+| `review_lifecycle_demoted_to_stable` | This unit moved back to stable. | Cette unite est redescendue a stable. | Esta unidade voltou para estavel. | عادت هذه الوحدة إلى مستوى الاستقرار. |
+| `review_lifecycle_demoted_to_ready` | This unit moved back to ready. | Cette unite est redescendue a prete. | Esta unidade voltou para pronta. | عادت هذه الوحدة إلى مستوى الجاهزية. |
 | `stage4_due_kind_pre_sleep_optional` | Optional pre-sleep check | Verification optionnelle avant sommeil | Verificacao opcional antes de dormir | تحقق اختياري قبل النوم |
 | `stage4_due_kind_next_day_required` | Mandatory next-day check | Verification obligatoire le lendemain | Verificacao obrigatoria no dia seguinte | تحقق إلزامي في اليوم التالي |
 | `stage4_due_kind_retry_required` | Mandatory retry check | Verification obligatoire de nouvelle tentative | Verificacao obrigatoria de nova tentativa | تحقق إعادة إلزامي |

@@ -29,6 +29,7 @@ Use when changes touch:
 - Do not bypass `PlanningProjectionEngine` with duplicate scheduling logic in UI or service layers.
 - Do not store non-versioned scheduling payloads in `app_settings`.
 - Do not bypass transactional boundaries for review log + scheduler updates.
+- Do not duplicate scheduled-review completion logic in screens; route Today and Companion review saves through `ReviewCompletionService`.
 - Do not auto-reveal full verse text on chain failure; hint progression is user-driven.
 
 ## Primary Files
@@ -39,6 +40,7 @@ Use when changes touch:
 - `lib/data/providers/database_providers.dart`
 - `lib/data/services/daily_planner.dart`
 - `lib/data/services/forecast_simulation_service.dart`
+- `lib/data/services/review_completion_service.dart`
 - `lib/data/services/scheduling/scheduling_preferences_codec.dart`
 - `lib/data/services/scheduling/availability_interpreter.dart`
 - `lib/data/services/scheduling/weekly_plan_generator.dart`
@@ -74,6 +76,7 @@ flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart
 flutter test -j 1 -r expanded test/app/app_preferences_test.dart
 flutter test -j 1 -r expanded test/data/services/tajweed_tags_service_test.dart
 flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart
+flutter test -j 1 -r expanded test/data/services/review_completion_service_test.dart
 flutter test -j 1 -r expanded test/data/services/forecast_simulation_service_test.dart
 flutter test -j 1 -r expanded test/data/database/app_database_test.dart
 flutter test -j 1 -r expanded test/data/repositories/settings_repo_test.dart
@@ -99,12 +102,16 @@ flutter test -j 1 -r expanded test/data/services/companion
    - Verify hidden-stage placeholder text is not rendered and end-marker words are suppressed in shared word widget usage.
 7. Symptoms: autoplay toggle resets after restart.
    - Verify `AppPreferencesStore.saveCompanionAutoReciteEnabled(...)` write-through and restore path.
+8. Symptoms: scheduled reviews save but lifecycle tier/badge does not change as expected.
+   - Verify `ReviewCompletionService.completeScheduledReview(...)` owns the full transaction order: insert `review_log`, apply scheduler, then update `companion_lifecycle_state`.
 
 ## Handoff Checklist
 
 - shared projection behavior is used by both weekly calendar and forecast simulation
 - scheduling prefs/overrides are versioned and decode safely when JSON is null/invalid
 - weekly calendar reflects recovery mode and review pressure
+- planned review rows carry lifecycle tier data for Today badge/sort rendering
+- scheduled review completion uses the shared `ReviewCompletionService` path in both Today and Companion
 - companion chain persists per-attempt telemetry and session summary
 - companion recitation controls remain optional and non-blocking (`Play current ayah`, persisted autoplay toggle)
 - companion/reader shared word rendering suppresses end-marker circles in Verse-by-Verse scope
@@ -115,7 +122,7 @@ flutter test -j 1 -r expanded test/data/services/companion
 
 - Launch mode contract:
   - `/companion/chain?unitId=<id>&mode=new` -> staged ramp for new units.
-  - `/companion/chain?unitId=<id>&mode=review` -> hidden-first fast retrieval.
+  - `/companion/chain?unitId=<id>&mode=review` -> hidden-first fast retrieval with summary grade-save back into the shared scheduler/lifecycle path.
   - `/companion/chain?unitId=<id>&mode=stage4` -> delayed consolidation runtime (Stage-4 lifecycle gate).
 - Stage sequence for `mode=new`:
   - Stage 1 `guided_visible` (Talqin + Retrieval-first):
@@ -158,7 +165,7 @@ flutter test -j 1 -r expanded test/data/services/companion
     - counted passes stay strict (`unassisted`, hint cap `H1`, required auto-check where mode requires)
     - any failed Stage-4 retrieval mode requires correction exposure before retry
     - outcomes are explicit and persisted:
-      - `pass` => lifecycle `stable` + Stage-5 candidate
+      - `pass` => lifecycle `stable` and the unit becomes eligible for Stage-5 maintenance on later scheduled reviews
       - `partial` => unresolved targets persisted + retry due
       - `fail` => strengthening route persisted + retry due
 - Stage memory:
@@ -174,6 +181,31 @@ flutter test -j 1 -r expanded test/data/services/companion
   - skip requires explicit confirm UI and applies to remaining verses in that stage for the current run.
   - skip writes telemetry event and advances immediately.
   - Stage-2 skip carries unresolved verses into Stage-3 weak-prelude targets.
+
+## Scheduled Review Lifecycle Governance
+
+- `ReviewCompletionService.completeScheduledReview(...)` is the shared completion path for:
+  - Today fallback grade buttons
+  - Companion review-mode summary grade actions
+- Transaction order must stay:
+  - insert `review_log`
+  - apply `schedule_repo.applyReviewWithScheduler(...)`
+  - read/update `companion_lifecycle_state`
+- Lifecycle tier policy for scheduled reviews:
+  - `stable + q>=3 -> maintained`
+  - `maintained + q>=4 -> maintained`
+  - `maintained + q=3 -> stable`
+  - `stable|maintained + q<3 -> ready`
+  - `ready` never auto-promotes from scheduled reviews; only Stage-4 pass restores `stable`
+- This milestone is demotion-only:
+  - no automatic Stage-4 reopen
+  - no forced strengthening route from scheduled review alone
+  - no new due queue beyond existing review scheduling
+- Today reaction is intentionally light-touch:
+  - overdue days remain the primary review sort key
+  - when overdue ties, less-stable lifecycle tiers sort earlier
+  - planned review rows show a small lifecycle tier badge
+  - Stage-4 due items remain the only soft-block for new memorization in this phase
 
 ## Retrieval-Strength Scoring Policy
 

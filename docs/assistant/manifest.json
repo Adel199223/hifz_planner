@@ -93,6 +93,7 @@
         "lib/ui/quran/arabic_ayah_text.dart",
         "lib/ui/quran/quran_word_wrap.dart",
         "lib/data/services/quran_wording.dart",
+        "lib/data/services/review_completion_service.dart",
         "lib/data/services/scheduling/planning_projection_engine.dart",
         "lib/data/services/scheduling/availability_interpreter.dart",
         "lib/data/services/scheduling/weekly_plan_generator.dart",
@@ -112,6 +113,7 @@
         "test/app/app_preferences_test.dart",
         "test/data/services/tajweed_tags_service_test.dart",
         "test/data/services/daily_planner_test.dart",
+        "test/data/services/review_completion_service_test.dart",
         "test/data/services/forecast_simulation_service_test.dart",
         "test/data/services/scheduling/availability_interpreter_test.dart",
         "test/data/services/scheduling/daily_content_allocator_test.dart",
@@ -133,6 +135,7 @@
         "flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart",
         "flutter test -j 1 -r expanded test/data/services/tajweed_tags_service_test.dart",
         "flutter test -j 1 -r expanded test/data/services/daily_planner_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/review_completion_service_test.dart",
         "flutter test -j 1 -r expanded test/data/services/forecast_simulation_service_test.dart",
         "flutter test -j 1 -r expanded test/data/database/app_database_test.dart",
         "flutter test -j 1 -r expanded test/data/services/scheduling",
@@ -339,5 +342,5 @@
     "plain_language_support_response_policy": "Support responses must be plain-language-first with numbered next steps and exact UI labels.",
     "term_definition_policy": "If a technical term is unavoidable in support replies, define it in one short sentence."
   },
-  "last_updated": "2026-02-25"
+  "last_updated": "2026-03-11"
 }

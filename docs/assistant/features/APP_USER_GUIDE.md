@@ -129,7 +129,7 @@ This screen is intentionally action-oriented: less setup, more execution.
 ## 4) Memorize with Companion Stages
 
 Open Companion from Today rows to run staged memorization flows:
-- review mode for hidden-first review
+- review mode for hidden-first review, with a save-to-schedule step at the end
 - new mode for staged acquisition to robustness flow
 - delayed mode for Stage-4 consolidation checks
 
@@ -141,11 +141,17 @@ The app supports a staged learning progression:
 - Stage 2 (bridge): reduce cue support, add discrimination and early linking.
 - Stage 3 (hidden robustness): hidden recall, stronger linking, correction loops.
 - Stage 4 (delayed consolidation): verify stability after delay, especially next day.
-- Stage 5 (maintenance concept): long-term upkeep scheduling after stable delayed checks.
+- Stage 5 (maintenance): begins after a stable unit succeeds on a later scheduled review.
 
 Simple rule:
 - earlier stages build access
 - later stages prove stability
+
+What Stage 5 means in practice:
+- after Stage 4 passes, the unit becomes stable
+- the next good scheduled review can move it to maintained
+- later weaker scheduled reviews can lower it back to stable or ready
+- this quality drop does not reopen Stage 4 automatically in the current version
 
 ## Why Today Prioritizes Certain Items First
 
@@ -153,6 +159,8 @@ Today prioritization is quality-driven:
 - delayed checks are high priority because they detect false fluency
 - review protects previously learned material
 - new memorization is important, but not at the cost of collapsing retention
+
+Review rows can also show a small lifecycle badge such as Ready, Stable, or Maintained so you can see the unit's current quality state at a glance.
 
 If delayed checks are due, new memorization can be soft-blocked by default to protect quality.
 

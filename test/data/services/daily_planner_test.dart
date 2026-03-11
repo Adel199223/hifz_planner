@@ -6,10 +6,12 @@ import 'package:hifz_planner/data/repositories/companion_repo.dart';
 import 'package:hifz_planner/data/repositories/mem_unit_repo.dart';
 import 'package:hifz_planner/data/repositories/progress_repo.dart';
 import 'package:hifz_planner/data/repositories/quran_repo.dart';
+import 'package:hifz_planner/data/repositories/review_log_repo.dart';
 import 'package:hifz_planner/data/repositories/schedule_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
 import 'package:hifz_planner/data/services/daily_planner.dart';
 import 'package:hifz_planner/data/services/new_unit_generator.dart';
+import 'package:hifz_planner/data/services/review_completion_service.dart';
 import 'package:hifz_planner/data/services/scheduling/planning_projection_engine.dart';
 
 void main() {
@@ -21,6 +23,7 @@ void main() {
   late SettingsRepo settingsRepo;
   late ProgressRepo progressRepo;
   late NewUnitGenerator newUnitGenerator;
+  late ReviewCompletionService reviewCompletionService;
   late DailyPlanner dailyPlanner;
 
   setUp(() async {
@@ -32,6 +35,12 @@ void main() {
     settingsRepo = SettingsRepo(db);
     progressRepo = ProgressRepo(db);
     newUnitGenerator = NewUnitGenerator(quranRepo, memUnitRepo, scheduleRepo);
+    reviewCompletionService = ReviewCompletionService(
+      db,
+      ReviewLogRepo(db),
+      scheduleRepo,
+      companionRepo,
+    );
     dailyPlanner = DailyPlanner(
       db,
       settingsRepo,
@@ -157,7 +166,9 @@ void main() {
     expect(acceleratedPlan.plannedReviews.length, 10);
   });
 
-  test('sorts due rows by overdue desc, reps asc, lapse_count desc', () async {
+  test(
+      'sorts due rows by overdue desc, lifecycle tier, reps asc, lapse_count desc',
+      () async {
     const todayDay = 10;
     await _configureSettings(
       settingsRepo,
@@ -193,14 +204,59 @@ void main() {
       unitKey: 'u-c',
       dueDay: 9,
       reps: 0,
+      lapseCount: 0,
+    );
+    await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'u-d',
+      dueDay: 9,
+      reps: 0,
       lapseCount: 3,
+    );
+    await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'u-e',
+      dueDay: 9,
+      reps: 0,
+      lapseCount: 1,
+    );
+
+    final uB = await _unitIdForKey(db, 'u-b');
+    final uC = await _unitIdForKey(db, 'u-c');
+    final uD = await _unitIdForKey(db, 'u-d');
+    final uE = await _unitIdForKey(db, 'u-e');
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: uB,
+      lifecycleTier: 'maintained',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: uC,
+      lifecycleTier: 'ready',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: uD,
+      lifecycleTier: 'stable',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: uE,
+      lifecycleTier: 'stable',
     );
 
     final plan = await dailyPlanner.planToday(todayDay: todayDay);
 
     expect(
       plan.plannedReviews.map((row) => row.unit.unitKey).toList(),
-      ['u-a', 'u-c', 'u-b'],
+      ['u-a', 'u-c', 'u-d', 'u-e', 'u-b'],
+    );
+    expect(
+      plan.plannedReviews.map((row) => row.lifecycleTier).toList(),
+      ['emerging', 'ready', 'stable', 'stable', 'maintained'],
     );
   });
 
@@ -389,6 +445,52 @@ void main() {
     expect(overridePlan.plannedStage4Due, isNotEmpty);
     expect(overridePlan.plannedNewUnits, isNotEmpty);
   });
+
+  test('quality snapshot counts maintained after review promotion', () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 30,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+    final unitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'maintained-after-review',
+      dueDay: todayDay - 1,
+      reps: 2,
+      lapseCount: 0,
+    );
+    await companionRepo.upsertLifecycleState(
+      unitId: unitId,
+      lifecycleTier: const Value('stable'),
+      stage4Status: const Value('passed'),
+      updatedAtDay: todayDay - 1,
+      updatedAtSeconds: 200,
+    );
+
+    final promotion = await reviewCompletionService.completeScheduledReview(
+      unitId: unitId,
+      gradeQ: 5,
+      completedDay: todayDay,
+      completedSeconds: 400,
+    );
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+
+    expect(promotion.promotedToMaintained, isTrue);
+    expect(
+      promotion.lifecycleTransition,
+      ReviewLifecycleTransition.promotedToMaintained,
+    );
+    expect(plan.stage4QualitySnapshot.maintainedCount, 1);
+    expect(plan.stage4QualitySnapshot.stableCount, 0);
+  });
 }
 
 Future<void> _configureSettings(
@@ -470,6 +572,28 @@ Future<int> _seedDueUnit(
         ),
       );
   return unitId;
+}
+
+Future<void> _seedLifecycleState(
+  CompanionRepo companionRepo, {
+  required int unitId,
+  required String lifecycleTier,
+}) {
+  return companionRepo.upsertLifecycleState(
+    unitId: unitId,
+    lifecycleTier: Value(lifecycleTier),
+    stage4Status: const Value('passed'),
+    updatedAtDay: 100,
+    updatedAtSeconds: 100,
+  );
+}
+
+Future<int> _unitIdForKey(AppDatabase db, String unitKey) async {
+  final unit = await (db.select(db.memUnit)
+        ..where((tbl) => tbl.unitKey.equals(unitKey))
+        ..limit(1))
+      .getSingle();
+  return unit.id;
 }
 
 Future<void> _seedAyahs(AppDatabase db) async {

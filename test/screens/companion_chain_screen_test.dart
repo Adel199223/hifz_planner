@@ -155,6 +155,39 @@ void main() {
         );
   }
 
+  Future<void> seedReviewSchedule(
+    AppDatabase db, {
+    required int unitId,
+    int dueDay = 100,
+  }) {
+    return db.into(db.scheduleState).insert(
+          ScheduleStateCompanion.insert(
+            unitId: Value(unitId),
+            ef: 2.5,
+            reps: 0,
+            intervalDays: 0,
+            dueDay: dueDay,
+            lapseCount: 0,
+          ),
+        );
+  }
+
+  Future<void> seedLifecycle(
+    AppDatabase db, {
+    required int unitId,
+    required String lifecycleTier,
+  }) {
+    return db.into(db.companionLifecycleState).insert(
+          CompanionLifecycleStateCompanion.insert(
+            unitId: Value(unitId),
+            lifecycleTier: Value(lifecycleTier),
+            stage4Status: const Value('passed'),
+            updatedAtDay: 100,
+            updatedAtSeconds: 100,
+          ),
+        );
+  }
+
   Future<void> pumpScreen(
     WidgetTester tester,
     ProviderContainer container, {
@@ -228,6 +261,8 @@ void main() {
     expect(stage1ModeLabelText(tester), 'Model + Echo');
     expect(find.byKey(const ValueKey('companion_skip_stage_button')),
         findsOneWidget);
+    expect(find.byKey(const ValueKey('companion_review_grade_prompt')),
+        findsNothing);
   });
 
   testWidgets('forced cold probe hides text after echo cap', (tester) async {
@@ -592,6 +627,117 @@ void main() {
         findsOneWidget);
     expect(find.byKey(const ValueKey('companion_stage4_auto_check_card')),
         findsOneWidget);
+    expect(find.byKey(const ValueKey('companion_review_grade_prompt')),
+        findsNothing);
+  });
+
+  testWidgets(
+      'review completion summary saves grade and promotes stable units to maintained',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-review-grade-save',
+    );
+    await seedReviewSchedule(db, unitId: unitId);
+    await seedLifecycle(
+      db,
+      unitId: unitId,
+      lifecycleTier: 'stable',
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.review,
+    );
+
+    await submitManualDecision(tester, true);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('companion_summary_card')),
+    );
+    expect(find.byKey(const ValueKey('companion_review_grade_prompt')),
+        findsOneWidget);
+
+    final gradeButton = find.byKey(const ValueKey('companion_review_grade_5'));
+    await tester.ensureVisible(gradeButton);
+    await tester.tap(gradeButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('companion_review_saved_message')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('companion_review_lifecycle_message')),
+        findsOneWidget);
+    expect(find.text('This unit moved to maintained.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('companion_back_to_today_button')),
+        findsOneWidget);
+
+    final logs = await (db.select(db.reviewLog)
+          ..where((tbl) => tbl.unitId.equals(unitId))
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
+        .get();
+    expect(logs, hasLength(1));
+    expect(logs.single.gradeQ, 5);
+
+    final lifecycle = await (db.select(db.companionLifecycleState)
+          ..where((tbl) => tbl.unitId.equals(unitId)))
+        .getSingle();
+    expect(lifecycle.lifecycleTier, 'maintained');
+    expect(lifecycle.stage4Status, 'passed');
+  });
+
+  testWidgets(
+      'review completion summary shows demotion message when maintained drops to stable',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-review-demote-stable',
+    );
+    await seedReviewSchedule(db, unitId: unitId);
+    await seedLifecycle(
+      db,
+      unitId: unitId,
+      lifecycleTier: 'maintained',
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.review,
+    );
+
+    await submitManualDecision(tester, true);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('companion_summary_card')),
+    );
+
+    final gradeButton = find.byKey(const ValueKey('companion_review_grade_3'));
+    await tester.ensureVisible(gradeButton);
+    await tester.tap(gradeButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('companion_review_saved_message')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('companion_review_lifecycle_message')),
+        findsOneWidget);
+    expect(find.text('This unit moved back to stable.'), findsOneWidget);
+
+    final lifecycle = await (db.select(db.companionLifecycleState)
+          ..where((tbl) => tbl.unitId.equals(unitId)))
+        .getSingle();
+    expect(lifecycle.lifecycleTier, 'stable');
+    expect(lifecycle.stage4Status, 'passed');
   });
 
   testWidgets('Stage-4 failure enters correction flow and requires correction',

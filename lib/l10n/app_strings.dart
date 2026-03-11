@@ -339,8 +339,7 @@ class AppStrings {
           'unresolvedTargets': unresolvedTargets,
         },
       );
-  String get stage4OpenAction =>
-      _t('stage4_open_action', 'Open Stage-4 Check');
+  String get stage4OpenAction => _t('stage4_open_action', 'Open Stage-4 Check');
   String get stage4OverrideNewAction => _t(
         'stage4_override_new_action',
         'Override once and allow new memorization',
@@ -402,6 +401,32 @@ class AppStrings {
   String get gradeSaved => _t('grade_saved', 'Grade saved.');
   String get failedToSaveGrade =>
       _t('failed_to_save_grade', 'Failed to save grade.');
+  String get lifecycleTierEmerging => _t('lifecycle_tier_emerging', 'Emerging');
+  String get lifecycleTierReady => _t('lifecycle_tier_ready', 'Ready');
+  String get lifecycleTierStable => _t('lifecycle_tier_stable', 'Stable');
+  String get lifecycleTierMaintained =>
+      _t('lifecycle_tier_maintained', 'Maintained');
+  String lifecycleTierLabel(String tier) {
+    return switch (tier) {
+      'ready' => lifecycleTierReady,
+      'stable' => lifecycleTierStable,
+      'maintained' => lifecycleTierMaintained,
+      _ => lifecycleTierEmerging,
+    };
+  }
+
+  String get reviewLifecyclePromotedToMaintained => _t(
+        'review_lifecycle_promoted_to_maintained',
+        'This unit moved to maintained.',
+      );
+  String get reviewLifecycleDemotedToStable => _t(
+        'review_lifecycle_demoted_to_stable',
+        'This unit moved back to stable.',
+      );
+  String get reviewLifecycleDemotedToReady => _t(
+        'review_lifecycle_demoted_to_ready',
+        'This unit moved back to ready.',
+      );
   String get rangeUnavailable => _t('range_unavailable', 'Range unavailable');
   String get gradeGood => _t('grade_good', 'Good');
   String get gradeMedium => _t('grade_medium', 'Medium');
@@ -860,6 +885,20 @@ class AppStrings {
         _t('companion_summary_strength', 'Average retrieval strength: {value}'),
         <String, Object>{'value': value},
       );
+  String get companionReviewGradePrompt => _t(
+        'companion_review_grade_prompt',
+        'Save this review to your schedule.',
+      );
+  String get companionReviewSavedToSchedule => _t(
+        'companion_review_saved_to_schedule',
+        'Review saved to your schedule.',
+      );
+  String get companionReviewPromotedToMaintained => _t(
+        'companion_review_promoted_to_maintained',
+        'This unit moved to maintained.',
+      );
+  String get companionBackToToday =>
+      _t('companion_back_to_today', 'Back to Today');
   String get companionNoSessionState =>
       _t('companion_no_session_state', 'No companion session state.');
   String get enterAllQPercentagesOrBlank => _t(
@@ -1140,6 +1179,16 @@ class AppStrings {
       'failed_to_load_today_plan': "Échec du chargement du plan d'aujourd'hui.",
       'grade_saved': 'Évaluation enregistrée.',
       'failed_to_save_grade': "Échec de l'enregistrement de l'évaluation.",
+      'lifecycle_tier_emerging': 'Émergente',
+      'lifecycle_tier_ready': 'Prête',
+      'lifecycle_tier_stable': 'Stable',
+      'lifecycle_tier_maintained': 'En maintien',
+      'review_lifecycle_promoted_to_maintained':
+          "Cette unité est passée en maintien.",
+      'review_lifecycle_demoted_to_stable':
+          'Cette unité est redescendue à stable.',
+      'review_lifecycle_demoted_to_ready':
+          'Cette unité est redescendue à prête.',
       'range_unavailable': 'Plage indisponible',
       'grade_good': 'Bon',
       'grade_medium': 'Moyen',
@@ -1272,6 +1321,13 @@ class AppStrings {
       'companion_summary_passed': 'Reussies : {passed}/{total}',
       'companion_summary_hint': "Niveau d'indice moyen : {value}",
       'companion_summary_strength': 'Force moyenne de recuperation : {value}',
+      'companion_review_grade_prompt':
+          'Enregistrer cette revision dans votre programme.',
+      'companion_review_saved_to_schedule':
+          'Revision enregistree dans votre programme.',
+      'companion_review_promoted_to_maintained':
+          "Cette unite est passee en maintien.",
+      'companion_back_to_today': "Retour a Aujourd'hui",
       'companion_no_session_state': 'Aucun etat de session compagnon.',
     },
     AppLanguage.portuguese: <String, String>{
@@ -1393,6 +1449,14 @@ class AppStrings {
       'failed_to_load_today_plan': 'Falha ao carregar plano de hoje.',
       'grade_saved': 'Nota salva.',
       'failed_to_save_grade': 'Falha ao salvar nota.',
+      'lifecycle_tier_emerging': 'Emergente',
+      'lifecycle_tier_ready': 'Pronta',
+      'lifecycle_tier_stable': 'Estável',
+      'lifecycle_tier_maintained': 'Em manutenção',
+      'review_lifecycle_promoted_to_maintained':
+          'Esta unidade passou para manutenção.',
+      'review_lifecycle_demoted_to_stable': 'Esta unidade voltou para estável.',
+      'review_lifecycle_demoted_to_ready': 'Esta unidade voltou para pronta.',
       'range_unavailable': 'Intervalo indisponível',
       'grade_good': 'Bom',
       'grade_medium': 'Médio',
@@ -1524,6 +1588,11 @@ class AppStrings {
       'companion_summary_passed': 'Aprovadas: {passed}/{total}',
       'companion_summary_hint': 'Nivel medio de dica: {value}',
       'companion_summary_strength': 'Forca media de recuperacao: {value}',
+      'companion_review_grade_prompt': 'Salvar esta revisao no seu cronograma.',
+      'companion_review_saved_to_schedule': 'Revisao salva no seu cronograma.',
+      'companion_review_promoted_to_maintained':
+          'Esta unidade passou para manutencao.',
+      'companion_back_to_today': 'Voltar para Hoje',
       'companion_no_session_state': 'Nenhum estado de sessao do companheiro.',
     },
     AppLanguage.arabic: <String, String>{
@@ -1662,6 +1731,16 @@ class AppStrings {
       'failed_to_load_today_plan': 'تعذر تحميل خطة اليوم.',
       'grade_saved': 'تم حفظ التقييم.',
       'failed_to_save_grade': 'فشل حفظ التقييم.',
+      'lifecycle_tier_emerging': 'ناشئة',
+      'lifecycle_tier_ready': 'جاهزة',
+      'lifecycle_tier_stable': 'مستقرة',
+      'lifecycle_tier_maintained': 'قيد الصيانة',
+      'review_lifecycle_promoted_to_maintained':
+          'انتقلت هذه الوحدة إلى مستوى الصيانة.',
+      'review_lifecycle_demoted_to_stable':
+          'عادت هذه الوحدة إلى مستوى الاستقرار.',
+      'review_lifecycle_demoted_to_ready':
+          'عادت هذه الوحدة إلى مستوى الجاهزية.',
       'range_unavailable': 'النطاق غير متاح',
       'grade_good': 'جيد',
       'grade_medium': 'متوسط',
@@ -1791,6 +1870,11 @@ class AppStrings {
       'companion_summary_passed': 'المجتاز: {passed}/{total}',
       'companion_summary_hint': 'متوسط مستوى التلميح: {value}',
       'companion_summary_strength': 'متوسط قوة الاسترجاع: {value}',
+      'companion_review_grade_prompt': 'احفظ هذه المراجعة في جدولك.',
+      'companion_review_saved_to_schedule': 'تم حفظ المراجعة في جدولك.',
+      'companion_review_promoted_to_maintained':
+          'تمت ترقية هذه الوحدة إلى مستوى الصيانة.',
+      'companion_back_to_today': 'العودة إلى اليوم',
       'companion_no_session_state': 'لا توجد حالة جلسة للمرافق.',
       'basmala_translation': 'بسم الله الرحمن الرحيم',
     },

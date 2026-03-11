@@ -257,6 +257,108 @@ void main() {
     );
   });
 
+  testWidgets('planned review rows show lifecycle badge from planner data',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+    await _insertLifecycleState(
+      db,
+      unitId: dueUnitId,
+      lifecycleTier: 'stable',
+      todayDay: todayDay,
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.byKey(ValueKey('today_review_lifecycle_badge_$dueUnitId')),
+      findsOneWidget,
+    );
+    expect(find.text('Stable'), findsOneWidget);
+  });
+
+  testWidgets(
+      'today fallback grading promotes stable lifecycle units and shows lifecycle message',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+    await db.into(db.companionLifecycleState).insert(
+          CompanionLifecycleStateCompanion.insert(
+            unitId: Value(dueUnitId),
+            lifecycleTier: const Value('stable'),
+            stage4Status: const Value('passed'),
+            updatedAtDay: todayDay,
+            updatedAtSeconds: 100,
+          ),
+        );
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_reviews_section')),
+    );
+
+    final gradeButton =
+        find.byKey(ValueKey('today_review_grade_${dueUnitId}_q5'));
+    await pumpUntilFound(tester, gradeButton);
+    await _tapVisible(tester, gradeButton);
+
+    expect(
+      find.text('Grade saved. This unit moved to maintained.'),
+      findsOneWidget,
+    );
+
+    final lifecycle = await (db.select(db.companionLifecycleState)
+          ..where((tbl) => tbl.unitId.equals(dueUnitId)))
+        .getSingle();
+    expect(lifecycle.lifecycleTier, 'maintained');
+    expect(lifecycle.stage4Status, 'passed');
+  });
+
   testWidgets('stage-4 due item opens companion with mode=stage4',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -408,7 +510,8 @@ void main() {
     expect(plannedNewUnits, isNotEmpty);
 
     final unitId = plannedNewUnits.first.id;
-    final companionButton = find.byKey(ValueKey('today_open_companion_new_$unitId'));
+    final companionButton =
+        find.byKey(ValueKey('today_open_companion_new_$unitId'));
     await pumpUntilFound(tester, companionButton);
     await _tapVisible(tester, companionButton);
 
@@ -567,6 +670,23 @@ Future<void> _insertStage4DueLifecycle(
           stage4Status: const Value('pending'),
           stage4NextDayDueDay: Value(todayDay),
           stage4UnresolvedTargetsJson: const Value('[0]'),
+          updatedAtDay: todayDay,
+          updatedAtSeconds: 100,
+        ),
+      );
+}
+
+Future<void> _insertLifecycleState(
+  AppDatabase db, {
+  required int unitId,
+  required String lifecycleTier,
+  required int todayDay,
+}) {
+  return db.into(db.companionLifecycleState).insert(
+        CompanionLifecycleStateCompanion.insert(
+          unitId: Value(unitId),
+          lifecycleTier: Value(lifecycleTier),
+          stage4Status: const Value('passed'),
           updatedAtDay: todayDay,
           updatedAtSeconds: 100,
         ),

@@ -105,7 +105,7 @@ Defined in `lib/app/router.dart`:
 
 `/companion/chain` query params:
 - `unitId` (required)
-- `mode` (`new` or `review`, defaults to review if omitted)
+- `mode` (`new`, `review`, or `stage4`, defaults to review if omitted)
 
 ### Global Preferences (persisted)
 - Language options (fully wired for app UI strings):
@@ -388,6 +388,7 @@ Important repos/services:
   - `calibration_service.dart`
   - `forecast_simulation_service.dart`
   - `new_unit_generator.dart`
+  - `review_completion_service.dart`
   - `scheduling/planning_projection_engine.dart`
   - `scheduling/availability_interpreter.dart`
   - `scheduling/weekly_plan_generator.dart`
@@ -429,10 +430,11 @@ User-facing explainer:
 
 Current capabilities:
 - Build today plan from scheduler/planner
-- Render planned reviews and planned new memorization
+- Render planned reviews with lifecycle tier badges and overdue-first ordering
+- Render planned new memorization
 - Render dedicated Stage-4 delayed-consolidation due items with urgency metadata
 - Render sessionized day blocks (timed or untimed) with recovery signal
-- Save grades (`q=5/4/3/2/0`)
+- Save grades (`q=5/4/3/2/0`) through shared `ReviewCompletionService`
 - "Open in Reader" deep-link with page mode + verse range highlight params
 - "Open Companion Chain" action for review/new rows
 - Soft-block NEW launch when mandatory Stage-4 due exists (explicit override allowed and logged)
@@ -486,11 +488,19 @@ Current capabilities:
       - run structure is retrieval-first and short: cold-start, random-start probes, linking checks, targeted discrimination, failed-only remediation
       - failures in all Stage-4 retrieval modes require correction exposure before retry
       - outcomes are explicit and persisted:
-        - `pass` => lifecycle tier `stable`, Stage-5 candidate hook
+        - `pass` => lifecycle tier `stable`, making the unit eligible for Stage-5 maintenance on later scheduled reviews
         - `partial` => unresolved targets carried forward for retry
         - `fail` => strengthening route (`targeted_stage3`/`broad_stage3`) plus retry scheduling
       - mandatory next-day delayed check is prioritized in Today and can soft-block NEW generation
   - review runs stay hidden-first (`mode=review`)
+  - completed review runs can now save the grade from the Companion summary card, show any lifecycle transition, and offer `Back to Today`
+  - Stage-5 maintenance now starts on scheduled review completion, not a separate runtime:
+    - `stable + q>=3 -> maintained`
+    - `maintained + q>=4 -> maintained`
+    - `maintained + q=3 -> stable`
+    - `stable|maintained + q<3 -> ready`
+    - `ready` never auto-promotes from scheduled reviews; only a later Stage-4 pass restores `stable`
+    - weak scheduled reviews do not reopen Stage 4 in this phase
   - stage skip with confirmation logs telemetry and persists unlock stage
   - recitation controls:
     - `Play current ayah` button

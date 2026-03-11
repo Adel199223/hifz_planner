@@ -22,6 +22,7 @@ import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
 import '../services/qurancom_api.dart';
 import '../services/qurancom_chapters_service.dart';
+import '../services/review_completion_service.dart';
 import '../services/scheduling/planning_projection_engine.dart';
 import '../services/quran_text_importer_service.dart';
 import '../services/surah_metadata_service.dart';
@@ -68,6 +69,20 @@ final companionRepoProvider = Provider<CompanionRepo>((ref) {
 final reviewLogRepoProvider = Provider<ReviewLogRepo>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return ReviewLogRepo(db);
+});
+
+final reviewCompletionServiceProvider =
+    Provider<ReviewCompletionService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final reviewLogRepo = ref.watch(reviewLogRepoProvider);
+  final scheduleRepo = ref.watch(scheduleRepoProvider);
+  final companionRepo = ref.watch(companionRepoProvider);
+  return ReviewCompletionService(
+    db,
+    reviewLogRepo,
+    scheduleRepo,
+    companionRepo,
+  );
 });
 
 final calibrationRepoProvider = Provider<CalibrationRepo>((ref) {

@@ -28,7 +28,7 @@ class TodayPlan {
     this.message,
   });
 
-  final List<DueUnitRow> plannedReviews;
+  final List<PlannedReviewRow> plannedReviews;
   final List<MemUnitData> plannedNewUnits;
   final List<Stage4DueItem> plannedStage4Due;
   final bool revisionOnly;
@@ -41,6 +41,18 @@ class TodayPlan {
   final double reviewPressure;
   final bool recoveryMode;
   final String? message;
+}
+
+class PlannedReviewRow {
+  const PlannedReviewRow({
+    required this.unit,
+    required this.schedule,
+    required this.lifecycleTier,
+  });
+
+  final MemUnitData unit;
+  final ScheduleStateData schedule;
+  final String lifecycleTier;
 }
 
 class Stage4DueItem {
@@ -111,6 +123,9 @@ class DailyPlanner {
           await _settingsRepo.getSettings(todayDayOverride: todayDay);
       final cursor = await _progressRepo.getCursor();
       final dueUnits = await _scheduleRepo.getDueUnits(todayDay);
+      final lifecycleTierByUnitId = await _loadLifecycleTierByUnitId(
+        dueUnits.map((row) => row.unit.id),
+      );
       final stage4DueItems = await _buildStage4DueItems(todayDay: todayDay);
       final stage4QualitySnapshot = await _buildStage4QualitySnapshot();
       final mandatoryStage4DueExists =
@@ -119,8 +134,14 @@ class DailyPlanner {
           ? 'Delayed stability checks are due. Complete Stage-4 first.'
           : null;
 
-      final sortedDueUnits = [...dueUnits]
-        ..sort((a, b) => _compareDueRows(a, b, todayDay));
+      final sortedDueUnits = [...dueUnits]..sort(
+          (a, b) => _compareDueRows(
+            a,
+            b,
+            todayDay,
+            lifecycleTierByUnitId,
+          ),
+        );
 
       final schedulingPreferences =
           _projectionEngine.preferencesFromSettings(settings);
@@ -149,7 +170,7 @@ class DailyPlanner {
       if (dailyMinutes <= 0 ||
           (todaySchedule != null && !todaySchedule.enabledStudyDay)) {
         return TodayPlan(
-          plannedReviews: const <DueUnitRow>[],
+          plannedReviews: const <PlannedReviewRow>[],
           plannedNewUnits: const <MemUnitData>[],
           plannedStage4Due: stage4DueItems,
           revisionOnly: false,
@@ -181,7 +202,7 @@ class DailyPlanner {
       );
       final reviewBudgetMinutes = allocation.reviewCapacityMinutes;
 
-      final plannedReviews = <DueUnitRow>[];
+      final plannedReviews = <PlannedReviewRow>[];
       var minutesPlannedReviews = 0.0;
       for (final dueRow in sortedDueUnits) {
         final estimated = await _estimateReviewMinutesForUnit(
@@ -191,12 +212,20 @@ class DailyPlanner {
         if (minutesPlannedReviews + estimated > reviewBudgetMinutes + 1e-9) {
           continue;
         }
-        plannedReviews.add(dueRow);
+        plannedReviews.add(
+          PlannedReviewRow(
+            unit: dueRow.unit,
+            schedule: dueRow.schedule,
+            lifecycleTier: _resolveLifecycleTier(
+              dueRow.unit.id,
+              lifecycleTierByUnitId,
+            ),
+          ),
+        );
         minutesPlannedReviews += estimated;
       }
 
-      final stage4BlocksNew =
-          mandatoryStage4DueExists && !allowStage4Override;
+      final stage4BlocksNew = mandatoryStage4DueExists && !allowStage4Override;
       final revisionOnly =
           (todaySchedule?.revisionOnlyDay ?? false) || allocation.recoveryMode;
       final effectiveRevisionOnly = revisionOnly || stage4BlocksNew;
@@ -267,12 +296,28 @@ class DailyPlanner {
     });
   }
 
-  int _compareDueRows(DueUnitRow a, DueUnitRow b, int todayDay) {
+  int _compareDueRows(
+    DueUnitRow a,
+    DueUnitRow b,
+    int todayDay,
+    Map<int, String> lifecycleTierByUnitId,
+  ) {
     final overdueA = todayDay - a.schedule.dueDay;
     final overdueB = todayDay - b.schedule.dueDay;
     final overdueCompare = overdueB.compareTo(overdueA);
     if (overdueCompare != 0) {
       return overdueCompare;
+    }
+
+    final lifecycleCompare = _lifecycleSortRank(
+      _resolveLifecycleTier(a.unit.id, lifecycleTierByUnitId),
+    ).compareTo(
+      _lifecycleSortRank(
+        _resolveLifecycleTier(b.unit.id, lifecycleTierByUnitId),
+      ),
+    );
+    if (lifecycleCompare != 0) {
+      return lifecycleCompare;
     }
 
     final repsCompare = a.schedule.reps.compareTo(b.schedule.reps);
@@ -288,6 +333,39 @@ class DailyPlanner {
     return a.schedule.unitId.compareTo(b.schedule.unitId);
   }
 
+  Future<Map<int, String>> _loadLifecycleTierByUnitId(
+    Iterable<int> unitIds,
+  ) async {
+    final ids = unitIds.toSet().toList(growable: false);
+    if (ids.isEmpty) {
+      return const <int, String>{};
+    }
+
+    final rows = await (_db.select(_db.companionLifecycleState)
+          ..where((tbl) => tbl.unitId.isIn(ids)))
+        .get();
+    return <int, String>{
+      for (final row in rows) row.unitId: row.lifecycleTier,
+    };
+  }
+
+  String _resolveLifecycleTier(
+    int unitId,
+    Map<int, String> lifecycleTierByUnitId,
+  ) {
+    return lifecycleTierByUnitId[unitId] ?? 'emerging';
+  }
+
+  int _lifecycleSortRank(String lifecycleTier) {
+    return switch (lifecycleTier) {
+      'emerging' => 0,
+      'ready' => 1,
+      'stable' => 2,
+      'maintained' => 3,
+      _ => 0,
+    };
+  }
+
   Future<List<Stage4DueItem>> _buildStage4DueItems({
     required int todayDay,
   }) async {
@@ -296,11 +374,14 @@ class DailyPlanner {
       return const <Stage4DueItem>[];
     }
 
-    final unitIds = rows.map((row) => row.unitId).toSet().toList(growable: false);
+    final unitIds =
+        rows.map((row) => row.unitId).toSet().toList(growable: false);
     final units = await (_db.select(_db.memUnit)
           ..where((tbl) => tbl.id.isIn(unitIds)))
         .get();
-    final unitById = <int, MemUnitData>{for (final unit in units) unit.id: unit};
+    final unitById = <int, MemUnitData>{
+      for (final unit in units) unit.id: unit
+    };
 
     final dueItems = <Stage4DueItem>[];
     for (final row in rows) {
