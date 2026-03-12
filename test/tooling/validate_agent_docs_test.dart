@@ -67,6 +67,32 @@ void main() {
     );
   });
 
+  test('validator fails when explainer HTML template file is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final templateFile = File(
+      _joinPath(
+        fixture.path,
+        'docs/assistant/templates/EXPLAINER_HTML_PROMPT.md',
+      ),
+    );
+    templateFile.deleteSync();
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Missing required file:') &&
+            issue.contains('EXPLAINER_HTML_PROMPT.md'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when roadmap anchor file is missing', () {
     final fixture = _createValidFixture();
     addTearDown(() => fixture.deleteSync(recursive: true));
@@ -218,6 +244,38 @@ void main() {
         (issue) =>
             issue.contains('Manifest must include required workflow id') &&
             issue.contains('workspace_performance'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when manifest misses explainer_html workflow', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final workflows = (manifest['workflows'] as List<dynamic>)
+        .whereType<Map<String, dynamic>>()
+        .where((workflow) => workflow['id'] != 'explainer_html')
+        .toList();
+    manifest['workflows'] = workflows;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Manifest must include required workflow id') &&
+            issue.contains('explainer_html'),
       ),
       isTrue,
       reason: issues.join('\n'),
@@ -1646,6 +1704,7 @@ Directory _createValidFixture() {
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
+      'For explicit HTML explainer requests use docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md.',
       'For user support/non-technical explanation tasks, start with docs/assistant/features/APP_USER_GUIDE.md; for planner behavior/support use docs/assistant/features/PLANNER_USER_GUIDE.md. Respond in plain language first and run a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
       '## Non-Coder Communication Mode',
       'For support tasks, start with docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-specific support.',
@@ -1656,6 +1715,7 @@ Directory _createValidFixture() {
       'Major changes must start on a new feat/* branch, not on main.',
       'Keep main stable; merge major work through PR flow with required checks.',
       'docs/assistant/templates/* is read-on-demand only.',
+      'Explicit HTML explainer requests may also use docs/assistant/templates/EXPLAINER_HTML_PROMPT.md.',
     ].join('\n'),
   );
   writeFile(
@@ -1673,6 +1733,7 @@ Directory _createValidFixture() {
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
+      'For explicit HTML explainer requests use docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md.',
       'Support/non-technical explanation routing: docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md. Use plain language first and perform a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
       '## Non-Coder Communication Mode',
       'For support tasks, start with docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md for planner-specific support.',
@@ -1682,6 +1743,7 @@ Directory _createValidFixture() {
       'Would you like me to run Assistant Docs Sync for this change now?',
       'docs/assistant/templates/* is read-on-demand only.',
       'Only open templates when user explicitly requests template/prompt work.',
+      'Explicit HTML explainer requests may also use docs/assistant/templates/EXPLAINER_HTML_PROMPT.md.',
       'Major changes must start on a new feat/* branch, not on main.',
       'Keep main stable; merge major work through PR flow with required checks.',
     ].join('\n'),
@@ -1748,6 +1810,8 @@ Directory _createValidFixture() {
     [
       '# INDEX',
       '',
+      'For explicit HTML explainer requests, use docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md first.',
+      '',
       '## Beginner Quick Path',
       '- docs/assistant/features/APP_USER_GUIDE.md',
       '- docs/assistant/features/PLANNER_USER_GUIDE.md',
@@ -1779,6 +1843,15 @@ Directory _createValidFixture() {
       '- Keep governance strict in beginner mode (no relaxation of validators, approval gates, or canonical precedence).',
     ].join('\n'),
   );
+  writeFile(
+    'docs/assistant/templates/EXPLAINER_HTML_PROMPT.md',
+    [
+      '# Explainer HTML Prompt',
+      '',
+      'Read docs/assistant/features/APP_USER_GUIDE.md, docs/assistant/features/PLANNER_USER_GUIDE.md, APP_KNOWLEDGE.md, and docs/assistant/ROADMAP_ANCHOR.md when relevant.',
+      'Write docs/assistant/features/<TOPIC>_EXPLAINER.html and docs/assistant/features/<TOPIC>_EXPLAINER_READING.html as local-only explanation artifacts.',
+    ].join('\n'),
+  );
 
   final workflowTemplate = _workflowTemplate();
   writeFile(
@@ -1807,6 +1880,10 @@ Directory _createValidFixture() {
   );
   writeFile(
     'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
+    workflowTemplate,
+  );
+  writeFile(
+    'docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md',
     workflowTemplate,
   );
   writeFile(
@@ -1871,6 +1948,10 @@ Directory _createValidFixture() {
         doc: 'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
       ),
       _manifestWorkflow(
+        id: 'explainer_html',
+        doc: 'docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md',
+      ),
+      _manifestWorkflow(
         id: 'ci_repo_ops',
         doc: 'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
         primaryFiles: <String>[
@@ -1904,6 +1985,10 @@ Directory _createValidFixture() {
       'windows_test_policy': 'windows test policy',
       'templates_read_policy':
           'docs/assistant/templates/* are read-on-demand only.',
+      'html_explainer_route_policy':
+          'Explicit HTML explainer requests route to docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md and docs/assistant/templates/EXPLAINER_HTML_PROMPT.md.',
+      'html_explainer_local_only_policy':
+          'Generated explainer HTML files are local-only and use repo-local exclude rules by default.',
       'localization_glossary_source_of_truth':
           'docs/assistant/LOCALIZATION_GLOSSARY.md is the canonical term source.',
       'workspace_performance_source_of_truth':

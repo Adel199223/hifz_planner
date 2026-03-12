@@ -25,10 +25,12 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
   'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
+  'docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md',
   'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
   'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
+  'docs/assistant/templates/EXPLAINER_HTML_PROMPT.md',
   'tooling/validate_workspace_hygiene.dart',
   'test/tooling/validate_workspace_hygiene_test.dart',
 ];
@@ -67,7 +69,9 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
   'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
+  'docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+  'docs/assistant/templates/EXPLAINER_HTML_PROMPT.md',
 ];
 
 final RegExp _backtickRegex = RegExp(r'`([^`\n]+)`');
@@ -110,6 +114,7 @@ class AgentDocsValidator {
     _validateLocalizationRoutingPolicy(issues);
     _validatePerformanceRoutingPolicy(issues);
     _validateReferenceDiscoveryPolicy(issues);
+    _validateExplainerHtmlRoutingPolicy(issues);
     _validatePostChangeDocsSyncPolicy(issues);
     _validateTemplatePolicies(issues);
     _validateTemplateNewbieLayer(issues);
@@ -264,6 +269,12 @@ class AgentDocsValidator {
         expectedDoc:
             'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
       );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
+        requiredId: 'explainer_html',
+        expectedDoc: 'docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md',
+      );
     }
 
     final globalCommands = manifest['global_commands'];
@@ -368,6 +379,16 @@ class AgentDocsValidator {
       );
       _validateNonEmptyString(
         issues,
+        contracts['html_explainer_route_policy'],
+        'contracts.html_explainer_route_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['html_explainer_local_only_policy'],
+        'contracts.html_explainer_local_only_policy',
+      );
+      _validateNonEmptyString(
+        issues,
         contracts['user_guides_canonical_deference_policy'],
         'contracts.user_guides_canonical_deference_policy',
       );
@@ -469,6 +490,23 @@ class AgentDocsValidator {
               !userGuideSupport.contains('PLANNER_USER_GUIDE.md'))) {
         issues.add(
           'contracts.user_guides_support_usage_policy must reference both APP_USER_GUIDE.md and PLANNER_USER_GUIDE.md.',
+        );
+      }
+      final htmlExplainerRoute = contracts['html_explainer_route_policy'];
+      if (htmlExplainerRoute is String &&
+          (!htmlExplainerRoute.contains('EXPLAINER_HTML_WORKFLOW.md') ||
+              !htmlExplainerRoute.contains('EXPLAINER_HTML_PROMPT.md'))) {
+        issues.add(
+          'contracts.html_explainer_route_policy must reference EXPLAINER_HTML_WORKFLOW.md and EXPLAINER_HTML_PROMPT.md.',
+        );
+      }
+      final htmlExplainerLocalOnly =
+          contracts['html_explainer_local_only_policy'];
+      if (htmlExplainerLocalOnly is String &&
+          (!htmlExplainerLocalOnly.toLowerCase().contains('local-only') ||
+              !htmlExplainerLocalOnly.toLowerCase().contains('exclude'))) {
+        issues.add(
+          'contracts.html_explainer_local_only_policy must require local-only explainer artifacts and repo-local exclude guidance.',
         );
       }
       final userGuideDeference =
@@ -1057,6 +1095,38 @@ class AgentDocsValidator {
       if (!text.contains('REFERENCE_DISCOVERY_WORKFLOW.md')) {
         issues.add(
           'agent.md must route inspiration/parity tasks to REFERENCE_DISCOVERY_WORKFLOW.md.',
+        );
+      }
+    }
+  }
+
+  void _validateExplainerHtmlRoutingPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      if (!text.contains('EXPLAINER_HTML_WORKFLOW.md')) {
+        issues.add(
+          'AGENTS.md must route explicit HTML explainer requests to EXPLAINER_HTML_WORKFLOW.md.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      if (!text.contains('EXPLAINER_HTML_WORKFLOW.md')) {
+        issues.add(
+          'agent.md must route explicit HTML explainer requests to EXPLAINER_HTML_WORKFLOW.md.',
+        );
+      }
+    }
+
+    final index = _resolveFile('docs/assistant/INDEX.md');
+    if (index.existsSync()) {
+      final text = index.readAsStringSync();
+      if (!text.contains('EXPLAINER_HTML_WORKFLOW.md')) {
+        issues.add(
+          'INDEX.md must route explicit HTML explainer requests to EXPLAINER_HTML_WORKFLOW.md.',
         );
       }
     }
