@@ -44,6 +44,7 @@ Ask for explicit approval before commands that:
 | Roadmap continuation / "continue where we left off" | `docs/assistant/ROADMAP_ANCHOR.md` | `git status --short --branch` |
 | "Like X"/"same as X"/parity inspired by named app/site | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | User support / non-technical app explanation | `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner questions); respond in plain language first and define unavoidable jargon once | `dart run tooling/validate_agent_docs.dart` when docs were edited |
+| Explicit HTML explainer / local study guide | `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | Agent docs/structure | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | CI workflow / branch merge hygiene | `docs/assistant/workflows/CI_REPO_WORKFLOW.md` | `flutter analyze --no-fatal-infos --no-fatal-warnings` |
 | Commit, stage, ignore, push, remote cleanup | `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` | `git status --short --branch` |
@@ -56,6 +57,7 @@ For user support or explanation tasks:
 3. If you must use a technical term, define it in one short line.
 4. Verify technical claims with `APP_KNOWLEDGE.md` before asserting them.
 5. Mention uncertainty explicitly when behavior may still be evolving.
+6. If the user explicitly asks for an HTML explainer, use `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md`.
 
 ## 5-Minute Bootstrap
 
@@ -85,18 +87,19 @@ For user support or explanation tasks:
 6. If user says `commit`, follow `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` before creating commits.
 7. `docs/assistant/templates/*` is read-on-demand only.
 8. Only open or update template files when the user explicitly requests template/prompt work.
-9. Exception: if user says to create/update the reusable prompt/template, `docs/assistant/templates/*` becomes in-scope for that task only.
+9. Exception: if user says to create/update the reusable prompt/template, or explicitly asks for an HTML explainer, `docs/assistant/templates/*` becomes in-scope for that task only.
 10. Major changes must start on a new `feat/*` branch, not on `main`.
 11. Keep `main` stable; merge major work through PR flow with required checks.
 12. For localization tasks, open `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` and use `docs/assistant/LOCALIZATION_GLOSSARY.md` as the term source of truth.
 13. For workspace performance tasks, open `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` and treat `docs/assistant/PERFORMANCE_BASELINES.md` as the source of truth.
 14. For inspiration/parity requests against named apps/sites, open `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` and base implementation decisions on cited references.
-15. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
-16. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
-17. For major implementation stages, default local closeout order is: targeted validation, implementation commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree. Push remains explicit.
-18. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
-19. Treat `roadmap`, `master plan`, and `next milestone` as Companion/Planner aliases unless the user explicitly redirects.
-20. For roadmap continuation in a new chat, open `docs/assistant/ROADMAP_ANCHOR.md` after `APP_KNOWLEDGE.md` before drafting a new ExecPlan or choosing the next milestone.
+15. For explicit HTML explainer requests, keep generated files local-only by default and use repo-local exclude rules when needed.
+16. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
+17. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
+18. For major implementation stages, default local closeout order is: targeted validation, implementation commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree. Push remains explicit.
+19. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
+20. Treat `roadmap`, `master plan`, and `next milestone` as Companion/Planner aliases unless the user explicitly redirects.
+21. For roadmap continuation in a new chat, open `docs/assistant/ROADMAP_ANCHOR.md` after `APP_KNOWLEDGE.md` before drafting a new ExecPlan or choosing the next milestone.
 
 ## ExecPlans
 

@@ -53,6 +53,7 @@ Do not use this file as primary truth when there is a conflict.
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - `docs/assistant/features/APP_USER_GUIDE.md`
 - `docs/assistant/features/PLANNER_USER_GUIDE.md`
+- `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md` for explicit HTML explainer requests
 
 ### App shell
 - `lib/main.dart`

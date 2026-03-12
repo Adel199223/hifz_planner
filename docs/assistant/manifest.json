@@ -1,5 +1,5 @@
 {
-  "version": 12,
+  "version": 13,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
@@ -161,6 +161,25 @@
         "flutter test -j 1 -r expanded test/data/services/companion",
         "dart run tooling/validate_localization.dart",
         "dart run tooling/validate_agent_docs.dart"
+      ]
+    },
+    {
+      "id": "explainer_html",
+      "doc": "docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md",
+      "scope": "Explicit user-triggered local HTML explainers and study guides that stay outside shipped app scope.",
+      "primary_files": [
+        "docs/assistant/features/APP_USER_GUIDE.md",
+        "docs/assistant/features/PLANNER_USER_GUIDE.md",
+        "APP_KNOWLEDGE.md",
+        "docs/assistant/ROADMAP_ANCHOR.md",
+        "docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
       ]
     },
     {
@@ -358,6 +377,8 @@
     "roadmap_alias_policy": "In repo conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.",
     "roadmap_continuity_policy": "For roadmap continuation or \"continue where we left off\" requests, open docs/assistant/ROADMAP_ANCHOR.md early and treat it as the current Companion/Planner continuity anchor unless the user redirects.",
     "user_guides_support_usage_policy": "For support/non-technical explanations, start with docs/assistant/features/APP_USER_GUIDE.md and use docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.",
+    "html_explainer_route_policy": "When the user explicitly asks for a local HTML explainer or study guide, route to docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md and use docs/assistant/templates/EXPLAINER_HTML_PROMPT.md only on demand.",
+    "html_explainer_local_only_policy": "Generated *_EXPLAINER.html files are explanation artifacts only, not shipped app features, and should remain local-only by default through repo-local exclude rules unless the user explicitly asks to commit them.",
     "user_guides_canonical_deference_policy": "Feature guides are explanatory docs; if they conflict with technical docs, APP_KNOWLEDGE.md and source code win.",
     "user_guides_update_sync_policy": "When user-facing behavior copy/flow changes, update only affected sections in APP_USER_GUIDE.md and/or PLANNER_USER_GUIDE.md.",
     "non_coder_entrypoint_policy": "Non-coders should start with docs/assistant/features/APP_USER_GUIDE.md (or PLANNER_USER_GUIDE.md for planner topics) before technical docs.",

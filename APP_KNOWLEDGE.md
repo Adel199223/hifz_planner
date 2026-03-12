@@ -39,6 +39,7 @@ Workflow runbooks:
 - Quran.com data/cache/fonts: `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md`
 - Planner/scheduler: `docs/assistant/workflows/PLANNER_WORKFLOW.md`
 - Scheduling + companion engine: `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`
+- Assistant-only HTML explainers: `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md`
 - Workspace performance: `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
 - Reference discovery: `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
 - Docs maintenance: `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`

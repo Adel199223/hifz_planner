@@ -38,6 +38,8 @@ Why both files exist:
   - `docs/assistant/PERFORMANCE_BASELINES.md`
 - Route inspiration/parity tasks to:
   - `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
+- Route explicit HTML explainer requests to:
+  - `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md`
 - For user support/non-technical explanation tasks:
   - start with `docs/assistant/features/APP_USER_GUIDE.md`
   - for planner behavior/support use `docs/assistant/features/PLANNER_USER_GUIDE.md`
@@ -58,6 +60,7 @@ Why both files exist:
   - keep push explicit
 - `docs/assistant/templates/*` is read-on-demand only.
 - Only open or update `docs/assistant/templates/*` when the user explicitly asks for template/prompt creation or updates.
+- Exception: explicit HTML explainer requests may use `docs/assistant/templates/EXPLAINER_HTML_PROMPT.md`.
 
 ## Non-Coder Communication Mode
 
@@ -66,6 +69,7 @@ For user support or explanation tasks:
 - answer in plain language first
 - avoid jargon unless you define it in one short line
 - verify technical claims using `APP_KNOWLEDGE.md` before asserting them
+- if the user explicitly asks for an HTML explainer, route to `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md`
 
 ## Approval Gates
 

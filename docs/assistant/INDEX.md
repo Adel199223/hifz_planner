@@ -9,6 +9,7 @@ One-page navigation guide for agent-facing documentation.
 3. Run the listed validator/smoke command before handoff.
 
 For roadmap continuation or "continue where we left off" requests, open `docs/assistant/ROADMAP_ANCHOR.md` after `APP_KNOWLEDGE.md`.
+For explicit HTML explainer requests, open `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md`; that workflow will decide whether any on-demand template is needed.
 
 ## Beginner Quick Path
 
@@ -40,6 +41,7 @@ For roadmap continuation or "continue where we left off" requests, open `docs/as
 | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | Task targets Quran.com fetch/cache/dedupe/fonts/translations. | Navigation shell changes. | 2 min |
 | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | Task targets onboarding/plan/today/scheduler/calibration. | Quran.com rendering fidelity tasks. | 2 min |
 | `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md` | Task targets automatic scheduling, weekly calendar generation, advanced availability, or companion staged/recitation/word-hover behavior. | Reader-only rendering or Quran.com data ingestion tasks. | 2 min |
+| `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md` | The user explicitly asks for a local HTML explainer or study guide that stays outside the shipped app. | Normal support replies, runtime feature work, or product-scope documentation. | 2 min |
 | `docs/assistant/workflows/CI_REPO_WORKFLOW.md` | Task targets CI workflow edits, branch sync/merge hygiene, and release gating commands. | Feature implementation details inside reader/planner logic. | 2 min |
 | `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` | Task starts with "commit": stage triage, ignore checks, commit message, push, and branch cleanup operations. | Feature implementation logic or schema design work. | 2 min |
 | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | Task changes docs structure/contracts/links. | Runtime feature implementation. | 2 min |
