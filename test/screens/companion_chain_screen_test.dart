@@ -143,6 +143,15 @@ void main() {
     );
   }
 
+  Future<void> requestMeaningCue(WidgetTester tester) async {
+    final hintButton = find.byKey(const ValueKey('companion_hint_button'));
+    for (var i = 0; i < 3; i++) {
+      await tester.ensureVisible(hintButton);
+      await tester.tap(hintButton);
+      await tester.pumpAndSettle();
+    }
+  }
+
   Future<int> seedUnitAndAyah(
     AppDatabase db, {
     String unitKey = 'companion-u1',
@@ -249,6 +258,7 @@ void main() {
     AppDatabase db, {
     AppPreferencesStore? appPreferencesStore,
     AyahAudioService? audioService,
+    QuranComApi? quranComApi,
   }) {
     return ProviderContainer(
       overrides: [
@@ -260,7 +270,8 @@ void main() {
           appPreferencesStoreProvider.overrideWithValue(appPreferencesStore),
         if (audioService != null)
           ayahAudioServiceProvider.overrideWithValue(audioService),
-        quranComApiProvider.overrideWithValue(_FakeQuranComApi()),
+        quranComApiProvider
+            .overrideWithValue(quranComApi ?? _FakeQuranComApi()),
         qcfFontManagerProvider.overrideWithValue(
           _FakeQcfFontManager(familyName: 'qcf_companion_test'),
         ),
@@ -826,14 +837,13 @@ void main() {
     expect(find.byKey(const ValueKey('companion_review_mode_card')),
         findsOneWidget);
     expect(reviewModeLabelText(tester), 'Discrimination');
-    expect(find.byKey(const ValueKey('companion_stage3_mode_card')),
-        findsNothing);
+    expect(
+        find.byKey(const ValueKey('companion_stage3_mode_card')), findsNothing);
     expect(find.byKey(const ValueKey('companion_skip_stage_button')),
         findsNothing);
   });
 
-  testWidgets('review failure shows review correction flow',
-      (tester) async {
+  testWidgets('review failure shows review correction flow', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final unitId =
         await seedUnitAndAyah(db, unitKey: 'companion-review-correction');
@@ -869,6 +879,65 @@ void main() {
     await tester.tap(recordButton);
     await tester.pumpAndSettle();
     expect(reviewModeLabelText(tester), isNot('Correction'));
+  });
+
+  testWidgets('meaning cue shows attributed source-backed translation hint',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId =
+        await seedUnitAndAyah(db, unitKey: 'companion-meaning-cue-source');
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.review,
+    );
+
+    await requestMeaningCue(tester);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('companion_active_hint_source')),
+    );
+
+    expect(find.text('All praise is for Allah.'), findsWidgets);
+    expect(find.text('Translation: English Meaning Source'), findsWidgets);
+    expect(find.byKey(const ValueKey('companion_verse_hint_source_1:1')),
+        findsOneWidget);
+  });
+
+  testWidgets('meaning cue falls back without source label when no cue exists',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId =
+        await seedUnitAndAyah(db, unitKey: 'companion-meaning-cue-fallback');
+    final container = buildContainer(
+      db,
+      quranComApi: _NoTranslationQuranComApi(),
+    );
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.review,
+    );
+
+    await requestMeaningCue(tester);
+
+    final verseText = 'الرَّحْمٰنِ';
+    final splitAt = (verseText.length / 2).ceil();
+    final expectedChunk = '${verseText.substring(0, splitAt)}...';
+    expect(find.text(expectedChunk), findsWidgets);
+    expect(find.byKey(const ValueKey('companion_active_hint_source')),
+        findsNothing);
+    expect(find.byKey(const ValueKey('companion_verse_hint_source_1:1')),
+        findsNothing);
   });
 
   testWidgets(
@@ -1110,6 +1179,40 @@ class _FakeQuranComApi extends QuranComApi {
           pageNumber: 1,
         ),
       ],
+      translations: <MushafVerseTranslation>[
+        MushafVerseTranslation(
+          resourceId: 85,
+          resourceName: 'English Meaning Source',
+          text: 'All praise is for Allah.',
+        ),
+      ],
+    );
+  }
+}
+
+class _NoTranslationQuranComApi extends _FakeQuranComApi {
+  @override
+  Future<MushafVerseData> getVerseDataByPage({
+    required int page,
+    required int mushafId,
+    required String verseKey,
+    int? translationResourceId,
+  }) async {
+    return const MushafVerseData(
+      verseKey: '1:1',
+      words: <MushafWord>[
+        MushafWord(
+          verseKey: '1:1',
+          codeV2: 'A',
+          textQpcHafs: 'A',
+          translationText: 'All praise and thanks',
+          charTypeName: 'word',
+          lineNumber: 1,
+          position: 1,
+          pageNumber: 1,
+        ),
+      ],
+      translations: <MushafVerseTranslation>[],
     );
   }
 }

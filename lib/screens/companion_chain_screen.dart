@@ -10,6 +10,7 @@ import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/services/ayah_audio_service.dart';
 import '../data/services/companion/companion_models.dart';
+import '../data/services/companion/meaning_cue_service.dart';
 import '../data/services/companion/progressive_reveal_chain_engine.dart';
 import '../data/services/review_completion_service.dart';
 import '../data/services/companion/verse_evaluator.dart';
@@ -52,6 +53,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
   String? _error;
   final Map<String, _CompanionVerseWordRenderData> _wordRenderDataByVerseKey =
       <String, _CompanionVerseWordRenderData>{};
+  final Map<String, CompanionMeaningCue> _meaningCueByVerseKey =
+      <String, CompanionMeaningCue>{};
+  final Set<String> _meaningCuePendingVerseKeys = <String>{};
 
   AppStrings get _strings =>
       AppStrings.of(ref.read(appPreferencesProvider).language);
@@ -74,6 +78,8 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       _error = null;
       _lastAutoRecitedVerseKey = null;
       _wordRenderDataByVerseKey.clear();
+      _meaningCueByVerseKey.clear();
+      _meaningCuePendingVerseKeys.clear();
     });
 
     try {
@@ -145,7 +151,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         _reviewCompletionResult = null;
         _syncAutoCheckSelection(state);
       });
-      unawaited(_loadWordRenderData(ayahs));
+      unawaited(_loadVerseSupportData(ayahs));
       unawaited(_maybeAutoplayCurrentVerse(state, force: true));
     } catch (error) {
       if (!mounted) {
@@ -163,13 +169,27 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
   bool get _companionAutoplayEnabled =>
       ref.read(appPreferencesProvider).companionAutoReciteEnabled;
 
-  Future<void> _loadWordRenderData(List<AyahData> ayahs) async {
+  Future<void> _loadVerseSupportData(List<AyahData> ayahs) async {
     final translationResourceId = translationResourceIdForLanguage(
       ref.read(appPreferencesProvider).language,
     );
     final quranComApi = ref.read(quranComApiProvider);
+    final meaningCueService = ref.read(companionMeaningCueServiceProvider);
     final qcfFontManager = ref.read(qcfFontManagerProvider);
     final pageFamilyFutureByPage = <int, Future<String?>>{};
+    final pendingCueVerseKeys = <String>{
+      for (final ayah in ayahs)
+        if (ayah.pageMadina != null &&
+            ayah.pageMadina! >= 1 &&
+            ayah.pageMadina! <= 604)
+          '${ayah.surah}:${ayah.ayah}',
+    };
+
+    if (pendingCueVerseKeys.isNotEmpty && mounted) {
+      setState(() {
+        _meaningCuePendingVerseKeys.addAll(pendingCueVerseKeys);
+      });
+    }
 
     Future<String?> resolvePageFamilyName(int page) {
       return pageFamilyFutureByPage.putIfAbsent(page, () async {
@@ -186,6 +206,8 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     }
 
     final loaded = <String, _CompanionVerseWordRenderData>{};
+    final loadedMeaningCues = <String, CompanionMeaningCue>{};
+    final resolvedCueVerseKeys = <String>{};
     for (final ayah in ayahs) {
       final page = ayah.pageMadina;
       if (page == null || page < 1 || page > 604) {
@@ -204,23 +226,41 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
           verseKey: verseKey,
           translationResourceId: translationResourceId,
         );
+        resolvedCueVerseKeys.add(verseKey);
         if (verseData.words.isEmpty) {
+          final meaningCue = meaningCueService.cueFromVerseData(
+            verseData,
+            translationResourceId: translationResourceId,
+          );
+          if (meaningCue != null) {
+            loadedMeaningCues[verseKey] = meaningCue;
+          }
           continue;
         }
         loaded[verseKey] = _CompanionVerseWordRenderData(
           qcfFamilyName: familyName,
           words: verseData.words,
         );
+        final meaningCue = meaningCueService.cueFromVerseData(
+          verseData,
+          translationResourceId: translationResourceId,
+        );
+        if (meaningCue != null) {
+          loadedMeaningCues[verseKey] = meaningCue;
+        }
       } catch (_) {
         // Word-level rendering is optional in Companion. Keep fallback stable.
+        resolvedCueVerseKeys.add(verseKey);
       }
     }
 
-    if (!mounted || loaded.isEmpty) {
+    if (!mounted) {
       return;
     }
     setState(() {
       _wordRenderDataByVerseKey.addAll(loaded);
+      _meaningCueByVerseKey.addAll(loadedMeaningCues);
+      _meaningCuePendingVerseKeys.removeAll(resolvedCueVerseKeys);
     });
   }
 
@@ -915,6 +955,33 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     return level;
   }
 
+  CompanionMeaningCue? _meaningCueForVerse(ChainVerse verse) {
+    return _meaningCueByVerseKey[_verseKey(verse)];
+  }
+
+  bool _meaningCuePendingForVerse(ChainVerse verse) {
+    return _meaningCuePendingVerseKeys.contains(_verseKey(verse));
+  }
+
+  String _meaningCueText(ChainVerse verse) {
+    final cue = _meaningCueForVerse(verse);
+    if (cue != null) {
+      return cue.text;
+    }
+    if (_meaningCuePendingForVerse(verse)) {
+      return _strings.companionMeaningCueLoading;
+    }
+    return _chunkHint(verse.text);
+  }
+
+  String? _meaningCueSourceLabel(ChainVerse verse) {
+    final cue = _meaningCueForVerse(verse);
+    if (cue == null) {
+      return null;
+    }
+    return _strings.translationLabel(cue.sourceLabel);
+  }
+
   String _hintText(ChainRunState state) {
     final verseText = state.currentVerse.verse.text;
     final words = verseText
@@ -928,7 +995,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       HintLevel.letters => _lettersHint(verseText),
       HintLevel.firstWord =>
         words.isEmpty ? _strings.companionHintUnavailable : words.first,
-      HintLevel.meaningCue => _strings.companionTafsirCuePlaceholder,
+      HintLevel.meaningCue => _meaningCueText(state.currentVerse.verse),
       HintLevel.chunkText => _chunkHint(verseText),
       HintLevel.fullText => verseText,
     };
@@ -1094,7 +1161,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       HintLevel.h0 => null,
       HintLevel.letters => _lettersHint(verse.verse.text),
       HintLevel.firstWord => _firstWordCue(verse.verse.text),
-      HintLevel.meaningCue => _strings.companionTafsirCuePlaceholder,
+      HintLevel.meaningCue => _meaningCueText(verse.verse),
       HintLevel.chunkText => _chunkHint(verse.verse.text),
       HintLevel.fullText => verse.verse.text,
     };
@@ -1112,7 +1179,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       HintLevel.h0 => null,
       HintLevel.letters => _lettersHint(verse.verse.text),
       HintLevel.firstWord => _firstWordCue(verse.verse.text),
-      HintLevel.meaningCue => _strings.companionTafsirCuePlaceholder,
+      HintLevel.meaningCue => _meaningCueText(verse.verse),
       HintLevel.chunkText => _chunkHint(verse.verse.text),
       HintLevel.fullText => verse.verse.text,
     };
@@ -1130,7 +1197,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       HintLevel.h0 => null,
       HintLevel.letters => _lettersHint(verse.verse.text),
       HintLevel.firstWord => _firstWordCue(verse.verse.text),
-      HintLevel.meaningCue => _strings.companionTafsirCuePlaceholder,
+      HintLevel.meaningCue => _meaningCueText(verse.verse),
       HintLevel.chunkText => _chunkHint(verse.verse.text),
       HintLevel.fullText => verse.verse.text,
     };
@@ -1148,10 +1215,39 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       HintLevel.h0 => null,
       HintLevel.letters => _lettersHint(verse.verse.text),
       HintLevel.firstWord => _firstWordCue(verse.verse.text),
-      HintLevel.meaningCue => _strings.companionTafsirCuePlaceholder,
+      HintLevel.meaningCue => _meaningCueText(verse.verse),
       HintLevel.chunkText => _chunkHint(verse.verse.text),
       HintLevel.fullText => verse.verse.text,
     };
+  }
+
+  String? _activeHintSourceLabel(ChainRunState state) {
+    if (_effectiveHintLevel(state) != HintLevel.meaningCue) {
+      return null;
+    }
+    return _meaningCueSourceLabel(state.currentVerse.verse);
+  }
+
+  bool _usesMeaningCueForBody(ChainRunState state, ChainVerseState verse) {
+    if (!identical(verse, state.currentVerse) ||
+        _effectiveHintLevel(state) != HintLevel.meaningCue) {
+      return false;
+    }
+    return switch (state.activeStage) {
+      CompanionStage.guidedVisible => false,
+      CompanionStage.cuedRecall =>
+        _isStage2RuntimeActive(state) && !verse.passedCuedRecall,
+      CompanionStage.hiddenReveal => _isStage3RuntimeActive(state) ||
+          _isReviewRuntimeActive(state) ||
+          _isStage4RuntimeActive(state),
+    };
+  }
+
+  String? _verseBodySourceLabel(ChainRunState state, ChainVerseState verse) {
+    if (!_usesMeaningCueForBody(state, verse)) {
+      return null;
+    }
+    return _meaningCueSourceLabel(verse.verse);
   }
 
   String? _verseBodyText(ChainRunState state, ChainVerseState verse) {
@@ -1272,10 +1368,38 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       );
     }
 
-    return Text(
-      bodyText,
-      textDirection: TextDirection.rtl,
-      textAlign: TextAlign.right,
+    final sourceLabel = _verseBodySourceLabel(state, verse);
+    final usesMeaningCue = _usesMeaningCueForBody(state, verse);
+    final textDirection =
+        usesMeaningCue ? TextDirection.ltr : TextDirection.rtl;
+    final textAlign = usesMeaningCue ? TextAlign.left : TextAlign.right;
+
+    if (sourceLabel == null) {
+      return Text(
+        bodyText,
+        textDirection: textDirection,
+        textAlign: textAlign,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          bodyText,
+          textDirection: textDirection,
+          textAlign: textAlign,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          sourceLabel,
+          key:
+              ValueKey('companion_verse_hint_source_${_verseKey(verse.verse)}'),
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.left,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
     );
   }
 
@@ -1604,6 +1728,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     final stage4ModeCard = _buildStage4ModeCard(state);
     final stage1AutoCheckCard = _buildAutoCheckCard(state);
     final hintLocked = _isHintLockedByStage1(state);
+    final activeHintSourceLabel = _activeHintSourceLabel(state);
     final isStage1Correction = _isStage1RuntimeActive(state) &&
         state.stage1?.mode == Stage1Mode.correction;
     final isStage2Correction = _isStage2RuntimeActive(state) &&
@@ -1778,7 +1903,23 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
                   children: [
                     Text(_strings.companionActiveHintLabel),
                     const SizedBox(height: 4),
-                    Text(_hintText(state)),
+                    Text(
+                      _hintText(state),
+                      textDirection:
+                          _effectiveHintLevel(state) == HintLevel.meaningCue
+                              ? TextDirection.ltr
+                              : null,
+                    ),
+                    if (activeHintSourceLabel != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        activeHintSourceLabel,
+                        key: const ValueKey('companion_active_hint_source'),
+                        textDirection: TextDirection.ltr,
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ],
                 ),
               ),

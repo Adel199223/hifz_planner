@@ -744,6 +744,8 @@ class AppStrings {
       _t('companion_hint_level_h0', 'No hint requested yet.');
   String get companionHintUnavailable =>
       _t('companion_hint_unavailable', 'Hint unavailable');
+  String get companionMeaningCueLoading =>
+      _t('companion_meaning_cue_loading', 'Loading meaning cue...');
   String get companionTafsirCuePlaceholder => _t(
         'companion_tafsir_cue_placeholder',
         'Meaning cue (Tafsir al-Muyassar placeholder)',
@@ -1468,6 +1470,7 @@ class AppStrings {
       'companion_active_hint_label': 'Indice actif',
       'companion_hint_level_h0': 'Aucun indice demande.',
       'companion_hint_unavailable': 'Indice indisponible',
+      'companion_meaning_cue_loading': 'Chargement de l\'indice de sens...',
       'companion_tafsir_cue_placeholder':
           'Indice de sens (placeholder Tafsir al-Muyassar)',
       'companion_play_current_ayah': "Ecouter l'ayah actuelle",
@@ -1778,6 +1781,7 @@ class AppStrings {
       'companion_active_hint_label': 'Dica ativa',
       'companion_hint_level_h0': 'Nenhuma dica solicitada.',
       'companion_hint_unavailable': 'Dica indisponivel',
+      'companion_meaning_cue_loading': 'Carregando dica de significado...',
       'companion_tafsir_cue_placeholder':
           'Dica de significado (placeholder Tafsir al-Muyassar)',
       'companion_play_current_ayah': 'Ouvir ayah atual',
@@ -2104,6 +2108,7 @@ class AppStrings {
       'companion_active_hint_label': 'التلميح النشط',
       'companion_hint_level_h0': 'لم يتم طلب تلميح بعد.',
       'companion_hint_unavailable': 'التلميح غير متاح',
+      'companion_meaning_cue_loading': 'جاري تحميل إشارة المعنى...',
       'companion_tafsir_cue_placeholder':
           'إشارة المعنى (عنصر نائب لتفسير الميسر)',
       'companion_play_current_ayah': 'تشغيل الآية الحالية',

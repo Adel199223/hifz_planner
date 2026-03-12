@@ -13,6 +13,7 @@ import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
 import '../services/calibration_service.dart';
 import '../services/companion/companion_calibration_bridge.dart';
+import '../services/companion/meaning_cue_service.dart';
 import '../services/companion/progressive_reveal_chain_engine.dart';
 import '../services/companion/stage1_auto_check_engine.dart';
 import '../services/companion/verse_evaluator.dart';
@@ -237,6 +238,12 @@ final surahMetadataServiceProvider = Provider<SurahMetadataService>((ref) {
 
 final quranComApiProvider = Provider<QuranComApi>((ref) {
   return QuranComApi();
+});
+
+final companionMeaningCueServiceProvider =
+    Provider<CompanionMeaningCueService>((ref) {
+  final quranComApi = ref.watch(quranComApiProvider);
+  return CompanionMeaningCueService(quranComApi);
 });
 
 final quranComChaptersServiceProvider = Provider<QuranComChaptersService>((
