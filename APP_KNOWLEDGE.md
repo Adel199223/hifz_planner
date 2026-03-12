@@ -452,10 +452,11 @@ User-facing explainer:
 
 Current capabilities:
 - Build today plan from scheduler/planner
-- Render planned reviews with lifecycle tier badges and overdue-first ordering
+- Render planned reviews with lifecycle tier badges and overdue-first ordering, with weaker Companion retention lifting units earlier when due pressure is equal or close
 - Render planned new memorization
 - Render dedicated Stage-4 delayed-consolidation due items with urgency metadata
 - Render sessionized day blocks (timed or untimed) with recovery signal
+- Increase review pressure and reduce new allocation sooner when existing Companion proficiency data shows weak retention
 - Save grades (`q=5/4/3/2/0`) through shared `ReviewCompletionService`
 - "Open in Reader" deep-link with page mode + verse range highlight params
 - "Open Companion Chain" action for review/new rows
@@ -553,6 +554,10 @@ Current capabilities:
     - live ASR, recording, transcription, and permission flows are still deferred; transcript/confidence fields exist only as future integration points
   - hidden verses render without dot placeholders
   - Arabic rendering parity with tajweed colors by default (no reader action-chip parity)
+  - planner reinforcement weighting:
+    - `DailyPlanner` now consumes existing `companion_step_proficiency` rows
+    - weak retention can pull due units earlier in Today review ordering when overdue pressure is otherwise close
+    - weak retention also increases effective review demand so new memorization shrinks sooner without changing Stage-4 soft-block rules
 - `lib/screens/about_screen.dart`
   - implemented local overview screen with:
     - beginner-friendly app summary

@@ -260,11 +260,13 @@ Execution order is designed to protect retention quality:
 - review rows with grading actions and a small lifecycle badge
 - supports immediate scheduler updates based on your quality
 - same review can also be saved from the Companion review summary if you open it there first
+- when two due items are similarly urgent, weaker recent Companion retention can move one earlier in the list
 
 ### Planned new section
 - new unit rows with actions:
   - open in reader
   - open companion chain (new mode)
+- if recent Companion retention is weak, this section may shrink sooner because the planner gives more of today's time back to review
 
 ## 7) Stage-4 Priority and Soft-Block Behavior
 
@@ -328,6 +330,7 @@ When not to overuse override:
 - reduce new caps
 - add more revision-only structure
 - recalibrate review pace
+- treat weak-retention units first; the planner now does this more aggressively when recent Companion quality is low
 
 ### Symptom: too many missed sessions
 - reduce session complexity (fewer timed constraints)
@@ -338,6 +341,7 @@ When not to overuse override:
 - lower daily new volume
 - complete delayed checks before adding more
 - ensure companion new-stage flow is being completed properly
+- expect Today to reduce new assignment sooner until recent Companion retention signals improve
 
 ### Symptom: delayed checks keep piling up
 - treat Stage-4 due items first in Today

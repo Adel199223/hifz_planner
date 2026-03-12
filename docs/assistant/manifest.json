@@ -93,7 +93,7 @@
     {
       "id": "scheduling_companion",
       "doc": "docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md",
-      "scope": "Automatic scheduling preferences, weekly calendar generation, rebalancing, and staged companion ramp with evaluator foundation, source-backed meaning cues, recitation controls, and word-hover parity.",
+      "scope": "Automatic scheduling preferences, weekly calendar generation, planner reinforcement weighting, rebalancing, and staged companion ramp with evaluator foundation, source-backed meaning cues, recitation controls, and word-hover parity.",
       "primary_files": [
         "lib/screens/plan_screen.dart",
         "lib/screens/today_screen.dart",

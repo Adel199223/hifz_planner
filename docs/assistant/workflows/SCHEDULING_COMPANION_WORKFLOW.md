@@ -8,6 +8,7 @@ Use this workflow for automatic scheduling preferences, weekly calendar generati
 
 - Scheduling and companion staged behavior remain deterministic and persisted safely.
 - Companion attempt evaluation stays routed through a future-ASR-ready boundary while the shipped UX remains manual.
+- Planner uses existing Companion proficiency signals to reinforce weaker retention before more new load is added.
 - Shared projection/calibration contracts remain consistent.
 - Scheduling/companion targeted tests pass.
 
@@ -37,6 +38,7 @@ Use when changes touch:
 - Do not bypass `activeVerseEvaluatorProvider` or reintroduce raw pass/fail primitives through screen-engine boundaries.
 - Do not generate unsourced meaning cues; reuse attributed verse translation data and fall back when unavailable.
 - Do not add live ASR, recording, transcription, or permission flows unless the milestone explicitly includes them.
+- Do not introduce planner-side reinforcement weighting with new schema first; consume existing Companion proficiency signals unless a later milestone proves they are insufficient.
 
 ## Primary Files
 
@@ -118,6 +120,8 @@ flutter test -j 1 -r expanded test/data/services/companion
    - Verify `CompanionMeaningCueService` is reading verse translation data, `Translation: {label}` renders for `HintLevel.meaningCue`, and missing translation text falls back to the next non-semantic hint.
 10. Symptoms: evaluator work starts rewriting screen or engine contracts again before ASR ships.
    - Verify the screen still submits `VerseEvaluationSubmission`, the engine still accepts that unified payload, and `activeVerseEvaluatorProvider` remains the swap point for future evaluator implementations.
+11. Symptoms: weak retention does not change Today review ordering or new load.
+   - Verify `DailyPlanner` is aggregating `companion_step_proficiency` rows, lifting weak units when overdue pressure is equal or close, and increasing effective review demand before new generation.
 
 ## Handoff Checklist
 
@@ -125,6 +129,7 @@ flutter test -j 1 -r expanded test/data/services/companion
 - scheduling prefs/overrides are versioned and decode safely when JSON is null/invalid
 - weekly calendar reflects recovery mode and review pressure
 - planned review rows carry lifecycle tier data for Today badge/sort rendering
+- planned review ordering and review/new pressure now react to existing Companion proficiency weakness, not only due-day and lifecycle data
 - scheduled review completion uses the shared `ReviewCompletionService` path in both Today and Companion
 - companion chain persists per-attempt telemetry and session summary
 - companion attempt evaluation flows through `VerseEvaluationSubmission` + `activeVerseEvaluatorProvider`, with live ASR still deferred
@@ -260,6 +265,7 @@ flutter test -j 1 -r expanded test/data/services/companion
 ## Retrieval-Strength Scoring Policy
 
 - Keep retrieval strength derived from hint usage, response latency, and evaluator confidence.
+- Allow planner reinforcement weighting to consume persisted proficiency, pass-rate, and evaluator-confidence signals from `companion_step_proficiency`; do not add a separate planner scoring table in this phase.
 - Exclude Stage-1 `encode_echo` attempts from retrieval-strength aggregates.
 - Exclude Stage-3 `encode_echo` correction exposures from retrieval-strength aggregates.
 - Exclude Stage-4 lifecycle attempts from Stage-1 `new_memorization` calibration samples.
