@@ -200,6 +200,50 @@ class AppStrings {
       );
   String get openHifzPlan => _t('open_hifz_plan', 'Open Hifz Plan');
   String get aboutTitle => _t('about_title', 'About');
+  String get aboutSubtitle => _t(
+        'about_subtitle',
+        'Local-first Quran reading, planning, and memorization support.',
+      );
+  String get aboutQuickActionsTitle => _t(
+        'about_quick_actions_title',
+        'Go Where You Need Next',
+      );
+  String get aboutHowItWorksTitle => _t(
+        'about_how_it_works_title',
+        'How This App Fits Together',
+      );
+  String get aboutHowItWorksReader => _t(
+        'about_how_it_works_reader',
+        'Reader is for reading, listening, translations, and word-level help.',
+      );
+  String get aboutHowItWorksPlan => _t(
+        'about_how_it_works_plan',
+        'Plan sets a daily workload you can keep consistently.',
+      );
+  String get aboutHowItWorksToday => _t(
+        'about_how_it_works_today',
+        'Today orders delayed checks, reviews, and new memorization.',
+      );
+  String get aboutHowItWorksCompanion => _t(
+        'about_how_it_works_companion',
+        'Companion runs the memorization stages and saves review results back into the schedule.',
+      );
+  String get aboutCurrentSetupTitle => _t(
+        'about_current_setup_title',
+        'Current Setup',
+      );
+  String get aboutReliabilityTitle => _t(
+        'about_reliability_title',
+        'Data and Reliability',
+      );
+  String get aboutReliabilityBody => _t(
+        'about_reliability_body',
+        'Your planning state, bookmarks, notes, and memorization history stay on this device. Reader audio downloads also stay local to this device.',
+      );
+  String get aboutViewLicensesAction => _t(
+        'about_view_licenses_action',
+        'View licenses',
+      );
 
   String get bookmarksTitle => _t('bookmarks_title', 'Bookmarks');
   String get failedToLoadMyQuran =>
@@ -1326,6 +1370,23 @@ class AppStrings {
       'duration_minutes': 'Durée (minutes)',
       'ayah_count': "Nombre d'ayahs",
       'about_title': 'À propos',
+      'about_subtitle':
+          'Lecture, planification et accompagnement de mémorisation du Coran en local.',
+      'about_quick_actions_title': 'Aller directement au bon endroit',
+      'about_how_it_works_title': "Comment l'application s'articule",
+      'about_how_it_works_reader':
+          "Le Lecteur sert à lire, écouter, afficher la traduction et utiliser l'aide mot à mot.",
+      'about_how_it_works_plan':
+          'Plan sert à définir une charge quotidienne que vous pouvez tenir régulièrement.',
+      'about_how_it_works_today':
+          "Aujourd'hui ordonne les vérifications différées, les révisions et le nouveau travail.",
+      'about_how_it_works_companion':
+          'La chaine compagnon exécute les étapes de mémorisation et enregistre les résultats de révision dans le planning.',
+      'about_current_setup_title': 'Configuration actuelle',
+      'about_reliability_title': 'Données et fiabilité',
+      'about_reliability_body':
+          'Votre planning, vos signets, vos notes et votre historique de mémorisation restent sur cet appareil. Les téléchargements audio du Lecteur y restent aussi.',
+      'about_view_licenses_action': 'Voir les licences',
       'open_hifz_plan': 'Ouvrir le plan de Hifz',
       'open_companion_chain': 'Ouvrir la chaine compagnon',
       'planned_review_minutes': 'Minutes de revision prevues : {value}',
@@ -1621,6 +1682,23 @@ class AppStrings {
       'duration_minutes': 'Duração (minutos)',
       'ayah_count': 'Contagem de ayahs',
       'about_title': 'Sobre',
+      'about_subtitle':
+          'Leitura do Alcorão, planejamento e apoio à memorização com foco local.',
+      'about_quick_actions_title': 'Vá direto ao que precisa',
+      'about_how_it_works_title': 'Como o app se encaixa',
+      'about_how_it_works_reader':
+          'Leitor serve para ler, ouvir, ver a tradução e usar ajuda palavra por palavra.',
+      'about_how_it_works_plan':
+          'Plano define uma carga diária que você consegue manter com constância.',
+      'about_how_it_works_today':
+          'Hoje organiza verificações adiadas, revisões e nova memorização.',
+      'about_how_it_works_companion':
+          'Cadeia do companheiro executa as etapas de memorização e salva os resultados de revisão no cronograma.',
+      'about_current_setup_title': 'Configuração atual',
+      'about_reliability_title': 'Dados e confiabilidade',
+      'about_reliability_body':
+          'Seu planejamento, favoritos, notas e histórico de memorização ficam neste dispositivo. Os downloads de áudio do Leitor também ficam locais neste dispositivo.',
+      'about_view_licenses_action': 'Ver licenças',
       'open_hifz_plan': 'Abrir Plano de Hifz',
       'open_companion_chain': 'Abrir cadeia do companheiro',
       'planned_review_minutes': 'Minutos de revisao planejados: {value}',
@@ -1933,6 +2011,23 @@ class AppStrings {
       'duration_minutes': 'المدة (دقائق)',
       'ayah_count': 'عدد الآيات',
       'about_title': 'حول',
+      'about_subtitle':
+          'قراءة القرآن والتخطيط ودعم الحفظ مع حفظ البيانات محليًا.',
+      'about_quick_actions_title': 'اذهب مباشرة إلى ما تحتاجه',
+      'about_how_it_works_title': 'كيف يعمل التطبيق معًا',
+      'about_how_it_works_reader':
+          'القارئ مخصص للقراءة والاستماع وعرض الترجمة ومساعدة الكلمات.',
+      'about_how_it_works_plan':
+          'الخطة تحدد حملاً يوميًا يمكنك الاستمرار عليه.',
+      'about_how_it_works_today':
+          'اليوم يرتب التحققات المؤجلة والمراجعات والحفظ الجديد.',
+      'about_how_it_works_companion':
+          'سلسلة المرافق تشغّل مراحل الحفظ وتحفظ نتائج المراجعة في الجدول.',
+      'about_current_setup_title': 'الإعداد الحالي',
+      'about_reliability_title': 'البيانات والاعتمادية',
+      'about_reliability_body':
+          'تبقى حالة التخطيط والعلامات والملاحظات وسجل الحفظ على هذا الجهاز. كما تبقى تنزيلات الصوت في القارئ محلية على هذا الجهاز.',
+      'about_view_licenses_action': 'عرض التراخيص',
       'open_hifz_plan': 'فتح خطة الحفظ',
       'open_companion_chain': 'فتح سلسلة المرافق',
       'planned_review_minutes': 'دقائق المراجعة المخططة: {value}',
