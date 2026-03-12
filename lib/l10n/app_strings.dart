@@ -1061,6 +1061,25 @@ class AppStrings {
       _t('download_coming_soon', 'Download is coming soon.');
   String get experienceComingSoon =>
       _t('experience_coming_soon', 'Experience settings are coming soon.');
+  String downloadedAyahsProgress(int downloaded, int total) => _fmt(
+        _t(
+          'downloaded_ayahs_progress',
+          'Downloaded {downloaded}/{total} ayahs.',
+        ),
+        <String, Object>{'downloaded': downloaded, 'total': total},
+      );
+  String downloadingAyahsProgress(int downloaded, int total) => _fmt(
+        _t(
+          'downloading_ayahs_progress',
+          'Downloading {downloaded}/{total} ayahs...',
+        ),
+        <String, Object>{'downloaded': downloaded, 'total': total},
+      );
+  String get removeDownload => _t('remove_download', 'Remove download');
+  String audioDownloadFailed(String error) => _fmt(
+        _t('audio_download_failed', 'Audio download failed: {error}'),
+        <String, Object>{'error': error},
+      );
   String elapsedTimeLabel(String value) => _fmt(
         _t('elapsed_time_label', 'Elapsed {value}'),
         <String, Object>{'value': value},
@@ -1083,6 +1102,18 @@ class AppStrings {
   String get wordByWordSettingsComingSoon => _t(
         'word_by_word_settings_coming_soon',
         'Word by Word settings are coming soon.',
+      );
+  String get showVerseTranslations => _t(
+        'show_verse_translations',
+        'Show verse translations',
+      );
+  String get showWordTooltips => _t(
+        'show_word_tooltips',
+        'Show word tooltips',
+      );
+  String get highlightHoveredWords => _t(
+        'highlight_hovered_words',
+        'Highlight hovered words',
       );
   String get verseActionsUnavailable => _t(
         'verse_actions_unavailable',
@@ -1164,6 +1195,12 @@ class AppStrings {
       'failed_to_load_reciters': 'Échec du chargement des récitateurs.',
       'download_coming_soon': 'Le téléchargement arrive bientôt.',
       'experience_coming_soon': "Les paramètres d'expérience arrivent bientôt.",
+      'downloaded_ayahs_progress':
+          'Ayahs téléchargees : {downloaded}/{total}.',
+      'downloading_ayahs_progress':
+          'Téléchargement des ayahs : {downloaded}/{total}...',
+      'remove_download': 'Supprimer le téléchargement',
+      'audio_download_failed': 'Échec du téléchargement audio : {error}',
       'audio_plugin_unavailable':
           "Plugin audio indisponible. Redémarrez l'application après une reconstruction complète.",
       'audio_network_error':
@@ -1174,6 +1211,9 @@ class AppStrings {
       'elapsed_time_label': 'Écoulé {value}',
       'total_time_label': 'Total {value}',
       'translation_label': 'Traduction : {label}',
+      'show_verse_translations': 'Afficher les traductions des ayahs',
+      'show_word_tooltips': 'Afficher les infobulles des mots',
+      'highlight_hovered_words': 'Surligner les mots au survol',
       'page_label': 'Page {page}',
       'juz_label': 'Juz {juz}',
       'hizb_label': 'Hizb {hizb}',
@@ -1456,6 +1496,12 @@ class AppStrings {
       'failed_to_load_reciters': 'Falha ao carregar recitadores.',
       'download_coming_soon': 'Download em breve.',
       'experience_coming_soon': 'Configurações de experiência em breve.',
+      'downloaded_ayahs_progress':
+          'Ayahs baixadas: {downloaded}/{total}.',
+      'downloading_ayahs_progress':
+          'Baixando ayahs: {downloaded}/{total}...',
+      'remove_download': 'Remover download',
+      'audio_download_failed': 'Falha no download do áudio: {error}',
       'audio_plugin_unavailable':
           'Plugin de áudio indisponível. Reinicie o app após reconstrução completa.',
       'audio_network_error':
@@ -1466,6 +1512,9 @@ class AppStrings {
       'elapsed_time_label': 'Decorrido {value}',
       'total_time_label': 'Total {value}',
       'translation_label': 'Tradução: {label}',
+      'show_verse_translations': 'Mostrar traduções dos versículos',
+      'show_word_tooltips': 'Mostrar dicas das palavras',
+      'highlight_hovered_words': 'Destacar palavras ao passar o mouse',
       'page_label': 'Página {page}',
       'search_surah': 'Pesquisar Surah',
       'learn_title': 'Planos de aprendizado',
@@ -1746,6 +1795,12 @@ class AppStrings {
       'failed_to_load_reciters': 'تعذر تحميل قائمة القراء.',
       'download_coming_soon': 'ميزة التنزيل قريبًا.',
       'experience_coming_soon': 'إعدادات التجربة قريبًا.',
+      'downloaded_ayahs_progress':
+          'الآيات المنزلة: {downloaded}/{total}.',
+      'downloading_ayahs_progress':
+          'جار تنزيل الآيات: {downloaded}/{total}...',
+      'remove_download': 'إزالة التنزيل',
+      'audio_download_failed': 'فشل تنزيل الصوت: {error}',
       'audio_plugin_unavailable':
           'ملحق الصوت غير متاح. أعد تشغيل التطبيق بعد إعادة البناء الكاملة.',
       'audio_network_error': 'مصدر الصوت غير متاح. تحقق من اتصال الإنترنت.',
@@ -1764,6 +1819,9 @@ class AppStrings {
       'preview': 'معاينة',
       'word': 'كلمة',
       'translation_label': 'الترجمة: {label}',
+      'show_verse_translations': 'إظهار ترجمات الآيات',
+      'show_word_tooltips': 'إظهار تلميحات الكلمات',
+      'highlight_hovered_words': 'تمييز الكلمات عند المرور عليها',
       'page_label': 'صفحة {page}',
       'juz_label': 'جزء {juz}',
       'hizb_label': 'حزب {hizb}',

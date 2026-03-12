@@ -136,6 +136,8 @@ int globalAyahIndex(int surah, int ayah) {
 }
 
 abstract class AyahAudioSource {
+  String get edition;
+  int get bitrate;
   Uri urlForAyah(int surah, int ayah);
 }
 
@@ -146,7 +148,9 @@ class AlQuranCloudAyahAudioSource implements AyahAudioSource {
     this.globalAyahIndexFn = globalAyahIndex,
   });
 
+  @override
   final String edition;
+  @override
   final int bitrate;
   final int Function(int surah, int ayah) globalAyahIndexFn;
 

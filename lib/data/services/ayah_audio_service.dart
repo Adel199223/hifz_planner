@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:just_audio/just_audio.dart';
 
+import 'ayah_audio_playback_resolver.dart';
 import 'ayah_audio_source.dart';
 
 class AyahRef {
@@ -120,8 +121,10 @@ class JustAudioAyahAudioService implements AyahAudioService {
   JustAudioAyahAudioService({
     required AudioPlayer audioPlayer,
     required AyahAudioSource source,
+    required AyahAudioPlaybackResolver playbackResolver,
   })  : _audioPlayer = audioPlayer,
-        _source = source {
+        _source = source,
+        _playbackResolver = playbackResolver {
     _playerSubscriptions = <StreamSubscription<dynamic>>[
       _audioPlayer.currentIndexStream.listen((_) {
         _syncState();
@@ -158,6 +161,7 @@ class JustAudioAyahAudioService implements AyahAudioService {
 
   final AudioPlayer _audioPlayer;
   AyahAudioSource _source;
+  final AyahAudioPlaybackResolver _playbackResolver;
   final StreamController<AyahAudioState> _stateController =
       StreamController<AyahAudioState>.broadcast();
   final StreamController<String> _errorController =
@@ -405,11 +409,19 @@ class JustAudioAyahAudioService implements AyahAudioService {
       return;
     }
 
-    final sources = <AudioSource>[
+    final resolvedUris = await Future.wait<Uri>([
       for (final ayah in timeline)
+        _playbackResolver.resolveAyahUri(
+          source: _source,
+          surah: ayah.surah,
+          ayah: ayah.ayah,
+        ),
+    ]);
+    final sources = <AudioSource>[
+      for (var index = 0; index < timeline.length; index++)
         AudioSource.uri(
-          _source.urlForAyah(ayah.surah, ayah.ayah),
-          tag: ayah,
+          resolvedUris[index],
+          tag: timeline[index],
         ),
     ];
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:drift/drift.dart';
@@ -14,6 +15,7 @@ import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/bookmark_repo.dart';
 import 'package:hifz_planner/data/repositories/note_repo.dart';
+import 'package:hifz_planner/data/services/ayah_audio_download_service.dart';
 import 'package:hifz_planner/data/services/qurancom_api.dart';
 import 'package:hifz_planner/data/services/qurancom_chapters_service.dart';
 import 'package:hifz_planner/data/services/ayah_audio_service.dart';
@@ -687,6 +689,160 @@ void main() {
     },
     timeout: const Timeout(Duration(seconds: 30)),
   );
+
+  testWidgets('reader audio experience sheet exposes current shortcuts',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeAudio = _FakeAyahAudioService();
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+      ],
+    );
+    addTearDown(() async {
+      container.dispose();
+      await fakeAudio.dispose();
+    });
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+
+    fakeAudio.emitState(
+      const AyahAudioState(
+        currentAyah: AyahRef(surah: 1, ayah: 1),
+        isPlaying: false,
+        isBuffering: false,
+        speed: 1.25,
+        repeatCount: 2,
+        canNext: true,
+        canPrevious: true,
+        queueLength: 3,
+        position: Duration.zero,
+        bufferedPosition: Duration.zero,
+        duration: Duration(seconds: 20),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('reader_audio_options_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('reader_audio_option_experience')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('reader_audio_experience_sheet')),
+        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('reader_audio_experience_option_reciter')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('reader_audio_experience_option_speed')),
+        matching: find.text('1.25x'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('reader_audio_experience_option_repeat')),
+        matching: find.text('2x'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester
+        .tap(find.byKey(const ValueKey('reader_audio_experience_option_speed')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1.50x').last);
+    await tester.pumpAndSettle();
+
+    expect(fakeAudio.speedChanges, isNotEmpty);
+    expect(fakeAudio.speedChanges.last, 1.5);
+  });
+
+  testWidgets('reader audio download sheet downloads and removes current surah',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeAudio = _FakeAyahAudioService();
+    final fakeDownloads = _FakeAyahAudioDownloadService(
+      initialBySurah: <int, SurahAudioDownloadSnapshot>{
+        1: const SurahAudioDownloadSnapshot(
+          surah: 1,
+          edition: 'ar.alafasy',
+          bitrate: 128,
+          downloadedAyahs: 0,
+          totalAyahs: 7,
+        ),
+      },
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        ayahAudioServiceProvider.overrideWithValue(fakeAudio),
+        ayahAudioDownloadServiceProvider.overrideWithValue(fakeDownloads),
+      ],
+    );
+    addTearDown(() async {
+      container.dispose();
+      await fakeAudio.dispose();
+    });
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+
+    fakeAudio.emitState(
+      const AyahAudioState(
+        currentAyah: AyahRef(surah: 1, ayah: 1),
+        isPlaying: false,
+        isBuffering: false,
+        speed: 1.0,
+        repeatCount: 0,
+        canNext: true,
+        canPrevious: true,
+        queueLength: 3,
+        position: Duration.zero,
+        bufferedPosition: Duration.zero,
+        duration: Duration(seconds: 20),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('reader_audio_options_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('reader_audio_option_download')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('reader_audio_download_sheet')),
+        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('reader_audio_download_progress_label')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('reader_audio_download_action')));
+    await tester.pumpAndSettle();
+
+    expect(fakeDownloads.downloadCalls.length, 1);
+    expect(fakeDownloads.downloadCalls.single.surah, 1);
+    expect(fakeDownloads.downloadCalls.single.config.edition, 'ar.alafasy');
+    expect(find.text('Downloaded 7/7 ayahs.'), findsOneWidget);
+
+    await tester
+        .tap(find.byKey(const ValueKey('reader_audio_remove_download_action')));
+    await tester.pumpAndSettle();
+
+    expect(fakeDownloads.removeCalls.length, 1);
+    expect(find.text('Downloaded 0/7 ayahs.'), findsOneWidget);
+  });
 
   testWidgets('reader audio reciter menu option disables while switching',
       (tester) async {
@@ -1456,14 +1612,164 @@ void main() {
       find.byKey(const ValueKey('reader_mushaf_settings_tab_translation')),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Translation settings are coming soon.'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('reader_translation_visibility_toggle')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('reader_translation_source_label')),
+      findsOneWidget,
+    );
 
     await tester.tap(
       find.byKey(const ValueKey('reader_mushaf_settings_tab_word_by_word')),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Word by Word settings are coming soon.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('reader_word_tooltips_toggle')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('reader_word_hover_toggle')),
+        findsOneWidget);
   });
+
+  testWidgets('translation visibility toggle hides verse translations',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final fakeApi =
+        _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
+    final fakeFonts = _FakeQcfFontManager(
+      familyName: 'qcf_test_family',
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        quranComApiProvider.overrideWithValue(fakeApi),
+        qcfFontManagerProvider.overrideWithValue(fakeFonts),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerPumpCleanup(tester);
+
+    await _seedAyahs(db);
+    await _pumpReader(tester, container);
+    expect(find.byKey(const ValueKey('reader_verse_translation_1:1')),
+        findsOneWidget);
+
+    await _switchToMushafView(tester);
+    await tester
+        .tap(find.byKey(const ValueKey('reader_mushaf_settings_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('reader_mushaf_settings_tab_translation')),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('reader_translation_visibility_toggle')),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('reader_mushaf_settings_done')));
+    await tester.pumpAndSettle();
+    await _switchToVerseByVerseView(tester);
+
+    expect(find.byKey(const ValueKey('reader_verse_translation_1:1')),
+        findsNothing);
+  });
+
+  testWidgets(
+    'word display toggles disable verse and mushaf tooltips and mushaf hover highlight',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final fakeApi =
+          _FakeQuranComApi.withData(_buildInteractiveMushafDataFixture());
+      final fakeFonts = _FakeQcfFontManager(
+        familyName: 'qcf_test_family',
+      );
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            ref.onDispose(db.close);
+            return db;
+          }),
+          quranComApiProvider.overrideWithValue(fakeApi),
+          qcfFontManagerProvider.overrideWithValue(fakeFonts),
+        ],
+      );
+      addTearDown(container.dispose);
+      _registerPumpCleanup(tester);
+
+      await _seedAyahs(db);
+      await _pumpReader(tester, container);
+      await pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('reader_verse_word_tooltip_1:1_0')),
+      );
+      expect(
+        find.byKey(const ValueKey('reader_verse_word_tooltip_1:1_0')),
+        findsOneWidget,
+      );
+
+      await _switchToMushafView(tester);
+      await tester
+          .tap(find.byKey(const ValueKey('reader_mushaf_settings_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('reader_mushaf_settings_tab_word_by_word')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('reader_word_tooltips_toggle')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('reader_word_hover_toggle')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('reader_mushaf_settings_done')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('reader_mushaf_word_tooltip_1_0')),
+        findsNothing,
+      );
+
+      final mushafWord =
+          find.byKey(const ValueKey('reader_mushaf_word_1_0_1:1'));
+      final beforeHoverColor = _wordTextColor(
+        tester,
+        wordFinder: mushafWord,
+      );
+      final highlightedBefore = _wordHighlightColor(
+        tester,
+        wordFinder: mushafWord,
+      );
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer(location: tester.getCenter(mushafWord));
+      await tester.pump();
+      await mouse.moveTo(tester.getCenter(mushafWord));
+      await tester.pumpAndSettle();
+
+      expect(
+        _wordTextColor(tester, wordFinder: mushafWord),
+        equals(beforeHoverColor),
+      );
+      expect(
+        _wordHighlightColor(tester, wordFinder: mushafWord),
+        equals(highlightedBefore),
+      );
+
+      await _switchToVerseByVerseView(tester);
+      await pumpUntilFound(
+        tester,
+        find.byKey(const ValueKey('reader_verse_word_1:1_0')),
+      );
+      expect(
+        find.byKey(const ValueKey('reader_verse_word_tooltip_1:1_0')),
+        findsNothing,
+      );
+    },
+  );
 
   testWidgets('mushaf controls render without selected check icons',
       (tester) async {
@@ -3619,6 +3925,90 @@ class _FakeAyahAudioService implements AyahAudioService {
   }
 }
 
+class _DownloadCall {
+  const _DownloadCall({
+    required this.surah,
+    required this.config,
+  });
+
+  final int surah;
+  final AyahAudioStreamConfig config;
+}
+
+class _FakeAyahAudioDownloadService implements AyahAudioDownloadService {
+  _FakeAyahAudioDownloadService({
+    Map<int, SurahAudioDownloadSnapshot>? initialBySurah,
+  }) : _statusBySurah =
+            Map<int, SurahAudioDownloadSnapshot>.from(initialBySurah ?? const {});
+
+  final Map<int, SurahAudioDownloadSnapshot> _statusBySurah;
+  final List<_DownloadCall> downloadCalls = <_DownloadCall>[];
+  final List<_DownloadCall> removeCalls = <_DownloadCall>[];
+
+  @override
+  Future<void> downloadSurah({
+    required int surah,
+    required AyahAudioStreamConfig config,
+    void Function(SurahAudioDownloadProgress progress)? onProgress,
+  }) async {
+    downloadCalls.add(_DownloadCall(surah: surah, config: config));
+    final totalAyahs = ayahCountForSurah(surah);
+    onProgress?.call(
+      SurahAudioDownloadProgress(
+        surah: surah,
+        completedAyahs: totalAyahs,
+        totalAyahs: totalAyahs,
+      ),
+    );
+    _statusBySurah[surah] = SurahAudioDownloadSnapshot(
+      surah: surah,
+      edition: config.edition,
+      bitrate: config.bitrate,
+      downloadedAyahs: totalAyahs,
+      totalAyahs: totalAyahs,
+    );
+  }
+
+  @override
+  Future<File?> findCachedAyahFile({
+    required int surah,
+    required int ayah,
+    required AyahAudioStreamConfig config,
+  }) async {
+    return null;
+  }
+
+  @override
+  Future<SurahAudioDownloadSnapshot> getSurahDownloadStatus({
+    required int surah,
+    required AyahAudioStreamConfig config,
+  }) async {
+    return _statusBySurah[surah] ??
+        SurahAudioDownloadSnapshot(
+          surah: surah,
+          edition: config.edition,
+          bitrate: config.bitrate,
+          downloadedAyahs: 0,
+          totalAyahs: ayahCountForSurah(surah),
+        );
+  }
+
+  @override
+  Future<void> removeSurahDownload({
+    required int surah,
+    required AyahAudioStreamConfig config,
+  }) async {
+    removeCalls.add(_DownloadCall(surah: surah, config: config));
+    _statusBySurah[surah] = SurahAudioDownloadSnapshot(
+      surah: surah,
+      edition: config.edition,
+      bitrate: config.bitrate,
+      downloadedAyahs: 0,
+      totalAyahs: ayahCountForSurah(surah),
+    );
+  }
+}
+
 class _FakeQuranComApiCall {
   const _FakeQuranComApiCall({
     required this.page,
@@ -3916,6 +4306,16 @@ Future<void> _switchToMushafView(WidgetTester tester) async {
     find.descendant(
       of: find.byKey(const ValueKey('reader_view_toggle')),
       matching: find.text('Reading'),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _switchToVerseByVerseView(WidgetTester tester) async {
+  await tester.tap(
+    find.descendant(
+      of: find.byKey(const ValueKey('reader_view_toggle')),
+      matching: find.text('Verse by Verse'),
     ),
   );
   await tester.pumpAndSettle();

@@ -92,6 +92,51 @@ void main() {
     expect(afterHoverColor, isNotNull);
     await mouse.removePointer();
   });
+
+  testWidgets('disables tooltip and hover highlight when flags are false',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: QuranWordWrap(
+            words: const <MushafWord>[
+              MushafWord(
+                codeV2: '',
+                textQpcHafs: 'ٱلْحَمْدُ',
+                translationText: 'All praise and thanks',
+                charTypeName: 'word',
+                lineNumber: 1,
+                position: 1,
+                pageNumber: 1,
+              ),
+            ],
+            qcfFamilyName: 'qcf_test_family',
+            showWordHover: false,
+            showTooltips: false,
+            suppressEndMarkers: true,
+            translationUnavailableText: 'Translation unavailable',
+            wordTextKeyBuilder: (index, _) => ValueKey('plain_word_$index'),
+            wordTooltipKeyBuilder: (index, _) =>
+                ValueKey('plain_word_tooltip_$index'),
+          ),
+        ),
+      ),
+    );
+
+    final wordFinder = find.byKey(const ValueKey('plain_word_0'));
+    expect(wordFinder, findsOneWidget);
+    expect(find.byKey(const ValueKey('plain_word_tooltip_0')), findsNothing);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: tester.getCenter(wordFinder));
+    await tester.pump();
+    await mouse.moveTo(tester.getCenter(wordFinder));
+    await tester.pumpAndSettle();
+
+    final afterHoverColor = _wordHighlightColor(tester, wordFinder);
+    expect(afterHoverColor, isNull);
+    await mouse.removePointer();
+  });
 }
 
 Color? _wordHighlightColor(WidgetTester tester, Finder wordFinder) {

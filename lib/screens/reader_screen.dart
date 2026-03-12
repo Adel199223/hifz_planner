@@ -8,8 +8,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../app/app_preferences.dart';
 import '../app/navigation_providers.dart';
+import '../app/reader_display_preferences.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
+import '../data/services/ayah_audio_download_service.dart';
 import '../data/services/ayah_audio_service.dart';
 import '../data/services/qurancom_api.dart';
 import '../data/services/qurancom_chapters_service.dart';
@@ -1715,17 +1717,64 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     await _setPlaybackRepeatCount(selected);
   }
 
+  Future<void> _openAudioDownloadSheet() async {
+    final audioState = ref.read(ayahAudioStateProvider).asData?.value;
+    final currentAyah = audioState?.currentAyah;
+    if (currentAyah == null || !mounted) {
+      return;
+    }
+    final config = ref.read(ayahAudioStreamConfigProvider);
+    final reciterName = ref.read(selectedReciterProvider).englishName;
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) {
+        return _ReaderAudioDownloadSheet(
+          surah: currentAyah.surah,
+          config: config,
+          reciterName: reciterName,
+          strings: _strings,
+        );
+      },
+    );
+  }
+
+  Future<void> _openAudioExperienceSheet() async {
+    final action = await showModalBottomSheet<_ReaderAudioExperienceAction>(
+      context: context,
+      builder: (sheetContext) {
+        return _ReaderAudioExperienceSheet(
+          strings: _strings,
+          repeatLabelForCount: _repeatLabelForCount,
+        );
+      },
+    );
+    if (action == null) {
+      return;
+    }
+    switch (action) {
+      case _ReaderAudioExperienceAction.reciter:
+        await _openReciterPicker();
+        return;
+      case _ReaderAudioExperienceAction.speed:
+        await _openPlaybackSpeedPicker();
+        return;
+      case _ReaderAudioExperienceAction.repeat:
+        await _openRepeatPicker();
+        return;
+    }
+  }
+
   Future<void> _handleAudioOptionsAction(
       _ReaderAudioOptionAction action) async {
     switch (action) {
       case _ReaderAudioOptionAction.download:
-        _showSnackBar(_strings.downloadComingSoon);
+        await _openAudioDownloadSheet();
         return;
       case _ReaderAudioOptionAction.repeat:
         await _openRepeatPicker();
         return;
       case _ReaderAudioOptionAction.experience:
-        _showSnackBar(_strings.experienceComingSoon);
+        await _openAudioExperienceSheet();
         return;
       case _ReaderAudioOptionAction.speed:
         await _openPlaybackSpeedPicker();
@@ -1825,6 +1874,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         _invalidateMushafFuture();
       }
     });
+    unawaited(ref.read(readerDisplayPreferencesProvider.notifier).reset());
   }
 
   int _activeMushafId() {
@@ -2040,6 +2090,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required String ayahKey,
     required _VerseByVerseRowRenderData data,
   }) {
+    final displayPrefs = ref.watch(readerDisplayPreferencesProvider);
     final baseArabicStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
               fontFamily: 'UthmanicHafs',
               fontSize: 34,
@@ -2055,8 +2106,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       words: data.words,
       qcfFamilyName: data.qcfFamilyName,
       baseStyle: baseArabicStyle,
-      showWordHover: true,
-      showTooltips: true,
+      showWordHover: displayPrefs.showWordHoverHighlights,
+      showTooltips: displayPrefs.showWordTooltips,
       suppressEndMarkers: true,
       preserveQcfTextColorOnHover:
           _arabicRenderMode == _ArabicRenderMode.tajweed,
@@ -2342,6 +2393,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     required _VerseByVerseRowRenderData? renderData,
     required String translationText,
   }) {
+    final displayPrefs = ref.watch(readerDisplayPreferencesProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final highlighted = _jumpHighlightedAyahKey == ayahKey ||
         _isRangeHighlighted(ayah) ||
@@ -2395,24 +2447,28 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     child: arabicWidget,
                   ),
                 ),
-                const SizedBox(height: 12),
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Text(
-                    translationText,
-                    key: ValueKey('reader_verse_translation_$ayahKey'),
-                    textAlign: TextAlign.start,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w400,
-                            ) ??
-                        const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w400,
-                        ),
+                if (displayPrefs.showVerseTranslations) ...[
+                  const SizedBox(height: 12),
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Text(
+                      translationText,
+                      key: ValueKey('reader_verse_translation_$ayahKey'),
+                      textAlign: TextAlign.start,
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w400,
+                                  ) ??
+                              const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w400,
+                              ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 14),
+                  const SizedBox(height: 14),
+                ] else
+                  const SizedBox(height: 12),
                 _buildVerseByVerseBottomActionRow(ayahKey: ayahKey),
                 const SizedBox(height: 14),
                 const Divider(height: 1),
@@ -3493,8 +3549,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       child: child,
     );
 
+    final displayPrefs = ref.watch(readerDisplayPreferencesProvider);
     Widget interactiveChild = wordBody;
-    if (!lineWord.isEndMarker) {
+    if (!lineWord.isEndMarker && displayPrefs.showWordTooltips) {
       interactiveChild = Tooltip(
         key: ValueKey('reader_mushaf_word_tooltip_${lineNumber}_$wordIndex'),
         message: _mushafWordTooltipMessage(lineWord.word),
@@ -3505,12 +3562,20 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
     final hoverableWord = MouseRegion(
       cursor: SystemMouseCursors.click,
-      onEnter: (_) => _setHoveredMushafHoverState(
-        verseKey: verseKey,
-        wordKey: wordKey,
-        previewWord: lineWord.word,
-      ),
+      onEnter: (_) {
+        if (!displayPrefs.showWordHoverHighlights) {
+          return;
+        }
+        _setHoveredMushafHoverState(
+          verseKey: verseKey,
+          wordKey: wordKey,
+          previewWord: lineWord.word,
+        );
+      },
       onExit: (_) {
+        if (!displayPrefs.showWordHoverHighlights) {
+          return;
+        }
         if (_hoveredMushafWordKey == wordKey) {
           _setHoveredMushafHoverState(
             verseKey: null,
@@ -4461,13 +4526,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               child: switch (_mushafSettingsTab) {
                 _MushafSettingsTab.arabic => _buildMushafArabicSettingsBody(),
                 _MushafSettingsTab.translation =>
-                  _buildMushafScaffoldSettingsBody(
-                    _strings.translationSettingsComingSoon,
-                  ),
+                  _buildMushafTranslationSettingsBody(),
                 _MushafSettingsTab.wordByWord =>
-                  _buildMushafScaffoldSettingsBody(
-                    _strings.wordByWordSettingsComingSoon,
-                  ),
+                  _buildMushafWordByWordSettingsBody(),
               },
             ),
           ),
@@ -4629,11 +4690,79 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  Widget _buildMushafScaffoldSettingsBody(String message) {
-    return Center(
-      child: Text(
-        message,
-        textAlign: TextAlign.center,
+  Widget _buildMushafTranslationSettingsBody() {
+    final displayPrefs = ref.watch(readerDisplayPreferencesProvider);
+    final language = ref.watch(appPreferencesProvider).language;
+    final translationResourceId = _translationResourceIdForLanguage(language);
+    final translationLabel = _strings.translationLabel(
+      _translationResourceLabelForId(translationResourceId),
+    );
+
+    return SingleChildScrollView(
+      key: const ValueKey('reader_translation_settings_scroll'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile(
+            key: const ValueKey('reader_translation_visibility_toggle'),
+            value: displayPrefs.showVerseTranslations,
+            contentPadding: EdgeInsets.zero,
+            title: Text(_strings.showVerseTranslations),
+            onChanged: (value) {
+              unawaited(
+                ref
+                    .read(readerDisplayPreferencesProvider.notifier)
+                    .setShowVerseTranslations(value),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          Text(
+            translationLabel,
+            key: const ValueKey('reader_translation_source_label'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMushafWordByWordSettingsBody() {
+    final displayPrefs = ref.watch(readerDisplayPreferencesProvider);
+
+    return SingleChildScrollView(
+      key: const ValueKey('reader_word_by_word_settings_scroll'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile(
+            key: const ValueKey('reader_word_tooltips_toggle'),
+            value: displayPrefs.showWordTooltips,
+            contentPadding: EdgeInsets.zero,
+            title: Text(_strings.showWordTooltips),
+            onChanged: (value) {
+              unawaited(
+                ref
+                    .read(readerDisplayPreferencesProvider.notifier)
+                    .setShowWordTooltips(value),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            key: const ValueKey('reader_word_hover_toggle'),
+            value: displayPrefs.showWordHoverHighlights,
+            contentPadding: EdgeInsets.zero,
+            title: Text(_strings.highlightHoveredWords),
+            onChanged: (value) {
+              unawaited(
+                ref
+                    .read(readerDisplayPreferencesProvider.notifier)
+                    .setShowWordHoverHighlights(value),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -4923,6 +5052,12 @@ enum _ReaderAudioOptionAction {
   reciter,
 }
 
+enum _ReaderAudioExperienceAction {
+  reciter,
+  speed,
+  repeat,
+}
+
 enum _MushafScriptStyleOption {
   uthmani,
   tajweed,
@@ -4941,6 +5076,252 @@ class _MushafControlOption<T> {
   final String label;
   final Key optionKey;
   final bool enabled;
+}
+
+class _ReaderAudioExperienceSheet extends ConsumerWidget {
+  const _ReaderAudioExperienceSheet({
+    required this.strings,
+    required this.repeatLabelForCount,
+  });
+
+  final AppStrings strings;
+  final String Function(int repeatCount) repeatLabelForCount;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedReciter = ref.watch(selectedReciterProvider);
+    final audioState = ref.watch(ayahAudioStateProvider).asData?.value;
+    final prefs = ref.watch(ayahAudioPreferencesProvider);
+    final speed = audioState?.speed ?? prefs.speed;
+    final repeatCount = audioState?.repeatCount ?? prefs.repeatCount;
+
+    return SafeArea(
+      child: ListView(
+        key: const ValueKey('reader_audio_experience_sheet'),
+        shrinkWrap: true,
+        children: [
+          ListTile(
+            title: Text(strings.experience),
+          ),
+          ListTile(
+            key: const ValueKey('reader_audio_experience_option_reciter'),
+            title: Text(strings.selectedReciter),
+            subtitle: Text(selectedReciter.englishName),
+            onTap: () => Navigator.of(context).pop(
+              _ReaderAudioExperienceAction.reciter,
+            ),
+          ),
+          ListTile(
+            key: const ValueKey('reader_audio_experience_option_speed'),
+            title: Text(strings.playbackSpeed),
+            subtitle: Text('${speed.toStringAsFixed(2)}x'),
+            onTap: () => Navigator.of(context).pop(
+              _ReaderAudioExperienceAction.speed,
+            ),
+          ),
+          ListTile(
+            key: const ValueKey('reader_audio_experience_option_repeat'),
+            title: Text(strings.manageRepeatSettings),
+            subtitle: Text(repeatLabelForCount(repeatCount)),
+            onTap: () => Navigator.of(context).pop(
+              _ReaderAudioExperienceAction.repeat,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReaderAudioDownloadSheet extends ConsumerStatefulWidget {
+  const _ReaderAudioDownloadSheet({
+    required this.surah,
+    required this.config,
+    required this.reciterName,
+    required this.strings,
+  });
+
+  final int surah;
+  final AyahAudioStreamConfig config;
+  final String reciterName;
+  final AppStrings strings;
+
+  @override
+  ConsumerState<_ReaderAudioDownloadSheet> createState() =>
+      _ReaderAudioDownloadSheetState();
+}
+
+class _ReaderAudioDownloadSheetState
+    extends ConsumerState<_ReaderAudioDownloadSheet> {
+  late Future<SurahAudioDownloadSnapshot> _statusFuture;
+  SurahAudioDownloadProgress? _progress;
+  String? _errorText;
+  bool _isBusy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _statusFuture = _loadStatus();
+  }
+
+  Future<SurahAudioDownloadSnapshot> _loadStatus() {
+    return ref.read(ayahAudioDownloadServiceProvider).getSurahDownloadStatus(
+          surah: widget.surah,
+          config: widget.config,
+        );
+  }
+
+  Future<void> _download() async {
+    setState(() {
+      _isBusy = true;
+      _errorText = null;
+      _progress = null;
+    });
+    try {
+      await ref.read(ayahAudioDownloadServiceProvider).downloadSurah(
+            surah: widget.surah,
+            config: widget.config,
+            onProgress: (progress) {
+              if (!mounted) {
+                return;
+              }
+              setState(() {
+                _progress = progress;
+              });
+            },
+          );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _progress = null;
+        _statusFuture = _loadStatus();
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _errorText = widget.strings.audioDownloadFailed(error.toString());
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _removeDownload() async {
+    setState(() {
+      _isBusy = true;
+      _errorText = null;
+      _progress = null;
+    });
+    try {
+      await ref.read(ayahAudioDownloadServiceProvider).removeSurahDownload(
+            surah: widget.surah,
+            config: widget.config,
+          );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _statusFuture = _loadStatus();
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _errorText = widget.strings.audioDownloadFailed(error.toString());
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: FutureBuilder<SurahAudioDownloadSnapshot>(
+        future: _statusFuture,
+        builder: (context, snapshot) {
+          final status = snapshot.data;
+          final progress = _progress;
+          final totalAyahs =
+              status?.totalAyahs ?? progress?.totalAyahs ?? 0;
+          final progressLabel = progress == null
+              ? widget.strings.downloadedAyahsProgress(
+                  status?.downloadedAyahs ?? 0,
+                  totalAyahs,
+                )
+              : widget.strings.downloadingAyahsProgress(
+                  progress.completedAyahs,
+                  progress.totalAyahs,
+                );
+
+          return ListView(
+            key: const ValueKey('reader_audio_download_sheet'),
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(widget.strings.download),
+                subtitle: Text(widget.strings.surahLabel(widget.surah)),
+              ),
+              Text(widget.strings.selectedReciter),
+              const SizedBox(height: 4),
+              Text(
+                widget.reciterName,
+                key: const ValueKey('reader_audio_download_reciter_name'),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                progressLabel,
+                key: const ValueKey('reader_audio_download_progress_label'),
+              ),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                key: const ValueKey('reader_audio_download_progress'),
+                value: progress != null
+                    ? progress.completedAyahs / progress.totalAyahs
+                    : (status?.fraction ?? 0),
+              ),
+              if (_errorText != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _errorText!,
+                  key: const ValueKey('reader_audio_download_error'),
+                ),
+              ],
+              const SizedBox(height: 16),
+              FilledButton(
+                key: const ValueKey('reader_audio_download_action'),
+                onPressed: _isBusy ? null : _download,
+                child: Text(widget.strings.download),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                key: const ValueKey('reader_audio_remove_download_action'),
+                onPressed: _isBusy || !(status?.hasAnyDownload ?? false)
+                    ? null
+                    : _removeDownload,
+                child: Text(widget.strings.removeDownload),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _ReaderAudioPill extends StatelessWidget {

@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 
+import '../services/ayah_audio_download_service.dart';
 import '../services/ayah_audio_preferences.dart';
+import '../services/ayah_audio_playback_resolver.dart';
 import '../services/ayah_audio_service.dart';
 import '../services/ayah_audio_source.dart';
 import '../services/ayah_reciter_catalog_service.dart';
@@ -260,6 +262,21 @@ final ayahAudioStreamResolverProvider = Provider<AyahAudioStreamResolver>(
   },
 );
 
+final ayahAudioDownloadServiceProvider = Provider<AyahAudioDownloadService>(
+  (ref) {
+    final client = http.Client();
+    ref.onDispose(client.close);
+    return SupportDirAyahAudioDownloadService(client: client);
+  },
+);
+
+final ayahAudioPlaybackResolverProvider = Provider<AyahAudioPlaybackResolver>(
+  (ref) {
+    final downloadService = ref.watch(ayahAudioDownloadServiceProvider);
+    return CachedAyahAudioPlaybackResolver(downloadService);
+  },
+);
+
 final ayahReciterCatalogProvider = FutureProvider<List<AyahReciterOption>>((
   ref,
 ) async {
@@ -323,9 +340,11 @@ final ayahAudioSourceProvider = Provider<AyahAudioSource>((ref) {
 
 AyahAudioService createStreamingAyahAudioService(Ref ref) {
   final source = ref.read(ayahAudioSourceProvider);
+  final playbackResolver = ref.read(ayahAudioPlaybackResolverProvider);
   final service = JustAudioAyahAudioService(
     audioPlayer: AudioPlayer(),
     source: source,
+    playbackResolver: playbackResolver,
   );
   final initialPrefs = ref.read(ayahAudioPreferencesProvider);
   unawaited(_syncServiceSettingsFromPrefs(service, initialPrefs));
