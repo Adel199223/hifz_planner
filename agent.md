@@ -20,6 +20,7 @@ Use this runbook to quickly route a task to the right files, commands, and tests
 Compatibility:
 - `AGENTS.md` is a short shim for tools that auto-open that filename.
 - `agent.md` is the detailed runbook humans and AI agents should execute.
+- In user conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.
 
 ## Approval Gates
 
@@ -92,6 +93,7 @@ For user support or explanation tasks:
 16. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
 17. For major implementation stages, default local closeout order is: targeted validation, implementation commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree. Push remains explicit.
 18. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
+19. Treat `roadmap`, `master plan`, and `next milestone` as Companion/Planner aliases unless the user explicitly redirects.
 
 ## ExecPlans
 

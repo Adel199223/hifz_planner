@@ -63,6 +63,9 @@ Significant-change docs sync policy:
   - end with a clean local worktree
   - push remains explicit
 
+Roadmap vocabulary default:
+- unless the user explicitly redirects, `roadmap`, `master plan`, and `next milestone` refer to the Companion/Planner track
+
 Why two `APP_KNOWLEDGE.md` files:
 - Root `APP_KNOWLEDGE.md` is canonical and complete.
 - `docs/assistant/APP_KNOWLEDGE.md` is intentionally shorter as a bridge/bootstrap doc.
@@ -544,6 +547,10 @@ Current capabilities:
     - `HintLevel.meaningCue` derives a short cue from existing Quran.com verse translation data
     - Companion renders the cue source as `Translation: <source>`
     - if no usable translation exists, meaning-cue requests fall back to the next non-semantic hint
+  - evaluator foundation:
+    - all graded attempts now flow through `VerseEvaluationSubmission` and the injected `activeVerseEvaluatorProvider`
+    - the current provider binding remains `ManualFallbackVerseEvaluator`, so `Record / Start` still ends in the manual correct/incorrect grading sheet
+    - live ASR, recording, transcription, and permission flows are still deferred; transcript/confidence fields exist only as future integration points
   - hidden verses render without dot placeholders
   - Arabic rendering parity with tajweed colors by default (no reader action-chip parity)
 - `lib/screens/about_screen.dart`

@@ -1,5 +1,5 @@
 {
-  "version": 10,
+  "version": 11,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
@@ -93,7 +93,7 @@
     {
       "id": "scheduling_companion",
       "doc": "docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md",
-      "scope": "Automatic scheduling preferences, weekly calendar generation, rebalancing, and staged companion ramp with source-backed meaning cues, recitation controls, and word-hover parity.",
+      "scope": "Automatic scheduling preferences, weekly calendar generation, rebalancing, and staged companion ramp with evaluator foundation, source-backed meaning cues, recitation controls, and word-hover parity.",
       "primary_files": [
         "lib/screens/plan_screen.dart",
         "lib/screens/today_screen.dart",
@@ -110,6 +110,7 @@
         "lib/data/services/scheduling/daily_content_allocator.dart",
         "lib/data/services/scheduling/scheduling_preferences_codec.dart",
         "lib/data/services/companion/progressive_reveal_chain_engine.dart",
+        "lib/data/services/companion/verse_evaluator.dart",
         "lib/data/services/companion/meaning_cue_service.dart",
         "lib/data/services/companion/companion_calibration_bridge.dart",
         "lib/data/repositories/companion_repo.dart",
@@ -120,6 +121,7 @@
         "test/screens/plan_screen_test.dart",
         "test/screens/today_screen_test.dart",
         "test/screens/companion_chain_screen_test.dart",
+        "test/data/services/companion/verse_evaluator_test.dart",
         "test/data/services/companion/meaning_cue_service_test.dart",
         "test/ui/quran/quran_word_wrap_test.dart",
         "test/app/app_preferences_test.dart",
@@ -143,6 +145,7 @@
         "flutter test -j 1 -r expanded test/screens/plan_screen_test.dart",
         "flutter test -j 1 -r expanded test/screens/today_screen_test.dart",
         "flutter test -j 1 -r expanded test/screens/companion_chain_screen_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/companion/verse_evaluator_test.dart",
         "flutter test -j 1 -r expanded test/data/services/companion/meaning_cue_service_test.dart",
         "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
         "flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart",
@@ -349,6 +352,7 @@
     "worktree_isolation_policy": "For parallel implementation streams, prefer git worktree isolation and avoid mixing unrelated feature threads in one working tree.",
     "doc_gardening_policy": "Run docs validators regularly and apply targeted docs maintenance to prevent routing/contract drift.",
     "major_stage_closeout_policy": "Major implementation stages default to: targeted validation, implementation commit first, the exact Assistant Docs Sync prompt, targeted docs sync if approved, a separate docs-only commit, then a clean local worktree. Push remains explicit.",
+    "roadmap_alias_policy": "In repo conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.",
     "user_guides_support_usage_policy": "For support/non-technical explanations, start with docs/assistant/features/APP_USER_GUIDE.md and use docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.",
     "user_guides_canonical_deference_policy": "Feature guides are explanatory docs; if they conflict with technical docs, APP_KNOWLEDGE.md and source code win.",
     "user_guides_update_sync_policy": "When user-facing behavior copy/flow changes, update only affected sections in APP_USER_GUIDE.md and/or PLANNER_USER_GUIDE.md.",

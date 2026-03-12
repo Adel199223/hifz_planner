@@ -45,6 +45,7 @@ Why both files exist:
 - After significant implementation changes, always ask:
   - "Would you like me to run Assistant Docs Sync for this change now?"
   - If user agrees, update only relevant assistant docs for changed scope.
+- In user conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.
 - Default closeout for major implementation stages:
   - run targeted validation for the touched scope
   - commit implementation files first

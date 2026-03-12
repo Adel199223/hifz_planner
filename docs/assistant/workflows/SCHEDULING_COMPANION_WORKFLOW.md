@@ -7,6 +7,7 @@ Use this workflow for automatic scheduling preferences, weekly calendar generati
 ## Expected Outputs
 
 - Scheduling and companion staged behavior remain deterministic and persisted safely.
+- Companion attempt evaluation stays routed through a future-ASR-ready boundary while the shipped UX remains manual.
 - Shared projection/calibration contracts remain consistent.
 - Scheduling/companion targeted tests pass.
 
@@ -18,6 +19,7 @@ Use when changes touch:
 - daily planner and forecast shared projection behavior
 - Plan screen scheduling/calendar UI or Today session rendering
 - companion chain route, engine, telemetry, proficiency, or calibration bridge
+- companion evaluator provider/submission contracts and future-ASR integration points
 - companion meaning-cue sourcing, fallback, or translation-source labeling
 - staged companion ramp contracts (`guided_visible`, `cued_recall`, `hidden_reveal`) and launch mode routing
 - companion recitation controls (play + autoplay persistence) and Quran word-hover parity
@@ -32,7 +34,9 @@ Use when changes touch:
 - Do not bypass transactional boundaries for review log + scheduler updates.
 - Do not duplicate scheduled-review completion logic in screens; route Today and Companion review saves through `ReviewCompletionService`.
 - Do not auto-reveal full verse text on chain failure; hint progression is user-driven.
+- Do not bypass `activeVerseEvaluatorProvider` or reintroduce raw pass/fail primitives through screen-engine boundaries.
 - Do not generate unsourced meaning cues; reuse attributed verse translation data and fall back when unavailable.
+- Do not add live ASR, recording, transcription, or permission flows unless the milestone explicitly includes them.
 
 ## Primary Files
 
@@ -76,6 +80,7 @@ rg -n "scheduling_prefs_json|PlanningProjectionEngine|WeeklyPlan|ProgressiveReve
 flutter test -j 1 -r expanded test/screens/plan_screen_test.dart
 flutter test -j 1 -r expanded test/screens/today_screen_test.dart
 flutter test -j 1 -r expanded test/screens/companion_chain_screen_test.dart
+flutter test -j 1 -r expanded test/data/services/companion/verse_evaluator_test.dart
 flutter test -j 1 -r expanded test/data/services/companion/meaning_cue_service_test.dart
 flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart
 flutter test -j 1 -r expanded test/app/app_preferences_test.dart
@@ -111,6 +116,8 @@ flutter test -j 1 -r expanded test/data/services/companion
    - Verify `ReviewCompletionService.completeScheduledReview(...)` owns the full transaction order: insert `review_log`, apply scheduler, then update `companion_lifecycle_state`.
 9. Symptoms: meaning cue appears without attribution or falls through incorrectly.
    - Verify `CompanionMeaningCueService` is reading verse translation data, `Translation: {label}` renders for `HintLevel.meaningCue`, and missing translation text falls back to the next non-semantic hint.
+10. Symptoms: evaluator work starts rewriting screen or engine contracts again before ASR ships.
+   - Verify the screen still submits `VerseEvaluationSubmission`, the engine still accepts that unified payload, and `activeVerseEvaluatorProvider` remains the swap point for future evaluator implementations.
 
 ## Handoff Checklist
 
@@ -120,6 +127,7 @@ flutter test -j 1 -r expanded test/data/services/companion
 - planned review rows carry lifecycle tier data for Today badge/sort rendering
 - scheduled review completion uses the shared `ReviewCompletionService` path in both Today and Companion
 - companion chain persists per-attempt telemetry and session summary
+- companion attempt evaluation flows through `VerseEvaluationSubmission` + `activeVerseEvaluatorProvider`, with live ASR still deferred
 - meaning cues use attributed verse translation text when available and fall back cleanly when unavailable
 - companion recitation controls remain optional and non-blocking (`Play current ayah`, persisted autoplay toggle)
 - companion/reader shared word rendering suppresses end-marker circles in Verse-by-Verse scope
@@ -128,6 +136,7 @@ flutter test -j 1 -r expanded test/data/services/companion
 
 ## Roadmap Stage Closeout Note
 
+- In repo conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.
 - For major scheduling/companion milestones, default local closeout is: targeted validation, feature commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree.
 - Defer detailed staging/push mechanics to `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`; push remains explicit.
 
@@ -203,6 +212,11 @@ flutter test -j 1 -r expanded test/data/services/companion
 - Stage memory:
   - persist per-unit unlocked stage in `companion_unit_state`.
   - `mode=new` resumes at stored stage; `mode=review` ignores it.
+- Attempt evaluation foundation:
+  - all graded attempts flow through `VerseEvaluationSubmission`
+  - the screen reads `activeVerseEvaluatorProvider`; the current binding remains `ManualFallbackVerseEvaluator`
+  - `Record / Start` still ends in manual correct/incorrect grading for this milestone
+  - live ASR, recording, transcription, and permissions are deferred; transcript/confidence fields exist only as future evaluator inputs
 - Meaning cue contract:
   - `HintLevel.meaningCue` uses attributed verse translation text from existing Quran.com verse data when available.
   - Companion renders the cue source as `Translation: <source>`.
