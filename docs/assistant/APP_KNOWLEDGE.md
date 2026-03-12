@@ -15,6 +15,7 @@ Why two `APP_KNOWLEDGE.md` files:
 Recommended starting points:
 - `AGENTS.md` (compatibility shim)
 - `agent.md` (primary runbook)
+- `docs/assistant/ROADMAP_ANCHOR.md` (current roadmap continuity and next-milestone handoff)
 - `docs/assistant/INDEX.md` (human index)
 - `docs/assistant/manifest.json` (machine routing map)
 
@@ -46,6 +47,7 @@ Do not use this file as primary truth when there is a conflict.
 - `AGENTS.md`
 - `agent.md`
 - `APP_KNOWLEDGE.md`
+- `docs/assistant/ROADMAP_ANCHOR.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
@@ -105,6 +107,7 @@ Do not use this file as primary truth when there is a conflict.
 2. Read:
    - `agent.md`
    - `APP_KNOWLEDGE.md`
+   - `docs/assistant/ROADMAP_ANCHOR.md` when resuming roadmap work
 3. Confirm current routes:
    - open `lib/app/router.dart`
 4. Confirm current reader modes:

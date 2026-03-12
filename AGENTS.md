@@ -10,17 +10,18 @@ Why both files exist:
 
 1. `agent.md` (primary runbook)
 2. `APP_KNOWLEDGE.md` (canonical app knowledge)
-3. `docs/assistant/manifest.json` (machine-readable routing)
-4. `docs/assistant/INDEX.md` (human doc index)
-5. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical invariants)
-6. `docs/assistant/exec_plans/PLANS.md` (major-work planning contract)
-7. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB/Drift deep reference)
-8. `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` (language/RTL/terminology)
-9. `docs/assistant/LOCALIZATION_GLOSSARY.md` (localized term source)
-10. `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` (workspace performance)
-11. `docs/assistant/PERFORMANCE_BASELINES.md` (editor/perf defaults)
-12. `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` (parity reference policy)
-13. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/push/cleanup protocol)
+3. `docs/assistant/ROADMAP_ANCHOR.md` (current roadmap continuity and next-milestone handoff)
+4. `docs/assistant/manifest.json` (machine-readable routing)
+5. `docs/assistant/INDEX.md` (human doc index)
+6. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical invariants)
+7. `docs/assistant/exec_plans/PLANS.md` (major-work planning contract)
+8. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB/Drift deep reference)
+9. `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` (language/RTL/terminology)
+10. `docs/assistant/LOCALIZATION_GLOSSARY.md` (localized term source)
+11. `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` (workspace performance)
+12. `docs/assistant/PERFORMANCE_BASELINES.md` (editor/perf defaults)
+13. `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` (parity reference policy)
+14. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/push/cleanup protocol)
 
 ## Non-Negotiables
 
@@ -46,6 +47,7 @@ Why both files exist:
   - "Would you like me to run Assistant Docs Sync for this change now?"
   - If user agrees, update only relevant assistant docs for changed scope.
 - In user conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.
+- For roadmap continuation or "continue where we left off" requests, open `docs/assistant/ROADMAP_ANCHOR.md` early.
 - Default closeout for major implementation stages:
   - run targeted validation for the touched scope
   - commit implementation files first

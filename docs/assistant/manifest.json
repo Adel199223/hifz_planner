@@ -1,9 +1,12 @@
 {
-  "version": 11,
+  "version": 12,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
     "db_knowledge": "docs/assistant/DB_DRIFT_KNOWLEDGE.md"
+  },
+  "continuity": {
+    "roadmap_anchor": "docs/assistant/ROADMAP_ANCHOR.md"
   },
   "bridges": [
     "AGENTS.md",
@@ -353,6 +356,7 @@
     "doc_gardening_policy": "Run docs validators regularly and apply targeted docs maintenance to prevent routing/contract drift.",
     "major_stage_closeout_policy": "Major implementation stages default to: targeted validation, implementation commit first, the exact Assistant Docs Sync prompt, targeted docs sync if approved, a separate docs-only commit, then a clean local worktree. Push remains explicit.",
     "roadmap_alias_policy": "In repo conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.",
+    "roadmap_continuity_policy": "For roadmap continuation or \"continue where we left off\" requests, open docs/assistant/ROADMAP_ANCHOR.md early and treat it as the current Companion/Planner continuity anchor unless the user redirects.",
     "user_guides_support_usage_policy": "For support/non-technical explanations, start with docs/assistant/features/APP_USER_GUIDE.md and use docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.",
     "user_guides_canonical_deference_policy": "Feature guides are explanatory docs; if they conflict with technical docs, APP_KNOWLEDGE.md and source code win.",
     "user_guides_update_sync_policy": "When user-facing behavior copy/flow changes, update only affected sections in APP_USER_GUIDE.md and/or PLANNER_USER_GUIDE.md.",

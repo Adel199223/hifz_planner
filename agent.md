@@ -9,13 +9,14 @@ Use this runbook to quickly route a task to the right files, commands, and tests
 ## Canonical Docs Stack
 
 1. `APP_KNOWLEDGE.md` (canonical app status and architecture)
-2. `docs/assistant/manifest.json` (machine-readable routing map)
-3. `docs/assistant/INDEX.md` (human doc index)
-4. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical style/invariant rules)
-5. `docs/assistant/exec_plans/PLANS.md` (major-work execution plans)
-6. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB and Drift deep reference)
-7. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
-8. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
+2. `docs/assistant/ROADMAP_ANCHOR.md` (current roadmap continuity and next-milestone handoff)
+3. `docs/assistant/manifest.json` (machine-readable routing map)
+4. `docs/assistant/INDEX.md` (human doc index)
+5. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical style/invariant rules)
+6. `docs/assistant/exec_plans/PLANS.md` (major-work execution plans)
+7. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB and Drift deep reference)
+8. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
+9. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
 
 Compatibility:
 - `AGENTS.md` is a short shim for tools that auto-open that filename.
@@ -40,6 +41,7 @@ Ask for explicit approval before commands that:
 | Reader UI or Quran parity | `docs/assistant/workflows/READER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart` |
 | Quran.com API/cache/fonts | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | `flutter test -j 1 -r expanded test/data/services/qurancom_api_test.dart` |
 | Planning/scheduling/calibration | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart` |
+| Roadmap continuation / "continue where we left off" | `docs/assistant/ROADMAP_ANCHOR.md` | `git status --short --branch` |
 | "Like X"/"same as X"/parity inspired by named app/site | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | User support / non-technical app explanation | `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner questions); respond in plain language first and define unavoidable jargon once | `dart run tooling/validate_agent_docs.dart` when docs were edited |
 | Agent docs/structure | `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
@@ -94,6 +96,7 @@ For user support or explanation tasks:
 17. For major implementation stages, default local closeout order is: targeted validation, implementation commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree. Push remains explicit.
 18. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
 19. Treat `roadmap`, `master plan`, and `next milestone` as Companion/Planner aliases unless the user explicitly redirects.
+20. For roadmap continuation in a new chat, open `docs/assistant/ROADMAP_ANCHOR.md` after `APP_KNOWLEDGE.md` before drafting a new ExecPlan or choosing the next milestone.
 
 ## ExecPlans
 

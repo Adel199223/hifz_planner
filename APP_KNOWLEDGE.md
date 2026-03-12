@@ -17,6 +17,7 @@ Documentation contract for contributors and AI agents:
 - Canonical app brief: `APP_KNOWLEDGE.md` (this file)
 - Compatibility entrypoint: `AGENTS.md`
 - Agent runbook entrypoint: `agent.md`
+- Roadmap continuity anchor: `docs/assistant/ROADMAP_ANCHOR.md`
 - Assistant bridge path: `docs/assistant/APP_KNOWLEDGE.md`
 - DB/Drift deep reference: `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - Assistant doc index: `docs/assistant/INDEX.md`
@@ -65,6 +66,7 @@ Significant-change docs sync policy:
 
 Roadmap vocabulary default:
 - unless the user explicitly redirects, `roadmap`, `master plan`, and `next milestone` refer to the Companion/Planner track
+- for new-chat continuation or resume requests, read `docs/assistant/ROADMAP_ANCHOR.md` after `agent.md` and this file
 
 Why two `APP_KNOWLEDGE.md` files:
 - Root `APP_KNOWLEDGE.md` is canonical and complete.

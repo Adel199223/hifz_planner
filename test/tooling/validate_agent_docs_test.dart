@@ -67,6 +67,29 @@ void main() {
     );
   });
 
+  test('validator fails when roadmap anchor file is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final missingAnchor = File(
+      _joinPath(fixture.path, 'docs/assistant/ROADMAP_ANCHOR.md'),
+    );
+    missingAnchor.deleteSync();
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Missing required file:') &&
+            issue.contains('ROADMAP_ANCHOR.md'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when manifest misses required ci_repo_ops workflow',
       () {
     final fixture = _createValidFixture();
@@ -1712,6 +1735,14 @@ Directory _createValidFixture() {
   );
   writeFile('docs/assistant/DB_DRIFT_KNOWLEDGE.md', '# DB');
   writeFile('docs/assistant/GOLDEN_PRINCIPLES.md', '# GOLDEN');
+  writeFile(
+    'docs/assistant/ROADMAP_ANCHOR.md',
+    [
+      '# Roadmap Anchor',
+      '',
+      'Read this after `agent.md` and `APP_KNOWLEDGE.md` when resuming roadmap work.',
+    ].join('\n'),
+  );
   writeFile(
     'docs/assistant/INDEX.md',
     [

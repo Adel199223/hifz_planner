@@ -8,6 +8,8 @@ One-page navigation guide for agent-facing documentation.
 2. Read that document first.
 3. Run the listed validator/smoke command before handoff.
 
+For roadmap continuation or "continue where we left off" requests, open `docs/assistant/ROADMAP_ANCHOR.md` after `APP_KNOWLEDGE.md`.
+
 ## Beginner Quick Path
 
 1. Start with `docs/assistant/features/APP_USER_GUIDE.md`.
@@ -21,6 +23,7 @@ One-page navigation guide for agent-facing documentation.
 | `AGENTS.md` | Your tool auto-opens `AGENTS.md` and needs immediate routing. | Deep architecture details. | 1 min |
 | `agent.md` | You need the operational runbook and quick task routing matrix. | Full DB schema details. | 2 min |
 | `APP_KNOWLEDGE.md` | You need canonical app architecture, feature status, and subsystem map. | Fine-grained per-workflow checklists. | 3 min |
+| `docs/assistant/ROADMAP_ANCHOR.md` | You need the current Companion/Planner roadmap state, latest completed milestones, next milestone, or a new-chat continuation point. | Canonical app architecture or detailed per-workflow checklists. | 2 min |
 | `docs/assistant/GOLDEN_PRINCIPLES.md` | You need enforceable style/invariant rules before implementation. | Feature-specific workflow steps. | 1 min |
 | `docs/assistant/exec_plans/PLANS.md` | Work is major/multi-file and needs a self-contained execution plan format. | Small isolated fixes. | 2 min |
 | `docs/assistant/APP_KNOWLEDGE.md` | Your workflow expects assistant-path docs and needs canonical pointer/bootstrapping. | Canonical truth when conflicts exist. | 1 min |
