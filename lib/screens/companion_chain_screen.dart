@@ -357,6 +357,13 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         !state.isReviewMode;
   }
 
+  bool _isReviewRuntimeActive(ChainRunState state) {
+    return state.activeStage == CompanionStage.hiddenReveal &&
+        !state.completed &&
+        state.review != null &&
+        state.isReviewMode;
+  }
+
   Future<void> _submitReviewGrade(int gradeQ) async {
     final state = _state;
     if (state == null ||
@@ -474,6 +481,13 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       }
       return runtime.activeAutoCheckPrompt;
     }
+    if (_isReviewRuntimeActive(state)) {
+      final runtime = state.review!;
+      if (!runtime.autoCheckRequiredForCurrentMode) {
+        return null;
+      }
+      return runtime.activeAutoCheckPrompt;
+    }
     if (_isStage4RuntimeActive(state)) {
       final runtime = state.stage4!;
       if (!runtime.autoCheckRequiredForCurrentMode) {
@@ -548,6 +562,17 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     };
   }
 
+  String _reviewModeLabel(ReviewMode mode) {
+    return switch (mode) {
+      ReviewMode.hiddenRecall => _strings.companionReviewModeHiddenRecall,
+      ReviewMode.linking => _strings.companionReviewModeLinking,
+      ReviewMode.discrimination => _strings.companionReviewModeDiscrimination,
+      ReviewMode.correction => _strings.companionReviewModeCorrection,
+      ReviewMode.checkpoint => _strings.companionReviewModeCheckpoint,
+      ReviewMode.remediation => _strings.companionReviewModeRemediation,
+    };
+  }
+
   Future<void> _recordAttempt() async {
     final state = _state;
     if (state == null || state.completed || _isSubmitting || _isChangingStage) {
@@ -562,10 +587,13 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         state.stage3!.mode == Stage3Mode.correction;
     final isStage4Correction = _isStage4RuntimeActive(state) &&
         state.stage4!.mode == Stage4Mode.correction;
+    final isReviewCorrection = _isReviewRuntimeActive(state) &&
+        state.review!.mode == ReviewMode.correction;
     if (isStage1Correction ||
         isStage2Correction ||
         isStage3Correction ||
-        isStage4Correction) {
+        isStage4Correction ||
+        isReviewCorrection) {
       setState(() {
         _isSubmitting = true;
       });
@@ -840,9 +868,23 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     return baseline;
   }
 
+  HintLevel _reviewBaselineHint(Stage3VerseStats stats) {
+    var baseline = stats.cueBaselineHint;
+    if (stats.reliefPending && baseline == HintLevel.h0) {
+      baseline = HintLevel.letters;
+    }
+    if (baseline.order > HintLevel.letters.order) {
+      baseline = HintLevel.letters;
+    }
+    return baseline;
+  }
+
   HintLevel _dynamicBaselineHint(ChainRunState state) {
     if (_isStage2RuntimeActive(state)) {
       return _stage2BaselineHint(state.currentVerse.stage2);
+    }
+    if (_isReviewRuntimeActive(state)) {
+      return _reviewBaselineHint(state.currentVerse.stage3);
     }
     if (_isStage4RuntimeActive(state)) {
       return _stage4BaselineHint(state.currentVerse.stage4);
@@ -947,6 +989,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     if (_isStage3RuntimeActive(state) && isCurrent) {
       return _stage3ModeLabel(state.stage3!.mode);
     }
+    if (_isReviewRuntimeActive(state) && isCurrent) {
+      return _reviewModeLabel(state.review!.mode);
+    }
     if (_isStage4RuntimeActive(state) && isCurrent) {
       return _stage4ModeLabel(state.stage4!.mode);
     }
@@ -1009,6 +1054,20 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     return _effectiveHintLevel(state) == HintLevel.h0;
   }
 
+  bool _shouldHideCurrentVerseForReview(
+    ChainRunState state,
+    ChainVerseState verse,
+  ) {
+    if (!_isReviewRuntimeActive(state) ||
+        !identical(verse, state.currentVerse)) {
+      return false;
+    }
+    if (verse.passed) {
+      return false;
+    }
+    return _effectiveHintLevel(state) == HintLevel.h0;
+  }
+
   bool _shouldHideCurrentVerseForStage4(
     ChainRunState state,
     ChainVerseState verse,
@@ -1059,6 +1118,24 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     };
   }
 
+  String? _reviewCueText(ChainRunState state, ChainVerseState verse) {
+    if (!_isReviewRuntimeActive(state)) {
+      return null;
+    }
+    if (!identical(verse, state.currentVerse)) {
+      return null;
+    }
+    final hintLevel = _effectiveHintLevel(state);
+    return switch (hintLevel) {
+      HintLevel.h0 => null,
+      HintLevel.letters => _lettersHint(verse.verse.text),
+      HintLevel.firstWord => _firstWordCue(verse.verse.text),
+      HintLevel.meaningCue => _strings.companionTafsirCuePlaceholder,
+      HintLevel.chunkText => _chunkHint(verse.verse.text),
+      HintLevel.fullText => verse.verse.text,
+    };
+  }
+
   String? _stage4CueText(ChainRunState state, ChainVerseState verse) {
     if (!_isStage4RuntimeActive(state)) {
       return null;
@@ -1087,6 +1164,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     if (_shouldHideCurrentVerseForStage3(state, verse)) {
       return null;
     }
+    if (_shouldHideCurrentVerseForReview(state, verse)) {
+      return null;
+    }
     if (_shouldHideCurrentVerseForStage4(state, verse)) {
       return null;
     }
@@ -1099,9 +1179,11 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
               : _firstWordCue(verse.verse.text)),
       CompanionStage.hiddenReveal => _isStage3RuntimeActive(state)
           ? _stage3CueText(state, verse)
-          : _isStage4RuntimeActive(state)
-              ? _stage4CueText(state, verse)
-              : (verse.revealed ? verse.verse.text : null),
+          : _isReviewRuntimeActive(state)
+              ? _reviewCueText(state, verse)
+              : _isStage4RuntimeActive(state)
+                  ? _stage4CueText(state, verse)
+                  : (verse.revealed ? verse.verse.text : null),
     };
   }
 
@@ -1113,6 +1195,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       return false;
     }
     if (_shouldHideCurrentVerseForStage3(state, verse)) {
+      return false;
+    }
+    if (_shouldHideCurrentVerseForReview(state, verse)) {
       return false;
     }
     if (_shouldHideCurrentVerseForStage4(state, verse)) {
@@ -1128,10 +1213,13 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       CompanionStage.hiddenReveal => _isStage3RuntimeActive(state)
           ? (identical(verse, state.currentVerse) &&
               _effectiveHintLevel(state) == HintLevel.fullText)
-          : _isStage4RuntimeActive(state)
+          : _isReviewRuntimeActive(state)
               ? (identical(verse, state.currentVerse) &&
                   _effectiveHintLevel(state) == HintLevel.fullText)
-              : verse.revealed,
+              : _isStage4RuntimeActive(state)
+                  ? (identical(verse, state.currentVerse) &&
+                      _effectiveHintLevel(state) == HintLevel.fullText)
+                  : verse.revealed,
     };
   }
 
@@ -1341,6 +1429,43 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     );
   }
 
+  Widget? _buildReviewModeCard(ChainRunState state) {
+    if (!_isReviewRuntimeActive(state) || state.review == null) {
+      return null;
+    }
+    final runtime = state.review!;
+    final modeLabel = _reviewModeLabel(runtime.mode);
+    final helperText = runtime.mode == ReviewMode.correction
+        ? _strings.companionReviewCorrectionRequiredMessage
+        : _strings.companionReviewReciteNow;
+
+    return Card(
+      key: const ValueKey('companion_review_mode_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _strings.companionReviewModeLabel,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              modeLabel,
+              key: const ValueKey('companion_review_mode_label'),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              helperText,
+              key: const ValueKey('companion_review_mode_hint'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget? _buildAutoCheckCard(ChainRunState state) {
     final prompt = _currentAutoCheckPrompt(state);
     if (prompt == null) {
@@ -1350,9 +1475,11 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         ? 'companion_stage2_auto_check'
         : _isStage3RuntimeActive(state)
             ? 'companion_stage3_auto_check'
-            : _isStage4RuntimeActive(state)
-                ? 'companion_stage4_auto_check'
-                : 'companion_stage1_auto_check';
+            : _isReviewRuntimeActive(state)
+                ? 'companion_review_auto_check'
+                : _isStage4RuntimeActive(state)
+                    ? 'companion_stage4_auto_check'
+                    : 'companion_stage1_auto_check';
 
     return Card(
       key: ValueKey('${keyPrefix}_card'),
@@ -1473,6 +1600,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
     final stage1ModeCard = _buildStage1ModeCard(state);
     final stage2ModeCard = _buildStage2ModeCard(state);
     final stage3ModeCard = _buildStage3ModeCard(state);
+    final reviewModeCard = _buildReviewModeCard(state);
     final stage4ModeCard = _buildStage4ModeCard(state);
     final stage1AutoCheckCard = _buildAutoCheckCard(state);
     final hintLocked = _isHintLockedByStage1(state);
@@ -1482,6 +1610,8 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         state.stage2?.mode == Stage2Mode.correction;
     final isStage3Correction = _isStage3RuntimeActive(state) &&
         state.stage3?.mode == Stage3Mode.correction;
+    final isReviewCorrection = _isReviewRuntimeActive(state) &&
+        state.review?.mode == ReviewMode.correction;
     final isStage4Correction = _isStage4RuntimeActive(state) &&
         state.stage4?.mode == Stage4Mode.correction;
 
@@ -1524,6 +1654,10 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
             if (stage3ModeCard != null) ...[
               const SizedBox(height: 8),
               stage3ModeCard,
+            ],
+            if (reviewModeCard != null) ...[
+              const SizedBox(height: 8),
+              reviewModeCard,
             ],
             if (stage4ModeCard != null) ...[
               const SizedBox(height: 8),
@@ -1673,10 +1807,13 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
                                 ? _strings.companionStage2CorrectionAction
                                 : isStage3Correction
                                     ? _strings.companionStage3CorrectionAction
-                                    : isStage4Correction
+                                    : isReviewCorrection
                                         ? _strings
-                                            .companionStage4CorrectionAction
-                                        : _strings.companionRecordStart,
+                                            .companionReviewCorrectionAction
+                                        : isStage4Correction
+                                            ? _strings
+                                                .companionStage4CorrectionAction
+                                            : _strings.companionRecordStart,
                   ),
                 ),
                 OutlinedButton(

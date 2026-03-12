@@ -10,6 +10,7 @@ import 'package:hifz_planner/data/services/companion/companion_calibration_bridg
 import 'package:hifz_planner/data/services/companion/companion_models.dart';
 import 'package:hifz_planner/data/services/companion/progressive_reveal_chain_engine.dart';
 import 'package:hifz_planner/data/services/companion/verse_evaluator.dart';
+import 'package:hifz_planner/data/time/local_day_time.dart';
 
 void main() {
   late AppDatabase db;
@@ -65,6 +66,7 @@ void main() {
     final prompt = state.stage1?.activeAutoCheckPrompt ??
         state.stage2?.activeAutoCheckPrompt ??
         state.stage3?.activeAutoCheckPrompt ??
+        state.review?.activeAutoCheckPrompt ??
         state.stage4?.activeAutoCheckPrompt;
     expect(prompt, isNotNull);
     return prompt!.correctOptionId;
@@ -1679,10 +1681,10 @@ void main() {
     expect(lifecycle.stage4Status, 'passed');
   });
 
-  test('review mode remains hidden-first and bypasses Stage 2 runtime',
+  test('review mode initializes dedicated runtime and removes legacy telemetry',
       () async {
-    final unitId = await createUnit('stage2-review-unchanged', endAyah: 1);
-    final config = configForStage2(const Stage2Config());
+    final unitId = await createUnit('review-runtime-init', endAyah: 1);
+    final config = configForStage3(const Stage3Config());
 
     final state = await engine.startSession(
       unitId: unitId,
@@ -1698,17 +1700,171 @@ void main() {
     expect(state.stage2, isNull);
     expect(state.stage3, isNull);
     expect(state.stage4, isNull);
+    expect(state.review, isNotNull);
 
     final update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
       manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 0, 2),
     );
     expect(update.state.activeStage, CompanionStage.hiddenReveal);
-    expect(update.state.stage2, isNull);
-    expect(update.state.stage3, isNull);
-    expect(update.state.stage4, isNull);
+    expect(update.state.review, isNotNull);
+
+    final attempts = await companionRepo.getAttemptsForSession(state.sessionId);
+    expect(attempts, isNotEmpty);
+    final telemetry = jsonDecode(attempts.first.telemetryJson!);
+    expect(telemetry['review_mode'], isNotNull);
+    expect(telemetry.containsKey('legacy_path'), isFalse);
+  });
+
+  test('review mode prioritizes weak targets and enforces correction replay',
+      () async {
+    final unitId = await createUnit('review-runtime-priority', endAyah: 2);
+    const config = ProgressiveRevealChainConfig(stage3: Stage3Config());
+    final day = localDayIndex(DateTime(2026, 2, 24));
+    final sessionId = await companionRepo.startChainSession(
+      unitId: unitId,
+      targetVerseCount: 2,
+      createdAtDay: day,
+      startedAtSeconds: 0,
+    );
+
+    await companionRepo.upsertStepProficiency(
+      unitId: unitId,
+      surah: 1,
+      ayah: 1,
+      proficiencyEma: 0.92,
+      lastHintLevel: HintLevel.h0.code,
+      lastEvaluatorConfidence: 0.95,
+      lastLatencyToStartMs: 400,
+      attemptsCount: 6,
+      passesCount: 6,
+      lastUpdatedDay: day,
+      lastSessionId: sessionId,
+    );
+    await companionRepo.upsertStepProficiency(
+      unitId: unitId,
+      surah: 1,
+      ayah: 2,
+      proficiencyEma: 0.22,
+      lastHintLevel: HintLevel.firstWord.code,
+      lastEvaluatorConfidence: 0.40,
+      lastLatencyToStartMs: 1200,
+      attemptsCount: 3,
+      passesCount: 1,
+      lastUpdatedDay: day,
+      lastSessionId: sessionId,
+    );
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'قل أعوذ برب الناس'),
+        ChainVerse(surah: 1, ayah: 2, text: 'ملك الناس'),
+      ],
+      launchMode: CompanionLaunchMode.review,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 0, 0),
+    );
+
+    expect(state.currentVerseIndex, 1);
+
+    var update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: false,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 0, 2),
+    );
+    state = update.state;
+    expect(state.review?.mode, ReviewMode.correction);
+    expect(update.telemetry.correctionRequiredAfterAttempt, isTrue);
+
+    await expectLater(
+      engine.submitAttempt(
+        state: state,
+        evaluator: evaluator,
+        manualFallbackPass: true,
+        selectedAutoCheckOptionId: null,
+        config: config,
+        nowLocal: DateTime(2026, 2, 24, 10, 0, 3),
+      ),
+      throwsA(isA<StateError>()),
+    );
+
+    update = await engine.submitCorrectionExposure(
+      state: state,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 10, 0, 4),
+    );
+    expect(update.state.review?.mode, isNot(ReviewMode.correction));
+  });
+
+  test('review runtime reaches checkpoint and completes deterministically',
+      () async {
+    final unitId = await createUnit('review-runtime-checkpoint', endAyah: 1);
+    const config = ProgressiveRevealChainConfig(stage3: Stage3Config());
+    final day = localDayIndex(DateTime(2026, 2, 24));
+    final sessionId = await companionRepo.startChainSession(
+      unitId: unitId,
+      targetVerseCount: 1,
+      createdAtDay: day,
+      startedAtSeconds: 0,
+    );
+
+    await companionRepo.upsertStepProficiency(
+      unitId: unitId,
+      surah: 1,
+      ayah: 1,
+      proficiencyEma: 0.88,
+      lastHintLevel: HintLevel.h0.code,
+      lastEvaluatorConfidence: 0.90,
+      lastLatencyToStartMs: 500,
+      attemptsCount: 5,
+      passesCount: 5,
+      lastUpdatedDay: day,
+      lastSessionId: sessionId,
+    );
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'إله الناس'),
+      ],
+      launchMode: CompanionLaunchMode.review,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 0, 0),
+    );
+
+    for (var i = 0; i < 3; i++) {
+      final update = await engine.submitAttempt(
+        state: state,
+        evaluator: evaluator,
+        manualFallbackPass: true,
+        selectedAutoCheckOptionId: correctOption(state),
+        config: config,
+        nowLocal: DateTime(2026, 2, 24, 11, 0, i + 1),
+      );
+      state = update.state;
+    }
+
+    expect(state.review?.phase, ReviewPhase.checkpoint);
+
+    final finalUpdate = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      manualFallbackPass: true,
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 11, 0, 5),
+    );
+
+    expect(finalUpdate.state.completed, isTrue);
+    expect(finalUpdate.summary, isNotNull);
+    expect(finalUpdate.summary!.resultKind, ChainResultKind.completed);
   });
 }

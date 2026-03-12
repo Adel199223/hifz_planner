@@ -880,6 +880,30 @@ class AppStrings {
         'companion_stage4_correction_action',
         'Play Stage-4 Correction',
       );
+  String get companionReviewModeLabel =>
+      _t('companion_review_mode_label', 'Review mode');
+  String get companionReviewModeHiddenRecall =>
+      _t('companion_review_mode_hidden_recall', 'Hidden Recall');
+  String get companionReviewModeLinking =>
+      _t('companion_review_mode_linking', 'Linking');
+  String get companionReviewModeDiscrimination =>
+      _t('companion_review_mode_discrimination', 'Discrimination');
+  String get companionReviewModeCorrection =>
+      _t('companion_review_mode_correction', 'Correction');
+  String get companionReviewModeCheckpoint =>
+      _t('companion_review_mode_checkpoint', 'Checkpoint');
+  String get companionReviewModeRemediation =>
+      _t('companion_review_mode_remediation', 'Remediation');
+  String get companionReviewReciteNow =>
+      _t('companion_review_recite_now', 'Recite from scheduled review recall.');
+  String get companionReviewCorrectionRequiredMessage => _t(
+        'companion_review_correction_required_message',
+        'Correction playback is required before the next review attempt.',
+      );
+  String get companionReviewCorrectionAction => _t(
+        'companion_review_correction_action',
+        'Play Review Correction',
+      );
   String companionStage4DueBanner(String dueKind) => _fmt(
         _t(
           'companion_stage4_due_banner',
@@ -1239,8 +1263,7 @@ class AppStrings {
       'failed_to_load_reciters': 'Échec du chargement des récitateurs.',
       'download_coming_soon': 'Le téléchargement arrive bientôt.',
       'experience_coming_soon': "Les paramètres d'expérience arrivent bientôt.",
-      'downloaded_ayahs_progress':
-          'Ayahs téléchargees : {downloaded}/{total}.',
+      'downloaded_ayahs_progress': 'Ayahs téléchargees : {downloaded}/{total}.',
       'downloading_ayahs_progress':
           'Téléchargement des ayahs : {downloaded}/{total}...',
       'remove_download': 'Supprimer le téléchargement',
@@ -1557,10 +1580,8 @@ class AppStrings {
       'failed_to_load_reciters': 'Falha ao carregar recitadores.',
       'download_coming_soon': 'Download em breve.',
       'experience_coming_soon': 'Configurações de experiência em breve.',
-      'downloaded_ayahs_progress':
-          'Ayahs baixadas: {downloaded}/{total}.',
-      'downloading_ayahs_progress':
-          'Baixando ayahs: {downloaded}/{total}...',
+      'downloaded_ayahs_progress': 'Ayahs baixadas: {downloaded}/{total}.',
+      'downloading_ayahs_progress': 'Baixando ayahs: {downloaded}/{total}...',
       'remove_download': 'Remover download',
       'audio_download_failed': 'Falha no download do áudio: {error}',
       'audio_plugin_unavailable':
@@ -1873,10 +1894,8 @@ class AppStrings {
       'failed_to_load_reciters': 'تعذر تحميل قائمة القراء.',
       'download_coming_soon': 'ميزة التنزيل قريبًا.',
       'experience_coming_soon': 'إعدادات التجربة قريبًا.',
-      'downloaded_ayahs_progress':
-          'الآيات المنزلة: {downloaded}/{total}.',
-      'downloading_ayahs_progress':
-          'جار تنزيل الآيات: {downloaded}/{total}...',
+      'downloaded_ayahs_progress': 'الآيات المنزلة: {downloaded}/{total}.',
+      'downloading_ayahs_progress': 'جار تنزيل الآيات: {downloaded}/{total}...',
       'remove_download': 'إزالة التنزيل',
       'audio_download_failed': 'فشل تنزيل الصوت: {error}',
       'audio_plugin_unavailable':

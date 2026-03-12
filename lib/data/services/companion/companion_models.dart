@@ -154,6 +154,32 @@ enum Stage4Phase {
   final String code;
 }
 
+enum ReviewMode {
+  hiddenRecall(code: 'hidden_recall'),
+  linking(code: 'linking'),
+  discrimination(code: 'discrimination'),
+  correction(code: 'correction'),
+  checkpoint(code: 'checkpoint'),
+  remediation(code: 'remediation');
+
+  const ReviewMode({required this.code});
+
+  final String code;
+}
+
+enum ReviewPhase {
+  acquisition(code: 'acquisition'),
+  checkpoint(code: 'checkpoint'),
+  remediation(code: 'remediation'),
+  completed(code: 'completed'),
+  budgetFallback(code: 'budget_fallback'),
+  skipped(code: 'skipped');
+
+  const ReviewPhase({required this.code});
+
+  final String code;
+}
+
 enum CompanionStage {
   guidedVisible(code: 'guided_visible', stageNumber: 1),
   cuedRecall(code: 'cued_recall', stageNumber: 2),
@@ -1658,6 +1684,120 @@ class Stage4Runtime {
   static const Object _stage4RuntimeUnset = Object();
 }
 
+class ReviewCheckpointOutcome {
+  const ReviewCheckpointOutcome({
+    required this.chunkPassRate,
+    required this.failedVerseIndexes,
+    required this.everyVerseReady,
+    required this.passed,
+  });
+
+  final double chunkPassRate;
+  final List<int> failedVerseIndexes;
+  final bool everyVerseReady;
+  final bool passed;
+}
+
+class ReviewRuntime {
+  const ReviewRuntime({
+    required this.config,
+    required this.phase,
+    required this.mode,
+    required this.startedAtEpochMs,
+    required this.lastActionAtEpochMs,
+    required this.chunkElapsedMs,
+    required this.reviewBudgetMs,
+    required this.perVerseCapMs,
+    required this.budgetExceeded,
+    required this.remediationRounds,
+    required this.checkpointTargets,
+    required this.checkpointCursor,
+    required this.remediationTargets,
+    required this.remediationCursor,
+    required this.lastCheckpointOutcome,
+    required this.activeAutoCheckPrompt,
+    required this.totalCountableAttempts,
+  });
+
+  final Stage3Config config;
+  final ReviewPhase phase;
+  final ReviewMode mode;
+  final int startedAtEpochMs;
+  final int lastActionAtEpochMs;
+  final int chunkElapsedMs;
+  final int reviewBudgetMs;
+  final int perVerseCapMs;
+  final bool budgetExceeded;
+  final int remediationRounds;
+  final List<int> checkpointTargets;
+  final int checkpointCursor;
+  final List<int> remediationTargets;
+  final int remediationCursor;
+  final ReviewCheckpointOutcome? lastCheckpointOutcome;
+  final Stage1AutoCheckPrompt? activeAutoCheckPrompt;
+  final int totalCountableAttempts;
+
+  bool get autoCheckRequiredForCurrentMode {
+    if (!config.autoCheckRequiredByDefault) {
+      return false;
+    }
+    return mode == ReviewMode.hiddenRecall ||
+        mode == ReviewMode.linking ||
+        mode == ReviewMode.discrimination ||
+        mode == ReviewMode.checkpoint ||
+        mode == ReviewMode.remediation;
+  }
+
+  ReviewRuntime copyWith({
+    Stage3Config? config,
+    ReviewPhase? phase,
+    ReviewMode? mode,
+    int? startedAtEpochMs,
+    int? lastActionAtEpochMs,
+    int? chunkElapsedMs,
+    int? reviewBudgetMs,
+    int? perVerseCapMs,
+    bool? budgetExceeded,
+    int? remediationRounds,
+    List<int>? checkpointTargets,
+    int? checkpointCursor,
+    List<int>? remediationTargets,
+    int? remediationCursor,
+    Object? lastCheckpointOutcome = _reviewRuntimeUnset,
+    Object? activeAutoCheckPrompt = _reviewRuntimeUnset,
+    int? totalCountableAttempts,
+  }) {
+    return ReviewRuntime(
+      config: config ?? this.config,
+      phase: phase ?? this.phase,
+      mode: mode ?? this.mode,
+      startedAtEpochMs: startedAtEpochMs ?? this.startedAtEpochMs,
+      lastActionAtEpochMs: lastActionAtEpochMs ?? this.lastActionAtEpochMs,
+      chunkElapsedMs: chunkElapsedMs ?? this.chunkElapsedMs,
+      reviewBudgetMs: reviewBudgetMs ?? this.reviewBudgetMs,
+      perVerseCapMs: perVerseCapMs ?? this.perVerseCapMs,
+      budgetExceeded: budgetExceeded ?? this.budgetExceeded,
+      remediationRounds: remediationRounds ?? this.remediationRounds,
+      checkpointTargets: checkpointTargets ?? this.checkpointTargets,
+      checkpointCursor: checkpointCursor ?? this.checkpointCursor,
+      remediationTargets: remediationTargets ?? this.remediationTargets,
+      remediationCursor: remediationCursor ?? this.remediationCursor,
+      lastCheckpointOutcome:
+          identical(lastCheckpointOutcome, _reviewRuntimeUnset)
+              ? this.lastCheckpointOutcome
+              : lastCheckpointOutcome as ReviewCheckpointOutcome?,
+      activeAutoCheckPrompt:
+          identical(activeAutoCheckPrompt, _reviewRuntimeUnset)
+              ? this.activeAutoCheckPrompt
+              : activeAutoCheckPrompt as Stage1AutoCheckPrompt?,
+      totalCountableAttempts:
+          totalCountableAttempts ?? this.totalCountableAttempts,
+    );
+  }
+
+  static const Object _reviewRuntimeUnset = Object();
+}
+
 class ChainVerse {
   const ChainVerse({
     required this.surah,
@@ -1849,6 +1989,7 @@ class ChainRunState {
     required this.stage2,
     this.stage3,
     this.stage4,
+    this.review,
     required this.stage3WeakPreludeTargets,
     required this.stage3WeakPreludeCursor,
     required this.resolvedAvgNewMinutesPerAyah,
@@ -1869,6 +2010,7 @@ class ChainRunState {
   final Stage2Runtime? stage2;
   final Stage3Runtime? stage3;
   final Stage4Runtime? stage4;
+  final ReviewRuntime? review;
   final List<int> stage3WeakPreludeTargets;
   final int stage3WeakPreludeCursor;
   final double resolvedAvgNewMinutesPerAyah;
@@ -1907,6 +2049,7 @@ class ChainRunState {
     Object? stage2 = _stateUnset,
     Object? stage3 = _stateUnset,
     Object? stage4 = _stateUnset,
+    Object? review = _stateUnset,
     List<int>? stage3WeakPreludeTargets,
     int? stage3WeakPreludeCursor,
     double? resolvedAvgNewMinutesPerAyah,
@@ -1935,6 +2078,9 @@ class ChainRunState {
       stage4: identical(stage4, _stateUnset)
           ? this.stage4
           : stage4 as Stage4Runtime?,
+      review: identical(review, _stateUnset)
+          ? this.review
+          : review as ReviewRuntime?,
       stage3WeakPreludeTargets:
           stage3WeakPreludeTargets ?? this.stage3WeakPreludeTargets,
       stage3WeakPreludeCursor:

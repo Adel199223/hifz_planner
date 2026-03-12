@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 
-import '../../database/app_database.dart' show CompanionLifecycleStateData;
+import '../../database/app_database.dart'
+    show CompanionLifecycleStateData, CompanionStepProficiencyData;
 import '../../repositories/companion_repo.dart';
 import '../../time/local_day_time.dart';
 import 'companion_calibration_bridge.dart';
@@ -97,22 +98,25 @@ class ProgressiveRevealChainEngine {
 
     final stageOneCleared = activeStage.stageNumber > 1;
     final stageTwoCleared = activeStage.stageNumber > 2;
+    final seededReviewProficiencies = isReviewMode
+        ? await Future.wait(
+            verses.map(
+              (verse) => _companionRepo.getStepProficiency(
+                unitId: unitId,
+                surah: verse.surah,
+                ayah: verse.ayah,
+              ),
+            ),
+          )
+        : null;
     final verseStates = <ChainVerseState>[
-      for (final verse in verses)
-        ChainVerseState(
-          verse: verse,
-          revealed: false,
-          passed: false,
-          passedGuidedVisible: stageOneCleared,
-          passedCuedRecall: stageTwoCleared,
-          attemptCount: 0,
-          hiddenAttemptCount: 0,
-          interleaveCycles: 0,
-          highestHintLevel: HintLevel.h0,
-          proficiency: 0,
-          stage1: const Stage1VerseStats(),
-          stage2: const Stage2VerseStats(),
-          stage3: const Stage3VerseStats(),
+      for (var i = 0; i < verses.length; i++)
+        _seedInitialVerseState(
+          verse: verses[i],
+          stageOneCleared: stageOneCleared,
+          stageTwoCleared: stageTwoCleared,
+          reviewProficiency: seededReviewProficiencies?[i],
+          reviewConfig: config.stage3,
         ),
     ];
 
@@ -129,38 +133,39 @@ class ProgressiveRevealChainEngine {
       ayahCount: verseStates.length,
       stage1ChunkBudgetMs: stage1BudgetMs,
     );
-    final stage1Runtime = isNewMode && activeStage == CompanionStage.guidedVisible
-        ? Stage1Runtime(
-            config: config.stage1,
-            phase: Stage1Phase.acquisition,
-            mode: Stage1Mode.modelEcho,
-            startedAtEpochMs: nowEpochMs,
-            lastActionAtEpochMs: nowEpochMs,
-            chunkElapsedMs: 0,
-            stage1BudgetMs: stage1BudgetMs,
-            perVerseCapMs: perVerseCapMs,
-            adaptiveSpacingMs: config.stage1.minSpacingMs,
-            adaptiveEchoLoopCap: config.stage1.echoDefaultLoops.clamp(
-              config.stage1.echoMinLoops,
-              config.stage1.echoMaxLoops,
-            ),
-            hintsUnlockedForCurrentProbe: false,
-            currentProbeAttemptCount: 0,
-            totalRetrievalAttempts: 0,
-            totalRetrievalPasses: 0,
-            budgetExceeded: false,
-            remediationRequiresCheckpoint: false,
-            remediationRounds: 0,
-            checkpointTargets: const <int>[],
-            checkpointCursor: 0,
-            remediationTargets: const <int>[],
-            remediationCursor: 0,
-            cumulativeTargets: const <int>[],
-            cumulativeCursor: 0,
-            lastCheckpointOutcome: null,
-            activeAutoCheckPrompt: null,
-          )
-        : null;
+    final stage1Runtime =
+        isNewMode && activeStage == CompanionStage.guidedVisible
+            ? Stage1Runtime(
+                config: config.stage1,
+                phase: Stage1Phase.acquisition,
+                mode: Stage1Mode.modelEcho,
+                startedAtEpochMs: nowEpochMs,
+                lastActionAtEpochMs: nowEpochMs,
+                chunkElapsedMs: 0,
+                stage1BudgetMs: stage1BudgetMs,
+                perVerseCapMs: perVerseCapMs,
+                adaptiveSpacingMs: config.stage1.minSpacingMs,
+                adaptiveEchoLoopCap: config.stage1.echoDefaultLoops.clamp(
+                  config.stage1.echoMinLoops,
+                  config.stage1.echoMaxLoops,
+                ),
+                hintsUnlockedForCurrentProbe: false,
+                currentProbeAttemptCount: 0,
+                totalRetrievalAttempts: 0,
+                totalRetrievalPasses: 0,
+                budgetExceeded: false,
+                remediationRequiresCheckpoint: false,
+                remediationRounds: 0,
+                checkpointTargets: const <int>[],
+                checkpointCursor: 0,
+                remediationTargets: const <int>[],
+                remediationCursor: 0,
+                cumulativeTargets: const <int>[],
+                cumulativeCursor: 0,
+                lastCheckpointOutcome: null,
+                activeAutoCheckPrompt: null,
+              )
+            : null;
 
     var initialState = ChainRunState(
       sessionId: sessionId,
@@ -179,6 +184,7 @@ class ProgressiveRevealChainEngine {
       stage2: null,
       stage3: null,
       stage4: null,
+      review: null,
       stage3WeakPreludeTargets: const <int>[],
       stage3WeakPreludeCursor: 0,
       resolvedAvgNewMinutesPerAyah: resolvedAvg,
@@ -207,6 +213,14 @@ class ProgressiveRevealChainEngine {
         config: config,
         nowEpochMs: nowEpochMs,
         nowLocal: effectiveNow,
+      );
+    }
+
+    if (isReviewMode && activeStage == CompanionStage.hiddenReveal) {
+      initialState = _initializeReviewRuntime(
+        state: initialState,
+        config: config,
+        nowEpochMs: nowEpochMs,
       );
     }
 
@@ -370,12 +384,17 @@ class ProgressiveRevealChainEngine {
         state.activeStage == CompanionStage.hiddenReveal &&
         state.stage4!.mode == Stage4Mode.correction &&
         !state.isReviewMode;
+    final reviewCorrection = state.review != null &&
+        state.activeStage == CompanionStage.hiddenReveal &&
+        state.review!.mode == ReviewMode.correction &&
+        state.isReviewMode;
 
     if (state.completed ||
         (!stage1Correction &&
             !stage2Correction &&
             !stage3Correction &&
-            !stage4Correction)) {
+            !stage4Correction &&
+            !reviewCorrection)) {
       throw StateError('Correction exposure is not available in this state.');
     }
 
@@ -712,6 +731,16 @@ class ProgressiveRevealChainEngine {
       );
     }
 
+    if (reviewCorrection) {
+      return _submitReviewCorrectionExposure(
+        state: state,
+        latencyToStartMs: latencyToStartMs,
+        stopsCount: stopsCount,
+        selfCorrectionsCount: selfCorrectionsCount,
+        nowLocal: nowLocal,
+      );
+    }
+
     final effectiveNow = (nowLocal ?? DateTime.now()).toLocal();
     final touched = _touchStage1Clock(
       state: state,
@@ -889,6 +918,26 @@ class ProgressiveRevealChainEngine {
     }
 
     if (state.activeStage == CompanionStage.hiddenReveal &&
+        state.review != null &&
+        state.isReviewMode) {
+      return _submitReviewAttempt(
+        state: state,
+        evaluator: evaluator,
+        manualFallbackPass: manualFallbackPass,
+        selectedAutoCheckOptionId: selectedAutoCheckOptionId,
+        asrConfidence: asrConfidence,
+        latencyToStartMs: latencyToStartMs,
+        stopsCount: stopsCount,
+        selfCorrectionsCount: selfCorrectionsCount,
+        audioPlays: audioPlays,
+        loopCount: loopCount,
+        playbackSpeed: playbackSpeed,
+        config: config,
+        nowLocal: nowLocal,
+      );
+    }
+
+    if (state.activeStage == CompanionStage.hiddenReveal &&
         state.stage3 != null &&
         !state.isReviewMode) {
       return _submitStage3Attempt(
@@ -908,17 +957,7 @@ class ProgressiveRevealChainEngine {
       );
     }
 
-    return _submitLegacyAttempt(
-      state: state,
-      evaluator: evaluator,
-      manualFallbackPass: manualFallbackPass,
-      asrConfidence: asrConfidence,
-      latencyToStartMs: latencyToStartMs,
-      stopsCount: stopsCount,
-      selfCorrectionsCount: selfCorrectionsCount,
-      config: config,
-      nowLocal: nowLocal,
-    );
+    throw StateError('No active runtime is available for this chain session.');
   }
 
   Future<ChainAttemptUpdate> _submitStage1Attempt({
@@ -1986,6 +2025,850 @@ class ProgressiveRevealChainEngine {
     );
   }
 
+  Future<ChainAttemptUpdate> _submitReviewCorrectionExposure({
+    required ChainRunState state,
+    required int latencyToStartMs,
+    required int stopsCount,
+    required int selfCorrectionsCount,
+    required DateTime? nowLocal,
+  }) async {
+    final effectiveNow = (nowLocal ?? DateTime.now()).toLocal();
+    final touched = _touchReviewClock(
+      state: state,
+      nowLocal: effectiveNow,
+    );
+    var runtime = touched.runtime!;
+    final verses = [...touched.verses];
+    final currentIndex = state.currentVerseIndex;
+    final current = verses[currentIndex];
+    final updatedVerse = current.copyWith(
+      attemptCount: current.attemptCount + 1,
+      stage3: current.stage3.copyWith(
+        correctionRequired: false,
+      ),
+    );
+    verses[currentIndex] = updatedVerse;
+
+    await _persistAttempt(
+      state: state.copyWith(
+        verses: verses,
+        review: runtime,
+      ),
+      verseIndex: currentIndex,
+      verse: updatedVerse,
+      stageCode: state.activeStage.code,
+      attemptType: 'encode_echo',
+      hintLevel: _reviewEffectiveBaselineHint(updatedVerse.stage3),
+      assistedFlag: 0,
+      evaluatorMode: EvaluatorMode.manualFallback,
+      evaluatorPassed: 1,
+      evaluatorConfidence: null,
+      autoCheckType: null,
+      autoCheckResult: null,
+      retrievalStrength: 0.0,
+      latencyToStartMs: latencyToStartMs,
+      stopsCount: stopsCount,
+      selfCorrectionsCount: selfCorrectionsCount,
+      nowLocal: effectiveNow,
+      telemetryExtras: <String, Object?>{
+        'review_mode': ReviewMode.correction.code,
+        'review_phase': runtime.phase.code,
+        'review_step': 'correction',
+        'correction_exposure': true,
+      },
+    );
+
+    final nextMode = switch (runtime.phase) {
+      ReviewPhase.checkpoint => ReviewMode.checkpoint,
+      ReviewPhase.remediation => ReviewMode.remediation,
+      _ => _reviewModeForVerse(
+          verse: updatedVerse,
+          runtime: runtime.copyWith(mode: ReviewMode.hiddenRecall),
+        ),
+    };
+
+    runtime = runtime.copyWith(
+      mode: nextMode,
+      activeAutoCheckPrompt: nextMode == ReviewMode.correction
+          ? null
+          : _buildReviewAutoCheckPrompt(
+              state: state.copyWith(verses: verses),
+              verses: verses,
+              verseIndex: currentIndex,
+              mode: nextMode,
+            ),
+    );
+
+    return ChainAttemptUpdate(
+      state: state.copyWith(
+        verses: verses,
+        review: runtime,
+        currentHintLevel: _reviewEffectiveBaselineHint(updatedVerse.stage3),
+      ),
+      telemetry: VerseAttemptTelemetry(
+        stage: state.activeStage,
+        hintLevel: _reviewEffectiveBaselineHint(updatedVerse.stage3),
+        latencyToStartMs: latencyToStartMs,
+        stopsCount: stopsCount,
+        selfCorrectionsCount: selfCorrectionsCount,
+        evaluatorPassed: true,
+        evaluatorConfidence: null,
+        evaluatorMode: EvaluatorMode.manualFallback,
+        revealedAfterAttempt: false,
+        retrievalStrength: 0.0,
+        attemptType: 'encode_echo',
+        assisted: false,
+        timeOnVerseMs: updatedVerse.stage3.timeOnVerseMs,
+        timeOnChunkMs: runtime.chunkElapsedMs,
+      ),
+    );
+  }
+
+  Future<ChainAttemptUpdate> _submitReviewAttempt({
+    required ChainRunState state,
+    required VerseEvaluator evaluator,
+    required bool manualFallbackPass,
+    required String? selectedAutoCheckOptionId,
+    required double? asrConfidence,
+    required int latencyToStartMs,
+    required int stopsCount,
+    required int selfCorrectionsCount,
+    required int audioPlays,
+    required int loopCount,
+    required double playbackSpeed,
+    required ProgressiveRevealChainConfig config,
+    required DateTime? nowLocal,
+  }) async {
+    final effectiveNow = (nowLocal ?? DateTime.now()).toLocal();
+    final touched = _touchReviewClock(
+      state: state,
+      nowLocal: effectiveNow,
+    );
+    var runtime = touched.runtime!;
+    var verses = [...touched.verses];
+    final currentIndex = state.currentVerseIndex;
+    final currentVerse = verses[currentIndex];
+
+    if (runtime.mode == ReviewMode.correction ||
+        currentVerse.stage3.correctionRequired) {
+      throw StateError(
+        'Correction playback is required before next review attempt.',
+      );
+    }
+
+    final evaluation = await evaluator.evaluate(
+      VerseEvaluationRequest(
+        verse: currentVerse.verse,
+        manualFallbackPass: manualFallbackPass,
+        asrConfidence: asrConfidence,
+      ),
+    );
+
+    final attemptMode = runtime.mode;
+    final attemptType = _attemptTypeForReviewMode(attemptMode);
+    final baselineHint = _reviewEffectiveBaselineHint(currentVerse.stage3);
+    final effectiveHintLevel = state.currentHintLevel.order < baselineHint.order
+        ? baselineHint
+        : state.currentHintLevel;
+    final assisted = effectiveHintLevel.order > baselineHint.order;
+    final autoCheckRequired = runtime.autoCheckRequiredForCurrentMode;
+    final autoPrompt = runtime.activeAutoCheckPrompt ??
+        _buildReviewAutoCheckPrompt(
+          state: state.copyWith(verses: verses),
+          verses: verses,
+          verseIndex: currentIndex,
+          mode: attemptMode,
+        );
+
+    if (autoCheckRequired &&
+        (selectedAutoCheckOptionId == null ||
+            selectedAutoCheckOptionId.trim().isEmpty)) {
+      throw StateError('Auto-check option is required for review attempts.');
+    }
+
+    final autoEval = autoCheckRequired
+        ? _autoCheckEngine.evaluate(
+            prompt: autoPrompt,
+            selectedOptionId: selectedAutoCheckOptionId,
+          )
+        : const Stage1AutoCheckEvaluation(
+            passed: true,
+            selectedOptionId: null,
+            normalizedSelected: '',
+          );
+
+    final passed = evaluation.passed && autoEval.passed;
+    final countableAttempt = !assisted &&
+        effectiveHintLevel.order <= runtime.config.readinessMaxHint.order;
+    final countedPass = passed && countableAttempt;
+    final countedH0Pass = countedPass && effectiveHintLevel == HintLevel.h0;
+    final riskTrigger = _reviewRiskTrigger(
+      verse: currentVerse,
+      config: runtime.config,
+    );
+
+    var stage3 = currentVerse.stage3;
+    final usedRelief = stage3.reliefPending;
+    final nextConsecutiveFailures = passed ? 0 : stage3.consecutiveFailures + 1;
+    final nextReliefPending = !passed &&
+        !usedRelief &&
+        nextConsecutiveFailures >= runtime.config.discriminationFailureTrigger;
+    var rotatedFrom = stage3.lastCueRotatedFrom;
+    var nextBaseline = stage3.cueBaselineHint;
+    if (countedPass) {
+      rotatedFrom = stage3.cueBaselineHint;
+      nextBaseline = _harderHint(stage3.cueBaselineHint);
+    }
+    if (nextBaseline.order > HintLevel.letters.order) {
+      nextBaseline = HintLevel.letters;
+    }
+
+    var lastH0SuccessAtMs = stage3.lastH0SuccessAtMs;
+    var spacedH0Confirmed = stage3.spacedH0Confirmed;
+    if (countedH0Pass) {
+      if (lastH0SuccessAtMs != null &&
+          runtime.lastActionAtEpochMs - lastH0SuccessAtMs >=
+              runtime.config.minSpacingMs) {
+        spacedH0Confirmed = true;
+      }
+      lastH0SuccessAtMs = runtime.lastActionAtEpochMs;
+    }
+
+    var readinessWindow = stage3.readinessWindow;
+    if (countableAttempt) {
+      readinessWindow = <Stage3WindowEntry>[
+        ...readinessWindow,
+        Stage3WindowEntry(
+          timestampMs: runtime.lastActionAtEpochMs,
+          passed: passed,
+          countedPass: countedPass,
+          hintLevel: effectiveHintLevel,
+          assisted: assisted,
+        ),
+      ];
+      if (readinessWindow.length > runtime.config.readinessWindow) {
+        readinessWindow = readinessWindow.sublist(
+          readinessWindow.length - runtime.config.readinessWindow,
+        );
+      }
+    }
+
+    stage3 = stage3.copyWith(
+      attempts: stage3.attempts + 1,
+      countedAttempts: stage3.countedAttempts + (countableAttempt ? 1 : 0),
+      countedPasses: stage3.countedPasses + (countedPass ? 1 : 0),
+      countedH0Passes: stage3.countedH0Passes + (countedH0Pass ? 1 : 0),
+      consecutiveFailures: nextConsecutiveFailures,
+      correctionRequired: !passed,
+      reliefPending: nextReliefPending,
+      weakTarget: stage3.weakTarget ||
+          currentVerse.proficiency < runtime.config.targetSuccessBandMin ||
+          !countedPass,
+      remediationNeeded: stage3.remediationNeeded ||
+          (runtime.phase == ReviewPhase.checkpoint && !countedPass),
+      discriminationAttempts: stage3.discriminationAttempts +
+          (attemptMode == ReviewMode.discrimination ? 1 : 0),
+      discriminationPasses: stage3.discriminationPasses +
+          (attemptMode == ReviewMode.discrimination && countedPass ? 1 : 0),
+      linkingAttempts:
+          stage3.linkingAttempts + (attemptMode == ReviewMode.linking ? 1 : 0),
+      linkingPassCount: stage3.linkingPassCount +
+          (attemptMode == ReviewMode.linking && countedPass ? 1 : 0),
+      checkpointAttempted: attemptMode == ReviewMode.checkpoint
+          ? true
+          : stage3.checkpointAttempted,
+      checkpointPassed: attemptMode == ReviewMode.checkpoint
+          ? countedPass
+          : stage3.checkpointPassed,
+      checkpointAttempts: attemptMode == ReviewMode.checkpoint
+          ? stage3.checkpointAttempts + 1
+          : stage3.checkpointAttempts,
+      cueBaselineHint: nextBaseline,
+      lastCueRotatedFrom: countedPass ? rotatedFrom : stage3.lastCueRotatedFrom,
+      readinessWindow: readinessWindow,
+      lastH0SuccessAtMs: lastH0SuccessAtMs,
+      spacedH0Confirmed: spacedH0Confirmed,
+    );
+
+    final retrievalStrength = computeRetrievalStrength(
+      passed: passed,
+      hintLevel: effectiveHintLevel,
+      latencyToStartMs: latencyToStartMs,
+      stopsCount: stopsCount,
+      selfCorrectionsCount: selfCorrectionsCount,
+      confidence: evaluation.confidence,
+    );
+    final updatedVerse = currentVerse.copyWith(
+      attemptCount: currentVerse.attemptCount + 1,
+      hiddenAttemptCount: currentVerse.hiddenAttemptCount + 1,
+      stage3: stage3,
+      passed: countedPass ? true : currentVerse.passed,
+      highestHintLevel:
+          effectiveHintLevel.order > currentVerse.highestHintLevel.order
+              ? effectiveHintLevel
+              : currentVerse.highestHintLevel,
+      proficiency: _nextProficiency(
+        oldValue: currentVerse.proficiency,
+        observedValue: retrievalStrength,
+        alpha: config.proficiencyEmaAlpha,
+      ),
+    );
+    verses[currentIndex] = updatedVerse;
+    final verseReady = _reviewIsReady(
+      verse: updatedVerse,
+      config: runtime.config,
+    );
+
+    await _persistAttempt(
+      state: state.copyWith(
+        verses: verses,
+        review: runtime,
+      ),
+      verseIndex: currentIndex,
+      verse: updatedVerse,
+      stageCode: state.activeStage.code,
+      attemptType: attemptType,
+      hintLevel: effectiveHintLevel,
+      assistedFlag: assisted ? 1 : 0,
+      evaluatorMode: evaluation.mode,
+      evaluatorPassed: passed ? 1 : 0,
+      evaluatorConfidence: evaluation.confidence,
+      autoCheckType: autoCheckRequired ? autoPrompt.type.code : null,
+      autoCheckResult:
+          autoCheckRequired ? (autoEval.passed ? 'pass' : 'fail') : null,
+      retrievalStrength: retrievalStrength,
+      latencyToStartMs: latencyToStartMs,
+      stopsCount: stopsCount,
+      selfCorrectionsCount: selfCorrectionsCount,
+      nowLocal: effectiveNow,
+      telemetryExtras: <String, Object?>{
+        'review_mode': attemptMode.code,
+        'review_phase': runtime.phase.code,
+        'review_step': _reviewTelemetryStep(attemptMode),
+        'cue_baseline': baselineHint.code,
+        'cue_rotated_from': countedPass ? rotatedFrom?.code : null,
+        'weak_target': updatedVerse.stage3.weakTarget,
+        'risk_trigger': riskTrigger,
+        'link_prev_verse_order': currentIndex > 0 ? currentIndex - 1 : null,
+        'readiness_counted_pass': countedPass,
+        'review_error_type': passed
+            ? null
+            : (evaluation.passed ? 'auto_check_fail' : 'recall_fail'),
+        'audio_plays': audioPlays,
+        'loop_count': loopCount,
+        'speed': playbackSpeed,
+        'lifecycle_hook': verseReady && updatedVerse.stage3.spacedH0Confirmed
+            ? 'stage5_candidate'
+            : null,
+      },
+    );
+    await _upsertProficiency(
+      state: state,
+      verse: updatedVerse,
+      hintLevel: effectiveHintLevel,
+      retrievalStrength: retrievalStrength,
+      evaluatorConfidence: evaluation.confidence,
+      latencyToStartMs: latencyToStartMs,
+      evaluatorPassed: passed,
+      nowLocal: effectiveNow,
+    );
+
+    runtime = runtime.copyWith(
+      totalCountableAttempts:
+          runtime.totalCountableAttempts + (countableAttempt ? 1 : 0),
+    );
+
+    if (!passed) {
+      runtime = runtime.copyWith(
+        mode: ReviewMode.correction,
+        activeAutoCheckPrompt: null,
+      );
+      final failedState = state.copyWith(
+        verses: verses,
+        review: runtime,
+        currentHintLevel: _reviewEffectiveBaselineHint(updatedVerse.stage3),
+      );
+      final budgetAdvance = await _maybeAdvanceReviewAfterBudget(
+        state: failedState,
+        nowLocal: effectiveNow,
+      );
+      if (budgetAdvance != null) {
+        return budgetAdvance;
+      }
+      return ChainAttemptUpdate(
+        state: failedState,
+        telemetry: VerseAttemptTelemetry(
+          stage: state.activeStage,
+          hintLevel: effectiveHintLevel,
+          latencyToStartMs: latencyToStartMs,
+          stopsCount: stopsCount,
+          selfCorrectionsCount: selfCorrectionsCount,
+          evaluatorPassed: false,
+          evaluatorConfidence: evaluation.confidence,
+          evaluatorMode: evaluation.mode,
+          revealedAfterAttempt: false,
+          retrievalStrength: retrievalStrength,
+          attemptType: attemptType,
+          assisted: assisted,
+          autoCheckType: autoCheckRequired ? autoPrompt.type.code : null,
+          autoCheckResult:
+              autoCheckRequired ? (autoEval.passed ? 'pass' : 'fail') : null,
+          timeOnVerseMs: updatedVerse.stage3.timeOnVerseMs,
+          timeOnChunkMs: runtime.chunkElapsedMs,
+          correctionRequiredAfterAttempt: true,
+        ),
+      );
+    }
+
+    final advanced = await _advanceReviewAfterPass(
+      state: state.copyWith(
+        verses: verses,
+        review: runtime,
+        currentHintLevel: _reviewEffectiveBaselineHint(updatedVerse.stage3),
+      ),
+      passedVerseIndex: currentIndex,
+      countedPass: countedPass,
+      nowLocal: effectiveNow,
+    );
+    final budgetAdvance = await _maybeAdvanceReviewAfterBudget(
+      state: advanced,
+      nowLocal: effectiveNow,
+    );
+    if (budgetAdvance != null) {
+      return budgetAdvance;
+    }
+
+    return ChainAttemptUpdate(
+      state: advanced,
+      telemetry: VerseAttemptTelemetry(
+        stage: state.activeStage,
+        hintLevel: effectiveHintLevel,
+        latencyToStartMs: latencyToStartMs,
+        stopsCount: stopsCount,
+        selfCorrectionsCount: selfCorrectionsCount,
+        evaluatorPassed: true,
+        evaluatorConfidence: evaluation.confidence,
+        evaluatorMode: evaluation.mode,
+        revealedAfterAttempt: false,
+        retrievalStrength: retrievalStrength,
+        attemptType: attemptType,
+        assisted: assisted,
+        autoCheckType: autoCheckRequired ? autoPrompt.type.code : null,
+        autoCheckResult:
+            autoCheckRequired ? (autoEval.passed ? 'pass' : 'fail') : null,
+        timeOnVerseMs: updatedVerse.stage3.timeOnVerseMs,
+        timeOnChunkMs:
+            advanced.review?.chunkElapsedMs ?? runtime.chunkElapsedMs,
+      ),
+    );
+  }
+
+  Future<ChainRunState> _advanceReviewAfterPass({
+    required ChainRunState state,
+    required int passedVerseIndex,
+    required bool countedPass,
+    required DateTime nowLocal,
+  }) async {
+    var runtime = state.review!;
+    var verses = [...state.verses];
+
+    if (runtime.phase == ReviewPhase.remediation) {
+      if (countedPass) {
+        final verse = verses[passedVerseIndex];
+        verses[passedVerseIndex] = verse.copyWith(
+          stage3: verse.stage3.copyWith(remediationNeeded: false),
+        );
+      }
+
+      final pending = runtime.remediationTargets.where((index) {
+        if (index < 0 || index >= verses.length) {
+          return false;
+        }
+        return verses[index].stage3.remediationNeeded ||
+            !_reviewIsReady(
+              verse: verses[index],
+              config: runtime.config,
+            );
+      }).toList(growable: false);
+      if (pending.isNotEmpty) {
+        final nextIndex = _nextIndexFromList(
+          indexes: pending,
+          startAfter: passedVerseIndex,
+        );
+        final nextVerse = verses[nextIndex];
+        return state.copyWith(
+          verses: verses,
+          review: runtime.copyWith(
+            phase: ReviewPhase.remediation,
+            mode: ReviewMode.remediation,
+            remediationCursor: pending.indexOf(nextIndex),
+            activeAutoCheckPrompt: _buildReviewAutoCheckPrompt(
+              state: state.copyWith(verses: verses),
+              verses: verses,
+              verseIndex: nextIndex,
+              mode: ReviewMode.remediation,
+            ),
+          ),
+          currentVerseIndex: nextIndex,
+          currentHintLevel: _reviewEffectiveBaselineHint(nextVerse.stage3),
+          returnVerseIndex: null,
+        );
+      }
+
+      final targets = runtime.remediationTargets;
+      if (targets.isNotEmpty) {
+        for (final index in targets) {
+          final verse = verses[index];
+          verses[index] = verse.copyWith(
+            stage3: verse.stage3.copyWith(
+              checkpointAttempted: false,
+              checkpointPassed: false,
+            ),
+          );
+        }
+        final first = targets.first;
+        return state.copyWith(
+          verses: verses,
+          review: runtime.copyWith(
+            phase: ReviewPhase.checkpoint,
+            mode: ReviewMode.checkpoint,
+            checkpointTargets: targets,
+            checkpointCursor: 0,
+            remediationTargets: const <int>[],
+            remediationCursor: 0,
+            activeAutoCheckPrompt: _buildReviewAutoCheckPrompt(
+              state: state.copyWith(verses: verses),
+              verses: verses,
+              verseIndex: first,
+              mode: ReviewMode.checkpoint,
+            ),
+          ),
+          currentVerseIndex: first,
+          currentHintLevel: _reviewEffectiveBaselineHint(verses[first].stage3),
+          returnVerseIndex: null,
+        );
+      }
+    }
+
+    if (runtime.phase == ReviewPhase.checkpoint) {
+      final targets = runtime.checkpointTargets.isEmpty
+          ? List<int>.generate(verses.length, (index) => index)
+          : runtime.checkpointTargets;
+      final nextCursor = runtime.checkpointCursor + 1;
+      if (nextCursor < targets.length) {
+        final nextIndex = targets[nextCursor];
+        return state.copyWith(
+          verses: verses,
+          review: runtime.copyWith(
+            phase: ReviewPhase.checkpoint,
+            mode: ReviewMode.checkpoint,
+            checkpointTargets: targets,
+            checkpointCursor: nextCursor,
+            activeAutoCheckPrompt: _buildReviewAutoCheckPrompt(
+              state: state.copyWith(verses: verses),
+              verses: verses,
+              verseIndex: nextIndex,
+              mode: ReviewMode.checkpoint,
+            ),
+          ),
+          currentVerseIndex: nextIndex,
+          currentHintLevel:
+              _reviewEffectiveBaselineHint(verses[nextIndex].stage3),
+          returnVerseIndex: null,
+        );
+      }
+
+      final failed = <int>[
+        for (final index in targets)
+          if (!verses[index].stage3.checkpointPassed) index,
+      ];
+      final chunkPassRate = targets.isEmpty
+          ? 0.0
+          : (targets.length - failed.length) / targets.length;
+      final everyReady = verses.every(
+        (verse) => _reviewIsReady(
+          verse: verse,
+          config: runtime.config,
+        ),
+      );
+      final checkpointPassed =
+          chunkPassRate >= runtime.config.checkpointThreshold && everyReady;
+      final outcome = ReviewCheckpointOutcome(
+        chunkPassRate: chunkPassRate,
+        failedVerseIndexes: failed,
+        everyVerseReady: everyReady,
+        passed: checkpointPassed,
+      );
+
+      if (checkpointPassed) {
+        final completedVerses = <ChainVerseState>[
+          for (final verse in verses)
+            verse.passed
+                ? verse
+                : verse.markPassedForStage(CompanionStage.hiddenReveal),
+        ];
+        return state.copyWith(
+          verses: completedVerses,
+          review: runtime.copyWith(
+            phase: ReviewPhase.completed,
+            mode: ReviewMode.checkpoint,
+            lastCheckpointOutcome: outcome,
+            activeAutoCheckPrompt: null,
+          ),
+          currentHintLevel: HintLevel.h0,
+          returnVerseIndex: null,
+        );
+      }
+
+      if (runtime.remediationRounds >=
+          runtime.config.maxCheckpointRemediationRounds) {
+        for (final index in failed) {
+          final verse = verses[index];
+          verses[index] = verse.copyWith(
+            stage3: verse.stage3.copyWith(
+              weakTarget: true,
+              remediationNeeded: true,
+            ),
+          );
+        }
+        return state.copyWith(
+          verses: verses,
+          review: runtime.copyWith(
+            phase: ReviewPhase.budgetFallback,
+            budgetExceeded: true,
+            lastCheckpointOutcome: outcome,
+            activeAutoCheckPrompt: null,
+          ),
+          returnVerseIndex: null,
+        );
+      }
+
+      for (final index in failed) {
+        final verse = verses[index];
+        verses[index] = verse.copyWith(
+          stage3: verse.stage3.copyWith(
+            weakTarget: true,
+            remediationNeeded: true,
+          ),
+        );
+      }
+      final first = failed.first;
+      return state.copyWith(
+        verses: verses,
+        review: runtime.copyWith(
+          phase: ReviewPhase.remediation,
+          mode: ReviewMode.remediation,
+          remediationRounds: runtime.remediationRounds + 1,
+          remediationTargets: failed,
+          remediationCursor: 0,
+          lastCheckpointOutcome: outcome,
+          activeAutoCheckPrompt: _buildReviewAutoCheckPrompt(
+            state: state.copyWith(verses: verses),
+            verses: verses,
+            verseIndex: first,
+            mode: ReviewMode.remediation,
+          ),
+        ),
+        currentVerseIndex: first,
+        currentHintLevel: _reviewEffectiveBaselineHint(verses[first].stage3),
+        returnVerseIndex: null,
+      );
+    }
+
+    final allReady = verses.every(
+      (verse) => _reviewIsReady(
+        verse: verse,
+        config: runtime.config,
+      ),
+    );
+    if (allReady) {
+      final targets = List<int>.generate(verses.length, (index) => index);
+      for (final index in targets) {
+        final verse = verses[index];
+        verses[index] = verse.copyWith(
+          stage3: verse.stage3.copyWith(
+            checkpointAttempted: false,
+            checkpointPassed: false,
+          ),
+        );
+      }
+      final first = targets.first;
+      return state.copyWith(
+        verses: verses,
+        review: runtime.copyWith(
+          phase: ReviewPhase.checkpoint,
+          mode: ReviewMode.checkpoint,
+          checkpointTargets: targets,
+          checkpointCursor: 0,
+          activeAutoCheckPrompt: _buildReviewAutoCheckPrompt(
+            state: state.copyWith(verses: verses),
+            verses: verses,
+            verseIndex: first,
+            mode: ReviewMode.checkpoint,
+          ),
+        ),
+        currentVerseIndex: first,
+        currentHintLevel: _reviewEffectiveBaselineHint(verses[first].stage3),
+        returnVerseIndex: null,
+      );
+    }
+
+    final nextState = state.copyWith(verses: verses);
+    final target = _pickReviewTarget(
+      state: nextState.copyWith(review: runtime),
+      verses: verses,
+      startAfter: passedVerseIndex,
+      runtime: runtime,
+    );
+    if (target == null) {
+      return nextState.copyWith(
+        review: runtime.copyWith(
+          phase: ReviewPhase.acquisition,
+          mode: ReviewMode.hiddenRecall,
+          activeAutoCheckPrompt: null,
+        ),
+      );
+    }
+
+    return nextState.copyWith(
+      review: runtime.copyWith(
+        phase: target.phase,
+        mode: target.mode,
+        activeAutoCheckPrompt: target.mode == ReviewMode.correction
+            ? null
+            : _buildReviewAutoCheckPrompt(
+                state: nextState,
+                verses: verses,
+                verseIndex: target.verseIndex,
+                mode: target.mode,
+              ),
+      ),
+      currentVerseIndex: target.verseIndex,
+      currentHintLevel: _reviewEffectiveBaselineHint(
+        verses[target.verseIndex].stage3,
+      ),
+      returnVerseIndex: null,
+    );
+  }
+
+  Future<ChainAttemptUpdate?> _maybeAdvanceReviewAfterBudget({
+    required ChainRunState state,
+    required DateTime nowLocal,
+  }) async {
+    final runtime = state.review;
+    if (runtime == null) {
+      return null;
+    }
+    if (runtime.phase == ReviewPhase.completed && !state.completed) {
+      return _finalizeReviewResult(
+        state: state,
+        resultKind: ChainResultKind.completed,
+        nowLocal: nowLocal,
+      );
+    }
+    if (runtime.phase == ReviewPhase.budgetFallback && !state.completed) {
+      return _finalizeReviewResult(
+        state: state,
+        resultKind: ChainResultKind.partial,
+        nowLocal: nowLocal,
+      );
+    }
+    if (runtime.chunkElapsedMs < runtime.reviewBudgetMs) {
+      return null;
+    }
+
+    final verses = [...state.verses];
+    final unresolved = _reviewUnresolvedTargets(
+      verses: verses,
+      config: runtime.config,
+    );
+    if (unresolved.isNotEmpty) {
+      for (final index in unresolved) {
+        final verse = verses[index];
+        verses[index] = verse.copyWith(
+          stage3: verse.stage3.copyWith(
+            weakTarget: true,
+            remediationNeeded: true,
+          ),
+        );
+      }
+      final nextState = state.copyWith(
+        verses: verses,
+        review: runtime.copyWith(
+          phase: ReviewPhase.budgetFallback,
+          mode: ReviewMode.remediation,
+          budgetExceeded: true,
+          activeAutoCheckPrompt: null,
+        ),
+      );
+      return _finalizeReviewResult(
+        state: nextState,
+        resultKind: ChainResultKind.partial,
+        nowLocal: nowLocal,
+      );
+    }
+
+    return _finalizeReviewResult(
+      state: state.copyWith(
+        review: runtime.copyWith(
+          phase: ReviewPhase.completed,
+          activeAutoCheckPrompt: null,
+        ),
+      ),
+      resultKind: ChainResultKind.completed,
+      nowLocal: nowLocal,
+    );
+  }
+
+  Future<ChainAttemptUpdate> _finalizeReviewResult({
+    required ChainRunState state,
+    required ChainResultKind resultKind,
+    required DateTime nowLocal,
+  }) async {
+    final finalizedVerses = resultKind == ChainResultKind.completed
+        ? <ChainVerseState>[
+            for (final verse in state.verses)
+              verse.passed
+                  ? verse
+                  : verse.markPassedForStage(CompanionStage.hiddenReveal),
+          ]
+        : state.verses;
+
+    final summary = await _completeSession(
+      state: state.copyWith(verses: finalizedVerses),
+      verseStates: finalizedVerses,
+      nowLocal: nowLocal,
+      resultKind: resultKind,
+    );
+    return ChainAttemptUpdate(
+      state: state.copyWith(
+        verses: finalizedVerses,
+        completed: true,
+        resultKind: resultKind,
+        currentHintLevel: HintLevel.h0,
+        returnVerseIndex: null,
+      ),
+      telemetry: VerseAttemptTelemetry(
+        stage: CompanionStage.hiddenReveal,
+        hintLevel: HintLevel.h0,
+        latencyToStartMs: 0,
+        stopsCount: 0,
+        selfCorrectionsCount: 0,
+        evaluatorPassed: resultKind == ChainResultKind.completed,
+        evaluatorConfidence: null,
+        evaluatorMode: EvaluatorMode.manualFallback,
+        revealedAfterAttempt: false,
+        retrievalStrength: 0.0,
+        attemptType: 'checkpoint',
+        assisted: false,
+        timeOnVerseMs:
+            finalizedVerses[state.currentVerseIndex].stage3.timeOnVerseMs,
+        timeOnChunkMs: state.review?.chunkElapsedMs ?? 0,
+      ),
+      summary: summary,
+    );
+  }
+
   Future<ChainAttemptUpdate> _submitStage4Attempt({
     required ChainRunState state,
     required VerseEvaluator evaluator,
@@ -2302,7 +3185,8 @@ class ProgressiveRevealChainEngine {
         autoCheckResult:
             autoCheckRequired ? (autoEval.passed ? 'pass' : 'fail') : null,
         timeOnVerseMs: updatedVerse.stage4.timeOnVerseMs,
-        timeOnChunkMs: advanced.stage4?.chunkElapsedMs ?? runtime.chunkElapsedMs,
+        timeOnChunkMs:
+            advanced.stage4?.chunkElapsedMs ?? runtime.chunkElapsedMs,
         stage4Mode: attemptMode,
         stage4Phase: advanced.stage4?.phase ?? runtime.phase,
       ),
@@ -2371,7 +3255,8 @@ class ProgressiveRevealChainEngine {
             ),
           ),
           currentVerseIndex: nextIndex,
-          currentHintLevel: _stage4EffectiveBaselineHint(verses[nextIndex].stage4),
+          currentHintLevel:
+              _stage4EffectiveBaselineHint(verses[nextIndex].stage4),
           returnVerseIndex: null,
         );
       }
@@ -2437,7 +3322,8 @@ class ProgressiveRevealChainEngine {
             ),
           ),
           currentVerseIndex: nextIndex,
-          currentHintLevel: _stage4EffectiveBaselineHint(verses[nextIndex].stage4),
+          currentHintLevel:
+              _stage4EffectiveBaselineHint(verses[nextIndex].stage4),
           returnVerseIndex: null,
         );
       }
@@ -2450,7 +3336,9 @@ class ProgressiveRevealChainEngine {
           ? 0.0
           : (targets.length - failed.length) / targets.length;
       final randomStartSatisfied = verses.every(
-        (verse) => verse.stage4.randomStartPasses >= runtime.config.randomStartProbeCount,
+        (verse) =>
+            verse.stage4.randomStartPasses >=
+            runtime.config.randomStartProbeCount,
       );
       final linkingSatisfied =
           verses.every((verse) => verse.stage4.linkingPassCount >= 1);
@@ -2501,9 +3389,10 @@ class ProgressiveRevealChainEngine {
           runtime.config.maxCheckpointRemediationRounds) {
         final unresolvedRatio =
             verses.isEmpty ? 0.0 : failed.length / verses.length;
-        final route = unresolvedRatio > runtime.config.failUnresolvedRatioThreshold
-            ? 'broad_stage3'
-            : 'targeted_stage3';
+        final route =
+            unresolvedRatio > runtime.config.failUnresolvedRatioThreshold
+                ? 'broad_stage3'
+                : 'targeted_stage3';
         return state.copyWith(
           verses: verses,
           stage4: runtime.copyWith(
@@ -2752,30 +3641,32 @@ class ProgressiveRevealChainEngine {
         endedDay: localDayIndex(nowLocal),
         endedSeconds: nowLocalSecondsSinceMidnight(nowLocal),
         countedPassRate: passRate,
-        randomStartPasses:
-            state.verses.fold<int>(0, (sum, verse) => sum + verse.stage4.randomStartPasses),
-        linkingPasses:
-            state.verses.fold<int>(0, (sum, verse) => sum + verse.stage4.linkingPassCount),
+        randomStartPasses: state.verses
+            .fold<int>(0, (sum, verse) => sum + verse.stage4.randomStartPasses),
+        linkingPasses: state.verses
+            .fold<int>(0, (sum, verse) => sum + verse.stage4.linkingPassCount),
         discriminationPasses: state.verses.fold<int>(
           0,
           (sum, verse) => sum + verse.stage4.discriminationPasses,
         ),
-        unresolvedTargetsJson: unresolved.isEmpty ? null : jsonEncode(unresolved),
+        unresolvedTargetsJson:
+            unresolved.isEmpty ? null : jsonEncode(unresolved),
         telemetryJson: jsonEncode(<String, Object?>{
           'lifecycle_stage': 'stage4',
           'stage4_phase': state.stage4?.phase.code,
           'stage4_mode': state.stage4?.mode.code,
-          'lifecycle_hook': outcome == 'pass' ? 'stage5_candidate' : 'stage4_retry',
+          'lifecycle_hook':
+              outcome == 'pass' ? 'stage5_candidate' : 'stage4_retry',
         }),
       );
     }
 
     final unresolvedRatio =
         state.verses.isEmpty ? 0.0 : unresolved.length / state.verses.length;
-    final strengtheningRoute = unresolvedRatio >
-            runtime.config.failUnresolvedRatioThreshold
-        ? 'broad_stage3'
-        : 'targeted_stage3';
+    final strengtheningRoute =
+        unresolvedRatio > runtime.config.failUnresolvedRatioThreshold
+            ? 'broad_stage3'
+            : 'targeted_stage3';
     final status = switch (outcome) {
       'pass' => 'passed',
       'partial' => 'partial',
@@ -2821,7 +3712,8 @@ class ProgressiveRevealChainEngine {
         retrievalStrength: 0.0,
         attemptType: 'checkpoint',
         assisted: false,
-        timeOnVerseMs: state.verses[state.currentVerseIndex].stage4.timeOnVerseMs,
+        timeOnVerseMs:
+            state.verses[state.currentVerseIndex].stage4.timeOnVerseMs,
         timeOnChunkMs: runtime.chunkElapsedMs,
         stage4Mode: runtime.mode,
         stage4Phase: runtime.phase,
@@ -3723,15 +4615,12 @@ class ProgressiveRevealChainEngine {
       verses: state.verses,
       config: stage3.config,
     );
-    final unresolvedRatio = state.verses.isEmpty
-        ? 0.0
-        : unresolved.length / state.verses.length;
+    final unresolvedRatio =
+        state.verses.isEmpty ? 0.0 : unresolved.length / state.verses.length;
     final day = localDayIndex(nowLocal);
     final preSleepDueDay = nowLocal.hour < 20 ? day : null;
     final nextDayDueDay = day + 1;
-    final status = unresolvedRatio > 0.30
-        ? 'needs_reinforcement'
-        : 'pending';
+    final status = unresolvedRatio > 0.30 ? 'needs_reinforcement' : 'pending';
 
     await _companionRepo.upsertLifecycleState(
       unitId: state.unitId,
@@ -3796,6 +4685,72 @@ class ProgressiveRevealChainEngine {
       nowEpochMs: nowLocal.millisecondsSinceEpoch,
       weakPreludeTargets: weakPreludeTargets,
     );
+  }
+
+  ChainVerseState _seedInitialVerseState({
+    required ChainVerse verse,
+    required bool stageOneCleared,
+    required bool stageTwoCleared,
+    required CompanionStepProficiencyData? reviewProficiency,
+    required Stage3Config reviewConfig,
+  }) {
+    final seededStage3 = reviewProficiency == null
+        ? const Stage3VerseStats()
+        : _seedReviewStage3Stats(
+            proficiency: reviewProficiency,
+            config: reviewConfig,
+          );
+    return ChainVerseState(
+      verse: verse,
+      revealed: false,
+      passed: false,
+      passedGuidedVisible: stageOneCleared,
+      passedCuedRecall: stageTwoCleared,
+      attemptCount: 0,
+      hiddenAttemptCount: 0,
+      interleaveCycles: 0,
+      highestHintLevel: HintLevel.h0,
+      proficiency: reviewProficiency?.proficiencyEma ?? 0,
+      stage1: const Stage1VerseStats(),
+      stage2: const Stage2VerseStats(),
+      stage3: seededStage3,
+    );
+  }
+
+  Stage3VerseStats _seedReviewStage3Stats({
+    required CompanionStepProficiencyData proficiency,
+    required Stage3Config config,
+  }) {
+    final lastHint = HintLevel.fromCode(proficiency.lastHintLevel);
+    final lowProficiency =
+        proficiency.proficiencyEma < config.targetSuccessBandMin;
+    final needsCueSupport = lastHint.order > HintLevel.letters.order;
+    final weakTarget = lowProficiency ||
+        needsCueSupport ||
+        proficiency.passesCount < config.readinessPassesRequired;
+    final seededLinkingPasses =
+        proficiency.passesCount > 0 && !needsCueSupport ? 1 : 0;
+    return Stage3VerseStats(
+      weakTarget: weakTarget,
+      cueBaselineHint: _reviewSeedBaselineHint(lastHint),
+      linkingPassCount: seededLinkingPasses,
+      discriminationPasses:
+          proficiency.proficiencyEma >= config.targetSuccessBandMax ? 1 : 0,
+      countedPasses:
+          proficiency.passesCount.clamp(0, config.readinessPassesRequired),
+      countedAttempts: proficiency.attemptsCount,
+      attempts: proficiency.attemptsCount,
+    );
+  }
+
+  HintLevel _reviewSeedBaselineHint(HintLevel lastHint) {
+    if (lastHint.order <= HintLevel.h0.order) {
+      return HintLevel.h0;
+    }
+    if (lastHint.order <= HintLevel.letters.order) {
+      return HintLevel.letters;
+    }
+    return HintLevel.letters;
   }
 
   ChainRunState _initializeStage2Runtime({
@@ -3971,6 +4926,81 @@ class ProgressiveRevealChainEngine {
     );
   }
 
+  ChainRunState _initializeReviewRuntime({
+    required ChainRunState state,
+    required ProgressiveRevealChainConfig config,
+    required int nowEpochMs,
+  }) {
+    final reviewBudgetMs = config.stage3.stage3ChunkBudgetMs(
+      ayahCount: state.verses.length,
+      avgNewMinutesPerAyah: state.resolvedAvgNewMinutesPerAyah,
+    );
+    final perVerseCapMs = config.stage3.perVerseCapMs(
+      ayahCount: state.verses.length,
+      stage3ChunkBudgetMs: reviewBudgetMs,
+    );
+
+    var runtime = ReviewRuntime(
+      config: config.stage3,
+      phase: ReviewPhase.acquisition,
+      mode: ReviewMode.hiddenRecall,
+      startedAtEpochMs: nowEpochMs,
+      lastActionAtEpochMs: nowEpochMs,
+      chunkElapsedMs: 0,
+      reviewBudgetMs: reviewBudgetMs,
+      perVerseCapMs: perVerseCapMs,
+      budgetExceeded: false,
+      remediationRounds: 0,
+      checkpointTargets: const <int>[],
+      checkpointCursor: 0,
+      remediationTargets: const <int>[],
+      remediationCursor: 0,
+      lastCheckpointOutcome: null,
+      activeAutoCheckPrompt: null,
+      totalCountableAttempts: 0,
+    );
+
+    final seeded = state.copyWith(
+      stage3: null,
+      stage4: null,
+      review: runtime,
+      stage3WeakPreludeTargets: const <int>[],
+      stage3WeakPreludeCursor: 0,
+    );
+    final target = _pickReviewTarget(
+      state: seeded,
+      verses: seeded.verses,
+      startAfter: -1,
+      runtime: runtime,
+    );
+    final currentIndex = target?.verseIndex ?? 0;
+    final mode = target?.mode ?? ReviewMode.hiddenRecall;
+    runtime = runtime.copyWith(
+      phase: target?.phase ?? ReviewPhase.acquisition,
+      mode: mode,
+      activeAutoCheckPrompt: mode == ReviewMode.correction
+          ? null
+          : _buildReviewAutoCheckPrompt(
+              state: seeded,
+              verses: seeded.verses,
+              verseIndex: currentIndex,
+              mode: mode,
+            ),
+    );
+    return state.copyWith(
+      stage3: null,
+      stage4: null,
+      review: runtime,
+      currentVerseIndex: currentIndex,
+      currentHintLevel: _reviewEffectiveBaselineHint(
+        seeded.verses[currentIndex].stage3,
+      ),
+      returnVerseIndex: null,
+      stage3WeakPreludeTargets: const <int>[],
+      stage3WeakPreludeCursor: 0,
+    );
+  }
+
   Future<ChainRunState> _initializeStage4Runtime({
     required ChainRunState state,
     required ProgressiveRevealChainConfig config,
@@ -4103,253 +5133,11 @@ class ProgressiveRevealChainEngine {
       stage3: null,
       stage4: runtime,
       currentVerseIndex: currentIndex,
-      currentHintLevel: _stage4EffectiveBaselineHint(verses[currentIndex].stage4),
+      currentHintLevel:
+          _stage4EffectiveBaselineHint(verses[currentIndex].stage4),
       returnVerseIndex: null,
       stage3WeakPreludeTargets: const <int>[],
       stage3WeakPreludeCursor: 0,
-    );
-  }
-
-  Future<ChainAttemptUpdate> _submitLegacyAttempt({
-    required ChainRunState state,
-    required VerseEvaluator evaluator,
-    required bool manualFallbackPass,
-    required double? asrConfidence,
-    required int latencyToStartMs,
-    required int stopsCount,
-    required int selfCorrectionsCount,
-    required ProgressiveRevealChainConfig config,
-    required DateTime? nowLocal,
-  }) async {
-    final effectiveNow = (nowLocal ?? DateTime.now()).toLocal();
-    final currentIndex = state.currentVerseIndex;
-    final currentVerseState = state.verses[currentIndex];
-    final stage3WeakPreludeActive =
-        state.activeStage == CompanionStage.hiddenReveal &&
-            state.stage3WeakPreludeTargets.isNotEmpty;
-    final baselineHint = stage3WeakPreludeActive
-        ? HintLevel.letters
-        : _defaultHintForStage(state.activeStage);
-    var effectiveHintLevel = state.currentHintLevel.order < baselineHint.order
-        ? baselineHint
-        : state.currentHintLevel;
-    if (stage3WeakPreludeActive &&
-        effectiveHintLevel.order > HintLevel.letters.order) {
-      effectiveHintLevel = HintLevel.letters;
-    }
-    final assisted = effectiveHintLevel.order > baselineHint.order;
-
-    final evaluation = await evaluator.evaluate(
-      VerseEvaluationRequest(
-        verse: currentVerseState.verse,
-        manualFallbackPass: manualFallbackPass,
-        asrConfidence: asrConfidence,
-      ),
-    );
-
-    final retrievalStrength = computeRetrievalStrength(
-      passed: evaluation.passed,
-      hintLevel: effectiveHintLevel,
-      latencyToStartMs: latencyToStartMs,
-      stopsCount: stopsCount,
-      selfCorrectionsCount: selfCorrectionsCount,
-      confidence: evaluation.confidence,
-    );
-
-    final updatedAttemptCount = currentVerseState.attemptCount + 1;
-    final updatedHiddenAttemptCount =
-        state.activeStage == CompanionStage.hiddenReveal
-            ? currentVerseState.hiddenAttemptCount + 1
-            : currentVerseState.hiddenAttemptCount;
-
-    final updatedVerseState = currentVerseState.copyWith(
-      attemptCount: updatedAttemptCount,
-      hiddenAttemptCount: updatedHiddenAttemptCount,
-      revealed:
-          state.activeStage == CompanionStage.hiddenReveal && evaluation.passed
-              ? true
-              : currentVerseState.revealed,
-      passed:
-          state.activeStage == CompanionStage.hiddenReveal && evaluation.passed
-              ? true
-              : currentVerseState.passed,
-      passedGuidedVisible:
-          state.activeStage == CompanionStage.guidedVisible && evaluation.passed
-              ? true
-              : currentVerseState.passedGuidedVisible,
-      passedCuedRecall:
-          state.activeStage == CompanionStage.cuedRecall && evaluation.passed
-              ? true
-              : currentVerseState.passedCuedRecall,
-      highestHintLevel:
-          effectiveHintLevel.order > currentVerseState.highestHintLevel.order
-              ? effectiveHintLevel
-              : currentVerseState.highestHintLevel,
-      proficiency: _nextProficiency(
-        oldValue: currentVerseState.proficiency,
-        observedValue: retrievalStrength,
-        alpha: config.proficiencyEmaAlpha,
-      ),
-    );
-
-    final verseStates = [...state.verses];
-    verseStates[currentIndex] = updatedVerseState;
-
-    await _persistAttempt(
-      state: state.copyWith(verses: verseStates),
-      verseIndex: currentIndex,
-      verse: updatedVerseState,
-      stageCode: state.activeStage.code,
-      attemptType: 'probe',
-      hintLevel: effectiveHintLevel,
-      assistedFlag: assisted ? 1 : 0,
-      evaluatorMode: evaluation.mode,
-      evaluatorPassed: evaluation.passed ? 1 : 0,
-      evaluatorConfidence: evaluation.confidence,
-      autoCheckType: null,
-      autoCheckResult: null,
-      retrievalStrength: retrievalStrength,
-      latencyToStartMs: latencyToStartMs,
-      stopsCount: stopsCount,
-      selfCorrectionsCount: selfCorrectionsCount,
-      nowLocal: effectiveNow,
-      telemetryExtras: <String, Object?>{
-        'legacy_path': true,
-        if (stage3WeakPreludeActive) ...<String, Object?>{
-          'stage2_step': 'stage3_weak_prelude',
-          'weak_target': true,
-          'lifecycle_hook': 'stage5_candidate',
-        },
-      },
-    );
-
-    await _upsertProficiency(
-      state: state,
-      verse: updatedVerseState,
-      hintLevel: effectiveHintLevel,
-      retrievalStrength: retrievalStrength,
-      evaluatorConfidence: evaluation.confidence,
-      latencyToStartMs: latencyToStartMs,
-      evaluatorPassed: evaluation.passed,
-      nowLocal: effectiveNow,
-    );
-
-    final telemetry = VerseAttemptTelemetry(
-      stage: state.activeStage,
-      hintLevel: effectiveHintLevel,
-      latencyToStartMs: latencyToStartMs,
-      stopsCount: stopsCount,
-      selfCorrectionsCount: selfCorrectionsCount,
-      evaluatorPassed: evaluation.passed,
-      evaluatorConfidence: evaluation.confidence,
-      evaluatorMode: evaluation.mode,
-      revealedAfterAttempt: updatedVerseState.revealed,
-      retrievalStrength: retrievalStrength,
-      attemptType: 'probe',
-      assisted: assisted,
-      timeOnVerseMs: updatedVerseState.stage1.timeOnVerseMs,
-      timeOnChunkMs: state.stage1?.chunkElapsedMs ?? 0,
-    );
-
-    if (state.activeStage != CompanionStage.hiddenReveal) {
-      if (!evaluation.passed) {
-        return ChainAttemptUpdate(
-          state: state.copyWith(verses: verseStates),
-          telemetry: telemetry,
-        );
-      }
-
-      final stagePassed =
-          verseStates.every((verse) => verse.passedForStage(state.activeStage));
-      if (!stagePassed) {
-        final nextIndex = _nextUnpassedIndexForStage(
-              verseStates,
-              stage: state.activeStage,
-              startAfter: currentIndex,
-            ) ??
-            currentIndex;
-        return ChainAttemptUpdate(
-          state: state.copyWith(
-            verses: verseStates,
-            currentVerseIndex: nextIndex,
-            currentHintLevel: _defaultHintForStage(state.activeStage),
-            returnVerseIndex: null,
-          ),
-          telemetry: telemetry,
-        );
-      }
-
-      final advanced = await _advanceToNextStage(
-        state: state,
-        verseStates: verseStates,
-        triggerVerseIndex: currentIndex,
-        nowLocal: effectiveNow,
-      );
-
-      return ChainAttemptUpdate(
-        state: advanced,
-        telemetry: telemetry,
-      );
-    }
-
-    final allPassed = verseStates.every((verse) => verse.passed);
-    if (allPassed) {
-      final summary = await _completeSession(
-        state: state.copyWith(verses: verseStates),
-        verseStates: verseStates,
-        nowLocal: effectiveNow,
-      );
-      return ChainAttemptUpdate(
-        state: state.copyWith(
-          verses: verseStates,
-          completed: true,
-          resultKind: ChainResultKind.completed,
-          currentHintLevel: _defaultHintForStage(CompanionStage.hiddenReveal),
-          returnVerseIndex: null,
-        ),
-        telemetry: telemetry,
-        summary: summary,
-      );
-    }
-
-    if (stage3WeakPreludeActive) {
-      final routed = _routeStage3WeakPrelude(
-        state: state,
-        verseStates: verseStates,
-        currentIndex: currentIndex,
-        passedCurrent: evaluation.passed,
-      );
-      return ChainAttemptUpdate(
-        state: state.copyWith(
-          verses: routed.verseStates,
-          currentVerseIndex: routed.nextIndex,
-          currentHintLevel: routed.nextHintLevel,
-          returnVerseIndex: null,
-          stage3WeakPreludeTargets: routed.remainingTargets,
-          stage3WeakPreludeCursor: routed.nextCursor,
-        ),
-        telemetry: telemetry,
-      );
-    }
-
-    final routed = _routeNextHiddenVerse(
-      state: state,
-      verseStates: verseStates,
-      currentIndex: currentIndex,
-      passedCurrent: evaluation.passed,
-      config: config,
-    );
-
-    return ChainAttemptUpdate(
-      state: state.copyWith(
-        verses: routed.verseStates,
-        currentVerseIndex: routed.nextIndex,
-        returnVerseIndex: routed.returnVerseIndex,
-        currentHintLevel: routed.nextIndex == currentIndex
-            ? state.currentHintLevel
-            : _defaultHintForStage(CompanionStage.hiddenReveal),
-      ),
-      telemetry: telemetry,
     );
   }
 
@@ -4937,6 +5725,35 @@ class ProgressiveRevealChainEngine {
       ),
     );
     return _Stage3Touched(
+      verses: verses,
+      runtime: runtime.copyWith(
+        lastActionAtEpochMs: nowMs,
+        chunkElapsedMs: runtime.chunkElapsedMs + deltaMs,
+      ),
+    );
+  }
+
+  _ReviewTouched _touchReviewClock({
+    required ChainRunState state,
+    required DateTime nowLocal,
+  }) {
+    final runtime = state.review;
+    if (runtime == null) {
+      return _ReviewTouched(verses: state.verses, runtime: null);
+    }
+    final nowMs = nowLocal.millisecondsSinceEpoch;
+    final deltaMs = nowMs > runtime.lastActionAtEpochMs
+        ? nowMs - runtime.lastActionAtEpochMs
+        : 0;
+    final verses = [...state.verses];
+    final currentIndex = state.currentVerseIndex;
+    final current = verses[currentIndex];
+    verses[currentIndex] = current.copyWith(
+      stage3: current.stage3.copyWith(
+        timeOnVerseMs: current.stage3.timeOnVerseMs + deltaMs,
+      ),
+    );
+    return _ReviewTouched(
       verses: verses,
       runtime: runtime.copyWith(
         lastActionAtEpochMs: nowMs,
@@ -5600,6 +6417,337 @@ class ProgressiveRevealChainEngine {
     );
   }
 
+  Stage1AutoCheckPrompt _buildReviewAutoCheckPrompt({
+    required ChainRunState state,
+    required List<ChainVerseState> verses,
+    required int verseIndex,
+    required ReviewMode mode,
+  }) {
+    final verse = verses[verseIndex];
+    return _autoCheckEngine.buildPrompt(
+      sessionId: state.sessionId,
+      verseOrder: verseIndex,
+      attemptIndex: verse.attemptCount + 1,
+      attemptType: _attemptTypeForReviewMode(mode),
+      stage1Mode: _seedStage1ModeForReviewMode(mode),
+      verse: verse.verse,
+      chunkVerses: verses.map((entry) => entry.verse).toList(growable: false),
+    );
+  }
+
+  Stage1Mode _seedStage1ModeForReviewMode(ReviewMode mode) {
+    return switch (mode) {
+      ReviewMode.hiddenRecall => Stage1Mode.coldProbe,
+      ReviewMode.linking => Stage1Mode.spacedReprobe,
+      ReviewMode.discrimination => Stage1Mode.spacedReprobe,
+      ReviewMode.correction => Stage1Mode.correction,
+      ReviewMode.checkpoint => Stage1Mode.checkpoint,
+      ReviewMode.remediation => Stage1Mode.checkpoint,
+    };
+  }
+
+  String _attemptTypeForReviewMode(ReviewMode mode) {
+    return switch (mode) {
+      ReviewMode.hiddenRecall => 'probe',
+      ReviewMode.linking => 'spaced_reprobe',
+      ReviewMode.discrimination => 'spaced_reprobe',
+      ReviewMode.correction => 'encode_echo',
+      ReviewMode.checkpoint => 'checkpoint',
+      ReviewMode.remediation => 'checkpoint',
+    };
+  }
+
+  String _reviewTelemetryStep(ReviewMode mode) {
+    return switch (mode) {
+      ReviewMode.hiddenRecall => 'hidden_attempt',
+      ReviewMode.linking => 'linking',
+      ReviewMode.discrimination => 'discrimination',
+      ReviewMode.correction => 'correction_exposure',
+      ReviewMode.checkpoint => 'checkpoint',
+      ReviewMode.remediation => 'remediation',
+    };
+  }
+
+  String? _reviewRiskTrigger({
+    required ChainVerseState verse,
+    required Stage3Config config,
+  }) {
+    if (verse.stage3.remediationNeeded) {
+      return 'remediation';
+    }
+    if (verse.stage3.consecutiveFailures >=
+        config.discriminationFailureTrigger) {
+      return 'failure_streak';
+    }
+    if (verse.stage3.weakTarget) {
+      return 'weak_target';
+    }
+    if (verse.proficiency < config.targetSuccessBandMin) {
+      return 'low_proficiency';
+    }
+    return null;
+  }
+
+  bool _reviewIsReady({
+    required ChainVerseState verse,
+    required Stage3Config config,
+  }) {
+    return verse.stage3.isReady(
+      config: config,
+      isWeak: verse.stage3.weakTarget ||
+          verse.proficiency < config.targetSuccessBandMin,
+    );
+  }
+
+  List<int> _reviewUnresolvedTargets({
+    required List<ChainVerseState> verses,
+    required Stage3Config config,
+  }) {
+    return <int>[
+      for (var i = 0; i < verses.length; i++)
+        if (!_reviewIsReady(
+              verse: verses[i],
+              config: config,
+            ) ||
+            verses[i].stage3.remediationNeeded ||
+            verses[i].stage3.correctionRequired)
+          i,
+    ];
+  }
+
+  HintLevel _reviewEffectiveBaselineHint(Stage3VerseStats stats) {
+    var baseline = stats.cueBaselineHint;
+    if (stats.reliefPending) {
+      baseline = _easierHint(
+        baseline,
+        maxHint: HintLevel.letters,
+      );
+    }
+    if (baseline.order > HintLevel.letters.order) {
+      baseline = HintLevel.letters;
+    }
+    return baseline;
+  }
+
+  ReviewMode _reviewModeForVerse({
+    required ChainVerseState verse,
+    required ReviewRuntime runtime,
+  }) {
+    if (verse.stage3.correctionRequired) {
+      return ReviewMode.correction;
+    }
+    if (runtime.phase == ReviewPhase.remediation) {
+      return ReviewMode.remediation;
+    }
+    if (runtime.phase == ReviewPhase.checkpoint) {
+      return ReviewMode.checkpoint;
+    }
+
+    final riskTrigger = _reviewRiskTrigger(
+      verse: verse,
+      config: runtime.config,
+    );
+    if (riskTrigger != null &&
+        (verse.stage3.discriminationPasses < 1 ||
+            verse.stage3.consecutiveFailures >=
+                runtime.config.discriminationFailureTrigger ||
+            verse.stage3.remediationNeeded)) {
+      return ReviewMode.discrimination;
+    }
+
+    if (verse.stage3.linkingPassCount < 1) {
+      return ReviewMode.linking;
+    }
+    return ReviewMode.hiddenRecall;
+  }
+
+  _ReviewTarget? _pickReviewTarget({
+    required ChainRunState state,
+    required List<ChainVerseState> verses,
+    required int startAfter,
+    required ReviewRuntime runtime,
+  }) {
+    if (verses.isEmpty) {
+      return null;
+    }
+
+    final correctionTarget = _nextMatchingIndex(
+      verses: verses,
+      startAfter: startAfter,
+      predicate: (verse) => verse.stage3.correctionRequired,
+    );
+    if (correctionTarget != null) {
+      return _ReviewTarget(
+        verseIndex: correctionTarget,
+        mode: ReviewMode.correction,
+        phase: runtime.phase,
+        weakTarget: true,
+        riskTrigger: 'correction_required',
+      );
+    }
+
+    final weakOrRiskTargets = <int>[
+      for (var i = 0; i < verses.length; i++)
+        if (!_reviewIsReady(
+              verse: verses[i],
+              config: runtime.config,
+            ) &&
+            (verses[i].stage3.weakTarget ||
+                _reviewRiskTrigger(
+                      verse: verses[i],
+                      config: runtime.config,
+                    ) !=
+                    null ||
+                verses[i].proficiency < runtime.config.targetSuccessBandMin))
+          i,
+    ];
+    if (weakOrRiskTargets.isNotEmpty) {
+      final verseIndex = _nextIndexFromList(
+        indexes: weakOrRiskTargets,
+        startAfter: startAfter,
+      );
+      final verse = verses[verseIndex];
+      return _ReviewTarget(
+        verseIndex: verseIndex,
+        mode: _reviewModeForVerse(
+          verse: verse,
+          runtime: runtime,
+        ),
+        phase: ReviewPhase.acquisition,
+        weakTarget: true,
+        riskTrigger: _reviewRiskTrigger(
+          verse: verse,
+          config: runtime.config,
+        ),
+      );
+    }
+
+    final linkingDeficits = <int>[
+      for (var i = 0; i < verses.length; i++)
+        if (verses[i].stage3.linkingPassCount < 1) i,
+    ];
+    if (linkingDeficits.isNotEmpty) {
+      final verseIndex = _nextIndexFromList(
+        indexes: linkingDeficits,
+        startAfter: startAfter,
+      );
+      return _ReviewTarget(
+        verseIndex: verseIndex,
+        mode: ReviewMode.linking,
+        phase: ReviewPhase.acquisition,
+        weakTarget: verses[verseIndex].stage3.weakTarget,
+        riskTrigger: 'linking_deficit',
+      );
+    }
+
+    final readinessOrLowProficiency = <int>[
+      for (var i = 0; i < verses.length; i++)
+        if (!_reviewIsReady(
+              verse: verses[i],
+              config: runtime.config,
+            ) ||
+            verses[i].proficiency < runtime.config.targetSuccessBandMin)
+          i,
+    ];
+    if (readinessOrLowProficiency.isNotEmpty) {
+      if (runtime.totalCountableAttempts > 0 &&
+          runtime.totalCountableAttempts %
+                  runtime.config.randomProbeEveryCountedAttempts ==
+              0) {
+        final seed = state.sessionId +
+            runtime.totalCountableAttempts +
+            state.currentVerseIndex +
+            verses.length;
+        final sorted = readinessOrLowProficiency.toList(growable: false)
+          ..sort();
+        final probeIndex = sorted[seed % sorted.length];
+        return _ReviewTarget(
+          verseIndex: probeIndex,
+          mode: ReviewMode.hiddenRecall,
+          phase: ReviewPhase.acquisition,
+          weakTarget: verses[probeIndex].stage3.weakTarget,
+          riskTrigger: 'deterministic_probe',
+        );
+      }
+      final verseIndex = _nextIndexFromList(
+        indexes: readinessOrLowProficiency,
+        startAfter: startAfter,
+      );
+      final verse = verses[verseIndex];
+      return _ReviewTarget(
+        verseIndex: verseIndex,
+        mode: _reviewModeForVerse(
+          verse: verse,
+          runtime: runtime,
+        ),
+        phase: ReviewPhase.acquisition,
+        weakTarget: verse.stage3.weakTarget,
+        riskTrigger: _reviewRiskTrigger(
+          verse: verse,
+          config: runtime.config,
+        ),
+      );
+    }
+
+    if (runtime.phase == ReviewPhase.checkpoint) {
+      final targets = runtime.checkpointTargets.isEmpty
+          ? List<int>.generate(verses.length, (index) => index)
+          : runtime.checkpointTargets;
+      final cursor = runtime.checkpointCursor.clamp(0, targets.length - 1);
+      final verseIndex = targets[cursor];
+      return _ReviewTarget(
+        verseIndex: verseIndex,
+        mode: ReviewMode.checkpoint,
+        phase: ReviewPhase.checkpoint,
+        weakTarget: verses[verseIndex].stage3.weakTarget,
+        riskTrigger: 'checkpoint',
+      );
+    }
+
+    if (runtime.phase == ReviewPhase.remediation &&
+        runtime.remediationTargets.isNotEmpty) {
+      final pending = runtime.remediationTargets.where((index) {
+        if (index < 0 || index >= verses.length) {
+          return false;
+        }
+        return verses[index].stage3.remediationNeeded ||
+            !_reviewIsReady(
+              verse: verses[index],
+              config: runtime.config,
+            );
+      }).toList(growable: false);
+      if (pending.isNotEmpty) {
+        final verseIndex = _nextIndexFromList(
+          indexes: pending,
+          startAfter: startAfter,
+        );
+        return _ReviewTarget(
+          verseIndex: verseIndex,
+          mode: ReviewMode.remediation,
+          phase: ReviewPhase.remediation,
+          weakTarget: true,
+          riskTrigger: 'remediation',
+        );
+      }
+    }
+
+    final fallback = _nextUnpassedIndex(
+          verses,
+          startAfter: startAfter,
+        ) ??
+        _firstUnpassedIndex(verses);
+    if (fallback == null) {
+      return null;
+    }
+    return _ReviewTarget(
+      verseIndex: fallback,
+      mode: ReviewMode.hiddenRecall,
+      phase: ReviewPhase.acquisition,
+      weakTarget: verses[fallback].stage3.weakTarget,
+      riskTrigger: 'fallback_hidden_interleave',
+    );
+  }
+
   Stage1AutoCheckPrompt _buildStage4AutoCheckPrompt({
     required ChainRunState state,
     required List<ChainVerseState> verses,
@@ -5661,7 +6809,8 @@ class ProgressiveRevealChainEngine {
     if (verse.stage4.remediationNeeded) {
       return 'remediation';
     }
-    if (verse.stage4.consecutiveFailures >= config.discriminationFailureTrigger) {
+    if (verse.stage4.consecutiveFailures >=
+        config.discriminationFailureTrigger) {
       return 'failure_streak';
     }
     if (verse.stage1.weak ||
@@ -6057,13 +7206,17 @@ class ProgressiveRevealChainEngine {
       CompanionStage.cuedRecall => verse.stage2.timeOnVerseMs,
       CompanionStage.hiddenReveal => state.stage4 != null
           ? verse.stage4.timeOnVerseMs
-          : verse.stage3.timeOnVerseMs,
+          : (state.review != null
+              ? verse.stage3.timeOnVerseMs
+              : verse.stage3.timeOnVerseMs),
     };
     final timeOnChunkMs = switch (attemptStage) {
       CompanionStage.guidedVisible => state.stage1?.chunkElapsedMs ?? 0,
       CompanionStage.cuedRecall => state.stage2?.chunkElapsedMs ?? 0,
-      CompanionStage.hiddenReveal =>
-        state.stage4?.chunkElapsedMs ?? state.stage3?.chunkElapsedMs ?? 0,
+      CompanionStage.hiddenReveal => state.stage4?.chunkElapsedMs ??
+          state.review?.chunkElapsedMs ??
+          state.stage3?.chunkElapsedMs ??
+          0,
     };
 
     await _companionRepo.insertVerseAttempt(
@@ -6349,85 +7502,6 @@ class ProgressiveRevealChainEngine {
     return summary;
   }
 
-  _Stage3WeakPreludeRouting _routeStage3WeakPrelude({
-    required ChainRunState state,
-    required List<ChainVerseState> verseStates,
-    required int currentIndex,
-    required bool passedCurrent,
-  }) {
-    final targets = [...state.stage3WeakPreludeTargets];
-    if (targets.isEmpty) {
-      final fallbackNext = _nextUnpassedIndex(
-            verseStates,
-            startAfter: currentIndex,
-          ) ??
-          _firstUnpassedIndex(verseStates) ??
-          currentIndex;
-      return _Stage3WeakPreludeRouting(
-        nextIndex: fallbackNext,
-        nextHintLevel: _defaultHintForStage(CompanionStage.hiddenReveal),
-        nextCursor: 0,
-        remainingTargets: const <int>[],
-        verseStates: verseStates,
-      );
-    }
-
-    var cursor = state.stage3WeakPreludeCursor;
-    if (cursor < 0 || cursor >= targets.length) {
-      cursor = 0;
-    }
-    final activeTarget = targets[cursor];
-    if (activeTarget != currentIndex) {
-      return _Stage3WeakPreludeRouting(
-        nextIndex: activeTarget,
-        nextHintLevel: HintLevel.letters,
-        nextCursor: cursor,
-        remainingTargets: targets,
-        verseStates: verseStates,
-      );
-    }
-
-    if (passedCurrent) {
-      targets.removeAt(cursor);
-      if (targets.isEmpty) {
-        final nextIndex = _nextUnpassedIndex(
-              verseStates,
-              startAfter: currentIndex,
-            ) ??
-            _firstUnpassedIndex(verseStates) ??
-            currentIndex;
-        return _Stage3WeakPreludeRouting(
-          nextIndex: nextIndex,
-          nextHintLevel: _defaultHintForStage(CompanionStage.hiddenReveal),
-          nextCursor: 0,
-          remainingTargets: const <int>[],
-          verseStates: verseStates,
-        );
-      }
-      if (cursor >= targets.length) {
-        cursor = 0;
-      }
-      return _Stage3WeakPreludeRouting(
-        nextIndex: targets[cursor],
-        nextHintLevel: HintLevel.letters,
-        nextCursor: cursor,
-        remainingTargets: targets,
-        verseStates: verseStates,
-      );
-    }
-
-    if (targets.length > 1) {
-      cursor = (cursor + 1) % targets.length;
-    }
-    return _Stage3WeakPreludeRouting(
-      nextIndex: targets[cursor],
-      nextHintLevel: HintLevel.letters,
-      nextCursor: cursor,
-      remainingTargets: targets,
-      verseStates: verseStates,
-    );
-  }
-
   _RoutingResult _routeNextHiddenVerse({
     required ChainRunState state,
     required List<ChainVerseState> verseStates,
@@ -6513,26 +7587,6 @@ class ProgressiveRevealChainEngine {
 
     for (var i = 0; i <= startAfter && i < verses.length; i++) {
       if (!verses[i].passed) {
-        return i;
-      }
-    }
-
-    return null;
-  }
-
-  int? _nextUnpassedIndexForStage(
-    List<ChainVerseState> verses, {
-    required CompanionStage stage,
-    required int startAfter,
-  }) {
-    for (var i = startAfter + 1; i < verses.length; i++) {
-      if (!verses[i].passedForStage(stage)) {
-        return i;
-      }
-    }
-
-    for (var i = 0; i <= startAfter && i < verses.length; i++) {
-      if (!verses[i].passedForStage(stage)) {
         return i;
       }
     }
@@ -6650,6 +7704,16 @@ class _Stage3Touched {
   final Stage3Runtime? runtime;
 }
 
+class _ReviewTouched {
+  const _ReviewTouched({
+    required this.verses,
+    required this.runtime,
+  });
+
+  final List<ChainVerseState> verses;
+  final ReviewRuntime? runtime;
+}
+
 class _Stage3Target {
   const _Stage3Target({
     required this.verseIndex,
@@ -6662,6 +7726,22 @@ class _Stage3Target {
   final int verseIndex;
   final Stage3Mode mode;
   final Stage3Phase phase;
+  final bool weakTarget;
+  final String? riskTrigger;
+}
+
+class _ReviewTarget {
+  const _ReviewTarget({
+    required this.verseIndex,
+    required this.mode,
+    required this.phase,
+    required this.weakTarget,
+    required this.riskTrigger,
+  });
+
+  final int verseIndex;
+  final ReviewMode mode;
+  final ReviewPhase phase;
   final bool weakTarget;
   final String? riskTrigger;
 }
@@ -6702,20 +7782,4 @@ class _Stage4DueResolution {
   final String dueKind;
   final int dueDay;
   final bool mandatory;
-}
-
-class _Stage3WeakPreludeRouting {
-  const _Stage3WeakPreludeRouting({
-    required this.nextIndex,
-    required this.nextHintLevel,
-    required this.nextCursor,
-    required this.remainingTargets,
-    required this.verseStates,
-  });
-
-  final int nextIndex;
-  final HintLevel nextHintLevel;
-  final int nextCursor;
-  final List<int> remainingTargets;
-  final List<ChainVerseState> verseStates;
 }

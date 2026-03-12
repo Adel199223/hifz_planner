@@ -64,6 +64,13 @@ void main() {
     return textWidget.data ?? '';
   }
 
+  String reviewModeLabelText(WidgetTester tester) {
+    final textWidget = tester.widget<Text>(
+      find.byKey(const ValueKey('companion_review_mode_label')),
+    );
+    return textWidget.data ?? '';
+  }
+
   bool autoplayToggleValue(WidgetTester tester) {
     final toggle =
         tester.widget(find.byKey(const ValueKey('companion_autoplay_toggle')));
@@ -91,6 +98,20 @@ void main() {
   }
 
   Future<void> submitManualDecision(WidgetTester tester, bool passed) async {
+    final autoCheckOption = find.byWidgetPredicate((widget) {
+      final key = widget.key;
+      if (key is! ValueKey) {
+        return false;
+      }
+      final value = key.value;
+      return value is String && value.contains('_auto_check_o');
+    });
+    if (autoCheckOption.evaluate().isNotEmpty) {
+      await tester.ensureVisible(autoCheckOption.first);
+      await tester.tap(autoCheckOption.first);
+      await tester.pumpAndSettle();
+    }
+
     final recordButton =
         find.byKey(const ValueKey('companion_record_start_button'));
     await tester.ensureVisible(recordButton);
@@ -110,6 +131,16 @@ void main() {
     await submitManualDecision(tester, true);
     await submitManualDecision(tester, true);
     await submitManualDecision(tester, true);
+  }
+
+  Future<void> completeSingleVerseReview(WidgetTester tester) async {
+    for (var i = 0; i < 4; i++) {
+      await submitManualDecision(tester, true);
+    }
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('companion_summary_card')),
+    );
   }
 
   Future<int> seedUnitAndAyah(
@@ -656,11 +687,7 @@ void main() {
       mode: CompanionLaunchMode.review,
     );
 
-    await submitManualDecision(tester, true);
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('companion_summary_card')),
-    );
+    await completeSingleVerseReview(tester);
     expect(find.byKey(const ValueKey('companion_review_grade_prompt')),
         findsOneWidget);
 
@@ -716,11 +743,7 @@ void main() {
       mode: CompanionLaunchMode.review,
     );
 
-    await submitManualDecision(tester, true);
-    await pumpUntilFound(
-      tester,
-      find.byKey(const ValueKey('companion_summary_card')),
-    );
+    await completeSingleVerseReview(tester);
 
     final gradeButton = find.byKey(const ValueKey('companion_review_grade_3'));
     await tester.ensureVisible(gradeButton);
@@ -784,7 +807,7 @@ void main() {
     expect(stage4ModeLabelText(tester), isNot('Correction'));
   });
 
-  testWidgets('review mode still starts hidden with no skip control',
+  testWidgets('review mode starts with review runtime card and no skip control',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final unitId = await seedUnitAndAyah(db, unitKey: 'companion-review-start');
@@ -800,8 +823,52 @@ void main() {
     );
 
     expect(stageLabelText(tester), 'Hidden reveal');
+    expect(find.byKey(const ValueKey('companion_review_mode_card')),
+        findsOneWidget);
+    expect(reviewModeLabelText(tester), 'Discrimination');
+    expect(find.byKey(const ValueKey('companion_stage3_mode_card')),
+        findsNothing);
     expect(find.byKey(const ValueKey('companion_skip_stage_button')),
         findsNothing);
+  });
+
+  testWidgets('review failure shows review correction flow',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId =
+        await seedUnitAndAyah(db, unitKey: 'companion-review-correction');
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.review,
+    );
+
+    final optionFinder =
+        firstAutoCheckOptionFinder(prefix: 'companion_review_auto_check_o');
+    await tester.ensureVisible(optionFinder.first);
+    await tester.tap(optionFinder.first);
+    await tester.pumpAndSettle();
+
+    final recordButton =
+        find.byKey(const ValueKey('companion_record_start_button'));
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('companion_mark_incorrect')));
+    await tester.pumpAndSettle();
+
+    expect(reviewModeLabelText(tester), 'Correction');
+    expect(find.text('Play Review Correction'), findsOneWidget);
+
+    await tester.ensureVisible(recordButton);
+    await tester.tap(recordButton);
+    await tester.pumpAndSettle();
+    expect(reviewModeLabelText(tester), isNot('Correction'));
   });
 
   testWidgets(
