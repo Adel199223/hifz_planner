@@ -63,8 +63,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
   ProgressiveRevealChainEngine get _engine =>
       ref.read(progressiveRevealChainEngineProvider);
 
-  VerseEvaluator get _evaluator =>
-      ref.read(manualFallbackVerseEvaluatorProvider);
+  VerseEvaluator get _evaluator => ref.read(activeVerseEvaluatorProvider);
 
   @override
   void initState() {
@@ -685,7 +684,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       final update = await _engine.submitAttempt(
         state: state,
         evaluator: _evaluator,
-        manualFallbackPass: result,
+        submission: VerseEvaluationSubmission.manual(passed: result),
         selectedAutoCheckOptionId: _selectedAutoCheckOptionId,
         latencyToStartMs: 800,
         stopsCount: 0,

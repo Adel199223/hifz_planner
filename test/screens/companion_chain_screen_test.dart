@@ -13,6 +13,7 @@ import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/services/ayah_audio_service.dart';
 import 'package:hifz_planner/data/services/ayah_audio_source.dart';
 import 'package:hifz_planner/data/services/companion/companion_models.dart';
+import 'package:hifz_planner/data/services/companion/verse_evaluator.dart';
 import 'package:hifz_planner/data/services/qurancom_api.dart';
 import 'package:hifz_planner/data/services/tajweed_tags_service.dart';
 import 'package:hifz_planner/screens/companion_chain_screen.dart';
@@ -259,6 +260,7 @@ void main() {
     AppPreferencesStore? appPreferencesStore,
     AyahAudioService? audioService,
     QuranComApi? quranComApi,
+    VerseEvaluator? verseEvaluator,
   }) {
     return ProviderContainer(
       overrides: [
@@ -270,6 +272,8 @@ void main() {
           appPreferencesStoreProvider.overrideWithValue(appPreferencesStore),
         if (audioService != null)
           ayahAudioServiceProvider.overrideWithValue(audioService),
+        if (verseEvaluator != null)
+          activeVerseEvaluatorProvider.overrideWithValue(verseEvaluator),
         quranComApiProvider
             .overrideWithValue(quranComApi ?? _FakeQuranComApi()),
         qcfFontManagerProvider.overrideWithValue(
@@ -325,6 +329,32 @@ void main() {
     expect(stage1ModeLabelText(tester), 'Cold Probe');
     expect(find.byKey(const ValueKey('companion_stage1_hidden_prompt')),
         findsOneWidget);
+  });
+
+  testWidgets('screen uses active evaluator provider override', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId =
+        await seedUnitAndAyah(db, unitKey: 'companion-evaluator-override');
+    final evaluator = _TrackingVerseEvaluator();
+    final container = buildContainer(
+      db,
+      verseEvaluator: evaluator,
+    );
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.newMemorization,
+    );
+
+    await driveToFirstColdProbe(tester);
+    await submitManualDecision(tester, true);
+
+    expect(evaluator.callCount, greaterThan(0));
+    expect(evaluator.lastSubmission?.manualFallbackPass, isTrue);
   });
 
   testWidgets('micro-check is required by default on cold attempts',
@@ -1213,6 +1243,22 @@ class _NoTranslationQuranComApi extends _FakeQuranComApi {
         ),
       ],
       translations: <MushafVerseTranslation>[],
+    );
+  }
+}
+
+class _TrackingVerseEvaluator implements VerseEvaluator {
+  int callCount = 0;
+  VerseEvaluationSubmission? lastSubmission;
+
+  @override
+  Future<VerseEvaluationResult> evaluate(VerseEvaluationRequest request) async {
+    callCount += 1;
+    lastSubmission = request.submission;
+    return VerseEvaluationResult(
+      passed: request.submission.manualFallbackPass ?? false,
+      confidence: request.submission.asrConfidence,
+      mode: EvaluatorMode.manualFallback,
     );
   }
 }

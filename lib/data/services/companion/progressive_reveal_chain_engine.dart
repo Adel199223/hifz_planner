@@ -841,9 +841,8 @@ class ProgressiveRevealChainEngine {
   Future<ChainAttemptUpdate> submitAttempt({
     required ChainRunState state,
     required VerseEvaluator evaluator,
-    required bool manualFallbackPass,
+    required VerseEvaluationSubmission submission,
     String? selectedAutoCheckOptionId,
-    double? asrConfidence,
     int latencyToStartMs = 0,
     int stopsCount = 0,
     int selfCorrectionsCount = 0,
@@ -863,9 +862,8 @@ class ProgressiveRevealChainEngine {
       return _submitStage1Attempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: manualFallbackPass,
+        submission: submission,
         selectedAutoCheckOptionId: selectedAutoCheckOptionId,
-        asrConfidence: asrConfidence,
         latencyToStartMs: latencyToStartMs,
         stopsCount: stopsCount,
         selfCorrectionsCount: selfCorrectionsCount,
@@ -883,9 +881,8 @@ class ProgressiveRevealChainEngine {
       return _submitStage2Attempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: manualFallbackPass,
+        submission: submission,
         selectedAutoCheckOptionId: selectedAutoCheckOptionId,
-        asrConfidence: asrConfidence,
         latencyToStartMs: latencyToStartMs,
         stopsCount: stopsCount,
         selfCorrectionsCount: selfCorrectionsCount,
@@ -903,9 +900,8 @@ class ProgressiveRevealChainEngine {
       return _submitStage4Attempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: manualFallbackPass,
+        submission: submission,
         selectedAutoCheckOptionId: selectedAutoCheckOptionId,
-        asrConfidence: asrConfidence,
         latencyToStartMs: latencyToStartMs,
         stopsCount: stopsCount,
         selfCorrectionsCount: selfCorrectionsCount,
@@ -923,9 +919,8 @@ class ProgressiveRevealChainEngine {
       return _submitReviewAttempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: manualFallbackPass,
+        submission: submission,
         selectedAutoCheckOptionId: selectedAutoCheckOptionId,
-        asrConfidence: asrConfidence,
         latencyToStartMs: latencyToStartMs,
         stopsCount: stopsCount,
         selfCorrectionsCount: selfCorrectionsCount,
@@ -943,9 +938,8 @@ class ProgressiveRevealChainEngine {
       return _submitStage3Attempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: manualFallbackPass,
+        submission: submission,
         selectedAutoCheckOptionId: selectedAutoCheckOptionId,
-        asrConfidence: asrConfidence,
         latencyToStartMs: latencyToStartMs,
         stopsCount: stopsCount,
         selfCorrectionsCount: selfCorrectionsCount,
@@ -963,9 +957,8 @@ class ProgressiveRevealChainEngine {
   Future<ChainAttemptUpdate> _submitStage1Attempt({
     required ChainRunState state,
     required VerseEvaluator evaluator,
-    required bool manualFallbackPass,
+    required VerseEvaluationSubmission submission,
     required String? selectedAutoCheckOptionId,
-    required double? asrConfidence,
     required int latencyToStartMs,
     required int stopsCount,
     required int selfCorrectionsCount,
@@ -1012,7 +1005,7 @@ class ProgressiveRevealChainEngine {
         assistedFlag: 0,
         evaluatorMode: EvaluatorMode.manualFallback,
         evaluatorPassed: 1,
-        evaluatorConfidence: asrConfidence,
+        evaluatorConfidence: submission.asrConfidence,
         autoCheckType: null,
         autoCheckResult: null,
         retrievalStrength: 0.0,
@@ -1078,7 +1071,7 @@ class ProgressiveRevealChainEngine {
           stopsCount: stopsCount,
           selfCorrectionsCount: selfCorrectionsCount,
           evaluatorPassed: true,
-          evaluatorConfidence: asrConfidence,
+          evaluatorConfidence: submission.asrConfidence,
           evaluatorMode: EvaluatorMode.manualFallback,
           revealedAfterAttempt: false,
           retrievalStrength: 0.0,
@@ -1094,8 +1087,7 @@ class ProgressiveRevealChainEngine {
     final evaluation = await evaluator.evaluate(
       VerseEvaluationRequest(
         verse: currentVerse.verse,
-        manualFallbackPass: manualFallbackPass,
-        asrConfidence: asrConfidence,
+        submission: submission,
       ),
     );
     final attemptMode = runtime.mode;
@@ -1356,9 +1348,8 @@ class ProgressiveRevealChainEngine {
   Future<ChainAttemptUpdate> _submitStage2Attempt({
     required ChainRunState state,
     required VerseEvaluator evaluator,
-    required bool manualFallbackPass,
+    required VerseEvaluationSubmission submission,
     required String? selectedAutoCheckOptionId,
-    required double? asrConfidence,
     required int latencyToStartMs,
     required int stopsCount,
     required int selfCorrectionsCount,
@@ -1387,8 +1378,7 @@ class ProgressiveRevealChainEngine {
     final evaluation = await evaluator.evaluate(
       VerseEvaluationRequest(
         verse: currentVerse.verse,
-        manualFallbackPass: manualFallbackPass,
-        asrConfidence: asrConfidence,
+        submission: submission,
       ),
     );
 
@@ -1663,9 +1653,8 @@ class ProgressiveRevealChainEngine {
   Future<ChainAttemptUpdate> _submitStage3Attempt({
     required ChainRunState state,
     required VerseEvaluator evaluator,
-    required bool manualFallbackPass,
+    required VerseEvaluationSubmission submission,
     required String? selectedAutoCheckOptionId,
-    required double? asrConfidence,
     required int latencyToStartMs,
     required int stopsCount,
     required int selfCorrectionsCount,
@@ -1694,8 +1683,7 @@ class ProgressiveRevealChainEngine {
     final evaluation = await evaluator.evaluate(
       VerseEvaluationRequest(
         verse: currentVerse.verse,
-        manualFallbackPass: manualFallbackPass,
-        asrConfidence: asrConfidence,
+        submission: submission,
       ),
     );
 
@@ -2127,9 +2115,8 @@ class ProgressiveRevealChainEngine {
   Future<ChainAttemptUpdate> _submitReviewAttempt({
     required ChainRunState state,
     required VerseEvaluator evaluator,
-    required bool manualFallbackPass,
+    required VerseEvaluationSubmission submission,
     required String? selectedAutoCheckOptionId,
-    required double? asrConfidence,
     required int latencyToStartMs,
     required int stopsCount,
     required int selfCorrectionsCount,
@@ -2159,8 +2146,7 @@ class ProgressiveRevealChainEngine {
     final evaluation = await evaluator.evaluate(
       VerseEvaluationRequest(
         verse: currentVerse.verse,
-        manualFallbackPass: manualFallbackPass,
-        asrConfidence: asrConfidence,
+        submission: submission,
       ),
     );
 
@@ -2872,9 +2858,8 @@ class ProgressiveRevealChainEngine {
   Future<ChainAttemptUpdate> _submitStage4Attempt({
     required ChainRunState state,
     required VerseEvaluator evaluator,
-    required bool manualFallbackPass,
+    required VerseEvaluationSubmission submission,
     required String? selectedAutoCheckOptionId,
-    required double? asrConfidence,
     required int latencyToStartMs,
     required int stopsCount,
     required int selfCorrectionsCount,
@@ -2903,8 +2888,7 @@ class ProgressiveRevealChainEngine {
     final evaluation = await evaluator.evaluate(
       VerseEvaluationRequest(
         verse: currentVerse.verse,
-        manualFallbackPass: manualFallbackPass,
-        asrConfidence: asrConfidence,
+        submission: submission,
       ),
     );
 

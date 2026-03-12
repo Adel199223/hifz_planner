@@ -191,7 +191,7 @@ final companionCalibrationBridgeProvider =
   return CompanionCalibrationBridge(calibrationRepo);
 });
 
-final manualFallbackVerseEvaluatorProvider = Provider<VerseEvaluator>((ref) {
+final activeVerseEvaluatorProvider = Provider<VerseEvaluator>((ref) {
   return const ManualFallbackVerseEvaluator();
 });
 

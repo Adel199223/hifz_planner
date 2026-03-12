@@ -72,6 +72,22 @@ void main() {
     return prompt!.correctOptionId;
   }
 
+  VerseEvaluationSubmission manualSubmission(bool passed) {
+    return VerseEvaluationSubmission.manual(passed: passed);
+  }
+
+  VerseEvaluationSubmission asrSubmission({
+    required double confidence,
+    String transcript = 'test transcript',
+  }) {
+    return VerseEvaluationSubmission(
+      sourceMode: EvaluatorMode.asr,
+      asrConfidence: confidence,
+      asrTranscript: transcript,
+      asrProvider: 'test-asr',
+    );
+  }
+
   test('forces cold probe after model-echo cap', () async {
     final unitId = await createUnit('stage1-echo-cap', endAyah: 1);
     const stage1 = Stage1Config(
@@ -96,7 +112,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: now,
     );
@@ -107,7 +123,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: now,
     );
@@ -117,6 +133,69 @@ void main() {
     final attempts = await companionRepo.getAttemptsForSession(state.sessionId);
     expect(attempts.where((entry) => entry.attemptType == 'encode_echo').length,
         2);
+  });
+
+  test('persists evaluator mode and confidence from non-manual evaluator',
+      () async {
+    final unitId = await createUnit('stage1-evaluator-persistence', endAyah: 1);
+    const stage1 = Stage1Config(
+      echoMinLoops: 1,
+      echoMaxLoops: 1,
+      echoDefaultLoops: 1,
+    );
+    final config = configForStage1(stage1);
+    final asrEvaluator = _FixedResultVerseEvaluator(
+      passed: true,
+      confidence: 0.87,
+      mode: EvaluatorMode.asr,
+    );
+
+    var state = await engine.startSession(
+      unitId: unitId,
+      verses: const <ChainVerse>[
+        ChainVerse(surah: 1, ayah: 1, text: 'الرحمن الرحيم'),
+      ],
+      launchMode: CompanionLaunchMode.newMemorization,
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 8, 5, 0),
+    );
+
+    var update = await engine.submitAttempt(
+      state: state,
+      evaluator: evaluator,
+      submission: manualSubmission(true),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 8, 5, 1),
+    );
+    state = update.state;
+    expect(state.stage1?.mode, Stage1Mode.coldProbe);
+
+    update = await engine.submitAttempt(
+      state: state,
+      evaluator: asrEvaluator,
+      submission: asrSubmission(confidence: 0.42),
+      selectedAutoCheckOptionId: correctOption(state),
+      config: config,
+      nowLocal: DateTime(2026, 2, 24, 8, 5, 2),
+    );
+
+    expect(asrEvaluator.lastSubmission?.sourceMode, EvaluatorMode.asr);
+    expect(asrEvaluator.lastSubmission?.asrTranscript, 'test transcript');
+
+    final attempts = await companionRepo.getAttemptsForSession(state.sessionId);
+    expect(attempts, hasLength(2));
+    expect(attempts.last.evaluatorMode, EvaluatorMode.asr.code);
+    expect(attempts.last.evaluatorConfidence, 0.87);
+
+    final proficiency = await companionRepo.getStepProficiency(
+      unitId: unitId,
+      surah: 1,
+      ayah: 1,
+    );
+    expect(proficiency, isNotNull);
+    expect(proficiency!.lastEvaluatorConfidence, 0.87);
+    expect(update.telemetry.evaluatorMode, EvaluatorMode.asr);
+    expect(update.telemetry.evaluatorConfidence, 0.87);
   });
 
   test('locks hints for first H0 cold attempt, then unlocks', () async {
@@ -141,7 +220,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 0, 1),
     );
@@ -155,7 +234,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 0, 5),
@@ -188,7 +267,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 0, 1),
     );
@@ -198,7 +277,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 0, 2),
@@ -211,7 +290,7 @@ void main() {
       engine.submitAttempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: true,
+        submission: manualSubmission(true),
         selectedAutoCheckOptionId: null,
         config: config,
         nowLocal: DateTime(2026, 2, 24, 8, 0, 3),
@@ -229,7 +308,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 2, 10),
@@ -262,7 +341,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 0, 1),
     );
@@ -270,7 +349,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 0, 2),
@@ -281,7 +360,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 0, 3),
     );
@@ -291,7 +370,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 1, 0),
@@ -302,7 +381,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 1, 1),
     );
@@ -312,7 +391,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 3, 2),
@@ -351,7 +430,7 @@ void main() {
     ChainAttemptUpdate update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: at(1),
     );
@@ -359,7 +438,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: at(2),
@@ -369,7 +448,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: at(3),
     );
@@ -377,7 +456,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: at(4),
@@ -387,7 +466,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: at(5),
@@ -396,7 +475,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: at(6),
@@ -408,7 +487,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: at(7),
@@ -429,7 +508,7 @@ void main() {
     update = await engine.submitAttempt(
       state: hinted,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(hinted),
       config: config,
       nowLocal: at(9),
@@ -441,7 +520,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: at(10),
@@ -482,7 +561,7 @@ void main() {
     final update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 8, 0, 3),
     );
@@ -541,7 +620,7 @@ void main() {
     final update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 0, 4),
@@ -573,7 +652,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 10, 2),
@@ -591,7 +670,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 10, 6),
@@ -628,7 +707,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 20, 2),
@@ -639,7 +718,7 @@ void main() {
     update = await engine.submitAttempt(
       state: hinted,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(hinted),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 20, 4),
@@ -649,7 +728,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 20, 6),
@@ -691,7 +770,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 30, 2),
@@ -700,7 +779,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 30, 4),
@@ -713,7 +792,7 @@ void main() {
     update = await engine.submitAttempt(
       state: hinted,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(hinted),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 30, 6),
@@ -724,7 +803,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 30, 8),
@@ -765,7 +844,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 40, 3),
@@ -781,7 +860,7 @@ void main() {
     update = await engine.submitAttempt(
       state: hinted,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(hinted),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 40, 4),
@@ -851,7 +930,7 @@ void main() {
     final update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 9, 50, 3),
@@ -899,7 +978,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 20, 2),
@@ -912,7 +991,7 @@ void main() {
       engine.submitAttempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: true,
+        submission: manualSubmission(true),
         config: config,
         nowLocal: DateTime(2026, 2, 24, 10, 20, 4),
       ),
@@ -955,7 +1034,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 30, 2),
@@ -966,7 +1045,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 30, 4),
@@ -1006,7 +1085,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 40, 2),
@@ -1015,7 +1094,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 40, 4),
@@ -1027,7 +1106,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 40, 6),
@@ -1039,7 +1118,7 @@ void main() {
     update = await engine.submitAttempt(
       state: hinted,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(hinted),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 40, 8),
@@ -1078,7 +1157,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 50, 3),
@@ -1092,7 +1171,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 50, 5),
@@ -1158,7 +1237,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 0, 2),
@@ -1173,7 +1252,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 0, 4),
@@ -1264,7 +1343,7 @@ void main() {
       var update = await engine.submitAttempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: false,
+        submission: manualSubmission(false),
         selectedAutoCheckOptionId: 'invalid',
         config: config,
         nowLocal: DateTime(2026, 2, 24, 11, 10, index * 10 + 2),
@@ -1280,7 +1359,7 @@ void main() {
         engine.submitAttempt(
           state: state,
           evaluator: evaluator,
-          manualFallbackPass: true,
+          submission: manualSubmission(true),
           selectedAutoCheckOptionId: 'ignored',
           config: config,
           nowLocal: DateTime(2026, 2, 24, 11, 10, index * 10 + 3),
@@ -1330,7 +1409,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 20, 2),
@@ -1344,7 +1423,7 @@ void main() {
     update = await engine.submitAttempt(
       state: hinted,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(hinted),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 20, 4),
@@ -1356,7 +1435,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 20, 6),
@@ -1366,7 +1445,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 20, 8),
@@ -1404,7 +1483,7 @@ void main() {
     var updateA = await engine.submitAttempt(
       state: stateA,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(stateA),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 30, 2),
@@ -1412,7 +1491,7 @@ void main() {
     var updateB = await engine.submitAttempt(
       state: stateB,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(stateB),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 30, 2),
@@ -1429,7 +1508,7 @@ void main() {
     updateA = await engine.submitAttempt(
       state: stateA,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(stateA),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 30, 4),
@@ -1437,7 +1516,7 @@ void main() {
     updateB = await engine.submitAttempt(
       state: stateB,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(stateB),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 30, 4),
@@ -1468,7 +1547,7 @@ void main() {
     final update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 40, 3),
@@ -1542,7 +1621,7 @@ void main() {
     final update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 26, 7, 10, 3),
@@ -1555,7 +1634,7 @@ void main() {
       engine.submitAttempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: true,
+        submission: manualSubmission(true),
         selectedAutoCheckOptionId: null,
         config: config,
         nowLocal: DateTime(2026, 2, 26, 7, 10, 4),
@@ -1597,7 +1676,7 @@ void main() {
     final update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 26, 7, 20, 3),
@@ -1619,7 +1698,8 @@ void main() {
     expect(sessions.last.unresolvedTargetsJson, isNotNull);
   });
 
-  test('Stage-4 pass marks lifecycle stable and stage5-candidate path', () async {
+  test('Stage-4 pass marks lifecycle stable and stage5-candidate path',
+      () async {
     final unitId = await createUnit('stage4-pass', endAyah: 1);
     final config = configForStage4(
       const Stage4Config(
@@ -1645,7 +1725,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 26, 7, 30, 2),
@@ -1655,7 +1735,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 26, 7, 30, 4),
@@ -1666,7 +1746,7 @@ void main() {
     update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 26, 7, 30, 6),
@@ -1705,7 +1785,7 @@ void main() {
     final update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 0, 2),
@@ -1775,7 +1855,7 @@ void main() {
     var update = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: false,
+      submission: manualSubmission(false),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 10, 0, 2),
@@ -1788,7 +1868,7 @@ void main() {
       engine.submitAttempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: true,
+        submission: manualSubmission(true),
         selectedAutoCheckOptionId: null,
         config: config,
         nowLocal: DateTime(2026, 2, 24, 10, 0, 3),
@@ -1844,7 +1924,7 @@ void main() {
       final update = await engine.submitAttempt(
         state: state,
         evaluator: evaluator,
-        manualFallbackPass: true,
+        submission: manualSubmission(true),
         selectedAutoCheckOptionId: correctOption(state),
         config: config,
         nowLocal: DateTime(2026, 2, 24, 11, 0, i + 1),
@@ -1857,7 +1937,7 @@ void main() {
     final finalUpdate = await engine.submitAttempt(
       state: state,
       evaluator: evaluator,
-      manualFallbackPass: true,
+      submission: manualSubmission(true),
       selectedAutoCheckOptionId: correctOption(state),
       config: config,
       nowLocal: DateTime(2026, 2, 24, 11, 0, 5),
@@ -1867,4 +1947,27 @@ void main() {
     expect(finalUpdate.summary, isNotNull);
     expect(finalUpdate.summary!.resultKind, ChainResultKind.completed);
   });
+}
+
+class _FixedResultVerseEvaluator implements VerseEvaluator {
+  _FixedResultVerseEvaluator({
+    required this.passed,
+    required this.confidence,
+    required this.mode,
+  });
+
+  final bool passed;
+  final double confidence;
+  final EvaluatorMode mode;
+  VerseEvaluationSubmission? lastSubmission;
+
+  @override
+  Future<VerseEvaluationResult> evaluate(VerseEvaluationRequest request) async {
+    lastSubmission = request.submission;
+    return VerseEvaluationResult(
+      passed: passed,
+      confidence: confidence,
+      mode: mode,
+    );
+  }
 }

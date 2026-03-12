@@ -1,15 +1,36 @@
 import 'companion_models.dart';
 
+class VerseEvaluationSubmission {
+  const VerseEvaluationSubmission({
+    required this.sourceMode,
+    this.manualFallbackPass,
+    this.asrTranscript,
+    this.asrConfidence,
+    this.asrProvider,
+  });
+
+  const VerseEvaluationSubmission.manual({
+    required bool passed,
+  }) : this(
+          sourceMode: EvaluatorMode.manualFallback,
+          manualFallbackPass: passed,
+        );
+
+  final EvaluatorMode sourceMode;
+  final bool? manualFallbackPass;
+  final String? asrTranscript;
+  final double? asrConfidence;
+  final String? asrProvider;
+}
+
 class VerseEvaluationRequest {
   const VerseEvaluationRequest({
     required this.verse,
-    this.manualFallbackPass,
-    this.asrConfidence,
+    required this.submission,
   });
 
   final ChainVerse verse;
-  final bool? manualFallbackPass;
-  final double? asrConfidence;
+  final VerseEvaluationSubmission submission;
 }
 
 class VerseEvaluationResult {
@@ -33,10 +54,10 @@ class ManualFallbackVerseEvaluator implements VerseEvaluator {
 
   @override
   Future<VerseEvaluationResult> evaluate(VerseEvaluationRequest request) async {
-    final passed = request.manualFallbackPass ?? false;
+    final passed = request.submission.manualFallbackPass ?? false;
     return VerseEvaluationResult(
       passed: passed,
-      confidence: request.asrConfidence,
+      confidence: request.submission.asrConfidence,
       mode: EvaluatorMode.manualFallback,
     );
   }
