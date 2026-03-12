@@ -38,7 +38,7 @@ Use when changes touch:
 - Do not duplicate performance exclusion tables across docs; keep workspace defaults canonical in `docs/assistant/PERFORMANCE_BASELINES.md`.
 - Do not run full assistant-doc rewrites after feature work unless explicitly approved; use targeted docs sync by touched scope.
 - Do not auto-push as part of the default docs-sync closeout sequence.
-- Do not treat local explainer HTML artifacts as shipped app docs unless the user explicitly asks to commit them.
+- Do not treat local explainer HTML artifacts as shipped app docs unless the user explicitly asks to commit a promoted stable pair.
 
 ## Primary Files
 
@@ -126,7 +126,7 @@ Relevance matrix:
 - Localization change -> localization workflow/glossary only (+ routing references if needed)
 - CI/repo ops change -> CI workflow + manifest/validator only
 - Template-only change -> template only unless user requests broader propagation
-- Local explainer workflow/template change -> explainer workflow/template plus routing docs only; do not treat generated HTML artifacts as shipped docs
+- Local explainer workflow/template change -> explainer workflow/template plus routing docs only; do not treat generated HTML artifacts as shipped docs unless the user explicitly promotes a stable pair
 - User-facing behavior copy/flow change -> update affected sections in `docs/assistant/features/APP_USER_GUIDE.md` and/or `docs/assistant/features/PLANNER_USER_GUIDE.md`
 
 ## Sync Order

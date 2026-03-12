@@ -11,6 +11,7 @@ Use this workflow when the user explicitly asks for a local HTML explainer that 
   - a main guide with sidebar/navigation when that helps scanning
   - a calmer reading edition for focused reading and read-aloud
 - Generated HTML files stay outside shipped app scope and remain local-only by default.
+- If the user explicitly promotes a stable/reusable explainer pair, that specific pair may be committed and maintained as assistant reference docs.
 
 ## When To Use
 
@@ -33,6 +34,7 @@ Before writing, read in this order:
 - Don't use this workflow when the task is app implementation. Instead use the relevant feature workflow and keep explainer work separate.
 - Do not treat generated explainer HTML files as shipped app features.
 - Do not commit explainer artifacts by default.
+- Do not assume a promoted explainer pair changes the default for future explainers; future pairs still stay local-only unless explicitly promoted.
 - Do not simplify behavior claims without checking `APP_KNOWLEDGE.md` first.
 - Do not let explainer polish change the real app unless the user separately requests implementation work.
 
@@ -68,9 +70,11 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
    - Shorten paragraphs, add clearer headings, and keep the reading edition one-column and chunked.
 3. Symptoms: the repo becomes dirty because explainer files show up as untracked.
    - Add the generated file paths or explainer wildcard patterns to `.git/info/exclude` and keep them local-only unless the user explicitly asks to commit them.
-4. Symptoms: Edge read-aloud is unreliable on the main guide.
+4. Symptoms: a stable explainer pair is worth preserving for future reference.
+   - If the user explicitly promotes that pair, force-add the specific tracked files and keep the default local-only rule for future explainers.
+5. Symptoms: Edge read-aloud is unreliable on the main guide.
    - Keep the calmer reading edition as the fallback surface and prefer sentence-level read-aloud controls there.
-5. Symptoms: the user wants a simpler or denser explainer than the default pair.
+6. Symptoms: the user wants a simpler or denser explainer than the default pair.
    - Keep the default two-page pair, then iterate only on the requested surface without changing app scope.
 
 ## Handoff Checklist
@@ -82,4 +86,5 @@ flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart
 - main guide was built first
 - calmer reading edition was also produced for dense topics unless the user asked for a single page
 - generated explainer files remain local-only by default
+- promoted explainer pairs were committed only when the user explicitly asked to preserve them
 - repo-local exclude rules keep explainer files from dirtying the worktree

@@ -41,6 +41,7 @@ Hard boundaries:
 - these HTML files are explanation artifacts only, not app features
 - keep them local-only by default
 - do not add them to normal feature commits unless the user explicitly asks
+- if the user explicitly promotes a stable pair, that specific pair may be committed while future explainers still default to local-only
 - if needed, use repo-local exclude rules so the generated explainer files do not dirty git status
 
 After generating the files:

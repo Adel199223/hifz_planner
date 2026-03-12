@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hifz Planner - Reading Edition</title>
+  <meta
+    name="description"
+    content="A calmer, dyslexia-friendly and ADHD-aware reading guide to the Hifz Planner planner and Companion flow."
+  >
+  <style>
+    :root {
+      --bg: #f5efe4;
+      --bg-strong: #ece2d1;
+      --paper: rgba(255, 253, 247, 0.96);
+      --ink: #1c1814;
+      --muted: #5a5146;
+      --line: rgba(74, 59, 37, 0.16);
+      --accent: #0f6d66;
+      --accent-soft: rgba(15, 109, 102, 0.11);
+      --warm: #b86d34;
+      --warm-soft: rgba(184, 109, 52, 0.12);
+      --shadow: 0 22px 52px rgba(45, 34, 18, 0.1);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --font-size: 21px;
+      --line-height: 1.9;
+      --content-width: 72ch;
+      --reader-font: "Comic Sans MS", "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(15, 109, 102, 0.08), transparent 30%),
+        radial-gradient(circle at top right, rgba(184, 109, 52, 0.1), transparent 28%),
+        linear-gradient(180deg, var(--bg), var(--bg-strong));
+      font-family: var(--reader-font);
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+      letter-spacing: 0.006em;
+      text-align: left;
+    }
+
+    body[data-font-preset="atkinson"] {
+      --reader-font: "Atkinson Hyperlegible", "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+
+    body[data-font-preset="system"] {
+      --reader-font: "Segoe UI", "Trebuchet MS", Arial, sans-serif;
+    }
+
+    body.comfort {
+      --font-size: 23px;
+      --line-height: 2;
+    }
+
+    body.spacious p,
+    body.spacious li {
+      margin-bottom: 0.95rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    body.focus-mode .guide-section {
+      opacity: 0.44;
+      transform: scale(0.995);
+      transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease;
+    }
+
+    body.focus-mode .guide-section.is-active {
+      opacity: 1;
+      transform: none;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    .skip-link {
+      position: absolute;
+      top: -4rem;
+      left: 1rem;
+      z-index: 20;
+      padding: 0.85rem 1rem;
+      border-radius: 999px;
+      border: 2px solid var(--accent);
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .skip-link:focus {
+      top: 1rem;
+    }
+
+    .page {
+      width: min(1040px, calc(100vw - 1.2rem));
+      margin: 1rem auto 3rem;
+    }
+
+    .hero,
+    .article {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: clamp(1.2rem, 2vw, 2rem);
+      margin-bottom: 1rem;
+    }
+
+    .kicker {
+      display: inline-block;
+      margin: 0 0 0.9rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin-top: 0;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+    }
+
+    h1 {
+      font-size: clamp(2.05rem, 3.3vw, 3.3rem);
+      max-width: 14ch;
+      margin-bottom: 0.55rem;
+    }
+
+    h2 {
+      font-size: clamp(1.48rem, 2.2vw, 2.15rem);
+      margin-bottom: 0.5rem;
+    }
+
+    h3 {
+      font-size: 1.12em;
+      margin-bottom: 0.35rem;
+    }
+
+    .intro,
+    .small-note {
+      color: var(--muted);
+      max-width: var(--content-width);
+    }
+
+    .hero-intro {
+      margin-bottom: 1rem;
+    }
+
+    .path-grid,
+    .toolbar-grid {
+      display: grid;
+      gap: 0.9rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .path-card,
+    .tool-group,
+    .stack-item,
+    .step-item {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+    }
+
+    .path-card {
+      padding: 1rem;
+    }
+
+    .path-card p,
+    .path-card ul {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .path-card ul {
+      padding-left: 1.15rem;
+      margin-top: 0.65rem;
+    }
+
+    .path-card button,
+    .section-tools button,
+    .toolbar-buttons button,
+    .display-buttons button,
+    .resume-button,
+    .view-link {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      padding: 0.78rem 0.9rem;
+      border-radius: 14px;
+      cursor: pointer;
+      text-align: left;
+      text-decoration: none;
+    }
+
+    .path-card button,
+    .resume-button,
+    .view-link {
+      width: 100%;
+      margin-top: 0.8rem;
+    }
+
+    .player-bar {
+      display: grid;
+      gap: 0.6rem;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .icon-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 3rem;
+      min-height: 3rem;
+      padding: 0.72rem;
+      text-align: center;
+    }
+
+    .icon-button svg {
+      width: 1.15rem;
+      height: 1.15rem;
+      fill: currentColor;
+      flex: none;
+    }
+
+    .icon-button-primary {
+      background: var(--accent);
+      border-color: rgba(15, 109, 102, 0.24);
+      color: #ffffff;
+    }
+
+    .icon-button-primary:hover,
+    .icon-button-primary:focus {
+      background: #145f59;
+      color: #ffffff;
+    }
+
+    .icon-button-primary[aria-pressed="true"] {
+      background: var(--accent);
+      border-color: rgba(15, 109, 102, 0.24);
+      color: #ffffff;
+    }
+
+    .resume-button.icon-button {
+      width: auto;
+    }
+
+    .section-tools .icon-button {
+      min-width: 2.8rem;
+      min-height: 2.8rem;
+      padding: 0.64rem;
+    }
+
+    .view-links {
+      display: grid;
+      gap: 0.75rem;
+      max-width: 26rem;
+      margin-bottom: 1rem;
+    }
+
+    .toolbar {
+      margin-top: 1rem;
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .tool-group {
+      padding: 1rem;
+    }
+
+    .tool-group h2 {
+      font-size: 1.08rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .tool-group p {
+      margin: 0 0 0.8rem;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .toolbar-field {
+      display: grid;
+      gap: 0.35rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .toolbar-field label {
+      font-weight: 700;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 0.78rem 0.88rem;
+    }
+
+    .toolbar-buttons,
+    .display-buttons {
+      display: grid;
+      gap: 0.6rem;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    button:hover,
+    button:focus,
+    .view-link:hover,
+    .view-link:focus,
+    select:focus {
+      outline: 2px solid rgba(15, 109, 102, 0.18);
+      background: #ffffff;
+    }
+
+    button[aria-pressed="true"] {
+      background: var(--accent-soft);
+      border-color: rgba(15, 109, 102, 0.28);
+    }
+
+    button:disabled,
+    .resume-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .status-panel {
+      margin-top: 0.95rem;
+      padding: 0.9rem 1rem;
+      border-radius: 20px;
+      background: rgba(255, 254, 249, 0.86);
+      border: 1px solid var(--line);
+    }
+
+    .status-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .status-chip.warm {
+      background: var(--warm-soft);
+      color: #7d4c24;
+    }
+
+    .status-message {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .article {
+      padding: clamp(1.15rem, 2vw, 2.2rem);
+    }
+
+    .article-body {
+      max-width: var(--content-width);
+      margin: 0 auto;
+    }
+
+    .quick-summary {
+      padding: 1rem;
+      border-radius: var(--radius-lg);
+      background: rgba(15, 109, 102, 0.06);
+      border: 1px solid rgba(15, 109, 102, 0.16);
+      margin-bottom: 1rem;
+    }
+
+    .quick-summary + .quick-summary {
+      margin-top: 0.9rem;
+    }
+
+    .quick-summary ul {
+      margin: 0.75rem 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .guide-section {
+      scroll-margin-top: 1rem;
+      padding: 1.05rem 1rem 1rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.86);
+      margin-top: 1rem;
+    }
+
+    .guide-section.is-active {
+      border-color: rgba(15, 109, 102, 0.28);
+      box-shadow: 0 0 0 4px rgba(15, 109, 102, 0.08);
+      background: #ffffff;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+    }
+
+    .section-label {
+      display: inline-block;
+      margin-bottom: 0.4rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(184, 109, 52, 0.1);
+      color: #855129;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .section-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .takeaway,
+    .recap {
+      padding: 0.9rem 1rem;
+      border-radius: 18px;
+      border-left: 6px solid var(--accent);
+      background: rgba(15, 109, 102, 0.07);
+    }
+
+    .takeaway strong,
+    .recap strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .recap {
+      margin-top: 0.9rem;
+      border-left-color: var(--warm);
+      background: rgba(184, 109, 52, 0.08);
+    }
+
+    .stack {
+      display: grid;
+      gap: 0.8rem;
+      margin-top: 0.8rem;
+    }
+
+    .stack-item,
+    .step-item {
+      padding: 0.95rem 1rem;
+    }
+
+    .stack-item p,
+    .stack-item ul,
+    .step-item p,
+    .step-item ul {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .stack-item ul,
+    .step-item ul {
+      margin-top: 0.6rem;
+      padding-left: 1.2rem;
+    }
+
+    .rule-list {
+      padding-left: 1.2rem;
+    }
+
+    .rule-list li + li {
+      margin-top: 0.8rem;
+    }
+
+    .sentence {
+      display: inline;
+      border-radius: 0.45rem;
+      padding: 0.04rem 0.1rem;
+      cursor: pointer;
+    }
+
+    .sentence:hover,
+    .sentence:focus {
+      outline: none;
+      background: rgba(15, 109, 102, 0.08);
+    }
+
+    .sentence.is-active {
+      background: #fff3a8;
+      box-shadow: 0 0 0 2px rgba(231, 183, 39, 0.32);
+    }
+
+    .support-note {
+      margin-top: 1rem;
+      padding: 0.95rem 1rem;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 252, 246, 0.96);
+      color: var(--muted);
+    }
+
+    .support-note strong {
+      color: var(--ink);
+    }
+
+    .footer-note {
+      margin-top: 1rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 780px) {
+      body {
+        font-size: 20px;
+      }
+
+      .page {
+        width: min(100vw - 0.7rem, 1040px);
+      }
+
+      .hero,
+      .article {
+        border-radius: 22px;
+      }
+
+      .section-head {
+        flex-direction: column;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      body.focus-mode .guide-section {
+        transition: none;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .toolbar,
+      .status-panel,
+      .section-tools,
+      .path-card button,
+      .resume-button {
+        display: none;
+      }
+
+      .hero,
+      .article,
+      .guide-section,
+      .quick-summary,
+      .stack-item,
+      .step-item {
+        box-shadow: none;
+        background: #ffffff;
+      }
+    }
+  </style>
+</head>
+<body data-font-preset="comic">
+  <a class="skip-link" href="#guide-root">Skip to the reading guide</a>
+
+  <div class="page">
+    <header class="hero">
+      <p class="kicker">Reading edition</p>
+      <h1>Planner and Companion, explained in a calmer way</h1>
+
+      <div class="view-links">
+        <a class="view-link" href="./PLANNER_COMPANION_EXPLAINER.html">Open main guide with sidebar and reader controls</a>
+      </div>
+
+      <div class="hero-intro">
+        <p class="intro">
+          This page is for reading, not for showing off. It is built to be calmer, easier to scan,
+          and easier to read aloud one sentence at a time.
+        </p>
+        <p class="intro">
+          If Edge does not show its own reading tools here, the built-in controls below should still work.
+        </p>
+      </div>
+
+      <div class="path-grid" aria-label="Choose your reading path">
+        <article class="path-card">
+          <h2>30-second version</h2>
+          <p>Use this when you are tired or you only want the big point.</p>
+          <ul>
+            <li>The app protects old memorization before adding more new work.</li>
+            <li>Today tells you what to do first.</li>
+            <li>Companion teaches in stages so memory becomes more stable.</li>
+          </ul>
+          <button type="button" data-jump-target="route-30">Jump to 30-second version</button>
+        </article>
+        <article class="path-card">
+          <h2>2-minute version</h2>
+          <p>Use this when you want the daily loop and the main benefits.</p>
+          <ul>
+            <li>Plan sets the load.</li>
+            <li>Today orders the work.</li>
+            <li>Companion teaches, checks, and feeds results back into planning.</li>
+          </ul>
+          <button type="button" data-jump-target="route-2">Jump to 2-minute version</button>
+        </article>
+        <article class="path-card">
+          <h2>Full guide</h2>
+          <p>Use this when you want the stages, the logic, and what is already built.</p>
+          <ul>
+            <li>Short sections.</li>
+            <li>Read-this-section buttons.</li>
+            <li>Sentence-by-sentence read aloud.</li>
+          </ul>
+          <button type="button" data-jump-target="start-here">Start the full guide</button>
+        </article>
+      </div>
+
+      <div class="toolbar" aria-label="Reading tools">
+        <div class="toolbar-grid">
+          <section class="tool-group" aria-labelledby="where-to-start-heading">
+            <h2 id="where-to-start-heading">Where to start</h2>
+            <p>Choose a small target first. That makes the page easier to return to later.</p>
+            <div class="toolbar-buttons">
+              <button type="button" data-jump-target="route-30">30-second version</button>
+              <button type="button" data-jump-target="route-2">2-minute version</button>
+              <button type="button" data-jump-target="start-here">Full guide</button>
+            </div>
+            <button type="button" class="resume-button icon-button" id="resume-section" aria-label="Resume last section" title="Resume last section">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 5h10v14l-5-3-5 3V5Z"></path>
+              </svg>
+              <span class="sr-only">Resume last section</span>
+            </button>
+          </section>
+
+          <section class="tool-group" aria-labelledby="read-tools-heading">
+            <h2 id="read-tools-heading">Read aloud</h2>
+            <p>Read the active section one sentence at a time. You can also click a sentence to start from there.</p>
+            <div class="toolbar-field">
+              <label for="voice-select">Voice</label>
+              <select id="voice-select" aria-label="Choose a voice for read aloud">
+                <option value="">Default voice</option>
+              </select>
+            </div>
+            <div class="toolbar-field">
+              <label for="speed-select">Reading speed</label>
+              <select id="speed-select" aria-label="Choose reading speed">
+                <option value="0.8">Slower</option>
+                <option value="0.9" selected>Calm</option>
+                <option value="1">Normal</option>
+                <option value="1.1">A bit faster</option>
+              </select>
+            </div>
+            <div class="player-bar" role="group" aria-label="Reader controls">
+              <button type="button" class="icon-button" id="previous-sentence" aria-label="Previous sentence" title="Previous sentence">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="5" y="6" width="2" height="12"></rect>
+                  <path d="M17 6 9 12 17 18V6Z"></path>
+                </svg>
+                <span class="sr-only">Previous sentence</span>
+              </button>
+              <button type="button" class="icon-button icon-button-primary" id="play-pause" aria-label="Play current section" title="Play current section">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 6v12l10-6-10-6Z"></path>
+                </svg>
+                <span class="sr-only">Play current section</span>
+              </button>
+              <button type="button" class="icon-button" id="next-sentence" aria-label="Next sentence" title="Next sentence">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 6v12l8-6-8-6Z"></path>
+                  <rect x="17" y="6" width="2" height="12"></rect>
+                </svg>
+                <span class="sr-only">Next sentence</span>
+              </button>
+              <button type="button" class="icon-button" id="stop-reading" aria-label="Stop" title="Stop">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="7" y="7" width="10" height="10" rx="1.5"></rect>
+                </svg>
+                <span class="sr-only">Stop</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="tool-group" aria-labelledby="display-heading">
+            <h2 id="display-heading">Display</h2>
+            <p>These are here to reduce strain. Use only the ones that actually help you.</p>
+            <div class="toolbar-field">
+              <label for="font-select">Font preset</label>
+              <select id="font-select" aria-label="Choose a font preset">
+                <option value="comic">Comic Sans / dyslexia-friendly fallback</option>
+                <option value="atkinson">Atkinson Hyperlegible if available</option>
+                <option value="system">System readable</option>
+              </select>
+            </div>
+            <div class="display-buttons">
+              <button type="button" id="comfort-toggle">Bigger text</button>
+              <button type="button" id="spacing-toggle">Extra spacing</button>
+              <button type="button" id="focus-toggle">Focus mode</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="status-panel">
+          <div class="status-chips" aria-label="Reading progress">
+            <span class="status-chip" id="section-progress">Section 1 of 8</span>
+            <span class="status-chip warm" id="sentence-progress">Sentence 1 of 1 ready</span>
+            <span class="status-chip" id="voice-progress">Voice: Default</span>
+          </div>
+          <p class="status-message" id="speech-status" role="status" aria-live="polite">
+            Ready.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <main class="article" id="guide-root">
+      <article class="article-body" data-read-root>
+        <section class="quick-summary" id="route-30">
+          <h2>30-second version</h2>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            The app protects old memorization first. It only adds more new work when your recent memory looks steady enough.
+          </p>
+          <ul>
+            <li>Plan decides what is realistic.</li>
+            <li>Today puts tasks in order.</li>
+            <li>Companion teaches in stages, then checks whether the memory still works later.</li>
+            <li>Weak recall gets more attention before more load is added.</li>
+            <li>Voice judging is not live yet, so you still mark attempts yourself for now.</li>
+          </ul>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            The app is trying to build memorization that stays alive, not just memorization that felt easy once.
+          </p>
+        </section>
+
+        <section class="quick-summary" id="route-2">
+          <h2>2-minute version</h2>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            This app acts like a cautious coach. It keeps asking, "Is the memory really holding up?" before it gives you more.
+          </p>
+          <div class="stack">
+            <article class="stack-item">
+              <h3>Step 1: Plan</h3>
+              <p>You tell the app how much time you have and how much new work is safe.</p>
+            </article>
+            <article class="stack-item">
+              <h3>Step 2: Today</h3>
+              <p>The app orders the tasks so you do the most important retention work first.</p>
+            </article>
+            <article class="stack-item">
+              <h3>Step 3: Companion</h3>
+              <p>The app teaches the unit in stages, reduces help over time, and checks it again later.</p>
+            </article>
+            <article class="stack-item">
+              <h3>Step 4: Feedback loop</h3>
+              <p>Your results go back into the planner so weak material can rise earlier and new work can shrink sooner.</p>
+            </article>
+          </div>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            You are not expected to manage all the balancing yourself. The app is built to carry some of that planning pressure for you.
+          </p>
+        </section>
+
+        <section class="guide-section is-active" id="start-here" data-section-id="start-here" data-sentence-scope>
+          <div class="section-head">
+            <div>
+              <p class="section-label">Full guide</p>
+              <h2>Start here</h2>
+            </div>
+            <div class="section-tools">
+              <button type="button" data-read-section="start-here">Read this section</button>
+            </div>
+          </div>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            The app is trying to help you memorize in a way that is realistic, steady, and durable.
+          </p>
+          <p>It does not only ask, "How much can you do today?" It also asks, "Will you still remember it well later?"</p>
+          <p>That is why delayed checks matter so much here. Something can feel easy in the same session and still be weak the next day.</p>
+          <ul>
+            <li>Plan sets the limits.</li>
+            <li>Today puts tasks in order.</li>
+            <li>Companion does the actual teaching, checking, and correction.</li>
+          </ul>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            If you remember only one line, remember this one: the app protects retention before it rewards speed.
+          </p>
+        </section>
+
+        <section class="guide-section" id="big-picture" data-section-id="big-picture" data-sentence-scope>
+          <div class="section-head">
+            <div>
+              <p class="section-label">Why it exists</p>
+              <h2>The big picture</h2>
+            </div>
+            <div class="section-tools">
+              <button type="button" data-read-section="big-picture">Read this section</button>
+            </div>
+          </div>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            Many memorization routines become stressful when new work grows faster than review quality can keep up.
+          </p>
+          <p>When that happens, the review pile becomes heavier, the learner feels guilty, and the quality quietly drops.</p>
+          <p>This app is designed to reduce that problem by making the planner more cautious and the memorization flow more guided.</p>
+          <ul>
+            <li>It tries to set a realistic load instead of an exciting load.</li>
+            <li>It tries to put the right task first instead of leaving you to guess.</li>
+            <li>It tries to check memory after delay, not only during the same sitting.</li>
+          </ul>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            The goal is not only to finish more. The goal is to keep what you finished.
+          </p>
+        </section>
+
+        <section class="guide-section" id="main-parts" data-section-id="main-parts" data-sentence-scope>
+          <div class="section-head">
+            <div>
+              <p class="section-label">Main parts</p>
+              <h2>What each main part does</h2>
+            </div>
+            <div class="section-tools">
+              <button type="button" data-read-section="main-parts">Read this section</button>
+            </div>
+          </div>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            Each part has one clear job, so you do not have to hold the whole system in your head all at once.
+          </p>
+          <div class="stack">
+            <article class="stack-item">
+              <h3>Plan</h3>
+              <p>This is where you tell the app how much time you have, how many days you study, and how much new work is safe.</p>
+              <ul>
+                <li>Benefit: it stops overloading you too early.</li>
+                <li>Benefit: it gives the planner a realistic daily budget.</li>
+                <li>Benefit: it lets you use revision-only days if you need them.</li>
+              </ul>
+            </article>
+            <article class="stack-item">
+              <h3>Today</h3>
+              <p>This is your action screen. It tells you what to do now, in the order the app thinks protects retention best.</p>
+              <ul>
+                <li>Benefit: less guessing.</li>
+                <li>Benefit: less decision fatigue.</li>
+                <li>Benefit: weaker due material can rise earlier.</li>
+              </ul>
+            </article>
+            <article class="stack-item">
+              <h3>Companion</h3>
+              <p>This is the guided training area. It walks you through learning, recall, correction, and later stability checks.</p>
+              <ul>
+                <li>Benefit: more guidance than a simple checklist.</li>
+                <li>Benefit: support falls away in layers instead of all at once.</li>
+                <li>Benefit: your results feed back into tomorrow's plan.</li>
+              </ul>
+            </article>
+          </div>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            Plan sets the rules. Today sets the order. Companion does the training.
+          </p>
+        </section>
+
+        <section class="guide-section" id="stages" data-section-id="stages" data-sentence-scope>
+          <div class="section-head">
+            <div>
+              <p class="section-label">Learning path</p>
+              <h2>The Companion stages</h2>
+            </div>
+            <div class="section-tools">
+              <button type="button" data-read-section="stages">Read this section</button>
+            </div>
+          </div>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            Companion is not one big test. It is a staged path where the help becomes lighter as your memory becomes stronger.
+          </p>
+          <div class="stack">
+            <article class="stack-item">
+              <h3>Stage 1: Acquisition</h3>
+              <p>You get strong support at the start.</p>
+              <ul>
+                <li>You hear and repeat.</li>
+                <li>You begin recall with more support.</li>
+                <li>Mistakes are corrected before they harden.</li>
+              </ul>
+            </article>
+            <article class="stack-item">
+              <h3>Stage 2: Bridge</h3>
+              <p>The app starts pulling away some of the help.</p>
+              <ul>
+                <li>You rely less on visible support.</li>
+                <li>You practice linking parts together.</li>
+                <li>You still get correction when needed.</li>
+              </ul>
+            </article>
+            <article class="stack-item">
+              <h3>Stage 3: Hidden recall</h3>
+              <p>This is where the memory has to work with little or no help.</p>
+              <ul>
+                <li>You recall more directly from memory.</li>
+                <li>Weak parts are targeted more carefully.</li>
+                <li>Correction still happens after failures.</li>
+              </ul>
+            </article>
+            <article class="stack-item">
+              <h3>Stage 4: Delayed consolidation</h3>
+              <p>This is the later check, especially the next day.</p>
+              <ul>
+                <li>The app checks whether memory survives time.</li>
+                <li>Due Stage-4 checks can soft-block new memorization.</li>
+                <li>This stage is there to catch false confidence.</li>
+              </ul>
+            </article>
+            <article class="stack-item">
+              <h3>Stage 5: Maintenance</h3>
+              <p>This is the longer-term upkeep stage.</p>
+              <ul>
+                <li>After a unit becomes stable, a later strong scheduled review can move it to maintained.</li>
+                <li>Weaker later reviews can lower it again.</li>
+                <li>That quality drop does not reopen Stage 4 automatically in the current version.</li>
+              </ul>
+            </article>
+            <article class="stack-item">
+              <h3>Meaning cues</h3>
+              <p>If you need help, Companion can show a short meaning-based hint.</p>
+              <ul>
+                <li>The cue comes from real translation data.</li>
+                <li>The source is shown clearly as a translation label.</li>
+                <li>If no good cue exists, the app falls back to normal hints.</li>
+              </ul>
+            </article>
+          </div>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            The stages exist so you do not have to jump from "brand new" to "perfect recall" in one leap.
+          </p>
+        </section>
+
+        <section class="guide-section" id="app-thinking" data-section-id="app-thinking" data-sentence-scope>
+          <div class="section-head">
+            <div>
+              <p class="section-label">Simple logic</p>
+              <h2>How the app decides</h2>
+            </div>
+            <div class="section-tools">
+              <button type="button" data-read-section="app-thinking">Read this section</button>
+            </div>
+          </div>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            The algorithm is trying to protect memory quality first, then add new load only when it looks safe.
+          </p>
+          <ol class="rule-list">
+            <li>Delayed checks come first because they test real stability after time has passed.</li>
+            <li>Reviews usually come before new work because protecting old memorization matters.</li>
+            <li>If two due items are similarly urgent, the weaker one can move earlier.</li>
+            <li>If recent recall quality is weak, new work can shrink sooner and review gets more attention.</li>
+            <li>Units can move through quality states such as Ready, Stable, and Maintained over time.</li>
+            <li>Voice checking is not live yet, so you still self-grade after attempts for now.</li>
+          </ol>
+          <p>One of the biggest upgrades so far is that the planner no longer looks only at what is due. It also reacts to how weak or strong recent Companion recall has been.</p>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            This is no longer just a timer and a checklist. It is becoming a quality-aware memorization planner.
+          </p>
+        </section>
+
+        <section class="guide-section" id="example" data-section-id="example" data-sentence-scope>
+          <div class="section-head">
+            <div>
+              <p class="section-label">Example</p>
+              <h2>A simple example journey</h2>
+            </div>
+            <div class="section-tools">
+              <button type="button" data-read-section="example">Read this section</button>
+            </div>
+          </div>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            The app is designed to guide you across time, not only through one strong session.
+          </p>
+          <div class="stack">
+            <article class="step-item">
+              <h3>Day 1: Learn the unit</h3>
+              <p>You open the task from Today. Companion begins with stronger support.</p>
+            </article>
+            <article class="step-item">
+              <h3>Later on Day 1: The help drops</h3>
+              <p>The app starts hiding more and asking for stronger recall.</p>
+            </article>
+            <article class="step-item">
+              <h3>Next day: Delayed check</h3>
+              <p>The app asks whether the memory is still there after time has passed.</p>
+            </article>
+            <article class="step-item">
+              <h3>Later: Scheduled review</h3>
+              <p>Strong results can support maintenance. Weak results lower confidence and demand more attention.</p>
+            </article>
+            <article class="step-item">
+              <h3>Long term: Maintenance</h3>
+              <p>The real goal is not "I learned it once." The real goal is "I can still retrieve it later with confidence."</p>
+            </article>
+          </div>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            The app is not only helping you learn. It is also checking whether the learning survived.
+          </p>
+        </section>
+
+        <section class="guide-section" id="built" data-section-id="built" data-sentence-scope>
+          <div class="section-head">
+            <div>
+              <p class="section-label">Current state</p>
+              <h2>What is already built</h2>
+            </div>
+            <div class="section-tools">
+              <button type="button" data-read-section="built">Read this section</button>
+            </div>
+          </div>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            The planning and learning system is already real. The biggest missing piece is smarter automatic judging of recitation.
+          </p>
+          <ul>
+            <li>Real planning setup with time budgets, study days, revision-only days, and safe caps.</li>
+            <li>A Today flow that already orders delayed checks, review, and new work to protect retention first.</li>
+            <li>A full staged Companion flow for guided memorization, hidden-first recall, and delayed checks.</li>
+            <li>Meaning cues that come from real translation data when available.</li>
+            <li>Quality states such as Ready, Stable, and Maintained.</li>
+            <li>Planner reinforcement that already reacts to recent weakness and reduces new load sooner.</li>
+          </ul>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            What exists already is much more than a tracker. It is already a guided memorization system.
+          </p>
+        </section>
+
+        <section class="guide-section" id="next" data-section-id="next" data-sentence-scope>
+          <div class="section-head">
+            <div>
+              <p class="section-label">Next step</p>
+              <h2>What comes next</h2>
+            </div>
+            <div class="section-tools">
+              <button type="button" data-read-section="next">Read this section</button>
+            </div>
+          </div>
+          <p class="takeaway">
+            <strong>Takeaway</strong>
+            The next main upgrade is voice-based checking, while keeping manual fallback available.
+          </p>
+          <p>In simple terms, the app should eventually listen to your recitation and help judge the attempt more automatically.</p>
+          <ul>
+            <li>The app is already prepared for this in the background.</li>
+            <li>Manual fallback should still remain available.</li>
+            <li>The goal is smarter judging, not replacing the learning flow itself.</li>
+          </ul>
+          <p class="recap">
+            <strong>Quick recap</strong>
+            What is missing is not the planner or the stage system. What is missing is better automatic evaluation.
+          </p>
+        </section>
+
+        <div class="support-note">
+          <strong>Support note</strong>
+          This reading edition is meant to be the calmest version of the guide.
+          If Edge still does not expose its own reading tools here, the built-in read-aloud controls above should still work section by section.
+        </div>
+
+        <p class="footer-note">
+          Tip: if the page feels crowded, switch on Focus mode and read one section at a time instead of trying to hold the whole guide at once.
+        </p>
+      </article>
+    </main>
+  </div>
+
+  <script>
+    const storageKeys = {
+      comfort: "plannerGuideReadingComfort",
+      spacing: "plannerGuideReadingSpacing",
+      focus: "plannerGuideReadingFocus",
+      font: "plannerGuideReadingFont",
+      voice: "plannerGuideReadingVoice",
+      rate: "plannerGuideReadingRate",
+      section: "plannerGuideReadingSection",
+    };
+
+    const PLAYBACK = {
+      IDLE: "idle",
+      PLAYING: "playing",
+      PAUSED: "paused",
+      STOPPED: "stopped",
+      ENDED: "ended",
+    };
+
+    const icons = {
+      play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6v12l10-6-10-6Z"></path></svg>',
+      pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="6" width="3" height="12"></rect><rect x="14" y="6" width="3" height="12"></rect></svg>',
+      previous: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="6" width="2" height="12"></rect><path d="M17 6 9 12 17 18V6Z"></path></svg>',
+      next: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6v12l8-6-8-6Z"></path><rect x="17" y="6" width="2" height="12"></rect></svg>',
+      stop: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5"></rect></svg>',
+      section: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6v12l10-6-10-6Z"></path></svg>',
+      resume: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h10v14l-5-3-5 3V5Z"></path></svg>',
+    };
+
+    const body = document.body;
+    const voiceSelect = document.getElementById("voice-select");
+    const speedSelect = document.getElementById("speed-select");
+    const fontSelect = document.getElementById("font-select");
+    const statusNode = document.getElementById("speech-status");
+    const sectionProgress = document.getElementById("section-progress");
+    const sentenceProgress = document.getElementById("sentence-progress");
+    const voiceProgress = document.getElementById("voice-progress");
+    const resumeButton = document.getElementById("resume-section");
+    const playPauseButton = document.getElementById("play-pause");
+    const previousButton = document.getElementById("previous-sentence");
+    const nextButton = document.getElementById("next-sentence");
+    const stopButton = document.getElementById("stop-reading");
+    const readSections = Array.from(document.querySelectorAll("[data-section-id]"));
+    const readRoot = document.querySelector("[data-read-root]") || document.body;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const supportsSpeech = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+    const comfortToggle = document.getElementById("comfort-toggle");
+    const spacingToggle = document.getElementById("spacing-toggle");
+    const focusToggle = document.getElementById("focus-toggle");
+    const sectionNames = new Map();
+    const sentenceRecords = [];
+    const sectionSentenceMap = new Map();
+    let activeSectionId = readSections[0] ? readSections[0].dataset.sectionId : "";
+    let currentGlobalSentenceIndex = null;
+    let currentQueue = [];
+    let currentQueuePosition = 0;
+    let currentQueueSectionId = "";
+    let runToken = 0;
+    let voices = [];
+    let playbackState = PLAYBACK.IDLE;
+
+    readSections.forEach((section) => {
+      sectionNames.set(section.dataset.sectionId, section.querySelector("h2").textContent.trim());
+      sectionSentenceMap.set(section.dataset.sectionId, []);
+    });
+
+    function loadValue(key, fallback) {
+      try {
+        return window.localStorage.getItem(key) ?? fallback;
+      } catch (_) {
+        return fallback;
+      }
+    }
+
+    function loadBoolean(key) {
+      return loadValue(key, "off") === "on";
+    }
+
+    function saveValue(key, value) {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (_) {
+        // Ignore storage failures.
+      }
+    }
+
+    function setStatus(message) {
+      statusNode.textContent = message;
+    }
+
+    function formatVoiceLabel(name) {
+      if (!name) {
+        return "Voice: Default";
+      }
+
+      const lower = name.toLowerCase();
+      if (lower.includes("ava")) {
+        return "Voice: Ava";
+      }
+      if (lower.includes("andrew")) {
+        return "Voice: Andrew";
+      }
+
+      return `Voice: ${name.split(" ")[0]}`;
+    }
+
+    function setIconButton(button, icon, label, pressed = null) {
+      if (!button) {
+        return;
+      }
+
+      button.innerHTML = `${icons[icon]}<span class="sr-only">${label}</span>`;
+      button.setAttribute("aria-label", label);
+      button.title = label;
+
+      if (pressed === null) {
+        button.removeAttribute("aria-pressed");
+      } else {
+        button.setAttribute("aria-pressed", pressed ? "true" : "false");
+      }
+    }
+
+    function initializeButtons() {
+      setIconButton(previousButton, "previous", "Previous sentence");
+      setIconButton(nextButton, "next", "Next sentence");
+      setIconButton(stopButton, "stop", "Stop");
+      setIconButton(playPauseButton, "play", "Play current section", false);
+      setIconButton(resumeButton, "resume", "Resume last section");
+
+      document.querySelectorAll("[data-read-section]").forEach((button) => {
+        button.classList.add("icon-button");
+        const sectionId = button.dataset.readSection;
+        const sectionName = sectionNames.get(sectionId) || "this section";
+        setIconButton(button, "section", `Play ${sectionName}`);
+      });
+    }
+
+    function sentenceSegments(text) {
+      const cleaned = text.replace(/\s+/g, " ").trim();
+      if (!cleaned) {
+        return [];
+      }
+
+      if (window.Intl && typeof Intl.Segmenter === "function") {
+        const segmenter = new Intl.Segmenter("en", { granularity: "sentence" });
+        return Array.from(segmenter.segment(cleaned))
+          .map((part) => part.segment.trim())
+          .filter(Boolean);
+      }
+
+      return (cleaned.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [cleaned])
+        .map((segment) => segment.trim())
+        .filter(Boolean);
+    }
+
+    function buildSentenceMarkup() {
+      const scopes = document.querySelectorAll("[data-sentence-scope]");
+
+      scopes.forEach((scope) => {
+        const sectionId = scope.dataset.sectionId;
+        const records = sectionSentenceMap.get(sectionId);
+        const nodes = scope.querySelectorAll("p, li");
+
+        nodes.forEach((node) => {
+          if (node.classList.contains("section-label")) {
+            return;
+          }
+
+          if (node.querySelector("a, button, select, input, textarea")) {
+            return;
+          }
+
+          const text = node.textContent.replace(/\s+/g, " ").trim();
+          if (!text) {
+            return;
+          }
+
+          const segments = sentenceSegments(text);
+          if (segments.length === 0) {
+            return;
+          }
+
+          node.textContent = "";
+          segments.forEach((segment, index) => {
+            const span = document.createElement("span");
+            const globalIndex = sentenceRecords.length;
+
+            span.className = "sentence";
+            span.dataset.globalSentenceIndex = String(globalIndex);
+            span.dataset.sectionId = sectionId;
+            span.tabIndex = 0;
+            span.textContent = segment;
+
+            const record = {
+              globalIndex,
+              sectionId,
+              sectionIndex: records.length,
+              text: segment,
+              element: span,
+            };
+
+            sentenceRecords.push(record);
+            records.push(record);
+            node.appendChild(span);
+
+            if (index < segments.length - 1) {
+              node.appendChild(document.createTextNode(" "));
+            }
+          });
+        });
+      });
+    }
+
+    function applyToggleState(button, enabled) {
+      button.setAttribute("aria-pressed", enabled ? "true" : "false");
+    }
+
+    function applyDisplayState() {
+      const comfort = loadBoolean(storageKeys.comfort);
+      const spacing = loadBoolean(storageKeys.spacing);
+      const focus = loadBoolean(storageKeys.focus);
+      const font = loadValue(storageKeys.font, "comic");
+
+      body.classList.toggle("comfort", comfort);
+      body.classList.toggle("spacious", spacing);
+      body.classList.toggle("focus-mode", focus);
+      body.dataset.fontPreset = font;
+      fontSelect.value = font;
+
+      applyToggleState(comfortToggle, comfort);
+      applyToggleState(spacingToggle, spacing);
+      applyToggleState(focusToggle, focus);
+    }
+
+    function isPreferredVoice(voice, preferredName) {
+      const name = voice.name.toLowerCase();
+      return name.includes(preferredName) && name.includes("multilingual") && name.includes("natural");
+    }
+
+    function updateVoiceProgress() {
+      voiceProgress.textContent = formatVoiceLabel(voiceSelect.value);
+    }
+
+    function populateVoices() {
+      voices = supportsSpeech ? window.speechSynthesis.getVoices() : [];
+      const storedVoice = loadValue(storageKeys.voice, "");
+      const previous = storedVoice || voiceSelect.value;
+
+      voiceSelect.innerHTML = '<option value="">Default voice</option>';
+
+      const preferredVoices = voices.filter((voice) =>
+        isPreferredVoice(voice, "ava") || isPreferredVoice(voice, "andrew")
+      );
+
+      preferredVoices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        voiceSelect.appendChild(option);
+      });
+
+      if (previous && preferredVoices.some((voice) => voice.name === previous)) {
+        voiceSelect.value = previous;
+      } else if (preferredVoices.some((voice) => isPreferredVoice(voice, "ava"))) {
+        voiceSelect.value = preferredVoices.find((voice) => isPreferredVoice(voice, "ava")).name;
+      } else if (preferredVoices.length > 0) {
+        voiceSelect.value = preferredVoices[0].name;
+      } else {
+        voiceSelect.value = "";
+      }
+
+      saveValue(storageKeys.voice, voiceSelect.value);
+      updateVoiceProgress();
+
+      if (preferredVoices.length === 0) {
+        setStatus("Ava/Andrew not found. Default voice ready.");
+      }
+    }
+
+    function clearSentenceHighlight() {
+      if (currentGlobalSentenceIndex === null) {
+        return;
+      }
+      const record = sentenceRecords[currentGlobalSentenceIndex];
+      if (record) {
+        record.element.classList.remove("is-active");
+      }
+    }
+
+    function getSectionQueue(sectionId) {
+      return sectionSentenceMap.get(sectionId) || [];
+    }
+
+    function getCurrentRecord() {
+      return currentGlobalSentenceIndex === null ? null : sentenceRecords[currentGlobalSentenceIndex] || null;
+    }
+
+    function getNeighborRecord(direction) {
+      const currentRecord = getCurrentRecord();
+      const queue = currentRecord ? getSectionQueue(currentRecord.sectionId) : getSectionQueue(activeSectionId);
+      if (!queue.length) {
+        return null;
+      }
+
+      if (!currentRecord) {
+        return direction > 0 ? queue[0] : queue[queue.length - 1];
+      }
+
+      const nextIndex = Math.max(0, Math.min(queue.length - 1, currentRecord.sectionIndex + direction));
+      return queue[nextIndex] || null;
+    }
+
+    function setActiveSection(sectionId, options = {}) {
+      const nextSection = readSections.find((section) => section.dataset.sectionId === sectionId);
+      if (!nextSection) {
+        return;
+      }
+
+      activeSectionId = sectionId;
+      readSections.forEach((section) => {
+        section.classList.toggle("is-active", section.dataset.sectionId === sectionId);
+      });
+
+      if (options.save !== false) {
+        saveValue(storageKeys.section, sectionId);
+      }
+
+      if (options.scroll) {
+        nextSection.scrollIntoView({
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+          block: "start",
+        });
+      }
+
+      updateProgress();
+      updateResumeButton();
+      updateControlState();
+    }
+
+    function updateProgress() {
+      const sectionIndex = readSections.findIndex((section) => section.dataset.sectionId === activeSectionId);
+      sectionProgress.textContent = `Section ${sectionIndex + 1} of ${readSections.length}`;
+
+      const sectionSentences = getSectionQueue(activeSectionId);
+      const activeRecord = getCurrentRecord();
+
+      if (!sectionSentences.length) {
+        sentenceProgress.textContent = "Sentence 0 of 0";
+        return;
+      }
+
+      if (activeRecord && activeRecord.sectionId === activeSectionId) {
+        sentenceProgress.textContent = `Sentence ${activeRecord.sectionIndex + 1} of ${sectionSentences.length}`;
+      } else {
+        sentenceProgress.textContent = `Sentence 1 of ${sectionSentences.length} ready`;
+      }
+    }
+
+    function setActiveSentence(globalIndex, options = {}) {
+      const record = sentenceRecords[globalIndex];
+      if (!record) {
+        return;
+      }
+
+      clearSentenceHighlight();
+      currentGlobalSentenceIndex = globalIndex;
+      record.element.classList.add("is-active");
+      currentQueueSectionId = record.sectionId;
+      setActiveSection(record.sectionId, { save: true });
+      updateProgress();
+      updateControlState();
+
+      if (options.scroll !== false) {
+        record.element.scrollIntoView({
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+          block: "center",
+        });
+      }
+    }
+
+    function selectSentence(globalIndex, announce = true) {
+      const record = sentenceRecords[globalIndex];
+      if (!record) {
+        return;
+      }
+
+      currentQueue = sectionSentenceMap.get(record.sectionId) || [];
+      currentQueueSectionId = record.sectionId;
+      currentQueuePosition = currentQueue.findIndex((item) => item.globalIndex === globalIndex);
+      setActiveSentence(globalIndex, { scroll: false });
+
+      if (announce) {
+        setStatus("Sentence selected.");
+      }
+    }
+
+    function prepareQueue(sectionId, startGlobalIndex = null) {
+      const queue = getSectionQueue(sectionId);
+      if (!queue.length) {
+        setStatus("Nothing readable in this section.");
+        return false;
+      }
+
+      currentQueue = queue;
+      currentQueueSectionId = sectionId;
+
+      if (startGlobalIndex !== null) {
+        const explicitIndex = queue.findIndex((record) => record.globalIndex === startGlobalIndex);
+        currentQueuePosition = explicitIndex >= 0 ? explicitIndex : 0;
+      } else {
+        const activeRecord = getCurrentRecord();
+        if (activeRecord && activeRecord.sectionId === sectionId) {
+          currentQueuePosition = queue.findIndex((record) => record.globalIndex === activeRecord.globalIndex);
+        } else {
+          currentQueuePosition = 0;
+        }
+      }
+
+      if (currentQueuePosition < 0) {
+        currentQueuePosition = 0;
+      }
+
+      return true;
+    }
+
+    function setPlaybackState(nextState) {
+      playbackState = nextState;
+      updatePlayPauseButton();
+      updateControlState();
+    }
+
+    function updatePlayPauseButton() {
+      if (playbackState === PLAYBACK.PLAYING) {
+        setIconButton(playPauseButton, "pause", "Pause", true);
+      } else if (playbackState === PLAYBACK.PAUSED) {
+        setIconButton(playPauseButton, "play", "Resume", false);
+      } else {
+        setIconButton(playPauseButton, "play", "Play current section", false);
+      }
+    }
+
+    function updateControlState() {
+      const activeQueue = getSectionQueue(activeSectionId);
+      const currentRecord = getCurrentRecord();
+      const previousRecord = getNeighborRecord(-1);
+      const nextRecord = getNeighborRecord(1);
+
+      playPauseButton.disabled = !supportsSpeech || !activeQueue.length;
+      previousButton.disabled = !previousRecord || (currentRecord && previousRecord.globalIndex === currentRecord.globalIndex);
+      nextButton.disabled = !nextRecord || (currentRecord && nextRecord.globalIndex === currentRecord.globalIndex);
+      stopButton.disabled = !(playbackState === PLAYBACK.PLAYING || playbackState === PLAYBACK.PAUSED);
+    }
+
+    function stopSpeechInternals() {
+      runToken += 1;
+      if (supportsSpeech) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function stopReading(announce = true) {
+      stopSpeechInternals();
+      setPlaybackState(PLAYBACK.STOPPED);
+      if (announce) {
+        setStatus("Stopped.");
+      }
+    }
+
+    function getSelectedVoice() {
+      return voices.find((voice) => voice.name === voiceSelect.value) || null;
+    }
+
+    function speakCurrentSentence(token) {
+      const record = currentQueue[currentQueuePosition];
+      if (!record) {
+        setPlaybackState(PLAYBACK.ENDED);
+        setStatus("Section finished.");
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(record.text);
+      const selectedVoice = getSelectedVoice();
+
+      utterance.rate = parseFloat(speedSelect.value || "0.9");
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        utterance.lang = selectedVoice.lang;
+      }
+
+      utterance.onstart = () => {
+        if (token !== runToken) {
+          return;
+        }
+        setActiveSentence(record.globalIndex, { scroll: true });
+        setPlaybackState(PLAYBACK.PLAYING);
+        setStatus("Reading.");
+      };
+
+      utterance.onpause = () => {
+        if (token === runToken) {
+          setPlaybackState(PLAYBACK.PAUSED);
+          setStatus("Paused.");
+        }
+      };
+
+      utterance.onresume = () => {
+        if (token === runToken) {
+          setPlaybackState(PLAYBACK.PLAYING);
+          setStatus("Reading.");
+        }
+      };
+
+      utterance.onend = () => {
+        if (token !== runToken) {
+          return;
+        }
+        currentQueuePosition += 1;
+        if (currentQueuePosition < currentQueue.length) {
+          window.requestAnimationFrame(() => {
+            window.setTimeout(() => {
+              if (token === runToken) {
+                speakCurrentSentence(token);
+              }
+            }, 0);
+          });
+        } else {
+          setPlaybackState(PLAYBACK.ENDED);
+          setStatus("Section finished.");
+        }
+      };
+
+      utterance.onerror = () => {
+        if (token === runToken) {
+          setPlaybackState(PLAYBACK.STOPPED);
+          setStatus("Read aloud could not continue.");
+        }
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function beginPlayback(sectionId, startGlobalIndex = null, options = {}) {
+      if (!supportsSpeech) {
+        setStatus("Read aloud is not supported here.");
+        return;
+      }
+
+      setActiveSection(sectionId, { save: true, scroll: !!options.scroll });
+      if (!prepareQueue(sectionId, startGlobalIndex)) {
+        return;
+      }
+
+      stopSpeechInternals();
+      const token = runToken;
+      setPlaybackState(PLAYBACK.PLAYING);
+
+      window.requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          if (token === runToken) {
+            speakCurrentSentence(token);
+          }
+        }, 0);
+      });
+    }
+
+    function startFromSelectionOrActive() {
+      const currentRecord = getCurrentRecord();
+      const startSentence =
+        currentRecord && currentRecord.sectionId === activeSectionId
+          ? currentRecord.globalIndex
+          : null;
+
+      beginPlayback(activeSectionId, startSentence);
+    }
+
+    function handleSentenceActivation(globalIndex) {
+      const record = sentenceRecords[globalIndex];
+      if (!record) {
+        return;
+      }
+
+      selectSentence(globalIndex, false);
+
+      if (playbackState === PLAYBACK.PLAYING || playbackState === PLAYBACK.PAUSED) {
+        beginPlayback(record.sectionId, globalIndex);
+      } else {
+        setStatus("Sentence selected.");
+      }
+    }
+
+    function startSpecificSection(sectionId) {
+      beginPlayback(sectionId, null, { scroll: true });
+    }
+
+    function moveSentence(direction) {
+      const targetRecord = getNeighborRecord(direction);
+      if (!targetRecord) {
+        return;
+      }
+
+      selectSentence(targetRecord.globalIndex, false);
+
+      if (playbackState === PLAYBACK.PLAYING || playbackState === PLAYBACK.PAUSED) {
+        beginPlayback(targetRecord.sectionId, targetRecord.globalIndex);
+      } else {
+        setStatus("Sentence selected.");
+      }
+    }
+
+    function toggleStoredBoolean(key) {
+      saveValue(key, loadBoolean(key) ? "off" : "on");
+      applyDisplayState();
+    }
+
+    function updateResumeButton() {
+      const storedSection = loadValue(storageKeys.section, "");
+      const storedExists = readSections.some((section) => section.dataset.sectionId === storedSection);
+      const label = storedExists ? `Resume ${sectionNames.get(storedSection)}` : "Resume last section";
+
+      resumeButton.disabled = !storedExists;
+      setIconButton(resumeButton, "resume", label);
+    }
+
+    function jumpToTarget(targetId) {
+      const target = document.getElementById(targetId);
+      if (!target) {
+        return;
+      }
+
+      if (target.dataset && target.dataset.sectionId) {
+        setActiveSection(targetId, { scroll: true, save: true });
+      } else {
+        target.scrollIntoView({
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+          block: "start",
+        });
+      }
+    }
+
+    function attachObserver() {
+      if (!("IntersectionObserver" in window)) {
+        return;
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+
+        if (visible) {
+          setActiveSection(visible.target.dataset.sectionId, { save: true });
+        }
+      }, {
+        threshold: [0.35, 0.55, 0.75],
+        rootMargin: "-15% 0px -45% 0px",
+      });
+
+      readSections.forEach((section) => observer.observe(section));
+    }
+
+    buildSentenceMarkup();
+    initializeButtons();
+    saveValue(storageKeys.rate, loadValue(storageKeys.rate, speedSelect.value));
+    speedSelect.value = loadValue(storageKeys.rate, speedSelect.value);
+    fontSelect.value = loadValue(storageKeys.font, "comic");
+    applyDisplayState();
+
+    const storedSection = loadValue(storageKeys.section, activeSectionId);
+    if (readSections.some((section) => section.dataset.sectionId === storedSection)) {
+      setActiveSection(storedSection, { save: false });
+    } else if (activeSectionId) {
+      setActiveSection(activeSectionId, { save: false });
+    }
+
+    updateResumeButton();
+    updateProgress();
+    updateVoiceProgress();
+    updatePlayPauseButton();
+    updateControlState();
+    attachObserver();
+
+    if (supportsSpeech) {
+      populateVoices();
+      if (typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
+        window.speechSynthesis.onvoiceschanged = populateVoices;
+      }
+    } else {
+      setStatus("Read aloud is not supported here.");
+      updateControlState();
+    }
+
+    comfortToggle.addEventListener("click", () => toggleStoredBoolean(storageKeys.comfort));
+    spacingToggle.addEventListener("click", () => toggleStoredBoolean(storageKeys.spacing));
+    focusToggle.addEventListener("click", () => toggleStoredBoolean(storageKeys.focus));
+
+    fontSelect.addEventListener("change", () => {
+      saveValue(storageKeys.font, fontSelect.value);
+      applyDisplayState();
+    });
+
+    voiceSelect.addEventListener("change", () => {
+      saveValue(storageKeys.voice, voiceSelect.value);
+      updateVoiceProgress();
+      setStatus("Voice updated.");
+    });
+
+    speedSelect.addEventListener("change", () => {
+      saveValue(storageKeys.rate, speedSelect.value);
+      setStatus("Speed updated.");
+    });
+
+    playPauseButton.addEventListener("click", () => {
+      if (playbackState === PLAYBACK.PLAYING) {
+        if (supportsSpeech && window.speechSynthesis.speaking) {
+          window.speechSynthesis.pause();
+        }
+        return;
+      }
+
+      if (playbackState === PLAYBACK.PAUSED) {
+        if (supportsSpeech && window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+          setPlaybackState(PLAYBACK.PLAYING);
+          setStatus("Reading.");
+        } else {
+          startFromSelectionOrActive();
+        }
+        return;
+      }
+
+      startFromSelectionOrActive();
+    });
+
+    previousButton.addEventListener("click", () => moveSentence(-1));
+    nextButton.addEventListener("click", () => moveSentence(1));
+    stopButton.addEventListener("click", () => stopReading(true));
+
+    resumeButton.addEventListener("click", () => {
+      const targetId = loadValue(storageKeys.section, "");
+      if (targetId) {
+        jumpToTarget(targetId);
+      }
+    });
+
+    document.querySelectorAll("[data-jump-target]").forEach((button) => {
+      button.addEventListener("click", () => jumpToTarget(button.dataset.jumpTarget));
+    });
+
+    document.querySelectorAll("[data-read-section]").forEach((button) => {
+      button.addEventListener("click", () => startSpecificSection(button.dataset.readSection));
+    });
+
+    readRoot.addEventListener("click", (event) => {
+      const sentence = event.target.closest(".sentence");
+      if (!sentence) {
+        return;
+      }
+      handleSentenceActivation(Number(sentence.dataset.globalSentenceIndex));
+    });
+
+    readRoot.addEventListener("keydown", (event) => {
+      const sentence = event.target.closest(".sentence");
+      if (!sentence) {
+        return;
+      }
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleSentenceActivation(Number(sentence.dataset.globalSentenceIndex));
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (supportsSpeech) {
+        window.speechSynthesis.cancel();
+      }
+    });
+  </script>
+</body>
+</html>
