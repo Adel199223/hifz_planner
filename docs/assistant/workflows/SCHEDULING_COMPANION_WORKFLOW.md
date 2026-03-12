@@ -122,7 +122,7 @@ flutter test -j 1 -r expanded test/data/services/companion
 
 - Launch mode contract:
   - `/companion/chain?unitId=<id>&mode=new` -> staged ramp for new units.
-  - `/companion/chain?unitId=<id>&mode=review` -> hidden-first fast retrieval with summary grade-save back into the shared scheduler/lifecycle path.
+  - `/companion/chain?unitId=<id>&mode=review` -> hidden-first scheduled review runtime with summary grade-save back into the shared scheduler/lifecycle path.
   - `/companion/chain?unitId=<id>&mode=stage4` -> delayed consolidation runtime (Stage-4 lifecycle gate).
 - Stage sequence for `mode=new`:
   - Stage 1 `guided_visible` (Talqin + Retrieval-first):
@@ -139,7 +139,7 @@ flutter test -j 1 -r expanded test/data/services/companion
     - checkpoint (`>= 0.75`) + failed-only remediation + bounded remediation rounds
     - budget fallback carries unresolved weak verses into Stage-3 weak-prelude targets
   - Stage 3 `hidden_reveal` (NEW mode deterministic runtime):
-    - NEW runs route through Stage-3 runtime (`state.stage3 != null`); review runs stay on legacy hidden-first routing
+    - NEW runs route through Stage-3 runtime (`state.stage3 != null`)
     - deterministic target priority:
       - weak-prelude targets
       - correction-required verses
@@ -152,9 +152,28 @@ flutter test -j 1 -r expanded test/data/services/companion
     - any failed Stage-3 retrieval mode requires correction exposure before the next cold attempt
     - checkpoint/remediation remains failed-only with bounded remediation rounds
     - budget overflow is explicit `budgetFallback` (non-terminal), not silent completion
+  - Review runtime (`mode=review`, `state.review != null`):
+    - review stays on `hidden_reveal` stage code but now uses a dedicated runtime instead of the legacy fallback path
+    - deterministic target priority:
+      - correction-required verses
+      - weak/risk targets
+      - linking deficits
+      - low-readiness / low-proficiency targets
+      - checkpoint/remediation targets
+      - fallback hidden interleave
+    - review modes:
+      - `hidden_recall`
+      - `linking`
+      - `discrimination`
+      - `correction`
+      - `checkpoint`
+      - `remediation`
+    - counted passes stay strict (`unassisted`, hint cap `H1`, required auto-check where the mode requires)
+    - failed review retrieval attempts require correction exposure before the next counted cold attempt
+    - review summary grading still routes through `ReviewCompletionService`; lifecycle governance is unchanged by the runtime convergence
   - Stage 4 delayed consolidation (`hidden_reveal` + lifecycle runtime):
     - launched via `mode=stage4` and routed by runtime marker (`state.stage4 != null`)
-    - review mode remains unchanged and never initializes Stage-4 runtime
+    - review mode never initializes Stage-4 runtime
     - deterministic target priority:
       - correction-required verses
       - unresolved weak/risk targets

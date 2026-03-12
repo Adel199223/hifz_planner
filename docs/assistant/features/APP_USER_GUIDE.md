@@ -134,7 +134,7 @@ This screen is intentionally action-oriented: less setup, more execution.
 ## 4) Memorize with Companion Stages
 
 Open Companion from Today rows to run staged memorization flows:
-- review mode for hidden-first review, with a save-to-schedule step at the end
+- review mode for hidden-first scheduled review, with a dedicated review flow and a save-to-schedule step at the end
 - new mode for staged acquisition to robustness flow
 - delayed mode for Stage-4 consolidation checks
 

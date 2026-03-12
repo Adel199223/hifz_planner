@@ -484,7 +484,7 @@ Current capabilities:
       - correction gate after failures, checkpoint threshold (`0.75`), and failed-only remediation
       - budget fallback carries unresolved weak verses into guarded Stage-3 prelude
     - Stage 3 `hidden_reveal` (NEW mode runtime):
-      - deterministic Stage-3 runtime is active only for NEW runs (`state.stage3 != null`); review keeps the legacy hidden path unchanged
+      - deterministic Stage-3 runtime is active for NEW runs (`state.stage3 != null`)
       - guarded weak-prelude is mandatory when `stage3WeakPreludeTargets` is non-empty:
         - prelude targets are consumed first in deterministic order
         - hint cap remains `H1` until prelude targets clear
@@ -492,6 +492,18 @@ Current capabilities:
       - failure in any retrieval mode enforces correction exposure before next cold attempt
       - counted-pass/readiness path remains strict (unassisted, hint-threshold limited, auto-check required by default)
       - budget overflow is explicit (`budgetFallback` phase, non-terminal), preserving unresolved weak requirements for follow-up
+    - Review mode runtime (`mode=review`, `state.review != null`):
+      - hidden-first review stays on `hidden_reveal`, but now uses a dedicated deterministic runtime instead of the old fallback branch
+      - deterministic target priority:
+        - correction-required verses
+        - weak/risk targets
+        - linking deficits
+        - low-readiness / low-proficiency targets
+        - checkpoint / remediation targets
+        - fallback hidden interleave
+      - review modes are runtime-driven (`hidden_recall`, `linking`, `discrimination`, `correction`, `checkpoint`, `remediation`)
+      - failure in any review retrieval mode enforces correction exposure before the next counted cold attempt
+      - counted readiness remains strict: assisted or high-hint success can continue the session but does not clear review obligations
     - Stage 4 delayed consolidation (`mode=stage4`, lifecycle runtime):
       - activation uses `hidden_reveal` stage code with dedicated runtime (`state.stage4 != null`) and lifecycle telemetry tags
       - deterministic verification order prioritizes correction-required and weak/risk targets, then random-start and linking obligations
@@ -502,7 +514,7 @@ Current capabilities:
         - `partial` => unresolved targets carried forward for retry
         - `fail` => strengthening route (`targeted_stage3`/`broad_stage3`) plus retry scheduling
       - mandatory next-day delayed check is prioritized in Today and can soft-block NEW generation
-  - review runs stay hidden-first (`mode=review`)
+  - review runs stay hidden-first (`mode=review`) but now surface a dedicated review runtime card and telemetry path
   - completed review runs can now save the grade from the Companion summary card, show any lifecycle transition, and offer `Back to Today`
   - Stage-5 maintenance now starts on scheduled review completion, not a separate runtime:
     - `stable + q>=3 -> maintained`
