@@ -20,6 +20,10 @@
       "scope": "Verse by Verse and Reading (Mushaf) UI/interaction work, including shared Quran word rendering behavior.",
       "primary_files": [
         "lib/screens/reader_screen.dart",
+        "lib/app/reader_display_preferences.dart",
+        "lib/app/reader_display_preferences_store.dart",
+        "lib/data/services/ayah_audio_download_service.dart",
+        "lib/data/services/ayah_audio_playback_resolver.dart",
         "lib/ui/quran/quran_word_wrap.dart",
         "lib/data/services/quran_wording.dart",
         "lib/ui/tajweed/tajweed_colors.dart",
@@ -28,11 +32,15 @@
       ],
       "targeted_tests": [
         "test/screens/reader_screen_test.dart",
+        "test/app/reader_display_preferences_test.dart",
+        "test/data/services/ayah_audio_download_service_test.dart",
         "test/ui/quran/quran_word_wrap_test.dart",
         "test/app/navigation_shell_menu_test.dart"
       ],
       "validation_commands": [
         "flutter test -j 1 -r expanded test/screens/reader_screen_test.dart",
+        "flutter test -j 1 -r expanded test/app/reader_display_preferences_test.dart",
+        "flutter test -j 1 -r expanded test/data/services/ayah_audio_download_service_test.dart",
         "flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart",
         "flutter analyze --no-fatal-infos --no-fatal-warnings"
       ]

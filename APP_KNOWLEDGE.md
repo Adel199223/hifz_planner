@@ -214,15 +214,24 @@ Playback capabilities:
 - Mini-player appears in Reader when an ayah is active.
 - Mini-player includes elapsed/total time and seek slider.
 - Audio options menu includes:
-  - `Download` (placeholder)
+  - `Download` (functional current-surah cache flow for the active reciter/bitrate)
   - `Manage repeat settings` (functional)
-  - `Experience` (placeholder)
+  - `Experience` (functional consolidated audio settings sheet for reciter/speed/repeat)
   - `Speed` (functional)
   - `Reciter` (functional)
+- Reader audio downloads are stored under app-support storage and keyed by edition + bitrate + surah + ayah.
+- Playback resolves cached local ayah audio first, then falls back to the remote ayah URL source when no local file is present.
 - Playback stays active while navigating inside `/reader` and stops when leaving `/reader` (provider disposal).
 - Selected reciter/speed/repeat are persisted locally via SharedPreferences.
+- Reader display preferences are persisted separately from app-wide preferences.
+- Translation settings control verse-translation visibility and show the current translation source derived from app language.
+- Word By Word settings control word-tooltip visibility and hovered-word highlighting for both Verse by Verse and Reading (Mushaf).
 
 Implementation files:
+- `lib/app/reader_display_preferences.dart`
+- `lib/app/reader_display_preferences_store.dart`
+- `lib/data/services/ayah_audio_download_service.dart`
+- `lib/data/services/ayah_audio_playback_resolver.dart`
 - `lib/data/services/ayah_audio_source.dart`
 - `lib/data/services/ayah_audio_service.dart`
 - `lib/data/services/ayah_audio_preferences.dart`
@@ -250,10 +259,10 @@ Core behavior:
 
 Interaction model:
 - Words rendered as independent widgets in line rows.
-- Hover highlights word/verse context.
+- Hover can highlight word/verse context when Reader hover highlighting is enabled.
 - End-marker click opens verse actions.
 - Non-marker click opens word popover.
-- Tooltip uses word translation when available; fallback `Translation unavailable`.
+- Tooltip uses word translation when available, with fallback `Translation unavailable`, and can be disabled from Reader Word By Word settings.
 
 Header/spacing model:
 - External chapter header for surah starts.
@@ -609,9 +618,9 @@ Representative files:
 ## 12) Known Constraints / Incomplete Areas
 
 - Full UI localization infrastructure is implemented for English/French/Portuguese/Arabic; new terms should follow the localization workflow and glossary contracts.
-- `Translation` and `Word By Word` settings tabs are scaffolded but not fully implemented.
 - Quran Radio remains a placeholder surface.
 - My Quran is implemented as a local dashboard surface backed by `my_quran_overview_service.dart`.
+- Reader audio download scope is limited to the current surah for the active reciter/bitrate; there is no offline library or background downloader yet.
 - Web parity will require abstraction of `dart:io` usage in Quran.com cache/font services.
 - Quran.com parity work is active; visuals and interactions are close in many areas but still evolving.
 - No Python CI/tooling is configured because this repository currently has no Python code path; add Python configuration only when Python tooling is introduced.

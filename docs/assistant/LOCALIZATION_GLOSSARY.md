@@ -24,6 +24,13 @@ Use this glossary to keep terminology consistent across Reader, planner/scheduli
 | `juz` | Juz | Juz | Juz | جزء |
 | `page` | Page | Page | Página | صفحة |
 | `listen` | Listen | Écouter | Ouvir | استمع |
+| `download` | Download | Télécharger | Baixar | تنزيل |
+| `remove_download` | Remove download | Supprimer le téléchargement | Remover download | إزالة التنزيل |
+| `experience` | Experience | Expérience | Experiência | التجربة |
+| `word_by_word` | Word By Word | Mot à mot | Palavra por palavra | كلمة بكلمة |
+| `show_verse_translations` | Show verse translations | Afficher les traductions des ayahs | Mostrar traduções dos versículos | إظهار ترجمات الآيات |
+| `show_word_tooltips` | Show word tooltips | Afficher les infobulles des mots | Mostrar dicas das palavras | إظهار تلميحات الكلمات |
+| `highlight_hovered_words` | Highlight hovered words | Surligner les mots au survol | Destacar palavras ao passar o mouse | تمييز الكلمات عند المرور عليها |
 | `tajweed_colors` | Tajweed colors | Couleurs du Tajwid | Cores de Tajweed | ألوان التجويد |
 | `tafsirs` | Tafsirs | Tafsirs | Tafsirs | تفاسير |
 | `lessons` | Lessons | Leçons | Lições | فوائد |

@@ -21,6 +21,8 @@ Use when changes touch:
 - tajweed legend/control placement and visibility
 - locale-specific reader directionality/alignment behavior
 - reader recitation playback (per-ayah play, queue, mini-player controls)
+- Reader offline audio download/remove behavior
+- Reader-specific display preferences for translations and word-by-word aids
 
 ## What Not To Do
 
@@ -39,9 +41,13 @@ Use when changes touch:
 - `lib/data/services/qurancom_chapters_service.dart`
 - `lib/data/services/ayah_audio_source.dart`
 - `lib/data/services/ayah_audio_service.dart`
+- `lib/data/services/ayah_audio_download_service.dart`
+- `lib/data/services/ayah_audio_playback_resolver.dart`
 - `lib/data/services/ayah_audio_preferences.dart`
 - `lib/data/services/ayah_reciter_catalog_service.dart`
 - `lib/data/providers/audio_providers.dart`
+- `lib/app/reader_display_preferences.dart`
+- `lib/app/reader_display_preferences_store.dart`
 - `lib/ui/audio/reciter_selection_list.dart`
 - `lib/screens/reciters_screen.dart`
 - `lib/ui/qcf/qcf_font_manager.dart`
@@ -52,9 +58,11 @@ Use when changes touch:
 - `test/screens/reader_screen_test.dart`
 - `test/ui/quran/quran_word_wrap_test.dart`
 - `test/data/services/qurancom_chapters_service_test.dart`
+- `test/data/services/ayah_audio_download_service_test.dart`
 - `test/data/services/ayah_audio_source_test.dart`
 - `test/data/services/ayah_reciter_catalog_service_test.dart`
 - `test/data/providers/audio_providers_test.dart`
+- `test/app/reader_display_preferences_test.dart`
 - `test/screens/reciters_screen_test.dart`
 - `test/app/navigation_shell_menu_test.dart`
 
@@ -65,6 +73,8 @@ git status --short
 rg -n "_ReaderViewMode|Verse by Verse|Reading|_MushafNavTab" lib/screens/reader_screen.dart
 rg -n "_buildVerseByVerseChapterHeader|_buildMushafExternalChapterHeader|_buildTajweedLegendSection|searchSurah|Directionality\\(textDirection: TextDirection.ltr\\)" lib/screens/reader_screen.dart
 rg -n "ayahAudio|playFrom|playAyah|mini_player|reader_audio_options_button" lib/screens/reader_screen.dart lib/data/services/ayah_audio_service.dart
+rg -n "downloadSurah|removeSurahDownload|resolveAyahUri|reader_audio_download|reader_audio_experience" lib/screens/reader_screen.dart lib/data/services/ayah_audio_download_service.dart lib/data/services/ayah_audio_playback_resolver.dart
+rg -n "readerDisplayPreferences|showVerseTranslations|showWordTooltips|highlightHoveredWords" lib/screens/reader_screen.dart lib/app/reader_display_preferences.dart
 rg -n "edition|reciter|fallback|versebyverse" lib/data/services/ayah_reciter_catalog_service.dart lib/data/providers/audio_providers.dart
 rg -n "QuranComChapterEntry|getChapters|getChapter" lib/data/services/qurancom_chapters_service.dart
 ```
@@ -75,9 +85,11 @@ rg -n "QuranComChapterEntry|getChapters|getChapter" lib/data/services/qurancom_c
 flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
 flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart
 flutter test -j 1 -r expanded test/data/services/qurancom_chapters_service_test.dart
+flutter test -j 1 -r expanded test/data/services/ayah_audio_download_service_test.dart
 flutter test -j 1 -r expanded test/data/services/ayah_audio_source_test.dart
 flutter test -j 1 -r expanded test/data/services/ayah_reciter_catalog_service_test.dart
 flutter test -j 1 -r expanded test/data/providers/audio_providers_test.dart
+flutter test -j 1 -r expanded test/app/reader_display_preferences_test.dart
 flutter test -j 1 -r expanded test/screens/reciters_screen_test.dart
 flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
 ```
@@ -104,7 +116,11 @@ flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
    - Confirm AlQuran Cloud editions endpoint response shape, then verify bundled fallback list is still present in `ayah_reciter_catalog_service.dart`.
 10. Symptoms: speed/repeat/reciter settings reset after restart.
    - Verify SharedPreferences keys and notifier write-through in `ayah_audio_preferences.dart` and `audio_providers.dart`.
-11. Symptoms: verse-by-verse still shows circular end markers.
+11. Symptoms: download sheet never reaches fully downloaded state or cached playback never takes over.
+   - Verify app-support path resolution, atomic temp-file rename, and local-first resolver wiring in `ayah_audio_download_service.dart`, `ayah_audio_playback_resolver.dart`, and `ayah_audio_service.dart`.
+12. Symptoms: translation visibility, word tooltip, or hover highlight settings do not persist or apply in both reader modes.
+   - Verify `reader_display_preferences.dart`, its store, and both Verse-by-Verse and Mushaf call sites in `reader_screen.dart`.
+13. Symptoms: verse-by-verse still shows circular end markers.
    - Verify end-marker suppression is enabled in shared word rendering for Verse-by-Verse paths.
 
 ## Handoff Checklist
@@ -115,8 +131,10 @@ flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
 - `test/screens/reader_screen_test.dart` passes
 - `test/ui/quran/quran_word_wrap_test.dart` passes
 - `test/data/services/qurancom_chapters_service_test.dart` passes
+- `test/data/services/ayah_audio_download_service_test.dart` passes for surah download/remove and cached-path status behavior
 - `test/data/services/ayah_audio_source_test.dart` passes for ayah index/url mapping
 - `test/data/services/ayah_reciter_catalog_service_test.dart` passes for API parsing + fallback
 - `test/data/providers/audio_providers_test.dart` passes for persisted reciter/speed/repeat state
+- `test/app/reader_display_preferences_test.dart` passes for Reader display preference restore/write behavior
 - `test/screens/reciters_screen_test.dart` passes for searchable selector behavior
 - any control/key changes are reflected in tests

@@ -106,7 +106,9 @@ Go to Reader when your goal is comprehension, listening, and context.
 Typical actions:
 - navigate by surah/ayah/page/juz
 - listen to recitation
+- download the current surah's audio for offline replay in Reader
 - use translation and word interactions
+- show or hide verse translations, word tooltips, and hovered-word highlights
 - add bookmarks/notes
 
 ## 2) Plan Your Memorization
@@ -172,6 +174,8 @@ You can personalize:
 - app language
 - app theme
 - companion autoplay behavior
+- Reader reciter, playback speed, and repeat count
+- Reader translation visibility and word-by-word display aids
 
 Plan-level personalization also exists:
 - session structure
