@@ -48,11 +48,13 @@ class PlannedReviewRow {
     required this.unit,
     required this.schedule,
     required this.lifecycleTier,
+    required this.reinforcementWeight,
   });
 
   final MemUnitData unit;
   final ScheduleStateData schedule;
   final String lifecycleTier;
+  final double reinforcementWeight;
 }
 
 class Stage4DueItem {
@@ -126,6 +128,9 @@ class DailyPlanner {
       final lifecycleTierByUnitId = await _loadLifecycleTierByUnitId(
         dueUnits.map((row) => row.unit.id),
       );
+      final reinforcementByUnitId = await _loadReinforcementProfileByUnitId(
+        dueUnits.map((row) => row.unit.id),
+      );
       final stage4DueItems = await _buildStage4DueItems(todayDay: todayDay);
       final stage4QualitySnapshot = await _buildStage4QualitySnapshot();
       final mandatoryStage4DueExists =
@@ -140,8 +145,13 @@ class DailyPlanner {
             b,
             todayDay,
             lifecycleTierByUnitId,
+            reinforcementByUnitId,
           ),
         );
+      final reviewMinutesByUnitId = await _estimateReviewMinutesByUnitId(
+        sortedDueUnits.map((row) => row.unit),
+        settings.avgReviewMinutesPerAyah,
+      );
 
       final schedulingPreferences =
           _projectionEngine.preferencesFromSettings(settings);
@@ -187,11 +197,10 @@ class DailyPlanner {
         );
       }
 
-      final dueReviewMinutes =
-          await _projectionEngine.estimateReviewMinutesForRows(
+      final dueReviewMinutes = _weightedReviewDemandMinutes(
         dueRows: sortedDueUnits,
-        quranRepo: _quranRepo,
-        avgReviewMinutesPerAyah: settings.avgReviewMinutesPerAyah,
+        reviewMinutesByUnitId: reviewMinutesByUnitId,
+        reinforcementByUnitId: reinforcementByUnitId,
       );
       final allocation = _projectionEngine.allocateDailyContent(
         dailyMinutes: dailyMinutes,
@@ -205,10 +214,11 @@ class DailyPlanner {
       final plannedReviews = <PlannedReviewRow>[];
       var minutesPlannedReviews = 0.0;
       for (final dueRow in sortedDueUnits) {
-        final estimated = await _estimateReviewMinutesForUnit(
-          dueRow.unit,
-          settings.avgReviewMinutesPerAyah,
-        );
+        final estimated = reviewMinutesByUnitId[dueRow.unit.id] ??
+            await _estimateReviewMinutesForUnit(
+              dueRow.unit,
+              settings.avgReviewMinutesPerAyah,
+            );
         if (minutesPlannedReviews + estimated > reviewBudgetMinutes + 1e-9) {
           continue;
         }
@@ -220,6 +230,8 @@ class DailyPlanner {
               dueRow.unit.id,
               lifecycleTierByUnitId,
             ),
+            reinforcementWeight:
+                reinforcementByUnitId[dueRow.unit.id]?.weight ?? 0.0,
           ),
         );
         minutesPlannedReviews += estimated;
@@ -301,12 +313,27 @@ class DailyPlanner {
     DueUnitRow b,
     int todayDay,
     Map<int, String> lifecycleTierByUnitId,
+    Map<int, _UnitReinforcementProfile> reinforcementByUnitId,
   ) {
     final overdueA = todayDay - a.schedule.dueDay;
     final overdueB = todayDay - b.schedule.dueDay;
+    final weightA = reinforcementByUnitId[a.unit.id]?.weight ?? 0.0;
+    final weightB = reinforcementByUnitId[b.unit.id]?.weight ?? 0.0;
+    final reinforcementCompare = weightB.compareTo(weightA);
+    final weightGap = (weightA - weightB).abs();
+    final overdueGap = (overdueA - overdueB).abs();
+
+    if (overdueGap <= 1 && weightGap >= 0.15 && reinforcementCompare != 0) {
+      return reinforcementCompare;
+    }
+
     final overdueCompare = overdueB.compareTo(overdueA);
     if (overdueCompare != 0) {
       return overdueCompare;
+    }
+
+    if (reinforcementCompare != 0) {
+      return reinforcementCompare;
     }
 
     final lifecycleCompare = _lifecycleSortRank(
@@ -331,6 +358,33 @@ class DailyPlanner {
     }
 
     return a.schedule.unitId.compareTo(b.schedule.unitId);
+  }
+
+  Future<Map<int, _UnitReinforcementProfile>> _loadReinforcementProfileByUnitId(
+    Iterable<int> unitIds,
+  ) async {
+    final ids = unitIds.toSet().toList(growable: false);
+    if (ids.isEmpty) {
+      return const <int, _UnitReinforcementProfile>{};
+    }
+
+    final rows = await (_db.select(_db.companionStepProficiency)
+          ..where((tbl) => tbl.unitId.isIn(ids)))
+        .get();
+
+    final grouped = <int, List<CompanionStepProficiencyData>>{};
+    for (final row in rows) {
+      final unitRows = grouped.putIfAbsent(
+        row.unitId,
+        () => <CompanionStepProficiencyData>[],
+      );
+      unitRows.add(row);
+    }
+
+    return <int, _UnitReinforcementProfile>{
+      for (final unitId in ids)
+        unitId: _buildReinforcementProfile(grouped[unitId] ?? const []),
+    };
   }
 
   Future<Map<int, String>> _loadLifecycleTierByUnitId(
@@ -364,6 +418,67 @@ class DailyPlanner {
       'maintained' => 3,
       _ => 0,
     };
+  }
+
+  _UnitReinforcementProfile _buildReinforcementProfile(
+    List<CompanionStepProficiencyData> rows,
+  ) {
+    if (rows.isEmpty) {
+      return const _UnitReinforcementProfile();
+    }
+
+    var proficiencyTotal = 0.0;
+    var passRateTotal = 0.0;
+    var confidenceTotal = 0.0;
+    var confidenceCount = 0;
+    var weakStepCount = 0;
+
+    for (final row in rows) {
+      final proficiency = row.proficiencyEma.clamp(0.0, 1.0);
+      final attempts = row.attemptsCount;
+      final passRate =
+          attempts <= 0 ? 1.0 : (row.passesCount / attempts).clamp(0.0, 1.0);
+      final confidence = row.lastEvaluatorConfidence?.clamp(0.0, 1.0);
+
+      proficiencyTotal += proficiency;
+      passRateTotal += passRate;
+      if (confidence != null) {
+        confidenceTotal += confidence;
+        confidenceCount += 1;
+      }
+
+      final weakByProficiency = proficiency < 0.55;
+      final weakByPassRate = passRate < 0.70;
+      final weakByConfidence = confidence != null && confidence < 0.60;
+      if (weakByProficiency || weakByPassRate || weakByConfidence) {
+        weakStepCount += 1;
+      }
+    }
+
+    final stepCount = rows.length;
+    final averageProficiency = proficiencyTotal / stepCount;
+    final averagePassRate = passRateTotal / stepCount;
+    final averageConfidence =
+        confidenceCount == 0 ? null : confidenceTotal / confidenceCount;
+    final weakStepFraction = weakStepCount / stepCount;
+
+    final proficiencyDeficit = 1.0 - averageProficiency;
+    final passRateDeficit = 1.0 - averagePassRate;
+    final confidenceDeficit =
+        averageConfidence == null ? 0.0 : (1.0 - averageConfidence);
+
+    final weight = (proficiencyDeficit * 0.45) +
+        (passRateDeficit * 0.30) +
+        (weakStepFraction * 0.20) +
+        (confidenceDeficit * 0.05);
+
+    return _UnitReinforcementProfile(
+      averageProficiency: averageProficiency,
+      averagePassRate: averagePassRate,
+      averageConfidence: averageConfidence,
+      weakStepFraction: weakStepFraction,
+      weight: weight.clamp(0.0, 1.0),
+    );
   }
 
   Future<List<Stage4DueItem>> _buildStage4DueItems({
@@ -530,6 +645,35 @@ class DailyPlanner {
     return ayahCount * avgReviewMinutesPerAyah;
   }
 
+  Future<Map<int, double>> _estimateReviewMinutesByUnitId(
+    Iterable<MemUnitData> units,
+    double avgReviewMinutesPerAyah,
+  ) async {
+    final result = <int, double>{};
+    for (final unit in units) {
+      result[unit.id] = await _estimateReviewMinutesForUnit(
+        unit,
+        avgReviewMinutesPerAyah,
+      );
+    }
+    return result;
+  }
+
+  double _weightedReviewDemandMinutes({
+    required List<DueUnitRow> dueRows,
+    required Map<int, double> reviewMinutesByUnitId,
+    required Map<int, _UnitReinforcementProfile> reinforcementByUnitId,
+  }) {
+    var total = 0.0;
+    for (final dueRow in dueRows) {
+      final reviewMinutes = reviewMinutesByUnitId[dueRow.unit.id] ?? 0.0;
+      final multiplier =
+          reinforcementByUnitId[dueRow.unit.id]?.demandMultiplier ?? 1.0;
+      total += reviewMinutes * multiplier;
+    }
+    return total;
+  }
+
   Future<int> _estimateAyahCount(MemUnitData unit) async {
     final startSurah = unit.startSurah;
     final startAyah = unit.startAyah;
@@ -674,4 +818,22 @@ class _Stage4DueResolution {
   final String dueKind;
   final int dueDay;
   final bool mandatory;
+}
+
+class _UnitReinforcementProfile {
+  const _UnitReinforcementProfile({
+    this.averageProficiency = 1.0,
+    this.averagePassRate = 1.0,
+    this.averageConfidence,
+    this.weakStepFraction = 0.0,
+    this.weight = 0.0,
+  });
+
+  final double averageProficiency;
+  final double averagePassRate;
+  final double? averageConfidence;
+  final double weakStepFraction;
+  final double weight;
+
+  double get demandMultiplier => 1.0 + weight;
 }

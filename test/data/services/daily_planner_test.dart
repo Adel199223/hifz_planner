@@ -260,6 +260,81 @@ void main() {
     );
   });
 
+  test(
+      'weak retention sorts ahead of stronger units when due pressure is close',
+      () async {
+    const todayDay = 10;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 100,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    final strongUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'u-strong',
+      dueDay: 9,
+      reps: 0,
+      lapseCount: 0,
+    );
+    final weakUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'u-weak',
+      dueDay: 9,
+      reps: 0,
+      lapseCount: 0,
+    );
+
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: strongUnitId,
+      lifecycleTier: 'stable',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: weakUnitId,
+      lifecycleTier: 'stable',
+    );
+
+    await _seedStepProficiency(
+      companionRepo,
+      unitId: strongUnitId,
+      ayah: 1,
+      proficiencyEma: 0.94,
+      attemptsCount: 8,
+      passesCount: 8,
+      lastEvaluatorConfidence: 0.96,
+    );
+    await _seedStepProficiency(
+      companionRepo,
+      unitId: weakUnitId,
+      ayah: 1,
+      proficiencyEma: 0.28,
+      attemptsCount: 6,
+      passesCount: 1,
+      lastEvaluatorConfidence: 0.42,
+    );
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+
+    expect(
+      plan.plannedReviews.take(2).map((row) => row.unit.unitKey).toList(),
+      ['u-weak', 'u-strong'],
+    );
+    expect(
+      plan.plannedReviews.first.reinforcementWeight,
+      greaterThan(plan.plannedReviews[1].reinforcementWeight),
+    );
+  });
+
   test('recovery mode expands review capacity and suspends new when overloaded',
       () async {
     const todayDay = 100;
@@ -342,6 +417,64 @@ void main() {
     expect(plan.plannedReviews.length, 4);
     expect(plan.plannedNewUnits, isNotEmpty);
     expect(plan.minutesPlannedNew, greaterThan(0));
+  });
+
+  test('weak retention increases review pressure and reduces new allocation',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 10,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 5,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    final dueUnitIds = <int>[];
+    for (var i = 0; i < 5; i++) {
+      dueUnitIds.add(
+        await _seedDueUnit(
+          memUnitRepo,
+          db,
+          unitKey: 'weak-pressure-$i',
+          dueDay: todayDay - 1,
+          reps: 0,
+          lapseCount: 0,
+          startAyah: i + 1,
+          endAyah: i + 1,
+        ),
+      );
+    }
+
+    final baselinePlan = await dailyPlanner.planToday(todayDay: todayDay);
+    expect(baselinePlan.plannedNewUnits, isNotEmpty);
+    expect(baselinePlan.minutesPlannedNew, greaterThan(0));
+
+    for (var i = 0; i < dueUnitIds.length; i++) {
+      await _seedStepProficiency(
+        companionRepo,
+        unitId: dueUnitIds[i],
+        ayah: i + 1,
+        proficiencyEma: 0.22,
+        attemptsCount: 5,
+        passesCount: 1,
+        lastEvaluatorConfidence: 0.40,
+      );
+    }
+
+    final weakPlan = await dailyPlanner.planToday(todayDay: todayDay);
+
+    expect(weakPlan.reviewPressure, greaterThan(baselinePlan.reviewPressure));
+    expect(
+        weakPlan.minutesPlannedNew, lessThan(baselinePlan.minutesPlannedNew));
+    expect(
+      weakPlan.plannedNewUnits.length,
+      lessThanOrEqualTo(baselinePlan.plannedNewUnits.length),
+    );
   });
 
   test('metadata guard blocks new units when cursor ayah page metadata missing',
@@ -585,6 +718,36 @@ Future<void> _seedLifecycleState(
     stage4Status: const Value('passed'),
     updatedAtDay: 100,
     updatedAtSeconds: 100,
+  );
+}
+
+Future<void> _seedStepProficiency(
+  CompanionRepo companionRepo, {
+  required int unitId,
+  required int ayah,
+  required double proficiencyEma,
+  required int attemptsCount,
+  required int passesCount,
+  required double lastEvaluatorConfidence,
+}) async {
+  final sessionId = await companionRepo.startChainSession(
+    unitId: unitId,
+    targetVerseCount: 1,
+    createdAtDay: 100,
+    startedAtSeconds: 0,
+  );
+  return companionRepo.upsertStepProficiency(
+    unitId: unitId,
+    surah: 1,
+    ayah: ayah,
+    proficiencyEma: proficiencyEma,
+    lastHintLevel: 'h0',
+    lastEvaluatorConfidence: lastEvaluatorConfidence,
+    lastLatencyToStartMs: 600,
+    attemptsCount: attemptsCount,
+    passesCount: passesCount,
+    lastUpdatedDay: 100,
+    lastSessionId: sessionId,
   );
 }
 
