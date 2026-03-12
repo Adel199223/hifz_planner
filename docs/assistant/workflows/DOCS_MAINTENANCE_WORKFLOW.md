@@ -29,6 +29,7 @@ Use when changes touch:
 - Do not rewrite entire user guides when only one user journey changed; update touched sections only.
 - Do not replace plain-language user-guide support guidance with implementation jargon; preserve exact support scope boundaries.
 - Do not remove beginner-focused sections (`Quick Start`, `Terms in Plain English`) when updating support-facing guides.
+- Do not mix runtime implementation files into the docs-only sync commit for a major stage.
 - Do not let bridge docs become alternate canon.
 - Do not add stale paths or commands that fail in this repo.
 - Do not skip docs validation after changing documentation structure.
@@ -36,6 +37,7 @@ Use when changes touch:
 - Do not duplicate localization term tables across docs; keep terms canonical in `docs/assistant/LOCALIZATION_GLOSSARY.md`.
 - Do not duplicate performance exclusion tables across docs; keep workspace defaults canonical in `docs/assistant/PERFORMANCE_BASELINES.md`.
 - Do not run full assistant-doc rewrites after feature work unless explicitly approved; use targeted docs sync by touched scope.
+- Do not auto-push as part of the default docs-sync closeout sequence.
 
 ## Primary Files
 
@@ -107,6 +109,15 @@ Significant change definition:
 Mandatory end-of-implementation prompt:
 - "Would you like me to run Assistant Docs Sync for this change now?"
 
+Default major-stage closeout order:
+1. Finish implementation and targeted validation.
+2. Commit implementation files first.
+3. Ask the exact Assistant Docs Sync prompt.
+4. If approved, update only relevant assistant docs for touched scope.
+5. Commit docs changes separately as a docs-only commit.
+6. End with a clean local worktree.
+7. Push remains explicit.
+
 Relevance matrix:
 - Reader/UI change -> reader workflow + canonical app sections + relevant test/docs links
 - Data pipeline change -> data workflow + cache/API contract docs only
@@ -117,23 +128,24 @@ Relevance matrix:
 
 ## Sync Order
 
-1. Update canonical:
+1. For post-implementation stage closeout, ensure the implementation commit already exists and Assistant Docs Sync is approved before editing docs.
+2. Update canonical:
    - `APP_KNOWLEDGE.md`
-2. Update bridge:
+3. Update bridge:
    - `docs/assistant/APP_KNOWLEDGE.md`
-3. Update routing docs:
+4. Update routing docs:
    - `docs/assistant/INDEX.md`
    - `docs/assistant/manifest.json`
-4. Update validator and tests:
+5. Update validator and tests:
    - `tooling/validate_agent_docs.dart`
    - `tooling/validate_localization.dart`
    - `tooling/validate_workspace_hygiene.dart`
    - `test/tooling/validate_agent_docs_test.dart`
    - `test/tooling/validate_localization_test.dart`
    - `test/tooling/validate_workspace_hygiene_test.dart`
-5. Update private templates only when requested:
+6. Update private templates only when requested:
    - `docs/assistant/templates/*`
-6. For significant implementation work, ask docs-sync prompt and update only relevant files when approved.
+7. Keep docs-sync changes in their own docs-only commit and leave push as a separate explicit action.
 
 ## Handoff Checklist
 
@@ -144,6 +156,7 @@ Relevance matrix:
 - CI command examples in docs match `.github/workflows/dart.yml`
 - localization terms and workspace performance defaults are maintained in their canonical docs only
 - significant-change docs-sync prompt was asked and response handled
+- major-stage closeout kept implementation and docs sync in separate commits when docs sync ran
 - worktree isolation was used when multiple doc streams ran in parallel
 - relevant user-guide sections were updated or explicitly deemed unchanged
 - touched user-guide sections remain understandable to non-technical readers and still defer to canonical docs

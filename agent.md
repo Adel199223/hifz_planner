@@ -90,7 +90,8 @@ For user support or explanation tasks:
 14. For inspiration/parity requests against named apps/sites, open `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` and base implementation decisions on cited references.
 15. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
 16. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
-17. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
+17. For major implementation stages, default local closeout order is: targeted validation, implementation commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree. Push remains explicit.
+18. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
 
 ## ExecPlans
 
@@ -124,4 +125,6 @@ flutter test -j 1 -r expanded
 - `dart run tooling/validate_agent_docs.dart` passed for doc changes
 - `dart run tooling/validate_workspace_hygiene.dart` passed for performance/workspace changes
 - after significant changes, Assistant Docs Sync prompt was asked and outcome recorded
+- major-stage closeout kept implementation and docs sync in separate commits when docs sync ran
+- push/publish happened only when explicitly requested
 - no stale or broken doc paths remain

@@ -43,6 +43,7 @@ If this guide conflicts with technical docs:
 
 - Delayed check: a later memory check (usually next day) to confirm recall is still stable.
 - Calibration: adjusting planner estimates using your real session pace.
+- Meaning cue: a short hint taken from verse translation text, shown with its source when available.
 - Canonical: the final source to trust if two docs disagree (`APP_KNOWLEDGE.md`, then source code).
 
 ## What This App Is For
@@ -137,6 +138,9 @@ Open Companion from Today rows to run staged memorization flows:
 - review mode for hidden-first scheduled review, with a dedicated review flow and a save-to-schedule step at the end
 - new mode for staged acquisition to robustness flow
 - delayed mode for Stage-4 consolidation checks
+- when you ask for more help, Companion can show a short meaning cue taken from verse translation text and label the source
+
+If that meaning cue is not available, Companion falls back to its normal hint steps.
 
 ## Companion Lifecycle in Plain Terms
 

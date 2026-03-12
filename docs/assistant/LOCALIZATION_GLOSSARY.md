@@ -98,6 +98,8 @@ Use this glossary to keep terminology consistent across Reader, planner/scheduli
 | `companion_skip_stage_title` | Skip current stage? | Passer l'etape en cours ? | Pular etapa atual? | تخطي المرحلة الحالية؟ |
 | `companion_skip_stage_confirm` | Skip | Passer | Pular | تخطي |
 | `companion_active_hint_label` | Active hint | Indice actif | Dica ativa | التلميح النشط |
+| `companion_meaning_cue_loading` | Loading meaning cue... | Chargement de l'indice de sens... | Carregando dica de significado... | جاري تحميل إشارة المعنى... |
+| `translation_label` | Translation: {label} | Traduction : {label} | Tradução: {label} | الترجمة: {label} |
 | `companion_play_current_ayah` | Play current ayah | Ecouter l'ayah actuelle | Ouvir ayah atual | تشغيل الآية الحالية |
 | `companion_autoplay_next_ayah` | Autoplay next ayah | Lecture auto ayah suivante | Reproducao auto da proxima ayah | تشغيل تلقائي للآية التالية |
 | `companion_autoplay_on` | Autoplay on | Lecture auto activee | Reproducao auto ativada | التشغيل التلقائي مفعل |

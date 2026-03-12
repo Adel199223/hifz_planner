@@ -45,6 +45,14 @@ Why both files exist:
 - After significant implementation changes, always ask:
   - "Would you like me to run Assistant Docs Sync for this change now?"
   - If user agrees, update only relevant assistant docs for changed scope.
+- Default closeout for major implementation stages:
+  - run targeted validation for the touched scope
+  - commit implementation files first
+  - keep the exact Assistant Docs Sync prompt unchanged
+  - if approved, run targeted docs sync for the touched scope
+  - commit docs changes separately
+  - end with a clean local worktree
+  - keep push explicit
 - `docs/assistant/templates/*` is read-on-demand only.
 - Only open or update `docs/assistant/templates/*` when the user explicitly asks for template/prompt creation or updates.
 

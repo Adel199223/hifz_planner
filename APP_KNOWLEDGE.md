@@ -54,6 +54,14 @@ Significant-change docs sync policy:
 - after significant implementation changes, ask:
   - "Would you like me to run Assistant Docs Sync for this change now?"
 - if approved, update only relevant assistant docs by touched scope.
+- default closeout for major implementation stages:
+  - run targeted validation for the touched scope
+  - commit implementation files first
+  - keep the exact Assistant Docs Sync prompt unchanged
+  - if approved, run targeted Assistant Docs Sync for the touched scope
+  - commit docs changes separately
+  - end with a clean local worktree
+  - push remains explicit
 
 Why two `APP_KNOWLEDGE.md` files:
 - Root `APP_KNOWLEDGE.md` is canonical and complete.
@@ -405,6 +413,7 @@ Important repos/services:
   - `scheduling/daily_content_allocator.dart`
   - `scheduling/scheduling_preferences_codec.dart`
   - `companion/progressive_reveal_chain_engine.dart`
+  - `companion/meaning_cue_service.dart`
   - `companion/verse_evaluator.dart`
   - `companion/companion_calibration_bridge.dart`
   - `tajweed_tags_service.dart`
@@ -531,6 +540,10 @@ Current capabilities:
     - per-word hover highlight
     - per-word translation tooltip
     - end-marker suppression (`char_type_name=end`) in Companion + Reader Verse-by-Verse scope
+  - source-backed meaning cues:
+    - `HintLevel.meaningCue` derives a short cue from existing Quran.com verse translation data
+    - Companion renders the cue source as `Translation: <source>`
+    - if no usable translation exists, meaning-cue requests fall back to the next non-semantic hint
   - hidden verses render without dot placeholders
   - Arabic rendering parity with tajweed colors by default (no reader action-chip parity)
 - `lib/screens/about_screen.dart`
@@ -682,7 +695,9 @@ Representative files:
   - `lib/data/services/scheduling/weekly_plan_generator.dart`
   - `lib/data/services/scheduling/daily_content_allocator.dart`
   - `lib/data/services/scheduling/scheduling_preferences_codec.dart`
+  - `lib/data/providers/database_providers.dart`
   - `lib/data/services/companion/progressive_reveal_chain_engine.dart`
+  - `lib/data/services/companion/meaning_cue_service.dart`
   - `lib/data/services/companion/verse_evaluator.dart`
   - `lib/data/services/companion/companion_calibration_bridge.dart`
   - `lib/data/repositories/companion_repo.dart`

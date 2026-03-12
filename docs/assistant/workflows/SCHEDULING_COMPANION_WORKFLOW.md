@@ -18,6 +18,7 @@ Use when changes touch:
 - daily planner and forecast shared projection behavior
 - Plan screen scheduling/calendar UI or Today session rendering
 - companion chain route, engine, telemetry, proficiency, or calibration bridge
+- companion meaning-cue sourcing, fallback, or translation-source labeling
 - staged companion ramp contracts (`guided_visible`, `cued_recall`, `hidden_reveal`) and launch mode routing
 - companion recitation controls (play + autoplay persistence) and Quran word-hover parity
 
@@ -31,6 +32,7 @@ Use when changes touch:
 - Do not bypass transactional boundaries for review log + scheduler updates.
 - Do not duplicate scheduled-review completion logic in screens; route Today and Companion review saves through `ReviewCompletionService`.
 - Do not auto-reveal full verse text on chain failure; hint progression is user-driven.
+- Do not generate unsourced meaning cues; reuse attributed verse translation data and fall back when unavailable.
 
 ## Primary Files
 
@@ -49,12 +51,14 @@ Use when changes touch:
 - `lib/data/services/companion/companion_models.dart`
 - `lib/data/services/companion/verse_evaluator.dart`
 - `lib/data/services/companion/progressive_reveal_chain_engine.dart`
+- `lib/data/services/companion/meaning_cue_service.dart`
 - `lib/data/services/companion/companion_calibration_bridge.dart`
 - `lib/screens/plan_screen.dart`
 - `lib/screens/today_screen.dart`
 - `lib/screens/companion_chain_screen.dart`
 - `lib/app/app_preferences.dart`
 - `lib/app/app_preferences_store.dart`
+- `lib/l10n/app_strings.dart`
 - `lib/ui/quran/quran_word_wrap.dart`
 - `lib/data/services/quran_wording.dart`
 - `lib/app/router.dart`
@@ -72,6 +76,7 @@ rg -n "scheduling_prefs_json|PlanningProjectionEngine|WeeklyPlan|ProgressiveReve
 flutter test -j 1 -r expanded test/screens/plan_screen_test.dart
 flutter test -j 1 -r expanded test/screens/today_screen_test.dart
 flutter test -j 1 -r expanded test/screens/companion_chain_screen_test.dart
+flutter test -j 1 -r expanded test/data/services/companion/meaning_cue_service_test.dart
 flutter test -j 1 -r expanded test/ui/quran/quran_word_wrap_test.dart
 flutter test -j 1 -r expanded test/app/app_preferences_test.dart
 flutter test -j 1 -r expanded test/data/services/tajweed_tags_service_test.dart
@@ -104,6 +109,8 @@ flutter test -j 1 -r expanded test/data/services/companion
    - Verify `AppPreferencesStore.saveCompanionAutoReciteEnabled(...)` write-through and restore path.
 8. Symptoms: scheduled reviews save but lifecycle tier/badge does not change as expected.
    - Verify `ReviewCompletionService.completeScheduledReview(...)` owns the full transaction order: insert `review_log`, apply scheduler, then update `companion_lifecycle_state`.
+9. Symptoms: meaning cue appears without attribution or falls through incorrectly.
+   - Verify `CompanionMeaningCueService` is reading verse translation data, `Translation: {label}` renders for `HintLevel.meaningCue`, and missing translation text falls back to the next non-semantic hint.
 
 ## Handoff Checklist
 
@@ -113,10 +120,16 @@ flutter test -j 1 -r expanded test/data/services/companion
 - planned review rows carry lifecycle tier data for Today badge/sort rendering
 - scheduled review completion uses the shared `ReviewCompletionService` path in both Today and Companion
 - companion chain persists per-attempt telemetry and session summary
+- meaning cues use attributed verse translation text when available and fall back cleanly when unavailable
 - companion recitation controls remain optional and non-blocking (`Play current ayah`, persisted autoplay toggle)
 - companion/reader shared word rendering suppresses end-marker circles in Verse-by-Verse scope
 - retrieval-strength scoring remains hint+latency+confidence based
 - all targeted tests and docs validators pass
+
+## Roadmap Stage Closeout Note
+
+- For major scheduling/companion milestones, default local closeout is: targeted validation, feature commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree.
+- Defer detailed staging/push mechanics to `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`; push remains explicit.
 
 ## Companion Stage Contracts
 
@@ -190,6 +203,10 @@ flutter test -j 1 -r expanded test/data/services/companion
 - Stage memory:
   - persist per-unit unlocked stage in `companion_unit_state`.
   - `mode=new` resumes at stored stage; `mode=review` ignores it.
+- Meaning cue contract:
+  - `HintLevel.meaningCue` uses attributed verse translation text from existing Quran.com verse data when available.
+  - Companion renders the cue source as `Translation: <source>`.
+  - If source text is unavailable, meaning-cue requests fall back to the next non-semantic hint instead of showing an unsourced placeholder.
 - Stage events:
   - persist in `companion_stage_event` with `event_type`:
     - `auto_unlock`

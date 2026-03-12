@@ -20,6 +20,7 @@ Use this file whenever planning or implementing non-trivial changes.
 10. Preserve branch safety: major changes on `feat/*`, keep `main` stable via PR checks.
 11. Respect template isolation: `docs/assistant/templates/*` is read-on-demand only.
 12. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
+13. Major implementation stages default to: targeted validation, feature commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, clean local worktree. Push stays explicit.
 
 ## Change Discipline
 

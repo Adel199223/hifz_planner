@@ -26,7 +26,9 @@ Use when requests include:
 - Don't use this workflow to perform broad assistant-doc rewrites after implementation. Instead apply targeted docs sync via `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`.
 - Do not commit blindly with `git add .` unless the user explicitly wants every change.
 - Do not include unrelated files in the same commit.
+- Do not mix assistant-doc sync updates into the feature commit for a significant stage.
 - Do not force-push to `main`.
+- Do not auto-push as the default end of stage closeout.
 - Do not delete remote branches without a keep-list and user intent.
 - Do not perform broad assistant-doc rewrites after implementation; use targeted docs sync by scope only.
 
@@ -83,6 +85,18 @@ flutter test -j 1 -r expanded test/app/navigation_shell_menu_test.dart
 flutter test -j 1 -r expanded test/screens/reader_screen_test.dart
 ```
 
+## Default Stage Closeout Sequence
+
+For major implementation stages, default local closeout order is:
+
+1. Finish implementation and run targeted validation for the touched scope.
+2. Commit implementation files first.
+3. Ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
+4. If approved, run targeted Assistant Docs Sync for the touched scope.
+5. Commit docs changes separately as a docs-only commit.
+6. End with a clean local worktree.
+7. Push remains a separate, explicit action.
+
 ## Failure Modes and Fallback Steps
 
 1. Symptoms: unrelated dirty files appear.
@@ -109,12 +123,13 @@ Mandatory prompt at end of significant implementation work:
 - Ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
 
 If user says yes:
-- update only relevant assistant docs by touched scope:
+- after the implementation commit already exists, update only relevant assistant docs by touched scope:
   - Reader/UI -> reader workflow + canonical app sections + related routing docs
   - Data pipeline -> data workflow + manifest/contract references only where needed
   - Localization -> localization workflow/glossary + impacted routing docs
   - CI/repo ops -> CI workflow + manifest/validator docs
   - Template-only -> template file only unless user explicitly requests propagation
+- commit docs changes separately from the implementation commit
 
 If user says no:
 - continue without docs edits
@@ -126,7 +141,9 @@ If user says no:
 - ignored files are not accidentally staged
 - targeted validation/tests passed
 - commit message matches change intent
+- major-stage closeout kept implementation and docs sync in separate commits when docs sync ran
 - push succeeded to correct remote branch
 - optional merge/prune operations completed only when requested
+- push/publish happened only when explicitly requested
 - final state is clean (`git status --short --branch`)
 - worktree isolation was used when parallel streams existed
