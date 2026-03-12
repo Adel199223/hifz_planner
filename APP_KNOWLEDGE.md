@@ -522,7 +522,11 @@ Current capabilities:
   - hidden verses render without dot placeholders
   - Arabic rendering parity with tajweed colors by default (no reader action-chip parity)
 - `lib/screens/about_screen.dart`
-  - placeholder
+  - implemented local overview screen with:
+    - beginner-friendly app summary
+    - quick links into Reader, Today, Plan, My Quran, and Settings
+    - current language/theme/companion-autoplay snapshot
+    - local-first data/reliability note and licenses entry
 
 ## 9) Assets and Tooling
 

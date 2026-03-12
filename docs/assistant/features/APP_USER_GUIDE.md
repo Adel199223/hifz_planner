@@ -96,6 +96,7 @@ Additional top-right menu areas:
 - My Quran: reopen your next target, check counts for due work/bookmarks/notes, and jump back into related areas.
 - Companion chain: run the memorization stages for specific units.
 - Settings: language/theme and data/import controls.
+- About: get a quick overview of what the app does, see your current setup, and jump into the main areas.
 
 ## Core User Journeys
 
