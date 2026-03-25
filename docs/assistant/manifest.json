@@ -8,6 +8,13 @@
   "continuity": {
     "roadmap_anchor": "docs/assistant/ROADMAP_ANCHOR.md"
   },
+  "product_docs": [
+    "docs/strategy/adaptive-hifz-path-solo-master-plan.md",
+    "docs/roadmap/adaptive-hifz-path-solo-roadmap.md",
+    "docs/algorithms/adaptive-hifz-scheduler-v1.md",
+    "docs/ux/solo-learner-daily-flow.md",
+    "docs/backlog/wave-1-implementation-backlog.md"
+  ],
   "bridges": [
     "AGENTS.md",
     "docs/assistant/APP_KNOWLEDGE.md"
@@ -405,8 +412,9 @@
     "worktree_isolation_policy": "For parallel implementation streams, prefer git worktree isolation and avoid mixing unrelated feature threads in one working tree.",
     "doc_gardening_policy": "Run docs validators regularly and apply targeted docs maintenance to prevent routing/contract drift.",
     "major_stage_closeout_policy": "Major implementation stages default to: targeted validation, implementation commit first, the exact Assistant Docs Sync prompt, targeted docs sync if approved, a separate docs-only commit, then a clean local worktree. Push remains explicit.",
-    "roadmap_alias_policy": "In repo conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.",
-    "roadmap_continuity_policy": "For roadmap continuation or \"continue where we left off\" requests, open docs/assistant/ROADMAP_ANCHOR.md early and treat it as the current Companion/Planner continuity anchor unless the user redirects.",
+    "roadmap_alias_policy": "In repo conversations, `roadmap`, `master plan`, and `next milestone` default to the Adaptive Hifz Path track unless the user explicitly redirects.",
+    "roadmap_continuity_policy": "For roadmap continuation or \"continue where we left off\" requests, open docs/assistant/ROADMAP_ANCHOR.md early and treat it as the current Adaptive Hifz Path continuity anchor unless the user redirects.",
+    "product_direction_docs_policy": "When the task is about product direction, roadmap reset, or Wave 1 prioritization, read docs/strategy/adaptive-hifz-path-solo-master-plan.md and docs/roadmap/adaptive-hifz-path-solo-roadmap.md after APP_KNOWLEDGE.md and docs/assistant/ROADMAP_ANCHOR.md.",
     "user_guides_support_usage_policy": "For support/non-technical explanations, start with docs/assistant/features/APP_USER_GUIDE.md and use docs/assistant/features/PLANNER_USER_GUIDE.md for planner-focused support.",
     "html_explainer_route_policy": "When the user explicitly asks for a local HTML explainer or study guide, route to docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md and use docs/assistant/templates/EXPLAINER_HTML_PROMPT.md only on demand.",
     "html_explainer_local_only_policy": "Generated *_EXPLAINER.html files are explanation artifacts only, not shipped app features, and should remain local-only by default through repo-local exclude rules. If the user explicitly promotes a stable explainer pair, that specific pair may be committed without changing the default for future explainers.",

@@ -1,6 +1,28 @@
 # hifz_planner
 
-A new Flutter project.
+Hifz Planner is being re-centered around an **Adaptive Hifz Path**:
+a solo-first Quran memorization companion that combines a strong reader, audio support, and local-first study tools with a guided daily memorization path.
+
+Current product reset priorities:
+- solo learner first
+- Today's Hifz Path as the product center
+- adaptive review and recovery instead of manual daily assembly
+- weak-spot and similar-verse support over feature sprawl
+- ADHD/dyslexia-friendly defaults that reduce overwhelm
+
+Reader and audio remain major strengths and are being preserved as core support systems rather than replaced.
+
+## Product Direction Docs
+
+Start here for the active product reset:
+- `docs/strategy/adaptive-hifz-path-solo-master-plan.md`
+- `docs/roadmap/adaptive-hifz-path-solo-roadmap.md`
+- `docs/algorithms/adaptive-hifz-scheduler-v1.md`
+- `docs/ux/solo-learner-daily-flow.md`
+- `docs/backlog/wave-1-implementation-backlog.md`
+
+Continuity for future chats and contributors:
+- `docs/assistant/ROADMAP_ANCHOR.md`
 
 ## Agent onboarding docs
 
@@ -23,6 +45,9 @@ A new Flutter project.
 
 Canonical source:
 - `APP_KNOWLEDGE.md` is the canonical app-level architecture/status brief.
+
+Current roadmap default:
+- `roadmap`, `master plan`, and `next milestone` now mean the Adaptive Hifz Path track unless explicitly redirected.
 
 ## User-facing guidance docs
 
@@ -65,11 +90,11 @@ CI quality gates:
 - Windows backend uses `just_audio_media_kit` (`media_kit_libs_windows_audio`).
 - If audio plugin wiring looks stale on Windows, run a full rebuild/restart (`flutter clean`, `flutter pub get`, then `flutter run -d windows`).
 
-## Getting Started
+## Flutter Development Baseline
 
-This project is a starting point for a Flutter application.
+This repo is built with Flutter.
 
-A few resources to get you started if this is your first Flutter project:
+Useful Flutter resources if you need framework help:
 
 - [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
 - [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)

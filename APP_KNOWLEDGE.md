@@ -70,8 +70,9 @@ Significant-change docs sync policy:
   - push remains explicit
 
 Roadmap vocabulary default:
-- unless the user explicitly redirects, `roadmap`, `master plan`, and `next milestone` refer to the Companion/Planner track
+- unless the user explicitly redirects, `roadmap`, `master plan`, and `next milestone` refer to the Adaptive Hifz Path track
 - for new-chat continuation or resume requests, read `docs/assistant/ROADMAP_ANCHOR.md` after `agent.md` and this file
+- this repo does not use `SESSION_RESUME.md`; `docs/assistant/ROADMAP_ANCHOR.md` is the canonical continuity file
 
 Why two `APP_KNOWLEDGE.md` files:
 - Root `APP_KNOWLEDGE.md` is canonical and complete.
@@ -86,13 +87,48 @@ Why both `AGENTS.md` and `agent.md` exist:
 Hifz Planner is a Flutter app focused on Quran reading and memorization workflow.
 
 Current product direction:
-- Quran.com-style reading experience (both Mushaf reading and Verse-by-Verse views).
-- Practical hifz planning workflow (onboarding settings, daily plan, review grading, calibration, forecast).
-- Local-first data with robust fallback behavior.
+- Adaptive Hifz Path for solo learners is now the active product direction.
+- Today's Hifz Path should become the main product center over time.
+- Quran.com-style reading, audio, and local-first data remain core strengths that support memorization.
+- The current implementation still exposes Today, Plan, Reader, and `/companion/chain` as separate surfaces while the reset is in progress.
 
 Primary target right now is desktop (Windows-first), while keeping architecture reusable for Android/iOS later.
 
+### Product North Star - Adaptive Hifz Path
+
+The app's core identity is shifting toward a **daily adaptive memorization companion** for Quran memorization.
+
+First target user:
+- a solo learner who studies without depending on a teacher every day
+- someone who needs clear next steps, backlog recovery, and accessible repetition
+
+Core product behavior:
+- the app should increasingly answer: **"What is my best next memorization step right now?"**
+
+Primary memorization buckets:
+- New
+- Today Lock-In
+- Recent Review
+- Old Review
+- Weak Spots
+- Similar Verses
+- Fluency
+
+Strategic rule:
+- reader, audio, and local-first persistence remain strengths
+- they support the memorization path instead of competing with it as the product center
+
+Active product docs:
+- `docs/strategy/adaptive-hifz-path-solo-master-plan.md`
+- `docs/roadmap/adaptive-hifz-path-solo-roadmap.md`
+- `docs/algorithms/adaptive-hifz-scheduler-v1.md`
+- `docs/ux/solo-learner-daily-flow.md`
+- `docs/backlog/wave-1-implementation-backlog.md`
+
 ## 2) Current User-Facing Surface
+
+This section describes the current shipped surface.
+It does not imply that the pre-reset navigation hierarchy is the long-term product center.
 
 ### Navigation
 - Left `NavigationRail` remains active for core app areas:

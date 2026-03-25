@@ -1,5 +1,10 @@
 # ExecPlan: Companion Live ASR Integration
 
+Status note:
+- Dormant as of 2026-03-25.
+- The active roadmap now lives in `docs/assistant/ROADMAP_ANCHOR.md` under the Adaptive Hifz Path reset.
+- Keep this file as reference-only unless the roadmap explicitly returns to live ASR work.
+
 ## Purpose
 - Add live ASR to the Companion/Planner roadmap on top of the existing evaluator foundation.
 - Preserve the current manual Companion flow while making local speech evaluation practical on the user's Windows CUDA machine.

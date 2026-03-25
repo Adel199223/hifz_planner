@@ -10,19 +10,22 @@ Use this runbook to quickly route a task to the right files, commands, and tests
 
 1. `APP_KNOWLEDGE.md` (canonical app status and architecture)
 2. `docs/assistant/ROADMAP_ANCHOR.md` (current roadmap continuity and next-milestone handoff)
-3. `docs/assistant/manifest.json` (machine-readable routing map)
-4. `docs/assistant/INDEX.md` (human doc index)
-5. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical style/invariant rules)
-6. `docs/assistant/exec_plans/PLANS.md` (major-work execution plans)
-7. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB and Drift deep reference)
-8. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
-9. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
-10. `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` (local bootstrap harness apply/audit)
+3. `docs/strategy/adaptive-hifz-path-solo-master-plan.md` (active product direction)
+4. `docs/roadmap/adaptive-hifz-path-solo-roadmap.md` (active product roadmap)
+5. `docs/assistant/manifest.json` (machine-readable routing map)
+6. `docs/assistant/INDEX.md` (human doc index)
+7. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical style/invariant rules)
+8. `docs/assistant/exec_plans/PLANS.md` (major-work execution plans)
+9. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB and Drift deep reference)
+10. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
+11. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
+12. `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` (local bootstrap harness apply/audit)
 
 Compatibility:
 - `AGENTS.md` is a short shim for tools that auto-open that filename.
 - `agent.md` is the detailed runbook humans and AI agents should execute.
-- In user conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.
+- In user conversations, `roadmap`, `master plan`, and `next milestone` default to the Adaptive Hifz Path track unless the user explicitly redirects.
+- This repo does not use `SESSION_RESUME.md`; `docs/assistant/ROADMAP_ANCHOR.md` is the continuity file.
 
 ## Approval Gates
 
@@ -42,7 +45,7 @@ Ask for explicit approval before commands that:
 | Reader UI or Quran parity | `docs/assistant/workflows/READER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/reader_screen_test.dart` |
 | Quran.com API/cache/fonts | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | `flutter test -j 1 -r expanded test/data/services/qurancom_api_test.dart` |
 | Planning/scheduling/calibration | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart` |
-| Roadmap continuation / "continue where we left off" | `docs/assistant/ROADMAP_ANCHOR.md` | `git status --short --branch` |
+| Roadmap continuation / "continue where we left off" | `docs/assistant/ROADMAP_ANCHOR.md` plus `docs/strategy/adaptive-hifz-path-solo-master-plan.md` | `git status --short --branch` |
 | Bootstrap harness apply / audit / validation | `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` | `py -3.11 tooling/check_harness_profile.py --profile docs/assistant/HARNESS_PROFILE.json --registry docs/assistant/templates/BOOTSTRAP_ARCHETYPE_REGISTRY.json` |
 | "Like X"/"same as X"/parity inspired by named app/site | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | User support / non-technical app explanation | `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner questions); respond in plain language first and define unavoidable jargon once | `dart run tooling/validate_agent_docs.dart` when docs were edited |
@@ -101,8 +104,9 @@ For user support or explanation tasks:
 18. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
 19. For major implementation stages, default local closeout order is: targeted validation, implementation commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree. Push remains explicit.
 20. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
-21. Treat `roadmap`, `master plan`, and `next milestone` as Companion/Planner aliases unless the user explicitly redirects.
+21. Treat `roadmap`, `master plan`, and `next milestone` as Adaptive Hifz Path aliases unless the user explicitly redirects.
 22. For roadmap continuation in a new chat, open `docs/assistant/ROADMAP_ANCHOR.md` after `APP_KNOWLEDGE.md` before drafting a new ExecPlan or choosing the next milestone.
+23. For product-direction work, open `docs/strategy/adaptive-hifz-path-solo-master-plan.md` and `docs/roadmap/adaptive-hifz-path-solo-roadmap.md` after the roadmap anchor.
 
 ## ExecPlans
 

@@ -9,6 +9,7 @@ One-page navigation guide for agent-facing documentation.
 3. Run the listed validator/smoke command before handoff.
 
 For roadmap continuation or "continue where we left off" requests, open `docs/assistant/ROADMAP_ANCHOR.md` after `APP_KNOWLEDGE.md`.
+For active product-direction work, also open `docs/strategy/adaptive-hifz-path-solo-master-plan.md` and `docs/roadmap/adaptive-hifz-path-solo-roadmap.md`.
 For explicit HTML explainer requests, open `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md`; that workflow will decide whether any on-demand template is needed.
 For explicit bootstrap harness apply/audit requests, open `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`; that workflow will decide when vendored bootstrap templates are in scope.
 
@@ -25,7 +26,8 @@ For explicit bootstrap harness apply/audit requests, open `docs/assistant/workfl
 | `AGENTS.md` | Your tool auto-opens `AGENTS.md` and needs immediate routing. | Deep architecture details. | 1 min |
 | `agent.md` | You need the operational runbook and quick task routing matrix. | Full DB schema details. | 2 min |
 | `APP_KNOWLEDGE.md` | You need canonical app architecture, feature status, and subsystem map. | Fine-grained per-workflow checklists. | 3 min |
-| `docs/assistant/ROADMAP_ANCHOR.md` | You need the current Companion/Planner roadmap state, latest completed milestones, next milestone, or a new-chat continuation point. | Canonical app architecture or detailed per-workflow checklists. | 2 min |
+| `docs/assistant/ROADMAP_ANCHOR.md` | You need the current Adaptive Hifz Path roadmap state, the active next milestone, or a new-chat continuation point. | Canonical app architecture or detailed per-workflow checklists. | 2 min |
+| `docs/strategy/adaptive-hifz-path-solo-master-plan.md` + `docs/roadmap/adaptive-hifz-path-solo-roadmap.md` | You need the active product reset, solo-learner-first direction, and Wave 0/Wave 1 roadmap framing. | Current shipped UI details or DB internals by themselves. | 3 min |
 | `docs/assistant/GOLDEN_PRINCIPLES.md` | You need enforceable style/invariant rules before implementation. | Feature-specific workflow steps. | 1 min |
 | `docs/assistant/exec_plans/PLANS.md` | Work is major/multi-file and needs a self-contained execution plan format. | Small isolated fixes. | 2 min |
 | `docs/assistant/APP_KNOWLEDGE.md` | Your workflow expects assistant-path docs and needs canonical pointer/bootstrapping. | Canonical truth when conflicts exist. | 1 min |
