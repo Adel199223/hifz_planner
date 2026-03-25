@@ -9,18 +9,34 @@ const List<String> _requiredFiles = <String>[
   '.github/workflows/dart.yml',
   'docs/assistant/APP_KNOWLEDGE.md',
   'docs/assistant/DB_DRIFT_KNOWLEDGE.md',
+  'docs/assistant/CAPABILITY_DISCOVERY.md',
+  'docs/assistant/CODEX_ENVIRONMENT.md',
+  'docs/assistant/DIAGNOSTICS.md',
   'docs/assistant/GOLDEN_PRINCIPLES.md',
+  'docs/assistant/HARNESS_OUTPUT_MAP.json',
+  'docs/assistant/HARNESS_PROFILE.json',
+  'docs/assistant/HOST_INTEGRATION.md',
   'docs/assistant/INDEX.md',
+  'docs/assistant/ISSUE_MEMORY.json',
+  'docs/assistant/ISSUE_MEMORY.md',
   'docs/assistant/ROADMAP_ANCHOR.md',
+  'docs/assistant/LOCAL_ENVIRONMENT.md',
   'docs/assistant/LOCALIZATION_GLOSSARY.md',
   'docs/assistant/PERFORMANCE_BASELINES.md',
+  'docs/assistant/QA_CHECKS.md',
+  'docs/assistant/SAFE_COMMANDS.md',
+  'docs/assistant/TERMS_IN_PLAIN_ENGLISH.md',
   'docs/assistant/exec_plans/PLANS.md',
   'docs/assistant/exec_plans/active',
   'docs/assistant/exec_plans/completed',
   'docs/assistant/manifest.json',
+  'docs/assistant/runtime/BOOTSTRAP_STATE.json',
+  'docs/assistant/runtime/CANONICAL_BUILD.json',
+  'docs/assistant/schemas/HARNESS_PROFILE.schema.json',
   'docs/assistant/workflows/READER_WORKFLOW.md',
   'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
   'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
+  'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
   'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
   'docs/assistant/workflows/PLANNER_WORKFLOW.md',
@@ -29,8 +45,20 @@ const List<String> _requiredFiles = <String>[
   'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md',
+  'docs/assistant/templates/BOOTSTRAP_ARCHETYPE_REGISTRY.json',
+  'docs/assistant/templates/BOOTSTRAP_CORE_CONTRACT.md',
+  'docs/assistant/templates/BOOTSTRAP_ISSUE_MEMORY_SYSTEM.md',
+  'docs/assistant/templates/BOOTSTRAP_MODULES_AND_TRIGGERS.md',
+  'docs/assistant/templates/BOOTSTRAP_PROFILE_RESOLUTION.md',
+  'docs/assistant/templates/BOOTSTRAP_PROJECT_HARNESS_SYNC_POLICY.md',
+  'docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json',
+  'docs/assistant/templates/BOOTSTRAP_VERSION.json',
   'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
   'docs/assistant/templates/EXPLAINER_HTML_PROMPT.md',
+  'tooling/bootstrap_profile_wizard.py',
+  'tooling/check_harness_profile.py',
+  'tooling/harness_profile_lib.py',
+  'tooling/preview_harness_sync.py',
   'tooling/validate_workspace_hygiene.dart',
   'test/tooling/validate_workspace_hygiene_test.dart',
 ];
@@ -60,10 +88,19 @@ const List<String> _docsToScanForBackticks = <String>[
   'docs/assistant/LOCALIZATION_GLOSSARY.md',
   'docs/assistant/PERFORMANCE_BASELINES.md',
   'docs/assistant/exec_plans/PLANS.md',
+  'docs/assistant/SAFE_COMMANDS.md',
+  'docs/assistant/TERMS_IN_PLAIN_ENGLISH.md',
+  'docs/assistant/DIAGNOSTICS.md',
+  'docs/assistant/QA_CHECKS.md',
+  'docs/assistant/ISSUE_MEMORY.md',
+  'docs/assistant/CAPABILITY_DISCOVERY.md',
+  'docs/assistant/LOCAL_ENVIRONMENT.md',
+  'docs/assistant/HOST_INTEGRATION.md',
   'docs/assistant/workflows/CI_REPO_WORKFLOW.md',
   'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
   'docs/assistant/workflows/LOCALIZATION_WORKFLOW.md',
   'docs/assistant/workflows/PERFORMANCE_WORKFLOW.md',
+  'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
   'docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md',
   'docs/assistant/workflows/READER_WORKFLOW.md',
   'docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md',
@@ -115,6 +152,7 @@ class AgentDocsValidator {
     _validatePerformanceRoutingPolicy(issues);
     _validateReferenceDiscoveryPolicy(issues);
     _validateExplainerHtmlRoutingPolicy(issues);
+    _validateProjectHarnessSyncRoutingPolicy(issues);
     _validatePostChangeDocsSyncPolicy(issues);
     _validateTemplatePolicies(issues);
     _validateTemplateNewbieLayer(issues);
@@ -272,6 +310,12 @@ class AgentDocsValidator {
       _validateRequiredWorkflowId(
         issues,
         workflowsById: workflowsById,
+        requiredId: 'project_harness_sync',
+        expectedDoc: 'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+      );
+      _validateRequiredWorkflowId(
+        issues,
+        workflowsById: workflowsById,
         requiredId: 'explainer_html',
         expectedDoc: 'docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md',
       );
@@ -321,6 +365,21 @@ class AgentDocsValidator {
         issues,
         contracts['templates_read_policy'],
         'contracts.templates_read_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['bootstrap_profile_source_of_truth'],
+        'contracts.bootstrap_profile_source_of_truth',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['bootstrap_output_map_policy'],
+        'contracts.bootstrap_output_map_policy',
+      );
+      _validateNonEmptyString(
+        issues,
+        contracts['project_harness_sync_policy'],
+        'contracts.project_harness_sync_policy',
       );
       _validateNonEmptyString(
         issues,
@@ -444,6 +503,28 @@ class AgentDocsValidator {
           !docsSyncPolicy.toLowerCase().contains('assistant docs sync')) {
         issues.add(
           'contracts.post_change_docs_sync_prompt_policy must include "Assistant Docs Sync" guidance.',
+        );
+      }
+      final bootstrapProfile = contracts['bootstrap_profile_source_of_truth'];
+      if (bootstrapProfile is String &&
+          !bootstrapProfile.contains('docs/assistant/HARNESS_PROFILE.json')) {
+        issues.add(
+          'contracts.bootstrap_profile_source_of_truth must reference docs/assistant/HARNESS_PROFILE.json.',
+        );
+      }
+      final bootstrapOutputMap = contracts['bootstrap_output_map_policy'];
+      if (bootstrapOutputMap is String &&
+          !bootstrapOutputMap.contains('docs/assistant/HARNESS_OUTPUT_MAP.json')) {
+        issues.add(
+          'contracts.bootstrap_output_map_policy must reference docs/assistant/HARNESS_OUTPUT_MAP.json.',
+        );
+      }
+      final projectHarnessSync = contracts['project_harness_sync_policy'];
+      if (projectHarnessSync is String &&
+          (!projectHarnessSync.contains('PROJECT_HARNESS_SYNC_WORKFLOW.md') ||
+              !projectHarnessSync.toLowerCase().contains('template files'))) {
+        issues.add(
+          'contracts.project_harness_sync_policy must reference PROJECT_HARNESS_SYNC_WORKFLOW.md and local template-file apply behavior.',
         );
       }
       final referencePolicy =
@@ -1127,6 +1208,38 @@ class AgentDocsValidator {
       if (!text.contains('EXPLAINER_HTML_WORKFLOW.md')) {
         issues.add(
           'INDEX.md must route explicit HTML explainer requests to EXPLAINER_HTML_WORKFLOW.md.',
+        );
+      }
+    }
+  }
+
+  void _validateProjectHarnessSyncRoutingPolicy(List<String> issues) {
+    final agentsShim = _resolveFile('AGENTS.md');
+    if (agentsShim.existsSync()) {
+      final text = agentsShim.readAsStringSync();
+      if (!text.contains('PROJECT_HARNESS_SYNC_WORKFLOW.md')) {
+        issues.add(
+          'AGENTS.md must route bootstrap harness apply/audit requests to PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+        );
+      }
+    }
+
+    final runbook = _resolveFile('agent.md');
+    if (runbook.existsSync()) {
+      final text = runbook.readAsStringSync();
+      if (!text.contains('PROJECT_HARNESS_SYNC_WORKFLOW.md')) {
+        issues.add(
+          'agent.md must route bootstrap harness apply/audit requests to PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+        );
+      }
+    }
+
+    final index = _resolveFile('docs/assistant/INDEX.md');
+    if (index.existsSync()) {
+      final text = index.readAsStringSync();
+      if (!text.contains('PROJECT_HARNESS_SYNC_WORKFLOW.md')) {
+        issues.add(
+          'INDEX.md must route bootstrap harness apply/audit requests to PROJECT_HARNESS_SYNC_WORKFLOW.md.',
         );
       }
     }

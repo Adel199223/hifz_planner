@@ -18,6 +18,9 @@ Documentation contract for contributors and AI agents:
 - Compatibility entrypoint: `AGENTS.md`
 - Agent runbook entrypoint: `agent.md`
 - Roadmap continuity anchor: `docs/assistant/ROADMAP_ANCHOR.md`
+- Bootstrap profile source of truth: `docs/assistant/HARNESS_PROFILE.json`
+- Bootstrap output mapping overlay: `docs/assistant/HARNESS_OUTPUT_MAP.json`
+- Bootstrap resolution state: `docs/assistant/runtime/BOOTSTRAP_STATE.json`
 - Assistant bridge path: `docs/assistant/APP_KNOWLEDGE.md`
 - DB/Drift deep reference: `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
 - Assistant doc index: `docs/assistant/INDEX.md`
@@ -40,6 +43,7 @@ Workflow runbooks:
 - Planner/scheduler: `docs/assistant/workflows/PLANNER_WORKFLOW.md`
 - Scheduling + companion engine: `docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md`
 - Assistant-only HTML explainers: `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md`
+- Local bootstrap harness apply/audit: `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`
 - Workspace performance: `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
 - Reference discovery: `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
 - Docs maintenance: `docs/assistant/workflows/DOCS_MAINTENANCE_WORKFLOW.md`

@@ -116,6 +116,29 @@ void main() {
     );
   });
 
+  test('validator fails when harness profile file is missing', () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final missingProfile = File(
+      _joinPath(fixture.path, 'docs/assistant/HARNESS_PROFILE.json'),
+    );
+    missingProfile.deleteSync();
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Missing required file:') &&
+            issue.contains('HARNESS_PROFILE.json'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
   test('validator fails when manifest misses required ci_repo_ops workflow',
       () {
     final fixture = _createValidFixture();
@@ -244,6 +267,39 @@ void main() {
         (issue) =>
             issue.contains('Manifest must include required workflow id') &&
             issue.contains('workspace_performance'),
+      ),
+      isTrue,
+      reason: issues.join('\n'),
+    );
+  });
+
+  test('validator fails when manifest misses project_harness_sync workflow',
+      () {
+    final fixture = _createValidFixture();
+    addTearDown(() => fixture.deleteSync(recursive: true));
+
+    final manifestFile = File(
+      _joinPath(fixture.path, 'docs/assistant/manifest.json'),
+    );
+    final manifest =
+        jsonDecode(manifestFile.readAsStringSync()) as Map<String, dynamic>;
+    final workflows = (manifest['workflows'] as List<dynamic>)
+        .whereType<Map<String, dynamic>>()
+        .where((workflow) => workflow['id'] != 'project_harness_sync')
+        .toList();
+    manifest['workflows'] = workflows;
+    manifestFile.writeAsStringSync(
+      const JsonEncoder.withIndent('  ').convert(manifest),
+    );
+
+    final validator = AgentDocsValidator(rootDirectory: fixture);
+    final issues = validator.validate();
+
+    expect(
+      issues.any(
+        (issue) =>
+            issue.contains('Manifest must include required workflow id') &&
+            issue.contains('project_harness_sync'),
       ),
       isTrue,
       reason: issues.join('\n'),
@@ -1704,6 +1760,7 @@ Directory _createValidFixture() {
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
+      'For bootstrap harness apply/audit tasks use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md.',
       'For explicit HTML explainer requests use docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md.',
       'For user support/non-technical explanation tasks, start with docs/assistant/features/APP_USER_GUIDE.md; for planner behavior/support use docs/assistant/features/PLANNER_USER_GUIDE.md. Respond in plain language first and run a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
       '## Non-Coder Communication Mode',
@@ -1716,6 +1773,7 @@ Directory _createValidFixture() {
       'Keep main stable; merge major work through PR flow with required checks.',
       'docs/assistant/templates/* is read-on-demand only.',
       'Explicit HTML explainer requests may also use docs/assistant/templates/EXPLAINER_HTML_PROMPT.md.',
+      'Explicit bootstrap harness tasks such as implement the template files or sync project harness may use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md.',
     ].join('\n'),
   );
   writeFile(
@@ -1733,6 +1791,7 @@ Directory _createValidFixture() {
       'For localization tasks use docs/assistant/workflows/LOCALIZATION_WORKFLOW.md and docs/assistant/LOCALIZATION_GLOSSARY.md.',
       'For performance tasks use docs/assistant/workflows/PERFORMANCE_WORKFLOW.md and docs/assistant/PERFORMANCE_BASELINES.md.',
       'For inspiration/parity tasks use docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md.',
+      'For bootstrap harness apply/audit tasks use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md.',
       'For explicit HTML explainer requests use docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md.',
       'Support/non-technical explanation routing: docs/assistant/features/APP_USER_GUIDE.md and docs/assistant/features/PLANNER_USER_GUIDE.md. Use plain language first and perform a canonical cross-check with APP_KNOWLEDGE.md before technical behavior claims.',
       '## Non-Coder Communication Mode',
@@ -1744,6 +1803,7 @@ Directory _createValidFixture() {
       'docs/assistant/templates/* is read-on-demand only.',
       'Only open templates when user explicitly requests template/prompt work.',
       'Explicit HTML explainer requests may also use docs/assistant/templates/EXPLAINER_HTML_PROMPT.md.',
+      'Explicit bootstrap harness tasks such as implement the template files or sync project harness may use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md.',
       'Major changes must start on a new feat/* branch, not on main.',
       'Keep main stable; merge major work through PR flow with required checks.',
     ].join('\n'),
@@ -1757,6 +1817,8 @@ Directory _createValidFixture() {
       '- docs/assistant/features/APP_USER_GUIDE.md',
       '- docs/assistant/features/PLANNER_USER_GUIDE.md',
       'Canonical app brief: `APP_KNOWLEDGE.md`',
+      'Bootstrap profile source of truth: `docs/assistant/HARNESS_PROFILE.json`',
+      'Bootstrap output mapping overlay: `docs/assistant/HARNESS_OUTPUT_MAP.json`',
       'source code remains the final truth',
       'Why two `APP_KNOWLEDGE.md` files:',
     ].join('\n'),
@@ -1772,6 +1834,9 @@ Directory _createValidFixture() {
       '- docs/assistant/INDEX.md',
       '- docs/assistant/GOLDEN_PRINCIPLES.md',
       '- docs/assistant/exec_plans/PLANS.md',
+      '- docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+      '- docs/assistant/HARNESS_PROFILE.json',
+      '- docs/assistant/HARNESS_OUTPUT_MAP.json',
     ].join('\n'),
   );
   writeFile(
@@ -1793,6 +1858,7 @@ Directory _createValidFixture() {
       'Root canonical wins',
       'if this file conflicts with `APP_KNOWLEDGE.md`',
       'intentionally shorter than the canonical root document',
+      'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
     ].join('\n'),
   );
   writeFile('docs/assistant/DB_DRIFT_KNOWLEDGE.md', '# DB');
@@ -1811,6 +1877,7 @@ Directory _createValidFixture() {
       '# INDEX',
       '',
       'For explicit HTML explainer requests, use docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md first.',
+      'For explicit bootstrap harness apply/audit requests, use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md first.',
       '',
       '## Beginner Quick Path',
       '- docs/assistant/features/APP_USER_GUIDE.md',
@@ -1822,9 +1889,32 @@ Directory _createValidFixture() {
   );
   writeFile('docs/assistant/LOCALIZATION_GLOSSARY.md', '# LOCALIZATION');
   writeFile('docs/assistant/PERFORMANCE_BASELINES.md', '# PERFORMANCE');
+  writeFile('docs/assistant/CAPABILITY_DISCOVERY.md', '# CAPABILITY');
+  writeFile('docs/assistant/CODEX_ENVIRONMENT.md', '# CODEX ENV');
+  writeFile('docs/assistant/DIAGNOSTICS.md', '# DIAGNOSTICS');
+  writeFile('docs/assistant/HARNESS_OUTPUT_MAP.json', '{"schema_version":1,"output_mappings":[]}');
+  writeFile('docs/assistant/HARNESS_PROFILE.json', '{"schema_version":1}');
+  writeFile('docs/assistant/HOST_INTEGRATION.md', '# HOST');
+  writeFile('docs/assistant/ISSUE_MEMORY.json', '{"schema_version":1,"entries":[]}');
+  writeFile('docs/assistant/ISSUE_MEMORY.md', '# ISSUE MEMORY');
+  writeFile('docs/assistant/LOCAL_ENVIRONMENT.md', '# LOCAL ENV');
+  writeFile('docs/assistant/QA_CHECKS.md', '# QA');
+  writeFile('docs/assistant/SAFE_COMMANDS.md', '# SAFE');
+  writeFile('docs/assistant/TERMS_IN_PLAIN_ENGLISH.md', '# TERMS');
   writeFile('docs/assistant/exec_plans/PLANS.md', '# PLANS');
   writeFile('docs/assistant/exec_plans/active/.gitkeep', '');
   writeFile('docs/assistant/exec_plans/completed/.gitkeep', '');
+  writeFile('docs/assistant/runtime/BOOTSTRAP_STATE.json', '{"schema_version":1}');
+  writeFile('docs/assistant/runtime/CANONICAL_BUILD.json', '{"schema_version":1}');
+  writeFile('docs/assistant/schemas/HARNESS_PROFILE.schema.json', '{}');
+  writeFile('docs/assistant/templates/BOOTSTRAP_ARCHETYPE_REGISTRY.json', '{}');
+  writeFile('docs/assistant/templates/BOOTSTRAP_CORE_CONTRACT.md', '# Core');
+  writeFile('docs/assistant/templates/BOOTSTRAP_ISSUE_MEMORY_SYSTEM.md', '# Issue');
+  writeFile('docs/assistant/templates/BOOTSTRAP_MODULES_AND_TRIGGERS.md', '# Modules');
+  writeFile('docs/assistant/templates/BOOTSTRAP_PROFILE_RESOLUTION.md', '# Profile');
+  writeFile('docs/assistant/templates/BOOTSTRAP_PROJECT_HARNESS_SYNC_POLICY.md', '# Sync');
+  writeFile('docs/assistant/templates/BOOTSTRAP_TEMPLATE_MAP.json', '{}');
+  writeFile('docs/assistant/templates/BOOTSTRAP_VERSION.json', '{}');
   writeFile(
     'docs/assistant/templates/CODEX_PROJECT_BOOTSTRAP_PROMPT.md',
     [
@@ -1887,6 +1977,10 @@ Directory _createValidFixture() {
     workflowTemplate,
   );
   writeFile(
+    'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+    workflowTemplate,
+  );
+  writeFile(
       'docs/assistant/workflows/CI_REPO_WORKFLOW.md', _ciWorkflowTemplate());
   writeFile(
     'docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md',
@@ -1897,6 +1991,10 @@ Directory _createValidFixture() {
     _docsMaintenanceWorkflowTemplate(),
   );
 
+  writeFile('tooling/bootstrap_profile_wizard.py', '# placeholder');
+  writeFile('tooling/check_harness_profile.py', '# placeholder');
+  writeFile('tooling/harness_profile_lib.py', '# placeholder');
+  writeFile('tooling/preview_harness_sync.py', '# placeholder');
   writeFile('tooling/validate_agent_docs.dart', '// placeholder');
   writeFile('tooling/validate_workspace_hygiene.dart', '// placeholder');
   writeFile('test/tooling/validate_agent_docs_test.dart', '// placeholder');
@@ -1948,6 +2046,10 @@ Directory _createValidFixture() {
         doc: 'docs/assistant/workflows/SCHEDULING_COMPANION_WORKFLOW.md',
       ),
       _manifestWorkflow(
+        id: 'project_harness_sync',
+        doc: 'docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md',
+      ),
+      _manifestWorkflow(
         id: 'explainer_html',
         doc: 'docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md',
       ),
@@ -1984,7 +2086,13 @@ Directory _createValidFixture() {
       'docs_sync_rule': 'docs sync contract',
       'windows_test_policy': 'windows test policy',
       'templates_read_policy':
-          'docs/assistant/templates/* are read-on-demand only.',
+          'docs/assistant/templates/* are read-on-demand only. Explicit bootstrap harness tasks may use PROJECT_HARNESS_SYNC_WORKFLOW.md.',
+      'bootstrap_profile_source_of_truth':
+          'docs/assistant/HARNESS_PROFILE.json is the source of truth for bootstrap profile resolution.',
+      'bootstrap_output_map_policy':
+          'docs/assistant/HARNESS_OUTPUT_MAP.json preserves stronger repo-local equivalents.',
+      'project_harness_sync_policy':
+          'Use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md to implement the template files and keep local template-file apply behavior separate from template maintenance.',
       'html_explainer_route_policy':
           'Explicit HTML explainer requests route to docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md and docs/assistant/templates/EXPLAINER_HTML_PROMPT.md.',
       'html_explainer_local_only_policy':

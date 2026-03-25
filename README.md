@@ -17,6 +17,9 @@ A new Flutter project.
 - `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
 - `docs/assistant/PERFORMANCE_BASELINES.md`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
+- `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`
+- `docs/assistant/HARNESS_PROFILE.json`
+- `docs/assistant/HARNESS_OUTPUT_MAP.json`
 
 Canonical source:
 - `APP_KNOWLEDGE.md` is the canonical app-level architecture/status brief.
@@ -35,6 +38,16 @@ Canonical source:
 
 CI quality gates:
 - `.github/workflows/dart.yml`
+
+## Bootstrap Harness Maintenance
+
+- Use `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` for:
+  - `implement the template files`
+  - `sync project harness`
+  - `audit project harness`
+  - `check project harness`
+- `docs/assistant/HARNESS_PROFILE.json` is the local bootstrap source of truth.
+- `docs/assistant/HARNESS_OUTPUT_MAP.json` preserves stronger repo-local equivalents when generic bootstrap outputs would overlap.
 
 ## Reader audio streaming
 

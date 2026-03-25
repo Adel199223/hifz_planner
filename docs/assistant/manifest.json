@@ -1,5 +1,5 @@
 {
-  "version": 13,
+  "version": 14,
   "canonical": {
     "agent_runbook": "agent.md",
     "app_knowledge": "APP_KNOWLEDGE.md",
@@ -161,6 +161,33 @@
         "flutter test -j 1 -r expanded test/data/services/companion",
         "dart run tooling/validate_localization.dart",
         "dart run tooling/validate_agent_docs.dart"
+      ]
+    },
+    {
+      "id": "project_harness_sync",
+      "doc": "docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md",
+      "scope": "Local preserve-first application, audit, and validation of the vendored bootstrap harness in this repo.",
+      "primary_files": [
+        "AGENTS.md",
+        "agent.md",
+        "docs/assistant/HARNESS_PROFILE.json",
+        "docs/assistant/HARNESS_OUTPUT_MAP.json",
+        "docs/assistant/runtime/BOOTSTRAP_STATE.json",
+        "docs/assistant/manifest.json",
+        "docs/assistant/INDEX.md",
+        "docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md",
+        "tooling/check_harness_profile.py",
+        "tooling/preview_harness_sync.py",
+        "tooling/validate_agent_docs.dart"
+      ],
+      "targeted_tests": [
+        "test/tooling/validate_agent_docs_test.dart"
+      ],
+      "validation_commands": [
+        "py -3.11 tooling/check_harness_profile.py --profile docs/assistant/HARNESS_PROFILE.json --registry docs/assistant/templates/BOOTSTRAP_ARCHETYPE_REGISTRY.json",
+        "py -3.11 tooling/preview_harness_sync.py --profile docs/assistant/HARNESS_PROFILE.json --registry docs/assistant/templates/BOOTSTRAP_ARCHETYPE_REGISTRY.json --output-map docs/assistant/HARNESS_OUTPUT_MAP.json --write-state docs/assistant/runtime/BOOTSTRAP_STATE.json",
+        "dart run tooling/validate_agent_docs.dart",
+        "flutter test -j 1 -r expanded test/tooling/validate_agent_docs_test.dart"
       ]
     },
     {
@@ -348,8 +375,9 @@
   ],
   "global_commands": {
     "bootstrap": [
-      "git status --short",
-      "rg -n \"symbol_or_keyword\" lib test tooling"
+      "git status --short --branch",
+      "py -3.11 tooling/check_harness_profile.py --profile docs/assistant/HARNESS_PROFILE.json --registry docs/assistant/templates/BOOTSTRAP_ARCHETYPE_REGISTRY.json",
+      "dart run tooling/validate_agent_docs.dart"
     ],
     "analysis": [
       "flutter analyze --no-fatal-infos --no-fatal-warnings"
@@ -362,7 +390,10 @@
     "canonical_precedence": "APP_KNOWLEDGE.md is canonical for app-level architecture and status. Source code is final truth on conflicts.",
     "docs_sync_rule": "If bridge docs conflict with canonical docs, canonical wins and bridge docs must be updated.",
     "windows_test_policy": "Prefer flutter test -j 1 -r expanded for stability on Windows.",
-    "templates_read_policy": "docs/assistant/templates/* are read-on-demand only; open/update only when explicitly requested by the user.",
+    "templates_read_policy": "docs/assistant/templates/* are read-on-demand only for normal feature work. Explicit bootstrap harness tasks such as implement the template files, sync project harness, audit project harness, and check project harness may read vendored bootstrap templates through PROJECT_HARNESS_SYNC_WORKFLOW.md.",
+    "bootstrap_profile_source_of_truth": "docs/assistant/HARNESS_PROFILE.json is the source of truth for bootstrap archetype, mode, and module overrides when bootstrap harness work is in scope.",
+    "bootstrap_output_map_policy": "docs/assistant/HARNESS_OUTPUT_MAP.json preserves stronger repo-local equivalents when generic bootstrap outputs would otherwise overlap existing canon.",
+    "project_harness_sync_policy": "Use docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md for implement the template files, sync project harness, audit project harness, and check project harness. Local harness apply must not edit vendored docs/assistant/templates/*.",
     "localization_glossary_source_of_truth": "docs/assistant/LOCALIZATION_GLOSSARY.md is the canonical term source for localized UI labels.",
     "workspace_performance_source_of_truth": "docs/assistant/PERFORMANCE_BASELINES.md is the canonical source for workspace/editor performance defaults.",
     "env_artifacts_outside_workspace_default": "Heavyweight environments and generated runtime artifacts should live outside repo root when feasible.",
@@ -385,5 +416,5 @@
     "plain_language_support_response_policy": "Support responses must be plain-language-first with numbered next steps and exact UI labels.",
     "term_definition_policy": "If a technical term is unavoidable in support replies, define it in one short sentence."
   },
-  "last_updated": "2026-03-12"
+  "last_updated": "2026-03-25"
 }

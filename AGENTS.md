@@ -22,6 +22,7 @@ Why both files exist:
 12. `docs/assistant/PERFORMANCE_BASELINES.md` (editor/perf defaults)
 13. `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` (parity reference policy)
 14. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/push/cleanup protocol)
+15. `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` (local bootstrap harness apply/audit)
 
 ## Non-Negotiables
 
@@ -38,6 +39,8 @@ Why both files exist:
   - `docs/assistant/PERFORMANCE_BASELINES.md`
 - Route inspiration/parity tasks to:
   - `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
+- Route local bootstrap harness apply/audit tasks to:
+  - `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`
 - Route explicit HTML explainer requests to:
   - `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md`
 - For user support/non-technical explanation tasks:
@@ -61,6 +64,7 @@ Why both files exist:
 - `docs/assistant/templates/*` is read-on-demand only.
 - Only open or update `docs/assistant/templates/*` when the user explicitly asks for template/prompt creation or updates.
 - Exception: explicit HTML explainer requests may use `docs/assistant/templates/EXPLAINER_HTML_PROMPT.md`.
+- Exception: explicit bootstrap harness tasks such as `implement the template files`, `sync project harness`, `audit project harness`, or `check project harness` may read vendored bootstrap templates through `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`.
 
 ## Non-Coder Communication Mode
 

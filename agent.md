@@ -17,6 +17,7 @@ Use this runbook to quickly route a task to the right files, commands, and tests
 7. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB and Drift deep reference)
 8. `docs/assistant/workflows/CI_REPO_WORKFLOW.md` (CI and branch/repo operations)
 9. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/publish branch hygiene)
+10. `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` (local bootstrap harness apply/audit)
 
 Compatibility:
 - `AGENTS.md` is a short shim for tools that auto-open that filename.
@@ -42,6 +43,7 @@ Ask for explicit approval before commands that:
 | Quran.com API/cache/fonts | `docs/assistant/workflows/QURANCOM_DATA_WORKFLOW.md` | `flutter test -j 1 -r expanded test/data/services/qurancom_api_test.dart` |
 | Planning/scheduling/calibration | `docs/assistant/workflows/PLANNER_WORKFLOW.md` | `flutter test -j 1 -r expanded test/screens/plan_screen_test.dart` |
 | Roadmap continuation / "continue where we left off" | `docs/assistant/ROADMAP_ANCHOR.md` | `git status --short --branch` |
+| Bootstrap harness apply / audit / validation | `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` | `py -3.11 tooling/check_harness_profile.py --profile docs/assistant/HARNESS_PROFILE.json --registry docs/assistant/templates/BOOTSTRAP_ARCHETYPE_REGISTRY.json` |
 | "Like X"/"same as X"/parity inspired by named app/site | `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
 | User support / non-technical app explanation | `docs/assistant/features/APP_USER_GUIDE.md` (or `docs/assistant/features/PLANNER_USER_GUIDE.md` for planner questions); respond in plain language first and define unavoidable jargon once | `dart run tooling/validate_agent_docs.dart` when docs were edited |
 | Explicit HTML explainer / local study guide | `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md` | `dart run tooling/validate_agent_docs.dart` |
@@ -88,18 +90,19 @@ For user support or explanation tasks:
 7. `docs/assistant/templates/*` is read-on-demand only.
 8. Only open or update template files when the user explicitly requests template/prompt work.
 9. Exception: if user says to create/update the reusable prompt/template, or explicitly asks for an HTML explainer, `docs/assistant/templates/*` becomes in-scope for that task only.
-10. Major changes must start on a new `feat/*` branch, not on `main`.
-11. Keep `main` stable; merge major work through PR flow with required checks.
-12. For localization tasks, open `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` and use `docs/assistant/LOCALIZATION_GLOSSARY.md` as the term source of truth.
-13. For workspace performance tasks, open `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` and treat `docs/assistant/PERFORMANCE_BASELINES.md` as the source of truth.
-14. For inspiration/parity requests against named apps/sites, open `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` and base implementation decisions on cited references.
-15. For explicit HTML explainer requests, keep generated files local-only by default and use repo-local exclude rules when needed.
-16. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
-17. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
-18. For major implementation stages, default local closeout order is: targeted validation, implementation commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree. Push remains explicit.
-19. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
-20. Treat `roadmap`, `master plan`, and `next milestone` as Companion/Planner aliases unless the user explicitly redirects.
-21. For roadmap continuation in a new chat, open `docs/assistant/ROADMAP_ANCHOR.md` after `APP_KNOWLEDGE.md` before drafting a new ExecPlan or choosing the next milestone.
+10. Exception: bootstrap harness tasks such as `implement the template files`, `sync project harness`, `audit project harness`, or `check project harness` may read vendored bootstrap templates through `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`.
+11. Major changes must start on a new `feat/*` branch, not on `main`.
+12. Keep `main` stable; merge major work through PR flow with required checks.
+13. For localization tasks, open `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` and use `docs/assistant/LOCALIZATION_GLOSSARY.md` as the term source of truth.
+14. For workspace performance tasks, open `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` and treat `docs/assistant/PERFORMANCE_BASELINES.md` as the source of truth.
+15. For inspiration/parity requests against named apps/sites, open `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` and base implementation decisions on cited references.
+16. For explicit HTML explainer requests, keep generated files local-only by default and use repo-local exclude rules when needed.
+17. After significant implementation changes, ask exactly: "Would you like me to run Assistant Docs Sync for this change now?"
+18. If docs sync is approved, update only relevant assistant docs for touched scope (no blanket doc rewrites).
+19. For major implementation stages, default local closeout order is: targeted validation, implementation commit, exact Assistant Docs Sync prompt, targeted docs sync if approved, docs-only commit, then clean local worktree. Push remains explicit.
+20. For support/non-technical replies, do a canonical cross-check with `APP_KNOWLEDGE.md` before making technical behavior claims.
+21. Treat `roadmap`, `master plan`, and `next milestone` as Companion/Planner aliases unless the user explicitly redirects.
+22. For roadmap continuation in a new chat, open `docs/assistant/ROADMAP_ANCHOR.md` after `APP_KNOWLEDGE.md` before drafting a new ExecPlan or choosing the next milestone.
 
 ## ExecPlans
 
@@ -132,6 +135,7 @@ flutter test -j 1 -r expanded
 - targeted tests passed for the touched area
 - `dart run tooling/validate_agent_docs.dart` passed for doc changes
 - `dart run tooling/validate_workspace_hygiene.dart` passed for performance/workspace changes
+- bootstrap harness profile/preview checks passed when harness files changed
 - after significant changes, Assistant Docs Sync prompt was asked and outcome recorded
 - major-stage closeout kept implementation and docs sync in separate commits when docs sync ran
 - push/publish happened only when explicitly requested

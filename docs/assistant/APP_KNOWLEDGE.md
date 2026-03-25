@@ -16,6 +16,8 @@ Recommended starting points:
 - `AGENTS.md` (compatibility shim)
 - `agent.md` (primary runbook)
 - `docs/assistant/ROADMAP_ANCHOR.md` (current roadmap continuity and next-milestone handoff)
+- `docs/assistant/HARNESS_PROFILE.json` (bootstrap profile source of truth when bootstrap harness work is in scope)
+- `docs/assistant/HARNESS_OUTPUT_MAP.json` (repo-local mapping overlay for bootstrap outputs)
 - `docs/assistant/INDEX.md` (human index)
 - `docs/assistant/manifest.json` (machine routing map)
 
@@ -54,6 +56,7 @@ Do not use this file as primary truth when there is a conflict.
 - `docs/assistant/features/APP_USER_GUIDE.md`
 - `docs/assistant/features/PLANNER_USER_GUIDE.md`
 - `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md` for explicit HTML explainer requests
+- `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` for local bootstrap harness apply/audit
 
 ### App shell
 - `lib/main.dart`

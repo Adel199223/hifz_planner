@@ -34,6 +34,7 @@ Use when changes touch:
 - Do not add stale paths or commands that fail in this repo.
 - Do not skip docs validation after changing documentation structure.
 - Do not route private template assets as default execution docs.
+- Do not confuse local harness apply (`implement the template files` / `sync project harness`) with global bootstrap-template maintenance.
 - Do not duplicate localization term tables across docs; keep terms canonical in `docs/assistant/LOCALIZATION_GLOSSARY.md`.
 - Do not duplicate performance exclusion tables across docs; keep workspace defaults canonical in `docs/assistant/PERFORMANCE_BASELINES.md`.
 - Do not run full assistant-doc rewrites after feature work unless explicitly approved; use targeted docs sync by touched scope.
@@ -56,10 +57,18 @@ Use when changes touch:
 - `docs/assistant/workflows/CI_REPO_WORKFLOW.md`
 - `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md`
 - `docs/assistant/workflows/EXPLAINER_HTML_WORKFLOW.md`
+- `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md`
 - `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md`
 - `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md`
 - `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md`
+- `docs/assistant/HARNESS_PROFILE.json`
+- `docs/assistant/HARNESS_OUTPUT_MAP.json`
+- `docs/assistant/runtime/BOOTSTRAP_STATE.json`
+- `docs/assistant/ISSUE_MEMORY.md`
+- `docs/assistant/ISSUE_MEMORY.json`
 - `tooling/validate_agent_docs.dart`
+- `tooling/check_harness_profile.py`
+- `tooling/preview_harness_sync.py`
 - `tooling/validate_localization.dart`
 - `tooling/validate_workspace_hygiene.dart`
 - `test/tooling/validate_agent_docs_test.dart`
@@ -126,6 +135,7 @@ Relevance matrix:
 - Localization change -> localization workflow/glossary only (+ routing references if needed)
 - CI/repo ops change -> CI workflow + manifest/validator only
 - Template-only change -> template only unless user requests broader propagation
+- Local harness bootstrap apply/change -> update only bootstrap control files, routing docs, validator coverage, and the affected repo-local harness docs
 - Local explainer workflow/template change -> explainer workflow/template plus routing docs only; do not treat generated HTML artifacts as shipped docs unless the user explicitly promotes a stable pair
 - User-facing behavior copy/flow change -> update affected sections in `docs/assistant/features/APP_USER_GUIDE.md` and/or `docs/assistant/features/PLANNER_USER_GUIDE.md`
 
