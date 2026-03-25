@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-03-25T13:59:40.668694Z",
+  "bootstrap_version": "2026.03-profile-driven-phase1",
+  "profile_fingerprint": "2cf8a0ceea91",
+  "resolved": {
+    "project": "hifz_planner",
+    "archetype": "flutter_app",
+    "mode": "standard",
+    "modules": [
+      "base_docs",
+      "beginner_support",
+      "build_identity",
+      "capability_discovery",
+      "diagnostics",
+      "host_integration",
+      "issue_memory",
+      "local_env_overlay",
+      "qa_checks",
+      "roadmap_governance",
+      "session_resume"
+    ],
+    "starter_files": [
+      "scripts/flutter_doctor.ps1",
+      "scripts/run_debug.ps1"
+    ],
+    "notes": [
+      "prefer explicit platform notes",
+      "keep commands copy-paste friendly",
+      "Keep the existing Planner/Companion canon and route roadmap continuity through docs/assistant/ROADMAP_ANCHOR.md.",
+      "Adopt bootstrap docs first; defer extra helper scripts."
+    ]
+  }
+}

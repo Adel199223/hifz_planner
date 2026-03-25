@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-03-25",
+  "latest_approved_baseline": {
+    "branch": "feat/next-milestones",
+    "head": "56104c23d698a15f6f3457164f80d0ae4f8be6f0",
+    "worktree_root": "C:/dev/hifz_planner"
+  },
+  "build_under_test": {
+    "branch": "codex/feat-bootstrap-harness-adoption",
+    "worktree_root": "C:/dev/worktrees/hifz_planner_bootstrap",
+    "base_head": "56104c23d698a15f6f3457164f80d0ae4f8be6f0"
+  },
+  "canonical_launch": {
+    "platform": "windows",
+    "command": "flutter run -d windows"
+  },
+  "notes": [
+    "Use worktree isolation for major parallel streams.",
+    "Do not hand off a runnable build without branch, worktree path, and launch command."
+  ]
+}

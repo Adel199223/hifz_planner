@@ -1,0 +1,32 @@
+{
+  "$schema": "./schemas/HARNESS_PROFILE.schema.json",
+  "schema_version": 1,
+  "project": {
+    "name": "hifz_planner",
+    "description": "Flutter app for Quran reading, hifz planning, and Companion memorization workflow"
+  },
+  "operator": {
+    "experience_level": "beginner",
+    "preferred_tone": "plain_english",
+    "needs_safe_commands": true
+  },
+  "stack": {
+    "primary_language": "dart",
+    "framework": "flutter",
+    "surfaces": ["desktop", "mobile"],
+    "target_os": ["windows", "android", "ios"]
+  },
+  "bootstrap": {
+    "archetype": "flutter_app",
+    "mode": "standard",
+    "enabled_modules": ["roadmap_governance", "host_integration"],
+    "disabled_modules": ["desktop_launcher"],
+    "uses_openai": false,
+    "needs_codespaces": false,
+    "has_browser_bridge": false,
+    "notes": [
+      "Keep the existing Planner/Companion canon and route roadmap continuity through docs/assistant/ROADMAP_ANCHOR.md.",
+      "Adopt bootstrap docs first; defer extra helper scripts."
+    ]
+  }
+}
