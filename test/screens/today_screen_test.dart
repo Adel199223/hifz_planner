@@ -50,6 +50,255 @@ void main() {
     expect(find.textContaining('page_segment'), findsWidgets);
   });
 
+  testWidgets('guided cards render above the queue and summary',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+    await _insertStage4DueLifecycle(
+      db,
+      unitId: dueUnitId,
+      todayDay: todayDay,
+    );
+
+    await _pumpToday(tester, container);
+
+    final nextStep = find.byKey(const ValueKey('today_next_step_card'));
+    final pathMode = find.byKey(const ValueKey('today_path_mode_card'));
+    final stage4 = find.byKey(const ValueKey('today_stage4_section'));
+    final reviews = find.byKey(const ValueKey('today_reviews_section'));
+    final summary = find.byKey(const ValueKey('today_summary_section'));
+
+    expect(nextStep, findsOneWidget);
+    expect(pathMode, findsOneWidget);
+    expect(summary, findsOneWidget);
+    expect(
+      tester.getTopLeft(nextStep).dy,
+      lessThan(tester.getTopLeft(pathMode).dy),
+    );
+    expect(
+      tester.getTopLeft(pathMode).dy,
+      lessThan(tester.getTopLeft(stage4).dy),
+    );
+    expect(
+      tester.getTopLeft(stage4).dy,
+      lessThan(tester.getTopLeft(reviews).dy),
+    );
+    expect(
+      tester.getTopLeft(reviews).dy,
+      lessThan(tester.getTopLeft(summary).dy),
+    );
+    expect(
+        find.byKey(const ValueKey('today_new_state_message')), findsOneWidget);
+    expect(find.textContaining('Stage-4'), findsWidgets);
+  });
+
+  testWidgets('next step updates after grading the current review',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+
+    await _pumpToday(tester, container);
+
+    final plannedNewUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
+    expect(plannedNewUnits, isNotEmpty);
+    expect(
+      find.byKey(const ValueKey('today_next_step_button_dueReview')),
+      findsOneWidget,
+    );
+
+    final gradeButton =
+        find.byKey(ValueKey('today_review_grade_${dueUnitId}_q5'));
+    await pumpUntilFound(tester, gradeButton);
+    await _tapVisible(tester, gradeButton);
+
+    expect(
+      find.byKey(const ValueKey('today_next_step_button_newUnit')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('next step button opens stage4 companion route', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+    await _insertStage4DueLifecycle(
+      db,
+      unitId: dueUnitId,
+      todayDay: todayDay,
+    );
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_next_step_button_stage4Due')),
+    );
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('today_next_step_button_stage4Due')),
+    );
+
+    expect(
+      find.text('Companion route unitId=$dueUnitId mode=stage4'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('next step falls back to My Quran when nothing is queued',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 0,
+      maxNewPagesPerDay: 0,
+    );
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_next_step_button_resume')),
+    );
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('today_next_step_button_resume')),
+    );
+
+    expect(find.text('My Quran route'), findsOneWidget);
+  });
+
+  testWidgets('grade buttons use plain-language labels and stable q keys',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+
+    await _pumpToday(tester, container);
+
+    final q5Button = find.byKey(ValueKey('today_review_grade_${dueUnitId}_q5'));
+    final q4Button = find.byKey(ValueKey('today_review_grade_${dueUnitId}_q4'));
+    final q2Button = find.byKey(ValueKey('today_review_grade_${dueUnitId}_q2'));
+    final q0Button = find.byKey(ValueKey('today_review_grade_${dueUnitId}_q0'));
+
+    expect(
+      find.descendant(of: q5Button, matching: find.text('Clean pass')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: q4Button, matching: find.text('Hesitant pass')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: q2Button, matching: find.text('Needed help')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: q0Button, matching: find.text('Wrong / confused')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('grading planned review writes review_log and updates schedule',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -805,6 +1054,16 @@ GoRouter _buildTodayRouter() {
           return Scaffold(
             body: Center(
               child: Text('Companion route unitId=$unitId mode=$mode'),
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/my-quran',
+        builder: (_, __) {
+          return const Scaffold(
+            body: Center(
+              child: Text('My Quran route'),
             ),
           );
         },

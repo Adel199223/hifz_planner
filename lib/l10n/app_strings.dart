@@ -355,6 +355,67 @@ class AppStrings {
       _t('import_page_metadata', 'Import Page Metadata');
 
   String get todayTitle => _t('today_title', 'Today');
+  String get todayReviewQueueTitle =>
+      _t('today_review_queue_title', 'Review Path');
+  String get warmUpSectionTitle => _t('warm_up_section_title', 'Warm-up');
+  String get dueReviewSectionTitle =>
+      _t('due_review_section_title', 'Due review');
+  String get weakSpotsSectionTitle =>
+      _t('weak_spots_section_title', 'Weak spots');
+  String get optionalNewSectionTitle => _t(
+        'optional_new_section_title',
+        'Optional new memorization',
+      );
+  String get todayNextStepTitle => _t(
+        'today_next_step_title',
+        'What should I do right now?',
+      );
+  String get todayPathModeTitle => _t('today_path_mode_title', "Today's path");
+  String get todaySummaryTitle => _t('today_summary_title', "Today's overview");
+  String todayPathLength(Object value) => _fmt(
+        _t('today_path_length', 'Path length: {value} min'),
+        <String, Object>{'value': value},
+      );
+  String get todayPathModeGreen => _t('today_path_mode_green', 'Green');
+  String get todayPathModeProtect => _t('today_path_mode_protect', 'Protect');
+  String get todayPathModeRecovery =>
+      _t('today_path_mode_recovery', 'Recovery');
+  String get todayPathModeGreenBody => _t(
+        'today_path_mode_green_body',
+        'Today is steady. Clear the queue in order and new memorization is available when you reach it.',
+      );
+  String get todayPathModeProtectBody => _t(
+        'today_path_mode_protect_body',
+        'Review health needs protection first. Finish the priority reviews to reopen new memorization.',
+      );
+  String get todayPathModeRecoveryBody => _t(
+        'today_path_mode_recovery_body',
+        'Today is a recovery day. Focus on the essentials first and let new memorization wait.',
+      );
+  String get todayNewUnlockedMessage => _t(
+        'today_new_unlocked_message',
+        'New memorization is unlocked when you finish the priority steps.',
+      );
+  String get todayNewLockedStage4Message => _t(
+        'today_new_locked_stage4_message',
+        'New memorization is paused until you finish the delayed Stage-4 check above.',
+      );
+  String get todayNewLockedReviewHealthMessage => _t(
+        'today_new_locked_review_health_message',
+        'New memorization is paused while review pressure is high. Finish the review path to unlock it again.',
+      );
+  String get todayNewLockedSetupMessage => _t(
+        'today_new_locked_setup_message',
+        'Import page metadata first to unlock new memorization in the guided path.',
+      );
+  String get todayNewNoneAvailableMessage => _t(
+        'today_new_none_available_message',
+        'New memorization is open, but nothing new is queued right now.',
+      );
+  String get todayNextStepResumeBody => _t(
+        'today_next_step_resume_body',
+        'Open My Quran to resume your next target.',
+      );
   String get plannedReviews => _t('planned_reviews', 'Planned Reviews');
   String get noPlannedReviewsLeft =>
       _t('no_planned_reviews_left', 'No planned reviews left.');
@@ -511,11 +572,11 @@ class AppStrings {
         'This unit moved back to ready.',
       );
   String get rangeUnavailable => _t('range_unavailable', 'Range unavailable');
-  String get gradeGood => _t('grade_good', 'Good');
-  String get gradeMedium => _t('grade_medium', 'Medium');
-  String get gradeHard => _t('grade_hard', 'Hard');
-  String get gradeVeryHard => _t('grade_very_hard', 'Very hard');
-  String get gradeFail => _t('grade_fail', 'Fail');
+  String get gradeGood => _t('grade_good', 'Clean pass');
+  String get gradeMedium => _t('grade_medium', 'Hesitant pass');
+  String get gradeHard => _t('grade_hard', 'Hard but I got there');
+  String get gradeVeryHard => _t('grade_very_hard', 'Needed help');
+  String get gradeFail => _t('grade_fail', 'Wrong / confused');
 
   String onboardingQuestionnaire(int questionCount) => _fmt(
         _t('onboarding_questionnaire',
@@ -1334,6 +1395,36 @@ class AppStrings {
       'import_quran_text': 'Importer le texte du Coran',
       'import_page_metadata': 'Importer les métadonnées de page',
       'today_title': "Aujourd'hui",
+      'today_review_queue_title': 'Parcours de revision',
+      'warm_up_section_title': 'Echauffement',
+      'due_review_section_title': 'Revision prioritaire',
+      'weak_spots_section_title': 'Points faibles',
+      'optional_new_section_title': 'Nouvelle memorisation optionnelle',
+      'today_next_step_title': 'Que faire maintenant ?',
+      'today_path_mode_title': 'Parcours du jour',
+      'today_summary_title': "Apercu d'aujourd'hui",
+      'today_path_length': 'Duree du parcours : {value} min',
+      'today_path_mode_green': 'Vert',
+      'today_path_mode_protect': 'Protection',
+      'today_path_mode_recovery': 'Recuperation',
+      'today_path_mode_green_body':
+          "La journee est stable. Avancez dans la file et la nouvelle memorisation reste disponible quand vous y arrivez.",
+      'today_path_mode_protect_body':
+          'Il faut proteger la sante des revisions. Terminez les revisions prioritaires pour rouvrir la nouvelle memorisation.',
+      'today_path_mode_recovery_body':
+          "Aujourd'hui est une journee de recuperation. Concentrez-vous d'abord sur l'essentiel et laissez le nouveau travail attendre.",
+      'today_new_unlocked_message':
+          'La nouvelle memorisation est ouverte une fois les etapes prioritaires terminees.',
+      'today_new_locked_stage4_message':
+          'La nouvelle memorisation reste en pause tant que la verification Stage-4 en retard ci-dessus n est pas terminee.',
+      'today_new_locked_review_health_message':
+          'La nouvelle memorisation est en pause pendant que la pression de revision est elevee. Terminez le parcours de revision pour la rouvrir.',
+      'today_new_locked_setup_message':
+          'Importez d abord les metadonnees de page pour debloquer la nouvelle memorisation dans ce parcours guide.',
+      'today_new_none_available_message':
+          "La nouvelle memorisation est ouverte, mais rien n'est en file pour le moment.",
+      'today_next_step_resume_body':
+          'Ouvrez Mon Coran pour reprendre votre prochaine cible.',
       'planned_reviews': 'Révisions planifiées',
       'no_planned_reviews_left': 'Aucune révision planifiée restante.',
       'due_day_label': 'Jour prévu {day}',
@@ -1357,11 +1448,11 @@ class AppStrings {
       'review_lifecycle_demoted_to_ready':
           'Cette unité est redescendue à prête.',
       'range_unavailable': 'Plage indisponible',
-      'grade_good': 'Bon',
-      'grade_medium': 'Moyen',
-      'grade_hard': 'Difficile',
-      'grade_very_hard': 'Très difficile',
-      'grade_fail': 'Échec',
+      'grade_good': 'Passage propre',
+      'grade_medium': 'Passage hesitant',
+      'grade_hard': 'Difficile mais reussi',
+      'grade_very_hard': "Besoin d'aide",
+      'grade_fail': 'Faux / confusion',
       'no_ayahs_for_surah': 'Aucun ayah trouvé pour la sourate {surah}.',
       'no_ayahs_for_page': 'Aucun ayah trouvé pour la page {page}.',
       'onboarding_questionnaire':
@@ -1647,6 +1738,36 @@ class AppStrings {
       'import_quran_text': 'Importar Texto do Alcorão',
       'import_page_metadata': 'Importar Metadados de Página',
       'today_title': 'Hoje',
+      'today_review_queue_title': 'Caminho de revisao',
+      'warm_up_section_title': 'Aquecimento',
+      'due_review_section_title': 'Revisao prioritária',
+      'weak_spots_section_title': 'Pontos fracos',
+      'optional_new_section_title': 'Nova memorizacao opcional',
+      'today_next_step_title': 'O que devo fazer agora?',
+      'today_path_mode_title': 'Caminho de hoje',
+      'today_summary_title': 'Visao geral de hoje',
+      'today_path_length': 'Duracao do caminho: {value} min',
+      'today_path_mode_green': 'Verde',
+      'today_path_mode_protect': 'Protecao',
+      'today_path_mode_recovery': 'Recuperacao',
+      'today_path_mode_green_body':
+          'Hoje esta estavel. Siga a fila em ordem e a nova memorizacao continua disponivel quando chegar a ela.',
+      'today_path_mode_protect_body':
+          'A saude das revisoes precisa de protecao primeiro. Termine as revisoes prioritarias para reabrir a nova memorizacao.',
+      'today_path_mode_recovery_body':
+          'Hoje e um dia de recuperacao. Foque primeiro no essencial e deixe a nova memorizacao para depois.',
+      'today_new_unlocked_message':
+          'A nova memorizacao esta liberada quando voce terminar os passos prioritarios.',
+      'today_new_locked_stage4_message':
+          'A nova memorizacao fica pausada ate voce concluir a verificacao Stage-4 atrasada acima.',
+      'today_new_locked_review_health_message':
+          'A nova memorizacao fica pausada enquanto a pressao de revisao estiver alta. Termine o caminho de revisao para libera-la novamente.',
+      'today_new_locked_setup_message':
+          'Importe primeiro os metadados de pagina para liberar a nova memorizacao neste caminho guiado.',
+      'today_new_none_available_message':
+          'A nova memorizacao esta aberta, mas nada novo foi enfileirado agora.',
+      'today_next_step_resume_body':
+          'Abra Meu Alcorao para retomar seu proximo alvo.',
       'planned_reviews': 'Revisões planejadas',
       'no_planned_reviews_left': 'Não há revisões planejadas restantes.',
       'due_day_label': 'Dia previsto {day}',
@@ -1669,11 +1790,11 @@ class AppStrings {
       'review_lifecycle_demoted_to_stable': 'Esta unidade voltou para estável.',
       'review_lifecycle_demoted_to_ready': 'Esta unidade voltou para pronta.',
       'range_unavailable': 'Intervalo indisponível',
-      'grade_good': 'Bom',
-      'grade_medium': 'Médio',
-      'grade_hard': 'Difícil',
-      'grade_very_hard': 'Muito difícil',
-      'grade_fail': 'Falha',
+      'grade_good': 'Passagem limpa',
+      'grade_medium': 'Passagem hesitante',
+      'grade_hard': 'Foi dificil mas consegui',
+      'grade_very_hard': 'Precisei de ajuda',
+      'grade_fail': 'Errado / confuso',
       'no_ayahs_for_surah': 'Nenhum ayah encontrado para a Surah {surah}.',
       'no_ayahs_for_page': 'Nenhum ayah encontrado para a Página {page}.',
       'onboarding_questionnaire': 'Questionário inicial ({count} perguntas)',
@@ -1974,6 +2095,36 @@ class AppStrings {
       'import_quran_text': 'استيراد نص القرآن',
       'import_page_metadata': 'استيراد بيانات الصفحات',
       'today_title': 'اليوم',
+      'today_review_queue_title': 'مسار المراجعة',
+      'warm_up_section_title': 'تهيئة',
+      'due_review_section_title': 'مراجعة مستحقة',
+      'weak_spots_section_title': 'نقاط الضعف',
+      'optional_new_section_title': 'حفظ جديد اختياري',
+      'today_next_step_title': 'ماذا أفعل الآن؟',
+      'today_path_mode_title': 'مسار اليوم',
+      'today_summary_title': 'ملخص اليوم',
+      'today_path_length': 'مدة المسار: {value} دقيقة',
+      'today_path_mode_green': 'أخضر',
+      'today_path_mode_protect': 'حماية',
+      'today_path_mode_recovery': 'تعافٍ',
+      'today_path_mode_green_body':
+          'اليوم مستقر. تقدم في المسار بالترتيب وسيبقى الحفظ الجديد متاحًا عندما تصل إليه.',
+      'today_path_mode_protect_body':
+          'صحة المراجعة تحتاج إلى حماية أولًا. أنهِ المراجعات ذات الأولوية ليعود الحفظ الجديد.',
+      'today_path_mode_recovery_body':
+          'اليوم يوم تعافٍ. ركز أولًا على الأساسيات ودع الحفظ الجديد ينتظر.',
+      'today_new_unlocked_message':
+          'الحفظ الجديد متاح عندما تنهي الخطوات ذات الأولوية.',
+      'today_new_locked_stage4_message':
+          'تم إيقاف الحفظ الجديد مؤقتًا حتى تنهي فحص Stage-4 المتأخر أعلاه.',
+      'today_new_locked_review_health_message':
+          'تم إيقاف الحفظ الجديد مؤقتًا لأن ضغط المراجعة مرتفع. أنهِ مسار المراجعة ليفتح من جديد.',
+      'today_new_locked_setup_message':
+          'استورد بيانات الصفحات أولًا لفتح الحفظ الجديد داخل هذا المسار الموجّه.',
+      'today_new_none_available_message':
+          'الحفظ الجديد مفتوح، لكن لا توجد مادة جديدة في الطابور الآن.',
+      'today_next_step_resume_body':
+          'افتح القرآن الخاص بي لاستئناف هدفك التالي.',
       'planned_reviews': 'المراجعات المخطط لها',
       'no_planned_reviews_left': 'لا توجد مراجعات متبقية.',
       'due_day_label': 'اليوم المستحق {day}',
@@ -1997,11 +2148,11 @@ class AppStrings {
       'review_lifecycle_demoted_to_ready':
           'عادت هذه الوحدة إلى مستوى الجاهزية.',
       'range_unavailable': 'النطاق غير متاح',
-      'grade_good': 'جيد',
-      'grade_medium': 'متوسط',
-      'grade_hard': 'صعب',
-      'grade_very_hard': 'صعب جدًا',
-      'grade_fail': 'رسوب',
+      'grade_good': 'مرور متقن',
+      'grade_medium': 'مرور متردد',
+      'grade_hard': 'كان صعبًا لكنني أكملت',
+      'grade_very_hard': 'احتجت مساعدة',
+      'grade_fail': 'خطأ / ارتباك',
       'no_ayahs_for_surah': 'لا توجد آيات للسورة {surah}.',
       'no_ayahs_for_page': 'لا توجد آيات للصفحة {page}.',
       'onboarding_questionnaire': 'استبيان البداية ({count} أسئلة)',
