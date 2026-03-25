@@ -495,12 +495,14 @@ User-facing explainer:
 
 Current capabilities:
 - Build today plan from scheduler/planner
-- Render planned reviews with lifecycle tier badges and overdue-first ordering, with weaker Companion retention lifting units earlier when due pressure is equal or close
-- Render planned new memorization
+- Derive a guided Today path with one top "next best step" action
+- Derive a user-facing path mode (`green`, `protect`, `recovery`) and explain whether new memorization is unlocked or paused
+- Group the day into warm-up, due review, weak spots, and optional new memorization sections
 - Render dedicated Stage-4 delayed-consolidation due items with urgency metadata
-- Render sessionized day blocks (timed or untimed) with recovery signal
+- Render planned reviews with lifecycle tier badges and overdue-first ordering, with weaker Companion retention lifting units earlier when due pressure is equal or close
+- Render sessionized day blocks (timed or untimed) with recovery signal inside a calmer summary card
 - Increase review pressure and reduce new allocation sooner when existing Companion proficiency data shows weak retention
-- Save grades (`q=5/4/3/2/0`) through shared `ReviewCompletionService`
+- Save grades (`q=5/4/3/2/0`) through shared `ReviewCompletionService`, with plain solo-learner labels in the UI
 - "Open in Reader" deep-link with page mode + verse range highlight params
 - "Open Companion Chain" action for review/new rows
 - Soft-block NEW launch when mandatory Stage-4 due exists (explicit override allowed and logged)

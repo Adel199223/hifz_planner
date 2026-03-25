@@ -248,38 +248,55 @@ Location: `Today` in navigation rail.
 
 Execution order is designed to protect retention quality:
 
-### Session section
-- shows today session blocks and status
-- helps you anchor when to study
+### Next best step card
+- shows the one action the app thinks you should do first
+- usually points to the most urgent delayed check, review, weak spot, or unlocked new memorization
+
+### Path mode card
+- tells you whether today is in `Green`, `Protect`, or `Recovery`
+- explains whether new memorization is open, paused, or unavailable
+- includes a short path-length summary so the day feels easier to size up
 
 ### Stage-4 delayed checks section
 - shows delayed consolidation items (especially mandatory next-day checks)
 - these are high priority because they verify durability after delay
 
-### Planned reviews section
-- review rows with grading actions and a small lifecycle badge
+### Warm-up / due review / weak spots sections
+- review rows are now grouped into a calmer queue instead of feeling like one flat dashboard list
+- warm-up gives you an easier review entry point when one is available
+- due review holds the remaining priority review work
+- weak spots pulls out higher-risk review items so they are easier to notice
 - supports immediate scheduler updates based on your quality
 - same review can also be saved from the Companion review summary if you open it there first
 - when two due items are similarly urgent, weaker recent Companion retention can move one earlier in the list
 
-### Planned new section
+### Optional new section
 - new unit rows with actions:
   - open in reader
   - open companion chain (new mode)
+- this section appears only when new memorization is truly unlocked
 - if recent Companion retention is weak, this section may shrink sooner because the planner gives more of today's time back to review
+
+### Summary section
+- keeps the secondary numbers together, such as planned minutes, review pressure, recovery signal, and session blocks
 
 ## 7) Stage-4 Priority and Soft-Block Behavior
 
-You may see new memorization blocked by default when mandatory delayed checks are due.
+You may see new memorization paused when:
+- mandatory delayed checks are due
+- review pressure is high enough that the day has shifted into protect/recovery behavior
+- the planner is in revision-only mode
+- required page metadata setup is still missing
 
 Why this happens:
 - the app protects retention quality first
 - unresolved delayed checks are a strong signal that stability needs attention
-- lifecycle badges alone do not block new memorization; only due Stage-4 delayed checks can do that in the current version
+- very high review pressure is also treated as a signal that review needs the day's budget first
+- lifecycle badges alone do not block new memorization
 
 Override behavior:
-- you can override once and continue to new memorization
-- override is logged (not ignored)
+- when mandatory Stage-4 delayed checks are the blocker, the existing explicit override path still applies
+- that override is logged (not ignored)
 
 When override is reasonable:
 - rare exceptional days

@@ -16,6 +16,7 @@ Recommended starting points:
 - `AGENTS.md` (compatibility shim)
 - `agent.md` (primary runbook)
 - `docs/assistant/ROADMAP_ANCHOR.md` (active Adaptive Hifz Path continuity and next-milestone handoff)
+- `docs/assistant/exec_plans/active/2026-03-25_wave1_guided_daily_hifz_path.md` (active Wave 1 Today-path implementation handoff)
 - `docs/strategy/adaptive-hifz-path-solo-master-plan.md` (active product direction)
 - `docs/roadmap/adaptive-hifz-path-solo-roadmap.md` (active roadmap)
 - `docs/assistant/HARNESS_PROFILE.json` (bootstrap profile source of truth when bootstrap harness work is in scope)
@@ -98,6 +99,7 @@ Roadmap continuity note:
 ### Planning
 - `lib/screens/plan_screen.dart`
 - `lib/screens/today_screen.dart`
+- `lib/screens/today_path.dart`
 - `lib/data/services/daily_planner.dart`
 - `lib/data/services/spaced_repetition_scheduler.dart`
 - `docs/assistant/features/PLANNER_USER_GUIDE.md`

@@ -125,10 +125,19 @@ This is where you define your system before execution.
 
 ## 3) Execute Today’s Work
 
-Go to Today to act on:
+Go to Today when you want the app to tell you the best next memorization step right now.
+
+Today now leads with:
+- one clear `Next best step` card at the top
+- a simple path mode message:
+  - `Green` = new work is available
+  - `Protect` = review needs more attention before pushing harder
+  - `Recovery` = backlog or strain is high enough that stabilization comes first
+
+Then it guides you through:
 - delayed consolidation checks
-- planned reviews
-- planned new memorization
+- review work grouped into warm-up, due review, and weak spots
+- optional new memorization when it is unlocked
 
 This screen is intentionally action-oriented: less setup, more execution.
 
@@ -169,9 +178,11 @@ Today prioritization is quality-driven:
 - review protects previously learned material
 - new memorization is important, but not at the cost of collapsing retention
 
+The top `Next best step` card follows that logic for you, so you do not have to guess what to open first.
+
 Review rows can also show a small lifecycle badge such as Ready, Stable, or Maintained so you can see the unit's current quality state at a glance.
 
-If delayed checks are due, new memorization can be soft-blocked by default to protect quality.
+If delayed checks are due, or if review health is under strain, Today can pause new memorization and explain why in plain language.
 
 ## Personalization and Preferences
 

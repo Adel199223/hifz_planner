@@ -28,27 +28,32 @@ Primary product docs:
 
 ## Current Roadmap State
 
-As of 2026-03-25, the roadmap has been reset at the documentation layer.
+As of 2026-03-25, the roadmap reset has moved from documentation-only into active Wave 1 implementation.
 
 Wave 0 status:
 - product-reset docs imported into top-level `docs/`
-- repo entrypoints being updated to reflect the new center of gravity
-- the current shipped UI remains Today + Plan + Reader + `/companion/chain` while the reset is in progress
+- repo entrypoints updated to reflect the new center of gravity
+- treat Wave 0 as complete enough for continuity purposes
 
 Current continuity ExecPlan:
-- `docs/assistant/exec_plans/active/2026-03-25_adaptive_hifz_path_wave0_docs.md`
+- `docs/assistant/exec_plans/active/2026-03-25_wave1_guided_daily_hifz_path.md`
+
+Wave 1 status on the current feature branch:
+- Today now leads with one obvious next action
+- Today now shows a path mode (`green`, `protect`, `recovery`) and clearer new-lock messaging
+- Today now groups work into warm-up, due review, weak spots, and optional new
+- scheduler, DB schema, reader, and companion route structure remain intact
 
 ## Next Milestone
 
 The next implementation milestone is:
-- **Wave 1 - Guided daily path MVP**
+- **Wave 1 - Guided daily path hardening and merge readiness**
 
 Practical meaning:
-- make Today the main Hifz Path entry
-- generate a daily queue with warm-up, due review, weak spots, and optional new memorization
-- use simple self-grading and review-health unlock rules
-- preserve existing route structure when rewrite friction is high
-- launch the current Companion flow directly from the daily path instead of rebuilding everything first
+- re-run targeted Today/planner validation once the local Flutter toolchain is stable
+- verify the guided path flow end-to-end on Today
+- keep the existing scheduler, DB contracts, and companion routes intact while landing the new surface
+- after Wave 1 is stable, move to deeper adaptive queue tuning and weak-spot refinement in Wave 2
 
 Recommended Wave 1 starting files:
 - `lib/screens/today_screen.dart`
@@ -73,8 +78,8 @@ Status:
 2. Open this file.
 3. Open `docs/strategy/adaptive-hifz-path-solo-master-plan.md`.
 4. Open `docs/roadmap/adaptive-hifz-path-solo-roadmap.md`.
-5. Open `docs/assistant/exec_plans/active/2026-03-25_adaptive_hifz_path_wave0_docs.md` if Wave 0 is still in progress.
-6. For Wave 1 implementation, start with `lib/screens/today_screen.dart` and `lib/data/services/daily_planner.dart`.
+5. Open `docs/assistant/exec_plans/active/2026-03-25_wave1_guided_daily_hifz_path.md`.
+6. For Wave 1 follow-up work, start with `lib/screens/today_screen.dart`, `lib/screens/today_path.dart`, and `lib/data/services/daily_planner.dart`.
 
 ## Code Anchors
 
