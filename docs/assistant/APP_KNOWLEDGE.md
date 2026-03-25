@@ -15,7 +15,9 @@ Why two `APP_KNOWLEDGE.md` files:
 Recommended starting points:
 - `AGENTS.md` (compatibility shim)
 - `agent.md` (primary runbook)
-- `docs/assistant/ROADMAP_ANCHOR.md` (current roadmap continuity and next-milestone handoff)
+- `docs/assistant/ROADMAP_ANCHOR.md` (active Adaptive Hifz Path continuity and next-milestone handoff)
+- `docs/strategy/adaptive-hifz-path-solo-master-plan.md` (active product direction)
+- `docs/roadmap/adaptive-hifz-path-solo-roadmap.md` (active roadmap)
 - `docs/assistant/HARNESS_PROFILE.json` (bootstrap profile source of truth when bootstrap harness work is in scope)
 - `docs/assistant/HARNESS_OUTPUT_MAP.json` (repo-local mapping overlay for bootstrap outputs)
 - `docs/assistant/INDEX.md` (human index)
@@ -43,6 +45,10 @@ Do not use this file as primary truth when there is a conflict.
 2. Keep this bridge updated whenever canonical structure changes
 3. Do not duplicate long canonical content here unless necessary
 
+Roadmap continuity note:
+- this repo does not use `SESSION_RESUME.md`
+- `docs/assistant/ROADMAP_ANCHOR.md` is the canonical continuity file
+
 ## Quick Start Links (High Impact)
 
 ### Core entry docs
@@ -50,6 +56,8 @@ Do not use this file as primary truth when there is a conflict.
 - `agent.md`
 - `APP_KNOWLEDGE.md`
 - `docs/assistant/ROADMAP_ANCHOR.md`
+- `docs/strategy/adaptive-hifz-path-solo-master-plan.md`
+- `docs/roadmap/adaptive-hifz-path-solo-roadmap.md`
 - `docs/assistant/INDEX.md`
 - `docs/assistant/manifest.json`
 - `docs/assistant/DB_DRIFT_KNOWLEDGE.md`
@@ -112,6 +120,7 @@ Do not use this file as primary truth when there is a conflict.
    - `agent.md`
    - `APP_KNOWLEDGE.md`
    - `docs/assistant/ROADMAP_ANCHOR.md` when resuming roadmap work
+   - `docs/strategy/adaptive-hifz-path-solo-master-plan.md` when the task is about product direction
 3. Confirm current routes:
    - open `lib/app/router.dart`
 4. Confirm current reader modes:

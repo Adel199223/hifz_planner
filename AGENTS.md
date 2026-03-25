@@ -10,19 +10,21 @@ Why both files exist:
 
 1. `agent.md` (primary runbook)
 2. `APP_KNOWLEDGE.md` (canonical app knowledge)
-3. `docs/assistant/ROADMAP_ANCHOR.md` (current roadmap continuity and next-milestone handoff)
-4. `docs/assistant/manifest.json` (machine-readable routing)
-5. `docs/assistant/INDEX.md` (human doc index)
-6. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical invariants)
-7. `docs/assistant/exec_plans/PLANS.md` (major-work planning contract)
-8. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB/Drift deep reference)
-9. `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` (language/RTL/terminology)
-10. `docs/assistant/LOCALIZATION_GLOSSARY.md` (localized term source)
-11. `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` (workspace performance)
-12. `docs/assistant/PERFORMANCE_BASELINES.md` (editor/perf defaults)
-13. `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` (parity reference policy)
-14. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/push/cleanup protocol)
-15. `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` (local bootstrap harness apply/audit)
+3. `docs/assistant/ROADMAP_ANCHOR.md` (active roadmap continuity and next-milestone handoff)
+4. `docs/strategy/adaptive-hifz-path-solo-master-plan.md` (active product direction)
+5. `docs/roadmap/adaptive-hifz-path-solo-roadmap.md` (active product roadmap)
+6. `docs/assistant/manifest.json` (machine-readable routing)
+7. `docs/assistant/INDEX.md` (human doc index)
+8. `docs/assistant/GOLDEN_PRINCIPLES.md` (mechanical invariants)
+9. `docs/assistant/exec_plans/PLANS.md` (major-work planning contract)
+10. `docs/assistant/DB_DRIFT_KNOWLEDGE.md` (DB/Drift deep reference)
+11. `docs/assistant/workflows/LOCALIZATION_WORKFLOW.md` (language/RTL/terminology)
+12. `docs/assistant/LOCALIZATION_GLOSSARY.md` (localized term source)
+13. `docs/assistant/workflows/PERFORMANCE_WORKFLOW.md` (workspace performance)
+14. `docs/assistant/PERFORMANCE_BASELINES.md` (editor/perf defaults)
+15. `docs/assistant/workflows/REFERENCE_DISCOVERY_WORKFLOW.md` (parity reference policy)
+16. `docs/assistant/workflows/COMMIT_PUBLISH_WORKFLOW.md` (commit/push/cleanup protocol)
+17. `docs/assistant/workflows/PROJECT_HARNESS_SYNC_WORKFLOW.md` (local bootstrap harness apply/audit)
 
 ## Non-Negotiables
 
@@ -51,8 +53,12 @@ Why both files exist:
 - After significant implementation changes, always ask:
   - "Would you like me to run Assistant Docs Sync for this change now?"
   - If user agrees, update only relevant assistant docs for changed scope.
-- In user conversations, `roadmap`, `master plan`, and `next milestone` default to the Companion/Planner track unless the user explicitly redirects.
+- In user conversations, `roadmap`, `master plan`, and `next milestone` default to the Adaptive Hifz Path track unless the user explicitly redirects.
 - For roadmap continuation or "continue where we left off" requests, open `docs/assistant/ROADMAP_ANCHOR.md` early.
+- For product-direction or roadmap-reset work, also open:
+  - `docs/strategy/adaptive-hifz-path-solo-master-plan.md`
+  - `docs/roadmap/adaptive-hifz-path-solo-roadmap.md`
+- This repo does not use `SESSION_RESUME.md`; `docs/assistant/ROADMAP_ANCHOR.md` is the continuity file.
 - Default closeout for major implementation stages:
   - run targeted validation for the touched scope
   - commit implementation files first
