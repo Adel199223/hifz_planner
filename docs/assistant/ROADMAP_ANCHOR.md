@@ -92,3 +92,21 @@ Status:
 - `test/screens/today_screen_test.dart`
 - `test/data/services/daily_planner_test.dart`
 - `test/screens/companion_chain_screen_test.dart`
+
+## Web V1 Continuity Update (2026-03-26)
+
+A serious web implementation pass is now active.
+
+Active continuity ExecPlan:
+- `docs/assistant/exec_plans/active/2026-03-26_web_adaptive_hifz_v1.md`
+- `docs/assistant/exec_plans/active/2026-03-26_review_followups_web_v1.md`
+
+Current milestone overlay:
+- keep the Adaptive Hifz Path product direction unchanged
+- treat browser-first web support as the active platform milestone that strengthens Today, Reader, Companion, Plan, My Quran, and Settings
+- preserve native Windows behavior while tightening platform seams
+
+Immediate next checks:
+- finish browser smoke validation in Chromium
+- confirm `flutter build web` output and Drift web storage behavior
+- keep docs and harness profile aligned with the new web surface

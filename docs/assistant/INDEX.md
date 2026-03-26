@@ -27,6 +27,7 @@ For explicit bootstrap harness apply/audit requests, open `docs/assistant/workfl
 | `agent.md` | You need the operational runbook and quick task routing matrix. | Full DB schema details. | 2 min |
 | `APP_KNOWLEDGE.md` | You need canonical app architecture, feature status, and subsystem map. | Fine-grained per-workflow checklists. | 3 min |
 | `docs/assistant/ROADMAP_ANCHOR.md` | You need the current Adaptive Hifz Path roadmap state, the active next milestone, or a new-chat continuation point. | Canonical app architecture or detailed per-workflow checklists. | 2 min |
+| `docs/WEB_VERSION_ROADMAP.md` | You need the current web-platform rollout shape, browser-first scope, and honest Web V1 degradations. | Canonical app architecture or general mobile/desktop planning by itself. | 2 min |
 | `docs/strategy/adaptive-hifz-path-solo-master-plan.md` + `docs/roadmap/adaptive-hifz-path-solo-roadmap.md` | You need the active product reset, solo-learner-first direction, and Wave 0/Wave 1 roadmap framing. | Current shipped UI details or DB internals by themselves. | 3 min |
 | `docs/assistant/GOLDEN_PRINCIPLES.md` | You need enforceable style/invariant rules before implementation. | Feature-specific workflow steps. | 1 min |
 | `docs/assistant/exec_plans/PLANS.md` | Work is major/multi-file and needs a self-contained execution plan format. | Small isolated fixes. | 2 min |

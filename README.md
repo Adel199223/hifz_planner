@@ -118,3 +118,36 @@ dart run tooling/generate_tajweed_uthmani_tags.dart
 
 If the file is not generated yet, the app still works and Plain mode is used.
 Generate this file to see Tajweed colors in Reader.
+
+## Web target (Serious V1)
+
+The repo now includes a real Flutter web target in the same codebase.
+
+What web currently supports best:
+- `/today`
+- `/companion/chain`
+- `/reader`
+- `/plan`
+- `/my-quran`
+- `/settings`
+
+Web behavior notes:
+- browser storage is opened through a platform-aware Drift connection factory
+- Settings and Today surface browser storage health and first-run Quran data readiness
+- audio is streaming-first on web
+- offline audio downloads are intentionally disabled on web for now
+- Quran.com cache and QCF font persistence use lighter browser-safe fallbacks instead of native filesystem paths
+
+Useful commands:
+
+```powershell
+flutter run -d chrome
+flutter build web
+cd tooling/playwright
+npm install
+npm run smoke
+```
+
+See also:
+- `docs/WEB_VERSION_ROADMAP.md`
+- `docs/assistant/exec_plans/active/2026-03-26_web_adaptive_hifz_v1.md`

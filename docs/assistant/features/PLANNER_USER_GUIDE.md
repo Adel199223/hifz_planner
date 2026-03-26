@@ -36,8 +36,9 @@ If this guide conflicts with technical docs:
 
 1. Open `Plan` and enter realistic weekly or weekday minutes.
 2. Set conservative caps for new work before enabling advanced options.
-3. Press `Activate Plan`, then open `Today` and execute due tasks consistently.
-4. Use calibration only after collecting real sessions so forecast quality improves.
+3. Press `Activate Plan`, then open `Today`.
+4. If Today shows a setup/import message, finish that step first; on a brand-new setup, Today can create the first memorization unit once the required Quran data is ready.
+5. Use calibration only after collecting real sessions so forecast quality improves.
 
 ## Terms in Plain English
 
@@ -276,6 +277,7 @@ Execution order is designed to protect retention quality:
   - open companion chain (new mode)
 - this section appears only when new memorization is truly unlocked
 - if recent Companion retention is weak, this section may shrink sooner because the planner gives more of today's time back to review
+- on a zero-unit setup, this section can begin with one starter unit after the required Quran import and page metadata checks pass
 
 ### Summary section
 - keeps the secondary numbers together, such as planned minutes, review pressure, recovery signal, and session blocks
@@ -286,12 +288,13 @@ You may see new memorization paused when:
 - mandatory delayed checks are due
 - review pressure is high enough that the day has shifted into protect/recovery behavior
 - the planner is in revision-only mode
-- required page metadata setup is still missing
+- required Quran import or page metadata setup is still missing
 
 Why this happens:
 - the app protects retention quality first
 - unresolved delayed checks are a strong signal that stability needs attention
 - very high review pressure is also treated as a signal that review needs the day's budget first
+- the app will not generate the first unit until it has enough imported data to do it safely
 - lifecycle badges alone do not block new memorization
 
 Override behavior:

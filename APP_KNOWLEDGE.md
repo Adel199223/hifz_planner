@@ -773,3 +773,32 @@ Representative files:
 Current branch model:
 - `main` is the stable default branch.
 - active implementation branches follow `feat/*`.
+
+## 15) Web V1 Status (2026-03-26)
+
+The app now has a serious Flutter web target in the same repo.
+
+Key architecture changes:
+- database opening now flows through `lib/data/database/app_database_connection_factory.dart`
+- web Drift depends on committed browser assets at `web/drift_worker.js` and `web/sqlite3.wasm`
+- browser storage health is surfaced through `DatabaseStorageStatus`
+- first-run Quran import readiness is surfaced through `QuranDataReadiness`
+- native/web variants now exist for Quran.com cache services, QCF font loading, and audio download/playback resolution
+- web startup enables semantics for browser accessibility and Playwright discoverability
+
+Current web-first behaviors:
+- Settings shows storage mode and Quran-data readiness
+- Today shows setup/import guidance and browser storage warnings
+- Today can generate a first memorization unit through the production planner path after Quran data is imported and no units exist yet
+- Plan restores persisted setup fields after refresh so browser resume flows stay truthful
+- Reader hides offline-download-only audio actions on web
+- the navigation shell adapts across narrow, medium, and wide widths, including menu-route titles on narrow layouts
+
+Honest web degradations in this phase:
+- offline audio downloads are disabled on web
+- Quran.com cache is browser-safe and lighter than the native filesystem cache
+- QCF font persistence is lighter on web than on native desktop
+- PWA/installability is not part of this pass
+
+Browser automation entrypoint:
+- `tooling/playwright/`

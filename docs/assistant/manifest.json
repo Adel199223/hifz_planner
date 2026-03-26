@@ -11,6 +11,7 @@
   "product_docs": [
     "docs/strategy/adaptive-hifz-path-solo-master-plan.md",
     "docs/roadmap/adaptive-hifz-path-solo-roadmap.md",
+    "docs/WEB_VERSION_ROADMAP.md",
     "docs/algorithms/adaptive-hifz-scheduler-v1.md",
     "docs/ux/solo-learner-daily-flow.md",
     "docs/backlog/wave-1-implementation-backlog.md"
@@ -33,7 +34,11 @@
         "lib/app/reader_display_preferences.dart",
         "lib/app/reader_display_preferences_store.dart",
         "lib/data/services/ayah_audio_download_service.dart",
+        "lib/data/services/ayah_audio_download_service_native.dart",
+        "lib/data/services/ayah_audio_download_service_web.dart",
         "lib/data/services/ayah_audio_playback_resolver.dart",
+        "lib/data/services/ayah_audio_playback_resolver_native.dart",
+        "lib/data/services/ayah_audio_playback_resolver_web.dart",
         "lib/ui/quran/quran_word_wrap.dart",
         "lib/data/services/quran_wording.dart",
         "lib/ui/tajweed/tajweed_colors.dart",
@@ -61,7 +66,15 @@
       "scope": "Quran.com API fetch/cache/dedupe/translation and QCF font pipeline.",
       "primary_files": [
         "lib/data/services/qurancom_api.dart",
+        "lib/data/services/qurancom_api_native.dart",
+        "lib/data/services/qurancom_api_web.dart",
+        "lib/data/services/qurancom_chapters_service.dart",
+        "lib/data/services/qurancom_chapters_service_native.dart",
+        "lib/data/services/qurancom_chapters_service_web.dart",
         "lib/ui/qcf/qcf_font_manager.dart",
+        "lib/ui/qcf/qcf_font_manager_native.dart",
+        "lib/ui/qcf/qcf_font_manager_web.dart",
+        "lib/data/services/quran_data_readiness.dart",
         "lib/data/providers/database_providers.dart"
       ],
       "targeted_tests": [
@@ -81,9 +94,14 @@
       "primary_files": [
         "lib/screens/plan_screen.dart",
         "lib/screens/today_screen.dart",
+        "lib/screens/settings_screen.dart",
         "lib/data/services/daily_planner.dart",
+        "lib/data/services/new_unit_generator.dart",
+        "lib/data/repositories/mem_unit_repo.dart",
         "lib/data/services/spaced_repetition_scheduler.dart",
-        "lib/data/database/app_database.dart"
+        "lib/data/database/app_database.dart",
+        "lib/data/database/app_database_connection_factory.dart",
+        "lib/data/database/database_storage_status.dart"
       ],
       "targeted_tests": [
         "test/screens/plan_screen_test.dart",
@@ -424,5 +442,5 @@
     "plain_language_support_response_policy": "Support responses must be plain-language-first with numbered next steps and exact UI labels.",
     "term_definition_policy": "If a technical term is unavoidable in support replies, define it in one short sentence."
   },
-  "last_updated": "2026-03-25"
+  "last_updated": "2026-03-26"
 }

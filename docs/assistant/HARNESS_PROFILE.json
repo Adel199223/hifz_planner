@@ -3,7 +3,7 @@
   "schema_version": 1,
   "project": {
     "name": "hifz_planner",
-    "description": "Flutter app for Quran reading, hifz planning, and Companion memorization workflow"
+    "description": "Flutter app for Quran reading, adaptive hifz planning, and Companion memorization workflow across desktop, mobile, and web"
   },
   "operator": {
     "experience_level": "beginner",
@@ -13,8 +13,8 @@
   "stack": {
     "primary_language": "dart",
     "framework": "flutter",
-    "surfaces": ["desktop", "mobile"],
-    "target_os": ["windows", "android", "ios"]
+    "surfaces": ["desktop", "mobile", "web"],
+    "target_os": ["windows", "android", "ios", "web"]
   },
   "bootstrap": {
     "archetype": "flutter_app",
@@ -23,10 +23,11 @@
     "disabled_modules": ["desktop_launcher"],
     "uses_openai": false,
     "needs_codespaces": false,
-    "has_browser_bridge": false,
+    "has_browser_bridge": true,
     "notes": [
-      "Keep the existing Planner/Companion canon and route roadmap continuity through docs/assistant/ROADMAP_ANCHOR.md.",
-      "Adopt bootstrap docs first; defer extra helper scripts."
+      "Keep the Adaptive Hifz Path canon and route roadmap continuity through docs/assistant/ROADMAP_ANCHOR.md.",
+      "Chromium + Playwright are now part of the local validation surface.",
+      "Web support lives in the same Flutter repo with browser-safe storage and service fallbacks."
     ]
   }
 }

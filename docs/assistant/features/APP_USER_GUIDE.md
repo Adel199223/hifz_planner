@@ -108,7 +108,7 @@ Go to Reader when your goal is comprehension, listening, and context.
 Typical actions:
 - navigate by surah/ayah/page/juz
 - listen to recitation
-- download the current surah's audio for offline replay in Reader
+- use the audio actions available on your current device; web focuses on streaming while native apps can also offer offline downloads
 - use translation and word interactions
 - show or hide verse translations, word tooltips, and hovered-word highlights
 - add bookmarks/notes
@@ -138,6 +138,9 @@ Then it guides you through:
 - delayed consolidation checks
 - review work grouped into warm-up, due review, and weak spots
 - optional new memorization when it is unlocked
+- a first-unit bootstrap when you have imported the Quran data but have not created any memorization units yet
+
+If required Quran data or page metadata is still missing, Today explains the setup step that is blocking new work instead of silently failing.
 
 This screen is intentionally action-oriented: less setup, more execution.
 
@@ -205,11 +208,15 @@ The app is local-first in core planning and memorization data.
 What this means:
 - your planning/scheduling state is saved locally
 - memorization telemetry and progress are persisted locally
+- on web, that local save lives in your browser storage instead of normal app files
 - many features continue working even if some external data is unavailable
 
 If some remote assets fail temporarily:
 - core planner and companion flows continue
 - reading/presentation may use fallback behaviors where needed
+
+If local browser storage is weak or Quran data is still not imported:
+- Settings and Today can show guidance instead of pretending the app is fully ready
 
 ## Where to Go for X (Quick Decision Table)
 

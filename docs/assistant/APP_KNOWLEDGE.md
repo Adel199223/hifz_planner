@@ -144,3 +144,27 @@ flutter test -j 1 -r expanded
 - Do not treat this bridge file as canonical.
 - Do not assume stale paths from historical docs are valid.
 - Do not skip targeted tests for the area you changed.
+
+## Web bridge update (2026-03-26)
+
+Current web continuity links:
+- `docs/WEB_VERSION_ROADMAP.md`
+- `docs/assistant/exec_plans/active/2026-03-26_web_adaptive_hifz_v1.md`
+- `tooling/playwright/`
+
+Web-specific high-impact files:
+- `web/index.html`
+- `web/drift_worker.js`
+- `web/sqlite3.wasm`
+- `lib/app/navigation_shell.dart`
+- `lib/data/database/app_database_connection_factory.dart`
+- `lib/data/database/database_storage_status.dart`
+- `lib/data/services/daily_planner.dart`
+- `lib/data/services/new_unit_generator.dart`
+- `lib/data/services/quran_data_readiness.dart`
+- `lib/screens/today_screen.dart`
+- `lib/data/services/qurancom_api.dart`
+- `lib/data/services/qurancom_chapters_service.dart`
+- `lib/ui/qcf/qcf_font_manager.dart`
+- `lib/data/services/ayah_audio_download_service.dart`
+- `lib/data/services/ayah_audio_playback_resolver.dart`

@@ -19,3 +19,9 @@ This is a repo-local environment overlay. It is allowed to contain machine-speci
 
 - Keep secrets out of this file.
 - If a machine fact stops being true, update this overlay instead of rewriting the universal bootstrap templates.
+
+## Browser validation overlay (2026-03-26)
+
+- Chromium is now an active local validation target for the Flutter web surface.
+- Playwright smoke tests live under `tooling/playwright/`.
+- `node` and `npx` are available locally for browser automation setup.
