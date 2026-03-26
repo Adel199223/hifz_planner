@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
@@ -623,6 +623,137 @@ void main() {
     );
     expect(plan.stage4QualitySnapshot.maintainedCount, 1);
     expect(plan.stage4QualitySnapshot.stableCount, 0);
+  });
+
+  test(
+      'createStarterUnitForToday creates one production unit and advances cursor',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 30,
+      maxNewPagesPerDay: 0,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+    expect(plan.plannedNewUnits, isEmpty);
+
+    final result = await dailyPlanner.createStarterUnitForToday(
+      todayDay: todayDay,
+      plan: plan,
+    );
+
+    expect(result.status, StarterUnitCreationStatus.created);
+    expect(result.createdUnit, isNotNull);
+    expect(result.createdUnit!.unitKey, 'page_segment:p1:s1a1-s1a5');
+    expect(result.minutesPlannedNew, 5);
+
+    final cursor = await progressRepo.getCursor();
+    expect(cursor.nextSurah, 1);
+    expect(cursor.nextAyah, 6);
+
+    final schedule = await (db.select(db.scheduleState)
+          ..where((tbl) => tbl.unitId.equals(result.createdUnit!.id)))
+        .getSingle();
+    expect(schedule.dueDay, todayDay);
+    expect(await memUnitRepo.hasAnyUnits(), isTrue);
+  });
+
+  test(
+      'createStarterUnitForToday returns blockedByMetadata when setup is blocked',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 30,
+      maxNewPagesPerDay: 0,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 1,
+    );
+
+    await (db.update(db.ayah)
+          ..where((tbl) => tbl.surah.equals(1) & tbl.ayah.equals(1)))
+        .write(const AyahCompanion(pageMadina: Value(null)));
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+    final result = await dailyPlanner.createStarterUnitForToday(
+      todayDay: todayDay,
+      plan: plan,
+    );
+
+    expect(result.status, StarterUnitCreationStatus.blockedByMetadata);
+    expect(result.createdUnit, isNull);
+  });
+
+  test(
+      'createStarterUnitForToday returns alreadyInitialized when any unit exists',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 30,
+      maxNewPagesPerDay: 0,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    await memUnitRepo.create(
+      MemUnitCompanion.insert(
+        kind: 'page_segment',
+        unitKey: 'existing-unit',
+        createdAtDay: todayDay,
+        updatedAtDay: todayDay,
+      ),
+    );
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+    final result = await dailyPlanner.createStarterUnitForToday(
+      todayDay: todayDay,
+      plan: plan,
+    );
+
+    expect(result.status, StarterUnitCreationStatus.alreadyInitialized);
+    expect(result.createdUnit, isNull);
+  });
+
+  test('createStarterUnitForToday returns unavailable past the end of data',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 30,
+      maxNewPagesPerDay: 0,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+    await progressRepo.updateCursor(nextSurah: 99, nextAyah: 1);
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+    final result = await dailyPlanner.createStarterUnitForToday(
+      todayDay: todayDay,
+      plan: plan,
+    );
+
+    expect(result.status, StarterUnitCreationStatus.unavailable);
+    expect(result.createdUnit, isNull);
   });
 }
 

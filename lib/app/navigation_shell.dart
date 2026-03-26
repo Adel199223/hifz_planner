@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../l10n/app_language.dart';
 import '../l10n/app_strings.dart';
 import 'app_preferences.dart';
+import 'nav_destination.dart';
 import 'navigation_providers.dart';
+
+const double _narrowShellBreakpoint = 840;
+const double _wideShellBreakpoint = 1200;
+const Set<String> _narrowPrimaryPaths = <String>{
+  '/today',
+  '/reader',
+  '/plan',
+  '/settings',
+};
 
 class AppNavigationShell extends ConsumerStatefulWidget {
   const AppNavigationShell({
@@ -47,6 +58,28 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
         : strings.themeSepia;
   }
 
+  String _resolveNarrowTitle({
+    required String location,
+    required List<NavDestination> destinations,
+    required AppStrings strings,
+    required int fallbackIndex,
+  }) {
+    for (final destination in destinations) {
+      if (destination.path == location) {
+        return destination.label;
+      }
+    }
+
+    return switch (location) {
+      '/learn' => strings.learn,
+      '/my-quran' => strings.myQuran,
+      '/quran-radio' => strings.quranRadio,
+      '/reciters' => strings.reciters,
+      '/companion/chain' => strings.companionProgressiveRevealTitle,
+      _ => destinations[fallbackIndex].label,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final destinations = ref.watch(navDestinationsProvider);
@@ -58,6 +91,16 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
     final strings = AppStrings.of(prefs.language);
     final isReaderRoute = widget.location == '/reader';
     final shouldShowGlobalMenuButton = !(isReaderRoute && isReaderSettingsOpen);
+    final width = MediaQuery.sizeOf(context).width;
+    final isNarrow = width < _narrowShellBreakpoint;
+    final isMedium =
+        width >= _narrowShellBreakpoint && width < _wideShellBreakpoint;
+    final narrowDestinations = destinations
+        .where((destination) => _narrowPrimaryPaths.contains(destination.path))
+        .toList(growable: false);
+    final selectedNarrowIndex = narrowDestinations.indexWhere(
+      (destination) => destination.path == widget.location,
+    );
 
     final menuItems = <_GlobalMenuDestination>[
       _GlobalMenuDestination(
@@ -97,8 +140,30 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
     final menuButtonBackground = colorScheme.surfaceContainerHighest;
     final drawerBorderColor = colorScheme.outlineVariant;
 
-    return Scaffold(
+    final scaffold = Scaffold(
       key: _scaffoldKey,
+      appBar: isNarrow
+          ? AppBar(
+              automaticallyImplyLeading: false,
+              title: Text(
+                _resolveNarrowTitle(
+                  location: widget.location,
+                  destinations: destinations,
+                  strings: strings,
+                  fallbackIndex: currentIndex,
+                ),
+              ),
+              actions: [
+                if (shouldShowGlobalMenuButton)
+                  IconButton(
+                    key: const ValueKey('global_menu_button'),
+                    tooltip: strings.menu,
+                    onPressed: _openMenuDrawer,
+                    icon: const Icon(Icons.menu),
+                  ),
+              ],
+            )
+          : null,
       endDrawerEnableOpenDragGesture: false,
       endDrawer: Drawer(
         key: const ValueKey('global_menu_drawer'),
@@ -241,49 +306,76 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          Row(
-            children: [
-              NavigationRail(
-                selectedIndex: currentIndex,
-                labelType: NavigationRailLabelType.all,
-                onDestinationSelected: (index) {
-                  context.go(destinations[index].path);
-                },
-                destinations: [
-                  for (final destination in destinations)
-                    NavigationRailDestination(
-                      icon: Icon(destination.icon),
-                      label: Text(destination.label),
+      body: isNarrow
+          ? widget.child
+          : Stack(
+              children: [
+                Row(
+                  children: [
+                    NavigationRail(
+                      selectedIndex: currentIndex,
+                      extended: !isMedium,
+                      labelType: isMedium
+                          ? NavigationRailLabelType.all
+                          : NavigationRailLabelType.none,
+                      onDestinationSelected: (index) {
+                        context.go(destinations[index].path);
+                      },
+                      destinations: [
+                        for (final destination in destinations)
+                          NavigationRailDestination(
+                            icon: Icon(destination.icon),
+                            label: Text(destination.label),
+                          ),
+                      ],
                     ),
-                ],
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(child: widget.child),
-            ],
-          ),
-          if (shouldShowGlobalMenuButton)
-            PositionedDirectional(
-              top: 8,
-              end: 12,
-              child: SafeArea(
-                child: Material(
-                  color: menuButtonBackground,
-                  shape: CircleBorder(
-                    side: BorderSide(color: menuButtonBorderColor),
-                  ),
-                  child: IconButton(
-                    key: const ValueKey('global_menu_button'),
-                    tooltip: strings.menu,
-                    onPressed: _openMenuDrawer,
-                    icon: const Icon(Icons.menu),
-                  ),
+                    const VerticalDivider(width: 1),
+                    Expanded(child: widget.child),
+                  ],
                 ),
-              ),
+                if (shouldShowGlobalMenuButton)
+                  PositionedDirectional(
+                    top: 8,
+                    end: 12,
+                    child: SafeArea(
+                      child: Material(
+                        color: menuButtonBackground,
+                        shape: CircleBorder(
+                          side: BorderSide(color: menuButtonBorderColor),
+                        ),
+                        child: IconButton(
+                          key: const ValueKey('global_menu_button'),
+                          tooltip: strings.menu,
+                          onPressed: _openMenuDrawer,
+                          icon: const Icon(Icons.menu),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-        ],
-      ),
+      bottomNavigationBar: isNarrow
+          ? NavigationBar(
+              selectedIndex: selectedNarrowIndex >= 0 ? selectedNarrowIndex : 0,
+              onDestinationSelected: (index) {
+                context.go(narrowDestinations[index].path);
+              },
+              destinations: [
+                for (final destination in narrowDestinations)
+                  NavigationDestination(
+                    icon: Icon(destination.icon),
+                    label: destination.label,
+                  ),
+              ],
+            )
+          : null,
+    );
+
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        const SingleActivator(LogicalKeyboardKey.escape): _closeMenuDrawer,
+      },
+      child: scaffold,
     );
   }
 }

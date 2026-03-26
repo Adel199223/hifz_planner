@@ -1,20 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 
+import 'app/audio_platform_bootstrap.dart';
 import 'app/app_preferences.dart';
 import 'app/router.dart';
 import 'data/providers/database_providers.dart';
 import 'l10n/app_language.dart';
 import 'theme/quran_themes.dart';
 
+Object? _webSemanticsHandle;
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  JustAudioMediaKit.ensureInitialized(
-    windows: true,
-    linux: true,
-  );
+  ensurePlatformAudioInitialized();
+  if (kIsWeb) {
+    _webSemanticsHandle ??= WidgetsBinding.instance.ensureSemantics();
+  }
   runApp(
     ProviderScope(
       overrides: [
@@ -54,3 +57,4 @@ class HifzPlannerApp extends ConsumerWidget {
     );
   }
 }
+

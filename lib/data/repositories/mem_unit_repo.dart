@@ -22,6 +22,13 @@ class MemUnitRepo {
     return query.get();
   }
 
+  Future<bool> hasAnyUnits() async {
+    final countExp = _db.memUnit.id.count();
+    final row =
+        await (_db.selectOnly(_db.memUnit)..addColumns([countExp])).getSingle();
+    return (row.read(countExp) ?? 0) > 0;
+  }
+
   Future<MemUnitData> ensureUniqueByUnitKey(MemUnitCompanion unit) {
     if (!unit.unitKey.present) {
       throw ArgumentError.value(

@@ -23,3 +23,6 @@ __pycache__/
 .ruff_cache/
 playstore_audit_dump.txt
 
+tooling/playwright/node_modules/
+tooling/playwright/test-results/
+output/playwright/

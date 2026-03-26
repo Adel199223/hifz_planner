@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
@@ -166,6 +168,76 @@ class NewUnitGenerator {
     );
   }
 
+  Future<NewUnitGenerationResult> generateOneUnit({
+    required int todayDay,
+    required MemProgressData cursor,
+    required AppSettingsData settings,
+    required double initialEf,
+  }) async {
+    if (settings.avgNewMinutesPerAyah <= 0) {
+      return NewUnitGenerationResult(
+        createdUnits: const <MemUnitData>[],
+        minutesPlannedNew: 0,
+        nextSurah: cursor.nextSurah,
+        nextAyah: cursor.nextAyah,
+        cursorAtEnd: false,
+      );
+    }
+
+    final anchorWindow = await _quranRepo.getAyahsFromCursor(
+      startSurah: cursor.nextSurah,
+      startAyah: cursor.nextAyah,
+      limit: 1,
+    );
+    if (anchorWindow.isEmpty) {
+      final exhaustedCursor = await _resolveExhaustedCursor(
+        fallbackSurah: cursor.nextSurah,
+        fallbackAyah: cursor.nextAyah,
+      );
+      return NewUnitGenerationResult(
+        createdUnits: const <MemUnitData>[],
+        minutesPlannedNew: 0,
+        nextSurah: exhaustedCursor.nextSurah,
+        nextAyah: exhaustedCursor.nextAyah,
+        cursorAtEnd: exhaustedCursor.cursorAtEnd,
+      );
+    }
+
+    final anchor = anchorWindow.first;
+    final unitAyahs = await _loadSingleUnitAyahs(
+      anchor: anchor,
+      settings: settings,
+    );
+    if (unitAyahs.isEmpty) {
+      return NewUnitGenerationResult(
+        createdUnits: const <MemUnitData>[],
+        minutesPlannedNew: 0,
+        nextSurah: anchor.surah,
+        nextAyah: anchor.ayah,
+        cursorAtEnd: false,
+      );
+    }
+
+    final createdUnit = await _createUnitFromAyahs(
+      unitAyahs: unitAyahs,
+      todayDay: todayDay,
+      initialEf: initialEf,
+    );
+    final end = unitAyahs.last;
+    final nextCursor = await _resolveNextCursor(
+      endSurah: end.surah,
+      endAyah: end.ayah,
+    );
+
+    return NewUnitGenerationResult(
+      createdUnits: <MemUnitData>[createdUnit],
+      minutesPlannedNew: unitAyahs.length * settings.avgNewMinutesPerAyah,
+      nextSurah: nextCursor.nextSurah,
+      nextAyah: nextCursor.nextAyah,
+      cursorAtEnd: nextCursor.cursorAtEnd,
+    );
+  }
+
   List<AyahData> _takeUnitAyahs(List<AyahData> window, int? anchorPage) {
     if (window.isEmpty) {
       return const <AyahData>[];
@@ -194,4 +266,123 @@ class NewUnitGenerator {
     final pageToken = pageMadina ?? 0;
     return 'page_segment:p$pageToken:s${startSurah}a$startAyah-s${endSurah}a$endAyah';
   }
+
+  Future<List<AyahData>> _loadSingleUnitAyahs({
+    required AyahData anchor,
+    required AppSettingsData settings,
+  }) async {
+    final anchorPage = anchor.pageMadina;
+    if (anchorPage != null) {
+      final pageAyahs = await _quranRepo.getAyahsByPage(anchorPage);
+      final unitAyahs = pageAyahs
+          .where(
+            (ayah) =>
+                ayah.surah > anchor.surah ||
+                (ayah.surah == anchor.surah && ayah.ayah >= anchor.ayah),
+          )
+          .toList(growable: false);
+      return unitAyahs.isEmpty ? <AyahData>[anchor] : unitAyahs;
+    }
+
+    final windowLimit = math.max(
+      1,
+      (settings.dailyMinutesDefault / settings.avgNewMinutesPerAyah).floor(),
+    );
+    return _quranRepo.getAyahsFromCursor(
+      startSurah: anchor.surah,
+      startAyah: anchor.ayah,
+      limit: windowLimit,
+    );
+  }
+
+  Future<MemUnitData> _createUnitFromAyahs({
+    required List<AyahData> unitAyahs,
+    required int todayDay,
+    required double initialEf,
+  }) async {
+    final start = unitAyahs.first;
+    final end = unitAyahs.last;
+    final pageMadina = start.pageMadina;
+    final unitId = await _memUnitRepo.create(
+      MemUnitCompanion.insert(
+        kind: 'page_segment',
+        pageMadina:
+            pageMadina == null ? const Value.absent() : Value(pageMadina),
+        startSurah: Value(start.surah),
+        startAyah: Value(start.ayah),
+        endSurah: Value(end.surah),
+        endAyah: Value(end.ayah),
+        unitKey: _buildUnitKey(
+          pageMadina: pageMadina,
+          startSurah: start.surah,
+          startAyah: start.ayah,
+          endSurah: end.surah,
+          endAyah: end.ayah,
+        ),
+        createdAtDay: todayDay,
+        updatedAtDay: todayDay,
+      ),
+    );
+
+    await _scheduleRepo.upsertInitialStateForNewUnit(
+      unitId: unitId,
+      dueDay: todayDay,
+      ef: initialEf,
+      reps: 0,
+      intervalDays: 0,
+    );
+
+    final createdUnit = await _memUnitRepo.get(unitId);
+    if (createdUnit == null) {
+      throw StateError('Failed to load newly created unit $unitId.');
+    }
+    return createdUnit;
+  }
+
+  Future<_NextCursorResult> _resolveNextCursor({
+    required int endSurah,
+    required int endAyah,
+  }) async {
+    final nextAyahs = await _quranRepo.getAyahsFromCursor(
+      startSurah: endSurah,
+      startAyah: endAyah + 1,
+      limit: 1,
+    );
+    if (nextAyahs.isNotEmpty) {
+      return _NextCursorResult(
+        nextSurah: nextAyahs.first.surah,
+        nextAyah: nextAyahs.first.ayah,
+        cursorAtEnd: false,
+      );
+    }
+
+    return _resolveExhaustedCursor(
+      fallbackSurah: endSurah,
+      fallbackAyah: endAyah,
+    );
+  }
+
+  Future<_NextCursorResult> _resolveExhaustedCursor({
+    required int fallbackSurah,
+    required int fallbackAyah,
+  }) async {
+    final lastAyah = await _quranRepo.getLastAyah();
+    return _NextCursorResult(
+      nextSurah: lastAyah?.surah ?? fallbackSurah,
+      nextAyah: lastAyah?.ayah ?? fallbackAyah,
+      cursorAtEnd: true,
+    );
+  }
+}
+
+class _NextCursorResult {
+  const _NextCursorResult({
+    required this.nextSurah,
+    required this.nextAyah,
+    required this.cursorAtEnd,
+  });
+
+  final int nextSurah;
+  final int nextAyah;
+  final bool cursorAtEnd;
 }

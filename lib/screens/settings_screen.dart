@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/app_preferences.dart';
+import '../data/database/database_storage_status.dart';
 import '../data/providers/database_providers.dart';
 import '../l10n/app_strings.dart';
 
@@ -166,6 +167,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           AppStrings.of(ref.read(appPreferencesProvider).language).completed,
       statusMessage: message,
     );
+    ref.invalidate(quranDataReadinessProvider);
     _showStatusMessage(message);
   }
 
@@ -205,48 +207,159 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final prefs = ref.watch(appPreferencesProvider);
     final strings = AppStrings.of(prefs.language);
+    final storageStatus = ref.watch(databaseStorageStatusProvider);
+    final readiness = ref.watch(quranDataReadinessProvider);
 
-    return SafeArea(
+    return Semantics(
+      container: true,
+      label: 'Settings screen',
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.settingsTitle,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 16),
+              _SettingsStatusCard(
+                key: const ValueKey('settings_storage_status_card'),
+                title: 'Storage status',
+                child: storageStatus.when(
+                  data: (value) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        value.label,
+                        key: const ValueKey('settings_storage_status_label'),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(value.details),
+                      if (value.warningMessage != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          value.warningMessage!,
+                          key: const ValueKey('settings_storage_warning'),
+                          style: TextStyle(
+                            color: value.health ==
+                                    DatabaseStorageHealth.transient
+                                ? Theme.of(context).colorScheme.error
+                                : Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  loading: () => Text(
+                    DatabaseStorageStatus.webInitializing().details,
+                  ),
+                  error: (error, stackTrace) => Text(error.toString()),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _SettingsStatusCard(
+                key: const ValueKey('settings_quran_data_status_card'),
+                title: 'Quran data',
+                child: readiness.when(
+                  data: (value) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        value.needsAnySetup
+                            ? strings.readyToImportBundledQuranAssets
+                            : strings.pageMetadataAlreadyUpToDate,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        value.needsTextImport
+                            ? strings.importQuranText
+                            : strings.alreadyImported,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        value.needsPageMetadataImport
+                            ? strings.importPageMetadata
+                            : strings.pageMetadataAlreadyUpToDate,
+                      ),
+                    ],
+                  ),
+                  loading: () => Text(strings.readyToImportBundledQuranAssets),
+                  error: (error, stackTrace) => Text(error.toString()),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  FilledButton.icon(
+                    key: const ValueKey('settings_import_quran_text_button'),
+                    onPressed: _isImporting ? null : _runTextImport,
+                    icon: const Icon(Icons.download),
+                    label: Text(strings.importQuranText),
+                  ),
+                  FilledButton.icon(
+                    key: const ValueKey(
+                      'settings_import_page_metadata_button',
+                    ),
+                    onPressed: _isImporting ? null : _runPageMetadataImport,
+                    icon: const Icon(Icons.menu_book_outlined),
+                    label: Text(strings.importPageMetadata),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (_isImporting || _progressDetails != null)
+                LinearProgressIndicator(
+                  value: _progressFraction,
+                ),
+              const SizedBox(height: 8),
+              Text(
+                _statusMessage,
+                key: const ValueKey('settings_status_message'),
+              ),
+              if (_progressDetails != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _progressDetails!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsStatusCard extends StatelessWidget {
+  const _SettingsStatusCard({
+    super.key,
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              strings.settingsTitle,
-              style: Theme.of(context).textTheme.headlineSmall,
+              title,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                FilledButton.icon(
-                  onPressed: _isImporting ? null : _runTextImport,
-                  icon: const Icon(Icons.download),
-                  label: Text(strings.importQuranText),
-                ),
-                FilledButton.icon(
-                  onPressed: _isImporting ? null : _runPageMetadataImport,
-                  icon: const Icon(Icons.menu_book_outlined),
-                  label: Text(strings.importPageMetadata),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (_isImporting || _progressDetails != null)
-              LinearProgressIndicator(
-                value: _progressFraction,
-              ),
             const SizedBox(height: 8),
-            Text(_statusMessage),
-            if (_progressDetails != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _progressDetails!,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+            child,
           ],
         ),
       ),

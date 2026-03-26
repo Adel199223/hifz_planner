@@ -377,11 +377,30 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       final projectionEngine = ref.read(planningProjectionEngineProvider);
       final preferences = projectionEngine.preferencesFromSettings(settings);
       final overrides = projectionEngine.overridesFromSettings(settings);
+      final weekdayMinutes = settings.minutesByWeekdayJson == null
+          ? splitWeeklyMinutesEvenly(settings.dailyMinutesDefault * 7)
+          : decodeWeekdayMinutesJson(settings.minutesByWeekdayJson!);
+      final weeklyMinutes = weekdayMinutes.values.fold<int>(0, (sum, value) => sum + value);
       if (!mounted) {
         return;
       }
 
       setState(() {
+        _profile = settings.profile;
+        _forceRevisionOnly = settings.forceRevisionOnly == 1;
+        _requirePageMetadata = settings.requirePageMetadata == 1;
+        _weeklyMinutesController.text = weeklyMinutes.toString();
+        for (final key in onboardingWeekdayKeys) {
+          _weekdayControllers[key]!.text = (weekdayMinutes[key] ?? 0).toString();
+        }
+        _maxNewPagesController.text = settings.maxNewPagesPerDay.toString();
+        _maxNewUnitsController.text = settings.maxNewUnitsPerDay.toString();
+        _avgNewMinutesController.text =
+            settings.avgNewMinutesPerAyah.toStringAsFixed(1);
+        _avgReviewMinutesController.text =
+            settings.avgReviewMinutesPerAyah.toStringAsFixed(1);
+        _avgNewDirty = false;
+        _avgReviewDirty = false;
         _schedulingPreferences = preferences;
         _schedulingOverrides = overrides;
         _minutesPerDayController.text =
@@ -1828,3 +1847,5 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     return '[$preview]';
   }
 }
+
+

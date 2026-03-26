@@ -11,6 +11,7 @@ import '../services/ayah_audio_service.dart';
 import '../services/ayah_audio_source.dart';
 import '../services/ayah_reciter_catalog_service.dart';
 import '../services/ayah_audio_stream_resolver.dart';
+import '../services/audio_platform_capabilities.dart';
 
 enum ReciterSelectionStatus {
   applied,
@@ -71,6 +72,12 @@ final ayahAudioPreferencesProvider =
     NotifierProvider<AyahAudioPreferencesNotifier, AyahAudioPreferencesState>(
   AyahAudioPreferencesNotifier.new,
 );
+
+final audioPlatformCapabilitiesProvider = Provider<AudioPlatformCapabilities>((
+  ref,
+) {
+  return currentAudioPlatformCapabilities();
+});
 
 class AyahAudioPreferencesNotifier extends Notifier<AyahAudioPreferencesState> {
   bool _didStartLoad = false;
@@ -412,3 +419,4 @@ final ayahAudioErrorProvider = StreamProvider.autoDispose<String>((ref) {
   final service = ref.watch(ayahAudioServiceProvider);
   return service.errorStream;
 });
+

@@ -1,0 +1,14 @@
+{
+  "name": "hifz-planner-playwright",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "test": "playwright test",
+    "smoke": "playwright test tests/smoke.spec.ts",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "http-server": "^14.1.1"
+  }
+}

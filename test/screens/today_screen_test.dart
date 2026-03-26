@@ -809,7 +809,7 @@ void main() {
     );
   });
 
-  testWidgets('debug seed button generates one new memorization unit',
+  testWidgets('starter unit button generates one production memorization unit',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
@@ -833,29 +833,107 @@ void main() {
     );
 
     await _pumpToday(tester, container);
-    expect(find.text('No planned new units left.'), findsOneWidget);
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_generate_starter_unit_button')),
+    );
 
     await _tapVisible(
       tester,
-      find.byKey(const ValueKey('today_debug_seed_new_unit')),
+      find.byKey(const ValueKey('today_generate_starter_unit_button')),
     );
 
-    final seededUnits = await (db.select(db.memUnit)
-          ..where(
-            (tbl) =>
-                tbl.kind.equals('page_segment') &
-                tbl.createdAtDay.equals(todayDay),
-          )
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.id)]))
-        .get();
-    expect(seededUnits, isNotEmpty);
+    final createdUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
+    expect(createdUnits.length, 1);
 
-    final seededUnit = seededUnits.first;
+    final createdUnit = createdUnits.single;
+    expect(createdUnit.unitKey, isNot(startsWith('debug_seed:')));
     expect(
-        find.byKey(ValueKey('today_new_row_${seededUnit.id}')), findsOneWidget);
-    expect(
-      find.byKey(ValueKey('today_open_companion_new_${seededUnit.id}')),
+      find.byKey(ValueKey('today_new_row_${createdUnit.id}')),
       findsOneWidget,
+    );
+    expect(
+      find.byKey(ValueKey('today_review_row_${createdUnit.id}')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(ValueKey('today_open_companion_new_${createdUnit.id}')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('today_generate_starter_unit_button')),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+      'starter unit button stays hidden once any memorization unit exists',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 0,
+      maxNewPagesPerDay: 0,
+    );
+    await _insertMemUnitOnly(
+      db,
+      unitKey: 'existing-starter-unit',
+      todayDay: todayDay,
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.byKey(const ValueKey('today_generate_starter_unit_button')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('starter unit button stays hidden when setup is still blocked',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: true,
+      maxNewUnitsPerDay: 0,
+      maxNewPagesPerDay: 0,
+    );
+    await (db.update(db.ayah)
+          ..where((tbl) => tbl.surah.equals(1) & tbl.ayah.equals(1)))
+        .write(const AyahCompanion(pageMadina: Value(null)));
+
+    await _pumpToday(tester, container);
+
+    expect(find.text('Import page metadata first'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('today_generate_starter_unit_button')),
+      findsNothing,
     );
   });
 }
@@ -971,6 +1049,26 @@ Future<int> _insertDueReviewUnit(
         ),
       );
   return unitId;
+}
+
+Future<int> _insertMemUnitOnly(
+  AppDatabase db, {
+  required String unitKey,
+  required int todayDay,
+}) {
+  return db.into(db.memUnit).insert(
+        MemUnitCompanion.insert(
+          kind: 'page_segment',
+          pageMadina: const Value(1),
+          startSurah: const Value(1),
+          startAyah: const Value(1),
+          endSurah: const Value(1),
+          endAyah: const Value(1),
+          unitKey: unitKey,
+          createdAtDay: todayDay,
+          updatedAtDay: todayDay,
+        ),
+      );
 }
 
 Future<List<MemUnitData>> _fetchPlannedNewUnits(

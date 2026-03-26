@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
 
+import 'app_database_connection_factory.dart';
 import '../time/local_day_time.dart';
 
 part 'app_database.g.dart';
@@ -688,7 +688,8 @@ class MemProgress extends Table {
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
+  AppDatabase([QueryExecutor? executor])
+      : super(executor ?? openAppDatabaseConnection());
 
   @override
   int get schemaVersion => 7;
@@ -896,6 +897,4 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-QueryExecutor _openConnection() {
-  return driftDatabase(name: 'hifz_planner.sqlite');
-}
+

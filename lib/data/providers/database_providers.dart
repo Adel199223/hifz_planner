@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../database/app_database.dart';
+import '../database/app_database_connection_factory.dart';
+import '../database/database_storage_status.dart';
 import '../repositories/bookmark_repo.dart';
 import '../repositories/calibration_repo.dart';
 import '../repositories/companion_repo.dart';
@@ -22,20 +24,48 @@ import '../services/forecast_simulation_service.dart';
 import '../services/my_quran_overview_service.dart';
 import '../services/new_unit_generator.dart';
 import '../services/page_metadata_importer_service.dart';
+import '../services/quran_data_readiness.dart';
+import '../services/quran_text_importer_service.dart';
 import '../services/qurancom_api.dart';
 import '../services/qurancom_chapters_service.dart';
 import '../services/review_completion_service.dart';
 import '../services/scheduling/planning_projection_engine.dart';
-import '../services/quran_text_importer_service.dart';
 import '../services/surah_metadata_service.dart';
 import '../services/tajweed_tags_service.dart';
 import '../../ui/qcf/qcf_font_manager.dart';
 export 'audio_providers.dart';
 
+final appDatabaseConnectionFactoryProvider =
+    Provider<AppDatabaseConnectionFactory>((ref) {
+  final factory = AppDatabaseConnectionFactory();
+  ref.onDispose(factory.dispose);
+  return factory;
+});
+
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final database = AppDatabase();
+  final factory = ref.watch(appDatabaseConnectionFactoryProvider);
+  final database = AppDatabase(factory.createExecutor());
   ref.onDispose(database.close);
   return database;
+});
+
+final databaseStorageStatusProvider = StreamProvider<DatabaseStorageStatus>((
+  ref,
+) async* {
+  final factory = ref.watch(appDatabaseConnectionFactoryProvider);
+  yield factory.currentStatus;
+  yield* factory.statusStream;
+});
+
+final quranDataReadinessServiceProvider = Provider<QuranDataReadinessService>((
+  ref,
+) {
+  final db = ref.watch(appDatabaseProvider);
+  return QuranDataReadinessService(db);
+});
+
+final quranDataReadinessProvider = FutureProvider<QuranDataReadiness>((ref) {
+  return ref.read(quranDataReadinessServiceProvider).load();
 });
 
 final quranRepoProvider = Provider<QuranRepo>((ref) {
@@ -130,11 +160,11 @@ final newUnitGeneratorProvider = Provider<NewUnitGenerator>((ref) {
   );
 });
 
-final planningProjectionEngineProvider = Provider<PlanningProjectionEngine>((
-  ref,
-) {
-  return PlanningProjectionEngine();
-});
+final planningProjectionEngineProvider = Provider<PlanningProjectionEngine>(
+  (ref) {
+    return PlanningProjectionEngine();
+  },
+);
 
 final dailyPlannerProvider = Provider<DailyPlanner>((ref) {
   final db = ref.watch(appDatabaseProvider);

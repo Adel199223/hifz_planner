@@ -97,6 +97,72 @@ void main() {
     expect(find.byKey(const ValueKey('reader_view_toggle')), findsOneWidget);
   });
 
+  testWidgets('narrow shell app bar title matches menu destinations',
+      (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(720, 900));
+
+    final fakeStore = _FakeAppPreferencesStore();
+    final container = _createContainer(fakeStore);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const HifzPlannerApp(),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_screen_root')),
+    );
+
+    Future<void> openMenu() async {
+      await tester.tap(find.byKey(const ValueKey('global_menu_button')));
+      await tester.pumpAndSettle();
+    }
+
+    await openMenu();
+    await tester.tap(find.byKey(const ValueKey('global_menu_item_learn')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('learn_screen_root')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Learn'),
+      ),
+      findsOneWidget,
+    );
+
+    await openMenu();
+    await tester.tap(find.byKey(const ValueKey('global_menu_item_my_quran')));
+    await tester.pumpAndSettle();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('my_quran_screen_root')),
+    );
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('My Quran'),
+      ),
+      findsOneWidget,
+    );
+
+    await openMenu();
+    await tester.tap(find.byKey(const ValueKey('global_menu_item_reciters')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('reciters_screen_root')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Reciters'),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('Learn menu route opens Learn screen and Hifz Plan',
       (tester) async {
     final fakeStore = _FakeAppPreferencesStore();

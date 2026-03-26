@@ -66,6 +66,38 @@ void main() {
     expect(result.cursorAtEnd, isFalse);
   });
 
+  test('generateOneUnit creates one production unit even when daily caps are 0',
+      () async {
+    await settingsRepo.updateSettings(
+      maxNewUnitsPerDay: 0,
+      maxNewPagesPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+    );
+    final settings = await settingsRepo.getSettings();
+    final cursor = await progressRepo.getCursor();
+
+    final result = await generator.generateOneUnit(
+      todayDay: 100,
+      cursor: cursor,
+      settings: settings,
+      initialEf: 2.5,
+    );
+
+    expect(result.createdUnits.length, 1);
+    final first = result.createdUnits.single;
+    expect(first.kind, 'page_segment');
+    expect(first.pageMadina, 1);
+    expect(first.startSurah, 1);
+    expect(first.startAyah, 1);
+    expect(first.endSurah, 1);
+    expect(first.endAyah, 3);
+    expect(first.unitKey, 'page_segment:p1:s1a1-s1a3');
+    expect(result.minutesPlannedNew, 3);
+    expect(result.nextSurah, 1);
+    expect(result.nextAyah, 4);
+    expect(result.cursorAtEnd, isFalse);
+  });
+
   test('enforces max_new_units_per_day cap', () async {
     await settingsRepo.updateSettings(
       maxNewUnitsPerDay: 1,
@@ -184,6 +216,32 @@ void main() {
     );
 
     expect(result.createdUnits, isNotEmpty);
+    expect(result.cursorAtEnd, isTrue);
+    expect(result.nextSurah, 1);
+    expect(result.nextAyah, 10);
+  });
+
+  test('generateOneUnit clamps cursor to the last ayah at end of data',
+      () async {
+    await progressRepo.updateCursor(nextSurah: 1, nextAyah: 10);
+    await settingsRepo.updateSettings(
+      maxNewUnitsPerDay: 0,
+      maxNewPagesPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+    );
+    final settings = await settingsRepo.getSettings();
+    final cursor = await progressRepo.getCursor();
+
+    final result = await generator.generateOneUnit(
+      todayDay: 200,
+      cursor: cursor,
+      settings: settings,
+      initialEf: 2.5,
+    );
+
+    expect(result.createdUnits.length, 1);
+    expect(result.createdUnits.single.startAyah, 10);
+    expect(result.createdUnits.single.endAyah, 10);
     expect(result.cursorAtEnd, isTrue);
     expect(result.nextSurah, 1);
     expect(result.nextAyah, 10);

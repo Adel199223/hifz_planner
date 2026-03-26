@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
+
 import '../database/app_database.dart';
 import '../repositories/companion_repo.dart';
 import '../repositories/progress_repo.dart';
@@ -10,6 +12,8 @@ import '../repositories/settings_repo.dart';
 import 'scheduling/planning_projection_engine.dart';
 import 'scheduling/weekly_plan_generator.dart';
 import 'new_unit_generator.dart';
+
+const Object _todayPlanUnset = Object();
 
 class TodayPlan {
   const TodayPlan({
@@ -41,6 +45,45 @@ class TodayPlan {
   final double reviewPressure;
   final bool recoveryMode;
   final String? message;
+
+  TodayPlan copyWith({
+    List<PlannedReviewRow>? plannedReviews,
+    List<MemUnitData>? plannedNewUnits,
+    List<Stage4DueItem>? plannedStage4Due,
+    bool? revisionOnly,
+    double? minutesPlannedReviews,
+    double? minutesPlannedNew,
+    bool? stage4BlocksNewByDefault,
+    Stage4QualitySnapshot? stage4QualitySnapshot,
+    Object? stage4CatchUpMessage = _todayPlanUnset,
+    List<PlannedSession>? sessions,
+    double? reviewPressure,
+    bool? recoveryMode,
+    Object? message = _todayPlanUnset,
+  }) {
+    return TodayPlan(
+      plannedReviews: plannedReviews ?? this.plannedReviews,
+      plannedNewUnits: plannedNewUnits ?? this.plannedNewUnits,
+      plannedStage4Due: plannedStage4Due ?? this.plannedStage4Due,
+      revisionOnly: revisionOnly ?? this.revisionOnly,
+      minutesPlannedReviews:
+          minutesPlannedReviews ?? this.minutesPlannedReviews,
+      minutesPlannedNew: minutesPlannedNew ?? this.minutesPlannedNew,
+      stage4BlocksNewByDefault:
+          stage4BlocksNewByDefault ?? this.stage4BlocksNewByDefault,
+      stage4QualitySnapshot:
+          stage4QualitySnapshot ?? this.stage4QualitySnapshot,
+      stage4CatchUpMessage: identical(stage4CatchUpMessage, _todayPlanUnset)
+          ? this.stage4CatchUpMessage
+          : stage4CatchUpMessage as String?,
+      sessions: sessions ?? this.sessions,
+      reviewPressure: reviewPressure ?? this.reviewPressure,
+      recoveryMode: recoveryMode ?? this.recoveryMode,
+      message: identical(message, _todayPlanUnset)
+          ? this.message
+          : message as String?,
+    );
+  }
 }
 
 class PlannedReviewRow {
@@ -93,6 +136,27 @@ class Stage4QualitySnapshot {
   final int maintainedCount;
   final int qualityStreakDays;
   final List<String> todayQuests;
+}
+
+enum StarterUnitCreationStatus {
+  created,
+  alreadyInitialized,
+  blockedByMetadata,
+  unavailable,
+}
+
+class StarterUnitCreationResult {
+  const StarterUnitCreationResult({
+    required this.status,
+    this.createdUnit,
+    this.minutesPlannedNew = 0,
+    this.sessions = const <PlannedSession>[],
+  });
+
+  final StarterUnitCreationStatus status;
+  final MemUnitData? createdUnit;
+  final double minutesPlannedNew;
+  final List<PlannedSession> sessions;
 }
 
 class DailyPlanner {
@@ -304,6 +368,69 @@ class DailyPlanner {
         reviewPressure: allocation.reviewPressure,
         recoveryMode: allocation.recoveryMode,
         message: message,
+      );
+    });
+  }
+
+  Future<StarterUnitCreationResult> createStarterUnitForToday({
+    required int todayDay,
+    required TodayPlan plan,
+  }) {
+    return _db.transaction(() async {
+      if (await _hasAnyMemUnits()) {
+        return const StarterUnitCreationResult(
+          status: StarterUnitCreationStatus.alreadyInitialized,
+        );
+      }
+
+      final settings =
+          await _settingsRepo.getSettings(todayDayOverride: todayDay);
+      final cursor = await _progressRepo.getCursor();
+      final metadataBlocked = await _isMetadataBlocked(
+        settings: settings,
+        cursor: cursor,
+      );
+      if (metadataBlocked) {
+        return const StarterUnitCreationResult(
+          status: StarterUnitCreationStatus.blockedByMetadata,
+        );
+      }
+
+      final generation = await _newUnitGenerator.generateOneUnit(
+        todayDay: todayDay,
+        cursor: cursor,
+        settings: settings,
+        initialEf: _initialEfForProfile(settings.profile),
+      );
+      final createdUnit = generation.createdUnits.isEmpty
+          ? null
+          : generation.createdUnits.first;
+      if (createdUnit == null) {
+        return const StarterUnitCreationResult(
+          status: StarterUnitCreationStatus.unavailable,
+        );
+      }
+
+      final cursorMoved = generation.nextSurah != cursor.nextSurah ||
+          generation.nextAyah != cursor.nextAyah;
+      if (cursorMoved) {
+        await _progressRepo.updateCursor(
+          nextSurah: generation.nextSurah,
+          nextAyah: generation.nextAyah,
+          updatedAtDay: todayDay,
+        );
+      }
+
+      return StarterUnitCreationResult(
+        status: StarterUnitCreationStatus.created,
+        createdUnit: createdUnit,
+        minutesPlannedNew: generation.minutesPlannedNew,
+        sessions: _syncSessionsWithActualMinutes(
+          template: plan.sessions,
+          minutesPlannedReviews: plan.minutesPlannedReviews,
+          minutesPlannedNew: generation.minutesPlannedNew,
+          revisionOnly: false,
+        ),
       );
     });
   }
@@ -730,6 +857,13 @@ class DailyPlanner {
     final withPage = coverageWindow.where((ayah) => ayah.pageMadina != null);
     final coverage = withPage.length / coverageWindow.length;
     return coverage < 0.90;
+  }
+
+  Future<bool> _hasAnyMemUnits() async {
+    final countExp = _db.memUnit.id.count();
+    final row =
+        await (_db.selectOnly(_db.memUnit)..addColumns([countExp])).getSingle();
+    return (row.read(countExp) ?? 0) > 0;
   }
 
   List<PlannedSession> _syncSessionsWithActualMinutes({

@@ -42,9 +42,12 @@ class _MyQuranScreenState extends ConsumerState<MyQuranScreen> {
     final prefs = ref.watch(appPreferencesProvider);
     final strings = AppStrings.of(prefs.language);
 
-    return SafeArea(
-      key: const ValueKey('my_quran_screen_root'),
-      child: FutureBuilder<MyQuranOverview>(
+    return Semantics(
+      container: true,
+      label: 'My Quran screen',
+      child: SafeArea(
+        key: const ValueKey('my_quran_screen_root'),
+        child: FutureBuilder<MyQuranOverview>(
         future: _overviewFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -103,6 +106,7 @@ class _MyQuranScreenState extends ConsumerState<MyQuranScreen> {
             ),
           );
         },
+        ),
       ),
     );
   }
@@ -468,3 +472,5 @@ class _MyQuranScreenState extends ConsumerState<MyQuranScreen> {
     return '/reader?targetSurah=$surah&targetAyah=$ayah';
   }
 }
+
+

@@ -1768,6 +1768,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       _ReaderAudioOptionAction action) async {
     switch (action) {
       case _ReaderAudioOptionAction.download:
+        if (!ref
+            .read(audioPlatformCapabilitiesProvider)
+            .supportsOfflineDownloads) {
+          return;
+        }
         await _openAudioDownloadSheet();
         return;
       case _ReaderAudioOptionAction.repeat:
@@ -4834,11 +4839,14 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 onSelected: (action) =>
                     unawaited(_handleAudioOptionsAction(action)),
                 itemBuilder: (context) => [
-                  PopupMenuItem<_ReaderAudioOptionAction>(
-                    key: const ValueKey('reader_audio_option_download'),
-                    value: _ReaderAudioOptionAction.download,
-                    child: Text(_strings.download),
-                  ),
+                  if (ref
+                      .watch(audioPlatformCapabilitiesProvider)
+                      .supportsOfflineDownloads)
+                    PopupMenuItem<_ReaderAudioOptionAction>(
+                      key: const ValueKey('reader_audio_option_download'),
+                      value: _ReaderAudioOptionAction.download,
+                      child: Text(_strings.download),
+                    ),
                   PopupMenuItem<_ReaderAudioOptionAction>(
                     key: const ValueKey('reader_audio_option_repeat'),
                     value: _ReaderAudioOptionAction.repeat,
@@ -5010,8 +5018,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         _showSnackBar(_strings.audioLoadFailed(trimmed));
       });
     });
-    return SafeArea(
-      child: _buildMushafLayout(context),
+    return Semantics(
+      container: true,
+      label: 'Reader screen',
+      child: SafeArea(
+        child: _buildMushafLayout(context),
+      ),
     );
   }
 }
@@ -5602,3 +5614,4 @@ class _VersePosition implements Comparable<_VersePosition> {
     return ayah.compareTo(other.ayah);
   }
 }
+

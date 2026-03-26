@@ -25,6 +25,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   bool _isLoading = true;
   bool _isSeedingDebugUnit = false;
   bool _allowStage4NewOverride = false;
+  bool _hasAnyMemUnits = false;
   String? _errorMessage;
   TodayPlan? _plan;
   List<Stage4DueItem> _remainingStage4Due = const <Stage4DueItem>[];
@@ -49,15 +50,23 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     try {
-      final plan = await ref.read(dailyPlannerProvider).planToday(
-            todayDay: todayDay,
-            allowStage4Override: _allowStage4NewOverride,
-          );
+      final planner = ref.read(dailyPlannerProvider);
+      final memUnitRepo = ref.read(memUnitRepoProvider);
+      final results = await Future.wait<Object?>([
+        planner.planToday(
+          todayDay: todayDay,
+          allowStage4Override: _allowStage4NewOverride,
+        ),
+        memUnitRepo.hasAnyUnits(),
+      ]);
+      final plan = results[0]! as TodayPlan;
+      final hasAnyMemUnits = results[1]! as bool;
       if (!mounted) {
         return;
       }
       setState(() {
         _plan = plan;
+        _hasAnyMemUnits = hasAnyMemUnits;
         _remainingStage4Due = List<Stage4DueItem>.from(plan.plannedStage4Due);
         _remainingReviews = List<PlannedReviewRow>.from(plan.plannedReviews);
         _remainingNewUnits = List<MemUnitData>.from(plan.plannedNewUnits);
@@ -784,6 +793,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Widget _buildNewMemorizationSection(AppStrings strings, TodayPath path) {
+    final readiness = ref.watch(quranDataReadinessProvider).asData?.value;
+    final plan = _plan;
+    final canGenerateStarterUnit = !_hasAnyMemUnits &&
+        plan != null &&
+        (readiness?.hasTextData ?? false) &&
+        plan.message != TodayPath.metadataBlockedMessage &&
+        _remainingReviews.isEmpty &&
+        _remainingStage4Due.isEmpty &&
+        _remainingNewUnits.isEmpty;
+
     return Card(
       key: const ValueKey('today_new_section'),
       child: Padding(
@@ -805,6 +824,19 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   _isSeedingDebugUnit
                       ? 'Debug: Generating...'
                       : 'Debug: Generate test new unit',
+                ),
+              ),
+            ],
+            if (canGenerateStarterUnit) ...[
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                key: const ValueKey('today_generate_starter_unit_button'),
+                onPressed: _isSeedingDebugUnit ? null : _generateStarterUnit,
+                icon: const Icon(Icons.auto_awesome_outlined),
+                label: Text(
+                  _isSeedingDebugUnit
+                      ? 'Preparing first unit...'
+                      : 'Generate first memorization unit',
                 ),
               ),
             ],
@@ -919,6 +951,83 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       _showSnackBar('Debug: Added one test new memorization unit.');
     } catch (error) {
       _showSnackBar('Debug: Failed to add test unit ($error).');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSeedingDebugUnit = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _generateStarterUnit() async {
+    if (_isSeedingDebugUnit) {
+      return;
+    }
+
+    final plan = _plan;
+    if (plan == null) {
+      return;
+    }
+
+    setState(() {
+      _isSeedingDebugUnit = true;
+    });
+
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    try {
+      final result =
+          await ref.read(dailyPlannerProvider).createStarterUnitForToday(
+                todayDay: todayDay,
+                plan: plan,
+              );
+
+      if (!mounted) {
+        return;
+      }
+
+      switch (result.status) {
+        case StarterUnitCreationStatus.created:
+          final createdUnit = result.createdUnit;
+          if (createdUnit == null) {
+            _showSnackBar('Could not prepare the first memorization unit.');
+            break;
+          }
+
+          final updatedNewUnits = <MemUnitData>[
+            ..._remainingNewUnits,
+            createdUnit,
+          ];
+          setState(() {
+            _hasAnyMemUnits = true;
+            _remainingNewUnits = updatedNewUnits;
+            _plan = plan.copyWith(
+              plannedNewUnits: updatedNewUnits,
+              minutesPlannedNew: result.minutesPlannedNew,
+              sessions: result.sessions,
+              revisionOnly: false,
+              message: null,
+            );
+          });
+          _showSnackBar('First memorization unit ready.');
+        case StarterUnitCreationStatus.unavailable:
+          _showSnackBar(
+            'No memorization unit is available from the current position.',
+          );
+        case StarterUnitCreationStatus.alreadyInitialized:
+        case StarterUnitCreationStatus.blockedByMetadata:
+          setState(() {
+            _hasAnyMemUnits =
+                result.status == StarterUnitCreationStatus.alreadyInitialized ||
+                    _hasAnyMemUnits;
+          });
+          _showSnackBar('Could not prepare the first memorization unit.');
+      }
+    } catch (_) {
+      if (mounted) {
+        _showSnackBar('Could not prepare the first memorization unit.');
+      }
     } finally {
       if (mounted) {
         setState(() {
