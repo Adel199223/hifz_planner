@@ -43,14 +43,18 @@ Completed in this pass:
 Completed in this pass:
 - made the shell responsive for narrow, medium, and wide widths
 - added a Settings-visible storage status and Quran-data status
-- added Today setup guidance and a browser-safe first-unit generator when the learner has imported data but has no units yet
-- restored persisted Plan setup fields so refresh/resume behaves like a real product
+- added a shared guided setup path for Today and Settings that imports Qur'an text first, backfills page metadata only if it is still missing, saves a calm starter plan, and prepares the first memorization unit
+- tightened zero-unit Today so guided setup is the only release-visible first-run path and the initial planner pass stays non-materializing until setup owns the first unit
+- made Today show a browser-storage warning only when persistence is degraded or transient
+- restored beginner Plan setup from the same saved truth that the scheduler uses
+- switched TodayPath to typed planner availability/notice state so it no longer invents a stricter new-work lock than the planner
 
 ## Wave 5 - browser automation and release quality
 
 Started in this pass:
 - add Playwright + Chromium smoke coverage under `tooling/playwright/`
 - prefer role/text locators and failure traces/screenshots
+- gate persistence-sensitive smoke assertions on the browser storage mode that is actually active
 - keep the suite intentionally small and product-centered
 
 ## Wave 6 - later enhancements

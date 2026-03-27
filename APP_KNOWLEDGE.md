@@ -787,12 +787,22 @@ Key architecture changes:
 - web startup enables semantics for browser accessibility and Playwright discoverability
 
 Current web-first behaviors:
-- Settings shows storage mode and Quran-data readiness
-- Today shows setup/import guidance and browser storage warnings
-- Today can generate a first memorization unit through the production planner path after Quran data is imported and no units exist yet
-- Plan restores persisted setup fields after refresh so browser resume flows stay truthful
+- Today and Settings share one guided setup flow for first-run browser use
+- for zero-unit learners, that guided setup is the sole release-visible first-run path before the normal Today queue appears
+- Today uses a non-materializing planner preview in that zero-unit state, so loading the screen does not silently create the first unit or advance the cursor
+- guided setup imports Qur'an text first, repairs page metadata only if it is still genuinely missing, saves a calm starter plan, and prepares the first memorization unit
+- starter-plan readiness on Today and Settings now means a healthy starter plan, not just non-empty structured scheduling prefs; existing learners with the legacy revision-only starter trap still surface guided setup repair
+- structured scheduling now carries an explicit starter-plan source marker so intentional user-saved revision-only plans are not mistaken for legacy starter traps
+- Settings shows storage mode and Quran-data readiness, and Today shows a browser-storage warning only when persistence is degraded or transient
+- TodayPath now follows typed planner truth for new-work availability instead of inventing a stricter raw review-pressure lock
+- Plan beginner setup persists legacy weekday fields and structured scheduling preferences from the same saved truth, so refresh/resume stays aligned with the scheduler
+- Plan no longer defaults fresh or repair-needed learners into revision-only in the UI; it only coerces revision-only off for the true legacy default trap, while intentional user-owned or structurally custom legacy revision-only plans stay intact
 - Reader hides offline-download-only audio actions on web
 - the navigation shell adapts across narrow, medium, and wide widths, including menu-route titles on narrow layouts
+
+Current local validation caveats:
+- local `flutter test` execution is still blocked by the native-assets `objective_c` `hook.dill` failure in this environment
+- `flutter build web` still succeeds with non-fatal warnings about the missing `CupertinoIcons` font asset and the Drift wasm dry run (`Bad state: No definition of type Stream`)
 
 Honest web degradations in this phase:
 - offline audio downloads are disabled on web

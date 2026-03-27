@@ -162,9 +162,26 @@ Web-specific high-impact files:
 - `lib/data/services/daily_planner.dart`
 - `lib/data/services/new_unit_generator.dart`
 - `lib/data/services/quran_data_readiness.dart`
+- `lib/data/services/solo_setup_flow.dart`
 - `lib/screens/today_screen.dart`
+- `lib/screens/settings_screen.dart`
 - `lib/data/services/qurancom_api.dart`
 - `lib/data/services/qurancom_chapters_service.dart`
 - `lib/ui/qcf/qcf_font_manager.dart`
 - `lib/data/services/ayah_audio_download_service.dart`
 - `lib/data/services/ayah_audio_playback_resolver.dart`
+
+Current browser-first truth to preserve:
+- Today and Settings now share one guided setup flow for first-run browser use
+- for zero-unit learners, that guided setup is the sole release-visible first-run path before the normal Today queue appears
+- Today uses a non-materializing planner preview in that zero-unit state so loading the page does not silently create the first unit or advance the cursor
+- the guided setup imports Qur'an text first, backfills page metadata only if it is still missing, saves a calm starter plan, and prepares the first memorization unit
+- starter-plan readiness on Today and Settings now means a healthy starter plan, not just non-empty structured scheduling prefs; existing learners with the legacy revision-only trap still surface guided setup repair
+- structured scheduling now carries an explicit starter-plan source marker so intentional user-saved revision-only plans are not mistaken for legacy starter traps
+- Today only shows a browser-storage warning when persistence is degraded or transient
+- Plan beginner setup now writes legacy minute fields and structured scheduler prefs from one coherent source of truth
+- Plan no longer defaults fresh or repair-needed learners into revision-only in the UI; it only coerces revision-only off for the true legacy default trap, while intentional user-owned or structurally custom legacy revision-only plans stay intact
+
+Current local validation caveats:
+- local `flutter test` execution is still blocked by the native-assets `objective_c` `hook.dill` failure in this environment
+- `flutter build web` still succeeds with non-fatal warnings about the missing `CupertinoIcons` font asset and the Drift wasm dry run (`Bad state: No definition of type Stream`)

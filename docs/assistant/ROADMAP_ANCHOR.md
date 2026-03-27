@@ -107,6 +107,8 @@ Current milestone overlay:
 - preserve native Windows behavior while tightening platform seams
 
 Immediate next checks:
-- finish browser smoke validation in Chromium
+- finish browser smoke validation in Chromium, especially guided setup completion and storage-gated persistence checks
 - confirm `flutter build web` output and Drift web storage behavior
+- keep Today, Plan, and Settings aligned with the typed planner/storage truth added in the browser-first follow-up pass
+- keep zero-unit Today aligned with the new non-materializing first-run preview so guided setup remains the sole release-visible creator of the first memorization unit
 - keep docs and harness profile aligned with the new web surface

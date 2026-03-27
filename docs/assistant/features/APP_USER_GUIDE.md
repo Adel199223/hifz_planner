@@ -138,9 +138,16 @@ Then it guides you through:
 - delayed consolidation checks
 - review work grouped into warm-up, due review, and weak spots
 - optional new memorization when it is unlocked
-- a first-unit bootstrap when you have imported the Quran data but have not created any memorization units yet
+- a guided setup path when you have imported the Quran data but have not created any memorization units yet
 
-If required Quran data or page metadata is still missing, Today explains the setup step that is blocking new work instead of silently failing.
+If required Quran data is still missing, Today and Settings now share one guided setup path:
+- import the bundled Quran text first
+- repair page metadata only if it is still genuinely missing after import
+- save a calm starter plan if needed
+- if you have zero memorization units, this guided setup path is the only release-visible first-run path before Today shows the normal queue
+- prepare the first memorization unit
+
+If review pressure is high but the planner still allows some new work, Today shows a reduced/protected state instead of pretending new memorization is fully broken or fully locked.
 
 This screen is intentionally action-oriented: less setup, more execution.
 

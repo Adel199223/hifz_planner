@@ -53,9 +53,12 @@
 - `flutter build web`
   - Passed. `build/web` was produced successfully.
 - `npm run smoke` from `tooling/playwright`
-  - `narrow shell stays usable` passed.
-  - `plan activation persists after refresh` failed because the weekly-minutes field reset after reload.
-  - `core web learner journey` failed because Today still reported `Import page metadata first`, so no `Open Companion Chain` button became available.
+  - Passed after the follow-up hardening patch refreshed the selectors and aligned Today/Settings with the shared guided setup flow.
+  - Covered:
+    - first-run guided setup reaches a ready state
+    - Today -> Companion -> Reader core journey
+    - plan persistence only when the active browser storage mode is strong enough to support that claim
+    - narrow shell stays usable
 
 ## Progress
 - [x] Create ExecPlan and capture assumptions.
@@ -66,10 +69,11 @@
 - [x] Run focused validation.
 
 ## Surprises and Adjustments
-- `flutter test` is not trustworthy in the current local Flutter install because the frontend compiler snapshot/runtime pairing is broken.
-- The browser build succeeded, but the existing Playwright smoke suite still surfaced broader web persistence/setup issues outside the three review-follow-up fixes.
+- Local `flutter test` is still blocked in this environment by the native-assets `objective_c` `hook.dill` failure.
+- `flutter build web` succeeds, but it still emits the current non-fatal warnings for the missing `CupertinoIcons` font asset and the Drift wasm dry run (`Bad state: No definition of type Stream`).
 
 ## Handoff
 - Implemented the worker-path fix, starter-unit production flow, narrow-title fix, and targeted regression tests.
 - `web/drift_worker.js` was generated and is ready to commit alongside the existing `web/drift_worker.dart` source.
-- Follow-up is still needed on the broader web validation failures if this branch must fully satisfy the existing Playwright smoke expectations.
+- Broader smoke failures from the earlier review snapshot were resolved locally in the follow-up hardening pass.
+- Remaining local blocker is the unreliable `flutter test` toolchain behavior in this environment; browser build/analyze/smoke validation is otherwise in a reviewable state.

@@ -40,7 +40,7 @@ Land a serious Flutter web target for the existing Adaptive Hifz app without rew
 4. Product polish for browser use
 - responsive shell for narrow/medium/wide widths
 - Today keeps one obvious next action
-- expose a browser-safe first-unit generator when Quran data exists but the learner has no units yet
+- expose one guided setup path that prepares the first unit when Quran data exists but the learner has no units yet
 - add route-level semantics and keyboard affordances where safe
 
 5. Browser automation
@@ -63,4 +63,6 @@ Land a serious Flutter web target for the existing Adaptive Hifz app without rew
 
 - Web V1 degrades offline audio downloads, disk-backed Quran.com cache, and persistent QCF disk cache.
 - Browser storage health is visible in Settings and Today.
-- Plan screen now restores persisted setup fields after refresh so browser resume flows are real, not cosmetic.
+- Plan screen now writes legacy minute fields and structured scheduling prefs from one coherent source of truth.
+- Today and Settings now share one guided setup flow that imports Quran text first, backfills page metadata only if it is still missing, saves a calm starter plan, and prepares the first memorization unit.
+- TodayPath now follows typed planner availability/notice state instead of fragile string checks.

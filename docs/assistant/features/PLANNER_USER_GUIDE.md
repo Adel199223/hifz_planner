@@ -37,7 +37,7 @@ If this guide conflicts with technical docs:
 1. Open `Plan` and enter realistic weekly or weekday minutes.
 2. Set conservative caps for new work before enabling advanced options.
 3. Press `Activate Plan`, then open `Today`.
-4. If Today shows a setup/import message, finish that step first; on a brand-new setup, Today can create the first memorization unit once the required Quran data is ready.
+4. If Today or Settings shows the guided setup path, use that one path first; it imports Quran text, repairs page metadata only if still needed, saves a calm starter plan, and prepares the first memorization unit.
 5. Use calibration only after collecting real sessions so forecast quality improves.
 
 ## Terms in Plain English
@@ -119,6 +119,8 @@ Each section below explains:
 - What it controls: temporarily pauses new memorization assignment.
 - When to use: backlog is heavy or retention quality has dropped.
 - Daily impact: `Today` focuses on review and stabilization only.
+- Safety rule: on fresh installs and real legacy-repair states, this switch now loads off by default; you must explicitly turn it on if you want a revision-only plan.
+- Intent rule: if you already saved a user-owned revision-only plan, the real on state is preserved instead of being auto-repaired away.
 
 ### Max new pages per day / max new units per day
 - Where: onboarding/caps area.
@@ -143,6 +145,7 @@ Each section below explains:
 - What it controls: saves your planner settings and applies them to scheduling.
 - When to use: after changing setup values.
 - Daily impact: `Today` starts using your updated rules.
+- Safety note: saving from an old trapped default now repairs that default instead of silently freezing you into revision-only mode.
 
 ## 2) Automatic Scheduling Section
 
@@ -257,6 +260,7 @@ Execution order is designed to protect retention quality:
 - tells you whether today is in `Green`, `Protect`, or `Recovery`
 - explains whether new memorization is open, paused, or unavailable
 - includes a short path-length summary so the day feels easier to size up
+- `Protect` does not always mean a full lock: if the planner still allocates some reduced new work, Today can keep new memorization visible while still steering you toward review first
 
 ### Stage-4 delayed checks section
 - shows delayed consolidation items (especially mandatory next-day checks)
@@ -277,7 +281,8 @@ Execution order is designed to protect retention quality:
   - open companion chain (new mode)
 - this section appears only when new memorization is truly unlocked
 - if recent Companion retention is weak, this section may shrink sooner because the planner gives more of today's time back to review
-- on a zero-unit setup, this section can begin with one starter unit after the required Quran import and page metadata checks pass
+- on a zero-unit setup, the guided setup path is the sole release-visible first-run path; it prepares the first memorization unit after the required Quran import and page metadata checks pass
+- Today uses a non-materializing preview in that zero-unit state, so opening the screen does not silently create the first unit before you run guided setup
 
 ### Summary section
 - keeps the secondary numbers together, such as planned minutes, review pressure, recovery signal, and session blocks

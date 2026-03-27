@@ -133,7 +133,12 @@ What web currently supports best:
 
 Web behavior notes:
 - browser storage is opened through a platform-aware Drift connection factory
-- Settings and Today surface browser storage health and first-run Quran data readiness
+- Today and Settings share one guided setup path for first-run web use
+- for zero-unit learners, the guided setup is the sole release-visible first-run path on Today and Settings
+- it imports Qur'an text, repairs page metadata only if it is still missing, saves a calm starter plan, and prepares the first memorization unit before the normal Today queue appears
+- Today only shows a browser-storage warning when persistence is degraded or transient
+- Plan beginner setup now saves legacy fields and structured scheduling preferences from the same source of truth
+- Plan keeps force-revision-only off by default for fresh and legacy-repair states; turning it on is now an explicit user choice
 - audio is streaming-first on web
 - offline audio downloads are intentionally disabled on web for now
 - Quran.com cache and QCF font persistence use lighter browser-safe fallbacks instead of native filesystem paths
