@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -5,9 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
+import 'package:hifz_planner/data/database/database_storage_status.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
+import 'package:hifz_planner/data/services/scheduling/scheduling_preferences_codec.dart';
 import 'package:hifz_planner/data/time/local_day_time.dart';
+import 'package:hifz_planner/screens/plan_screen.dart';
 import 'package:hifz_planner/screens/today_screen.dart';
 
 import '../helpers/pump_until_found.dart';
@@ -219,6 +224,7 @@ void main() {
     );
     addTearDown(container.dispose);
     _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
 
     await _seedAyahs(db, withPageMetadata: true);
     await _configurePlannerSettings(
@@ -226,6 +232,11 @@ void main() {
       requirePageMetadata: false,
       maxNewUnitsPerDay: 0,
       maxNewPagesPerDay: 0,
+    );
+    await _insertMemUnitOnly(
+      db,
+      unitKey: 'resume-only-unit',
+      todayDay: todayDay,
     );
 
     final router = _buildTodayRouter();
@@ -249,6 +260,40 @@ void main() {
     );
 
     expect(find.text('My Quran route'), findsOneWidget);
+  });
+
+  testWidgets('zero-unit Today shows guided setup and hides normal queue cards',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+      maxNewPagesPerDay: 1,
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_next_step_card')), findsNothing);
+    expect(find.byKey(const ValueKey('today_path_mode_card')), findsNothing);
+    expect(find.byKey(const ValueKey('today_stage4_section')), findsNothing);
+    expect(find.byKey(const ValueKey('today_reviews_section')), findsNothing);
+    expect(find.byKey(const ValueKey('today_new_section')), findsNothing);
+    expect(find.byKey(const ValueKey('today_summary_section')), findsNothing);
+    expect(find.byKey(const ValueKey('today_sessions_section')), findsNothing);
   });
 
   testWidgets('grade buttons use plain-language labels and stable q keys',
@@ -809,7 +854,8 @@ void main() {
     );
   });
 
-  testWidgets('starter unit button generates one production memorization unit',
+  testWidgets(
+      'guided setup creates one production memorization unit and offers companion',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
@@ -835,12 +881,16 @@ void main() {
     await _pumpToday(tester, container);
     await pumpUntilFound(
       tester,
-      find.byKey(const ValueKey('today_generate_starter_unit_button')),
+      find.byKey(const ValueKey('today_guided_setup_button')),
     );
 
     await _tapVisible(
       tester,
-      find.byKey(const ValueKey('today_generate_starter_unit_button')),
+      find.byKey(const ValueKey('today_guided_setup_button')),
+    );
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_open_companion_after_setup')),
     );
 
     final createdUnits = await _fetchPlannedNewUnits(db, todayDay: todayDay);
@@ -848,26 +898,201 @@ void main() {
 
     final createdUnit = createdUnits.single;
     expect(createdUnit.unitKey, isNot(startsWith('debug_seed:')));
+    expect(find.byKey(const ValueKey('today_open_companion_after_setup')),
+        findsOneWidget);
+  });
+
+  testWidgets(
+      'revisiting Today after guided setup leaves the zero-unit onboarding state',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 0,
+      maxNewPagesPerDay: 0,
+    );
+
+    await _pumpToday(tester, container);
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('today_guided_setup_button')),
+    );
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_open_companion_after_setup')),
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await _pumpToday(tester, container);
+
+    expect(find.byKey(const ValueKey('today_guided_setup_card')), findsNothing);
+    expect(find.byKey(const ValueKey('today_next_step_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_summary_section')), findsOneWidget);
+  });
+
+  testWidgets(
+      'guided setup stays visible when only the first unit is still missing',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await SettingsRepo(db).ensureZeroUnitStarterPlan(
+      todayDayOverride: todayDay,
+      updatedAtDay: todayDay,
+    );
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+      maxNewPagesPerDay: 1,
+    );
+
+    await _pumpToday(tester, container);
+
     expect(
-      find.byKey(ValueKey('today_new_row_${createdUnit.id}')),
+      find.byKey(const ValueKey('today_guided_setup_card')),
       findsOneWidget,
     );
     expect(
-      find.byKey(ValueKey('today_review_row_${createdUnit.id}')),
-      findsNothing,
-    );
-    expect(
-      find.byKey(ValueKey('today_open_companion_new_${createdUnit.id}')),
+      find.byKey(const ValueKey('today_guided_setup_button')),
       findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('today_generate_starter_unit_button')),
-      findsNothing,
     );
   });
 
   testWidgets(
-      'starter unit button stays hidden once any memorization unit exists',
+      'guided setup stays hidden for user-saved revision-only default-shaped plans',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+    final repo = SettingsRepo(db);
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await repo.updateSettings(
+      profile: 'standard',
+      forceRevisionOnly: 1,
+      dailyMinutesDefault: 45,
+      maxNewPagesPerDay: 1,
+      maxNewUnitsPerDay: 8,
+      avgNewMinutesPerAyah: 1.7,
+      avgReviewMinutesPerAyah: 0.7,
+      requirePageMetadata: 0,
+      updatedAtDay: todayDay,
+    );
+    await repo.saveSchedulingPreferences(
+      preferences: await repo.getSchedulingPreferences(
+        todayDayOverride: todayDay,
+      ),
+      updatedAtDay: todayDay,
+    );
+    await _insertMemUnitOnly(
+      db,
+      unitKey: 'existing-starter-unit',
+      todayDay: todayDay,
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.byKey(const ValueKey('today_guided_setup_card')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('manual plan save clears stale guided setup repair state on Today',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await SettingsRepo(db).updateSettings(
+      profile: 'standard',
+      forceRevisionOnly: 1,
+      dailyMinutesDefault: 45,
+      maxNewPagesPerDay: 1,
+      maxNewUnitsPerDay: 8,
+      avgNewMinutesPerAyah: 1.7,
+      avgReviewMinutesPerAyah: 0.7,
+      requirePageMetadata: 0,
+      schedulingPrefsJson: _encodeUnmarkedPreferences(
+        SchedulingPreferencesV1.defaults,
+      ),
+      updatedAtDay: todayDay,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+
+    final readinessSubscription = container.listen(
+      soloSetupReadinessProvider,
+      (_, __) {},
+      fireImmediately: true,
+    );
+    addTearDown(readinessSubscription.close);
+
+    final staleReadiness = await container.read(soloSetupReadinessProvider.future);
+    expect(staleReadiness.needsStarterPlanRepair, isTrue);
+
+    await _pumpPlanWithContainer(tester, container);
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('plan_activate_button')),
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.byKey(const ValueKey('today_guided_setup_card')),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('today_next_step_card')), findsOneWidget);
+    expect(find.byKey(ValueKey('today_review_row_$dueUnitId')), findsOneWidget);
+  });
+
+  testWidgets(
+      'legacy learners with units still keep the normal queue during repair setup',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
@@ -886,24 +1111,39 @@ void main() {
     await _configurePlannerSettings(
       db,
       requirePageMetadata: false,
-      maxNewUnitsPerDay: 0,
-      maxNewPagesPerDay: 0,
+      maxNewUnitsPerDay: 1,
+      maxNewPagesPerDay: 1,
     );
-    await _insertMemUnitOnly(
-      db,
-      unitKey: 'existing-starter-unit',
-      todayDay: todayDay,
+    final repo = SettingsRepo(db);
+    await repo.updateSettings(
+      profile: 'standard',
+      forceRevisionOnly: 1,
+      dailyMinutesDefault: 45,
+      maxNewPagesPerDay: 1,
+      maxNewUnitsPerDay: 8,
+      avgNewMinutesPerAyah: 1.7,
+      avgReviewMinutesPerAyah: 0.7,
+      requirePageMetadata: 0,
+      updatedAtDay: todayDay,
     );
+    await repo.updateSettings(
+      schedulingPrefsJson: _encodeUnmarkedPreferences(
+        await repo.getSchedulingPreferences(
+          todayDayOverride: todayDay,
+        ),
+      ),
+      updatedAtDay: todayDay,
+    );
+    await _insertDueReviewUnit(db, todayDay: todayDay);
 
     await _pumpToday(tester, container);
 
-    expect(
-      find.byKey(const ValueKey('today_generate_starter_unit_button')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_next_step_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_reviews_section')), findsOneWidget);
   });
 
-  testWidgets('starter unit button stays hidden when setup is still blocked',
+  testWidgets('guided setup stays visible when setup is still blocked',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
@@ -930,12 +1170,51 @@ void main() {
 
     await _pumpToday(tester, container);
 
-    expect(find.text('Import page metadata first'), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('today_generate_starter_unit_button')),
-      findsNothing,
+      find.byKey(const ValueKey('today_guided_setup_button')),
+      findsOneWidget,
     );
   });
+
+  testWidgets('shows guided setup CTA and storage warning on transient web storage',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+        databaseStorageStatusProvider.overrideWith(
+          (ref) => Stream<DatabaseStorageStatus>.value(
+            const DatabaseStorageStatus(
+              kind: DatabaseStorageKind.inMemory,
+              health: DatabaseStorageHealth.transient,
+              isWeb: true,
+              implementationName: 'inMemory',
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+
+    await _pumpToday(tester, container);
+
+    expect(find.byKey(const ValueKey('today_storage_warning')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_guided_setup_button')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_next_step_card')), findsNothing);
+    expect(find.byKey(const ValueKey('today_reviews_section')), findsNothing);
+  });
+}
+
+String _encodeUnmarkedPreferences(SchedulingPreferencesV1 preferences) {
+  final json = jsonDecode(preferences.encode()) as Map<String, dynamic>;
+  json.remove('starterPlanSource');
+  return jsonEncode(json);
 }
 
 void _registerTestCleanup(WidgetTester tester) {
@@ -1100,7 +1379,30 @@ Future<void> _pumpToday(
   await tester.pump();
   await pumpUntilFound(
     tester,
-    find.byKey(const ValueKey('today_reviews_section')),
+    find.byKey(const ValueKey('today_screen_root')),
+  );
+
+  const timeout = Duration(seconds: 5);
+  const step = Duration(milliseconds: 50);
+  var elapsed = Duration.zero;
+  while (elapsed <= timeout) {
+    final hasGuidedSetup = find
+        .byKey(const ValueKey('today_guided_setup_card'))
+        .evaluate()
+        .isNotEmpty;
+    final hasNextStep =
+        find.byKey(const ValueKey('today_next_step_card')).evaluate().isNotEmpty;
+    final hasError =
+        find.byKey(const ValueKey('today_error')).evaluate().isNotEmpty;
+    if (hasGuidedSetup || hasNextStep || hasError) {
+      return;
+    }
+    await tester.pump(step);
+    elapsed += step;
+  }
+
+  throw TestFailure(
+    'Timed out after ${timeout.inMilliseconds}ms waiting for Today ready state.',
   );
 }
 
@@ -1108,6 +1410,21 @@ Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
   await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pumpPlanWithContainer(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: const MaterialApp(
+        home: Scaffold(body: PlanScreen()),
+      ),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 

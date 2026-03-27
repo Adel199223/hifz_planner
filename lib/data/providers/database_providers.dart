@@ -29,6 +29,7 @@ import '../services/quran_text_importer_service.dart';
 import '../services/qurancom_api.dart';
 import '../services/qurancom_chapters_service.dart';
 import '../services/review_completion_service.dart';
+import '../services/solo_setup_flow.dart';
 import '../services/scheduling/planning_projection_engine.dart';
 import '../services/surah_metadata_service.dart';
 import '../services/tajweed_tags_service.dart';
@@ -64,9 +65,33 @@ final quranDataReadinessServiceProvider = Provider<QuranDataReadinessService>((
   return QuranDataReadinessService(db);
 });
 
-final quranDataReadinessProvider = FutureProvider<QuranDataReadiness>((ref) {
+final quranDataReadinessProvider =
+    FutureProvider.autoDispose<QuranDataReadiness>((ref) {
   return ref.read(quranDataReadinessServiceProvider).load();
 });
+
+final guidedSetupFlowServiceProvider = Provider<GuidedSetupFlowService>((ref) {
+  final quranDataReadinessService = ref.watch(quranDataReadinessServiceProvider);
+  final settingsRepo = ref.watch(settingsRepoProvider);
+  final memUnitRepo = ref.watch(memUnitRepoProvider);
+  final dailyPlanner = ref.watch(dailyPlannerProvider);
+  final quranTextImporterService = ref.watch(quranTextImporterServiceProvider);
+  final pageMetadataImporterService =
+      ref.watch(pageMetadataImporterServiceProvider);
+  return GuidedSetupFlowService(
+    quranDataReadinessService,
+    settingsRepo,
+    memUnitRepo,
+    dailyPlanner,
+    quranTextImporterService,
+    pageMetadataImporterService,
+  );
+});
+
+final soloSetupReadinessProvider =
+    FutureProvider.autoDispose<SoloSetupReadiness>((ref) {
+      return ref.read(guidedSetupFlowServiceProvider).load();
+    });
 
 final quranRepoProvider = Provider<QuranRepo>((ref) {
   final db = ref.watch(appDatabaseProvider);

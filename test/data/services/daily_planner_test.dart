@@ -453,6 +453,7 @@ void main() {
     final baselinePlan = await dailyPlanner.planToday(todayDay: todayDay);
     expect(baselinePlan.plannedNewUnits, isNotEmpty);
     expect(baselinePlan.minutesPlannedNew, greaterThan(0));
+    expect(baselinePlan.newAvailability, TodayNewAvailability.available);
 
     for (var i = 0; i < dueUnitIds.length; i++) {
       await _seedStepProficiency(
@@ -475,6 +476,9 @@ void main() {
       weakPlan.plannedNewUnits.length,
       lessThanOrEqualTo(baselinePlan.plannedNewUnits.length),
     );
+    if (weakPlan.plannedNewUnits.isNotEmpty) {
+      expect(weakPlan.newAvailability, TodayNewAvailability.available);
+    }
   });
 
   test('metadata guard blocks new units when cursor ayah page metadata missing',
@@ -500,7 +504,8 @@ void main() {
 
     expect(plan.plannedNewUnits, isEmpty);
     expect(plan.minutesPlannedNew, 0);
-    expect(plan.message, 'Import page metadata first');
+    expect(plan.notice, TodayPlanNotice.finishSetup);
+    expect(plan.newAvailability, TodayNewAvailability.blockedSetup);
   });
 
   test('metadata guard blocks when next-20 page coverage is below 90%',
@@ -528,7 +533,8 @@ void main() {
 
     expect(plan.plannedNewUnits, isEmpty);
     expect(plan.minutesPlannedNew, 0);
-    expect(plan.message, 'Import page metadata first');
+    expect(plan.notice, TodayPlanNotice.finishSetup);
+    expect(plan.newAvailability, TodayNewAvailability.blockedSetup);
   });
 
   test('mandatory Stage-4 due blocks new generation unless override', () async {
@@ -623,6 +629,35 @@ void main() {
     );
     expect(plan.stage4QualitySnapshot.maintainedCount, 1);
     expect(plan.stage4QualitySnapshot.stableCount, 0);
+  });
+
+  test('non-materializing planToday previews zero-unit days without side effects',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 30,
+      maxNewPagesPerDay: 1,
+      maxNewUnitsPerDay: 1,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    final cursorBefore = await progressRepo.getCursor();
+    final plan = await dailyPlanner.planToday(
+      todayDay: todayDay,
+      materializeNewUnits: false,
+    );
+    final cursorAfter = await progressRepo.getCursor();
+
+    expect(plan.plannedNewUnits, isEmpty);
+    expect(plan.minutesPlannedNew, 0);
+    expect(await memUnitRepo.hasAnyUnits(), isFalse);
+    expect(cursorAfter.nextSurah, cursorBefore.nextSurah);
+    expect(cursorAfter.nextAyah, cursorBefore.nextAyah);
   });
 
   test(

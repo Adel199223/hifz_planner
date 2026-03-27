@@ -1,3 +1,4 @@
+import '../data/database/database_storage_status.dart';
 import 'app_language.dart';
 
 class AppStrings {
@@ -298,9 +299,46 @@ class AppStrings {
   }
 
   String get settingsTitle => _t('settings_title', 'Settings');
+  String get settingsScreenSemanticsLabel => _t(
+        'settings_screen_semantics_label',
+        'Settings screen',
+      );
+  String get storageStatusTitle => _t(
+        'storage_status_title',
+        'Browser storage',
+      );
+  String get quranDataStatusTitle => _t(
+        'quran_data_status_title',
+        "Qur'an data",
+      );
   String get readyToImportBundledQuranAssets => _t(
         'ready_to_import_bundled_quran_assets',
         "Ready to import bundled Qur'an assets.",
+      );
+  String get checkingBrowserStorage => _t(
+        'checking_browser_storage',
+        'Checking browser storage...',
+      );
+  String get quranDataNeedsSetupSummary => _t(
+        'quran_data_needs_setup_summary',
+        "Your Qur'an data still needs setup.",
+      );
+  String get quranDataReadySummary => _t(
+        'quran_data_ready_summary',
+        "Qur'an text and page metadata are ready.",
+      );
+  String get quranTextReady => _t('quran_text_ready', "Qur'an text is ready.");
+  String get quranTextMissing => _t(
+        'quran_text_missing',
+        "Qur'an text still needs import.",
+      );
+  String get pageMetadataReady => _t(
+        'page_metadata_ready',
+        'Page metadata is ready.',
+      );
+  String get pageMetadataMissing => _t(
+        'page_metadata_missing',
+        'Page metadata still needs repair or backfill.',
       );
   String get startingQuranTextImport =>
       _t('starting_quran_text_import', "Starting Qur'an text import...");
@@ -353,6 +391,276 @@ class AppStrings {
   String get importQuranText => _t('import_quran_text', "Import Qur'an Text");
   String get importPageMetadata =>
       _t('import_page_metadata', 'Import Page Metadata');
+  String get guidedSetupTitle => _t('guided_setup_title', 'Guided setup');
+  String get guidedSetupAction => _t(
+        'guided_setup_action',
+        'Prepare my first session',
+      );
+  String get guidedSetupOpenCompanionAction => _t(
+        'guided_setup_open_companion_action',
+        'Open Companion',
+      );
+  String get guidedSetupInProgress => _t(
+        'guided_setup_in_progress',
+        'Preparing your solo setup...',
+      );
+  String get guidedSetupComplete => _t(
+        'guided_setup_complete',
+        'Your solo setup is ready.',
+      );
+  String get guidedSetupNeedsAttention => _t(
+        'guided_setup_needs_attention',
+        'Setup still needs one more pass.',
+      );
+  String get guidedSetupFailed => _t(
+        'guided_setup_failed',
+        'Could not finish the guided setup.',
+      );
+  String get guidedSetupStarterUnitReady => _t(
+        'guided_setup_starter_unit_ready',
+        'Your first memorization unit is ready.',
+      );
+  String guidedSetupMissingSummary({
+    required bool needsTextImport,
+    required bool needsPageMetadataImport,
+    required bool needsStarterPlan,
+    required bool needsStarterUnit,
+  }) {
+    if (needsTextImport) {
+      return _t(
+        'guided_setup_missing_summary_text',
+        "Import the bundled Qur'an text first. The guided setup will also finish page metadata if needed, save a calm starter plan, and prepare your first memorization unit.",
+      );
+    }
+    if (needsPageMetadataImport) {
+      return _t(
+        'guided_setup_missing_summary_metadata',
+        'Finish page metadata, save a calm starter plan, and prepare your first memorization unit.',
+      );
+    }
+    if (needsStarterPlan && needsStarterUnit) {
+      return _t(
+        'guided_setup_missing_summary_plan_and_unit',
+        'Save a calm starter plan and prepare your first memorization unit.',
+      );
+    }
+    if (needsStarterPlan) {
+      return _t(
+        'guided_setup_missing_summary_plan',
+        'Save a calm starter plan for your daily path.',
+      );
+    }
+    if (needsStarterUnit) {
+      return _t(
+        'guided_setup_missing_summary_unit',
+        'Prepare your first memorization unit so you can open Companion right away.',
+      );
+    }
+    return guidedSetupComplete;
+  }
+  String guidedSetupStepImportText(int processed, int total) =>
+      _progressStepText(
+        key: 'guided_setup_step_import_text',
+        english: "Importing Qur'an text",
+        processed: processed,
+        total: total,
+      );
+  String guidedSetupStepImportPageMetadata(int processed, int total) =>
+      _progressStepText(
+        key: 'guided_setup_step_import_page_metadata',
+        english: 'Finishing page metadata',
+        processed: processed,
+        total: total,
+      );
+  String get guidedSetupStepSaveStarterPlan => _t(
+        'guided_setup_step_save_starter_plan',
+        'Saving a calm starter plan',
+      );
+  String get guidedSetupStepCreateStarterUnit => _t(
+        'guided_setup_step_create_starter_unit',
+        'Preparing your first memorization unit',
+      );
+  String get guidedSetupStepComplete => _t(
+        'guided_setup_step_complete',
+        'Setup complete',
+      );
+  String get firstMemorizationUnitButton => _t(
+        'first_memorization_unit_button',
+        'Generate first memorization unit',
+      );
+  String get firstMemorizationUnitPreparing => _t(
+        'first_memorization_unit_preparing',
+        'Preparing first unit...',
+      );
+  String get firstMemorizationUnitReady => _t(
+        'first_memorization_unit_ready',
+        'First memorization unit ready.',
+      );
+  String get firstMemorizationUnitUnavailable => _t(
+        'first_memorization_unit_unavailable',
+        'No memorization unit is available from the current position.',
+      );
+  String get firstMemorizationUnitFailed => _t(
+        'first_memorization_unit_failed',
+        'Could not prepare the first memorization unit.',
+      );
+  String quranTextImportPhaseLabel(String phase) {
+    return switch (phase) {
+      'loading' => _t(
+          'quran_text_import_phase_loading',
+          "Loading Qur'an text...",
+        ),
+      'parsing' => _t(
+          'quran_text_import_phase_parsing',
+          "Parsing Qur'an text...",
+        ),
+      'inserting' => _t(
+          'quran_text_import_phase_inserting',
+          "Saving Qur'an text...",
+        ),
+      'completed' => _t(
+          'quran_text_import_phase_completed',
+          "Qur'an text import complete.",
+        ),
+      'skipped' => _t(
+          'quran_text_import_phase_skipped',
+          "Qur'an text import skipped.",
+        ),
+      _ => _t('quran_text_import_phase_default', "Importing Qur'an text..."),
+    };
+  }
+  String pageMetadataImportPhaseLabel(String phase) {
+    return switch (phase) {
+      'loading' => _t(
+          'page_metadata_import_phase_loading',
+          'Loading page metadata...',
+        ),
+      'parsing' => _t(
+          'page_metadata_import_phase_parsing',
+          'Parsing page metadata...',
+        ),
+      'updating' => _t(
+          'page_metadata_import_phase_updating',
+          'Saving page metadata...',
+        ),
+      'completed' => _t(
+          'page_metadata_import_phase_completed',
+          'Page metadata import complete.',
+        ),
+      _ => _t('page_metadata_import_phase_default', 'Importing page metadata...'),
+    };
+  }
+  String importProgressDetails(String phaseLabel, int processed, int total) {
+    if (total <= 0) {
+      return phaseLabel;
+    }
+    return _fmt(
+      _t(
+        'import_progress_details',
+        '{phaseLabel}: {processed}/{total}',
+      ),
+      <String, Object>{
+        'phaseLabel': phaseLabel,
+        'processed': processed,
+        'total': total,
+      },
+    );
+  }
+  String storageStatusLabel(DatabaseStorageStatus status) {
+    return switch (status.kind) {
+      DatabaseStorageKind.nativePersistent => _t(
+          'storage_status_label_native_persistent',
+          'Stored on this device',
+        ),
+      DatabaseStorageKind.webInitializing => _t(
+          'storage_status_label_web_initializing',
+          'Checking browser storage',
+        ),
+      DatabaseStorageKind.opfsShared => _t(
+          'storage_status_label_opfs_shared',
+          'Persistent browser storage',
+        ),
+      DatabaseStorageKind.opfs => _t(
+          'storage_status_label_opfs',
+          'Persistent browser storage',
+        ),
+      DatabaseStorageKind.indexedDbShared => _t(
+          'storage_status_label_indexeddb_shared',
+          'Browser storage fallback',
+        ),
+      DatabaseStorageKind.indexedDbFallback => _t(
+          'storage_status_label_indexeddb_fallback',
+          'Degraded browser storage',
+        ),
+      DatabaseStorageKind.inMemory => _t(
+          'storage_status_label_in_memory',
+          'Temporary memory-only storage',
+        ),
+      DatabaseStorageKind.other => _t(
+          'storage_status_label_other',
+          'Storage mode detected',
+        ),
+    };
+  }
+  String storageStatusDetails(DatabaseStorageStatus status) {
+    return switch (status.kind) {
+      DatabaseStorageKind.nativePersistent => _t(
+          'storage_status_details_native_persistent',
+          'Your memorization data is being stored locally on this device.',
+        ),
+      DatabaseStorageKind.webInitializing => checkingBrowserStorage,
+      DatabaseStorageKind.opfsShared => _t(
+          'storage_status_details_opfs_shared',
+          'Your memorization data is being stored in the browser with the preferred persistent mode.',
+        ),
+      DatabaseStorageKind.opfs => _t(
+          'storage_status_details_opfs',
+          'Your memorization data is being stored in persistent browser storage.',
+        ),
+      DatabaseStorageKind.indexedDbShared => _t(
+          'storage_status_details_indexeddb_shared',
+          'Your memorization data is being stored in IndexedDB. This is usable, but not the strongest browser mode.',
+        ),
+      DatabaseStorageKind.indexedDbFallback => _t(
+          'storage_status_details_indexeddb_fallback',
+          'Your memorization data is being stored in a degraded IndexedDB fallback mode.',
+        ),
+      DatabaseStorageKind.inMemory => _t(
+          'storage_status_details_in_memory',
+          'Your memorization data is only stored in memory for this session.',
+        ),
+      DatabaseStorageKind.other => _fmt(
+          _t(
+            'storage_status_details_other',
+            'Your memorization data is using {implementation}.',
+          ),
+          <String, Object>{
+            'implementation': status.implementationName ?? 'browser storage',
+          },
+        ),
+    };
+  }
+  String? storageStatusWarning(DatabaseStorageStatus status) {
+    return switch (status.kind) {
+      DatabaseStorageKind.indexedDbFallback => _t(
+          'storage_status_warning_indexeddb_fallback',
+          'Browser storage is degraded. Refresh should usually keep your data, but it is less robust than the preferred mode.',
+        ),
+      DatabaseStorageKind.inMemory => _t(
+          'storage_status_warning_in_memory',
+          'This session is using temporary browser storage. Refreshing or closing the tab may lose your progress.',
+        ),
+      _ => null,
+    };
+  }
+  String get todayStorageWarningTitle => _t(
+        'today_storage_warning_title',
+        'Storage note',
+      );
+  String get todayStorageWarningSemanticsLabel => _t(
+        'today_storage_warning_semantics_label',
+        'Today storage warning',
+      );
 
   String get todayTitle => _t('today_title', 'Today');
   String get todayReviewQueueTitle =>
@@ -406,7 +714,7 @@ class AppStrings {
       );
   String get todayNewLockedSetupMessage => _t(
         'today_new_locked_setup_message',
-        'Import page metadata first to unlock new memorization in the guided path.',
+        'Finish the guided setup first to unlock new memorization in the guided path.',
       );
   String get todayNewNoneAvailableMessage => _t(
         'today_new_none_available_message',
@@ -511,6 +819,22 @@ class AppStrings {
         'Page metadata required to open in Reader.',
       );
   String get selfCheckGrade => _t('self_check_grade', 'Self-check grade');
+  String get todayPlanNoticeNoStudySessions => _t(
+        'today_plan_notice_no_study_sessions',
+        'No study sessions are planned yet. Adjust your plan to give Today some study time.',
+      );
+  String get todayPlanNoticeHoliday => _t(
+        'today_plan_notice_holiday',
+        'Today is marked as a break day in your plan.',
+      );
+  String get todayPlanNoticeFinishSetup => _t(
+        'today_plan_notice_finish_setup',
+        'Finish the guided setup so Today can prepare your reader and memorization path.',
+      );
+  String get todayStage4CatchUpMessage => _t(
+        'today_stage4_catchup_message',
+        'Stage-4 catch-up is due today. Clear the delayed consolidation checks before adding more load.',
+      );
   String plannedReviewMinutes(Object value) => _fmt(
         _t('planned_review_minutes', 'Planned review minutes: {value}'),
         <String, Object>{'value': value},
@@ -548,6 +872,29 @@ class AppStrings {
   String get lifecycleTierEmerging => _t('lifecycle_tier_emerging', 'Emerging');
   String get lifecycleTierReady => _t('lifecycle_tier_ready', 'Ready');
   String get lifecycleTierStable => _t('lifecycle_tier_stable', 'Stable');
+
+  String _progressStepText({
+    required String key,
+    required String english,
+    required int processed,
+    required int total,
+  }) {
+    final label = _t(key, english);
+    if (total <= 0) {
+      return label;
+    }
+    return _fmt(
+      _t(
+        '${key}_with_counts',
+        '{label}: {processed}/{total}',
+      ),
+      <String, Object>{
+        'label': label,
+        'processed': processed,
+        'total': total,
+      },
+    );
+  }
   String get lifecycleTierMaintained =>
       _t('lifecycle_tier_maintained', 'Maintained');
   String lifecycleTierLabel(String tier) {
@@ -611,6 +958,10 @@ class AppStrings {
       _t('minutes_per_day_label', 'Minutes per day');
   String get minutesPerWeekLabel =>
       _t('minutes_per_week_label', 'Minutes per week');
+  String get advancedMinutesDerivedFromBeginnerPlan => _t(
+        'advanced_minutes_derived_from_beginner_plan',
+        'Derived from the beginner plan above.',
+      );
   String get timingStrategyLabel =>
       _t('timing_strategy_label', 'Timing strategy');
   String get timingStrategyUntimed => _t('timing_strategy_untimed', 'Untimed');

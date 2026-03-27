@@ -6,7 +6,7 @@ import 'package:hifz_planner/screens/today_path.dart';
 void main() {
   test('computes mode and new state from current planner truth', () {
     final greenPath = TodayPath.from(
-      plan: _plan(),
+      plan: _plan(newAvailability: TodayNewAvailability.available),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: const <PlannedReviewRow>[],
       remainingNewUnits: <MemUnitData>[_unit(10)],
@@ -15,7 +15,10 @@ void main() {
     expect(greenPath.newState, TodayNewState.unlocked);
 
     final protectPath = TodayPath.from(
-      plan: _plan(reviewPressure: 1.0),
+      plan: _plan(
+        reviewPressure: 1.0,
+        newAvailability: TodayNewAvailability.blockedReviewHealth,
+      ),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: const <PlannedReviewRow>[],
       remainingNewUnits: <MemUnitData>[_unit(11)],
@@ -28,6 +31,7 @@ void main() {
         reviewPressure: 1.6,
         recoveryMode: true,
         revisionOnly: true,
+        newAvailability: TodayNewAvailability.blockedReviewHealth,
       ),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: const <PlannedReviewRow>[],
@@ -37,7 +41,10 @@ void main() {
     expect(recoveryPath.newState, TodayNewState.lockedReviewHealth);
 
     final stage4LockedPath = TodayPath.from(
-      plan: _plan(stage4BlocksNewByDefault: true),
+      plan: _plan(
+        stage4BlocksNewByDefault: true,
+        newAvailability: TodayNewAvailability.blockedStage4,
+      ),
       remainingStage4Due: <Stage4DueItem>[_stage4Due(20)],
       remainingReviews: const <PlannedReviewRow>[],
       remainingNewUnits: <MemUnitData>[_unit(13)],
@@ -46,7 +53,10 @@ void main() {
     expect(stage4LockedPath.newState, TodayNewState.lockedStage4);
 
     final setupLockedPath = TodayPath.from(
-      plan: _plan(message: TodayPath.metadataBlockedMessage),
+      plan: _plan(
+        newAvailability: TodayNewAvailability.blockedSetup,
+        notice: TodayPlanNotice.finishSetup,
+      ),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: const <PlannedReviewRow>[],
       remainingNewUnits: const <MemUnitData>[],
@@ -54,12 +64,29 @@ void main() {
     expect(setupLockedPath.newState, TodayNewState.lockedSetup);
 
     final noneAvailablePath = TodayPath.from(
-      plan: _plan(),
+      plan: _plan(newAvailability: TodayNewAvailability.noneAvailable),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: const <PlannedReviewRow>[],
       remainingNewUnits: const <MemUnitData>[],
     );
     expect(noneAvailablePath.newState, TodayNewState.noneAvailable);
+  });
+
+  test('review pressure alone does not hide planned new units', () {
+    final path = TodayPath.from(
+      plan: _plan(
+        reviewPressure: 1.0,
+        plannedNewUnits: <MemUnitData>[_unit(40)],
+        newAvailability: TodayNewAvailability.available,
+      ),
+      remainingStage4Due: const <Stage4DueItem>[],
+      remainingReviews: const <PlannedReviewRow>[],
+      remainingNewUnits: <MemUnitData>[_unit(40)],
+    );
+
+    expect(path.mode, TodayPathMode.protect);
+    expect(path.newState, TodayNewState.unlocked);
+    expect(path.optionalNew.map((unit) => unit.id), <int>[40]);
   });
 
   test('splits reviews into warm-up, due review, and weak spots', () {
@@ -148,11 +175,13 @@ TodayPlan _plan({
   bool stage4BlocksNewByDefault = false,
   bool revisionOnly = false,
   double reviewPressure = 0.0,
-  String? message,
+  List<MemUnitData> plannedNewUnits = const <MemUnitData>[],
+  TodayNewAvailability newAvailability = TodayNewAvailability.noneAvailable,
+  TodayPlanNotice? notice,
 }) {
   return TodayPlan(
     plannedReviews: const <PlannedReviewRow>[],
-    plannedNewUnits: const <MemUnitData>[],
+    plannedNewUnits: plannedNewUnits,
     plannedStage4Due: const <Stage4DueItem>[],
     revisionOnly: revisionOnly,
     minutesPlannedReviews: 0,
@@ -161,7 +190,8 @@ TodayPlan _plan({
     stage4QualitySnapshot: const Stage4QualitySnapshot(),
     reviewPressure: reviewPressure,
     recoveryMode: recoveryMode,
-    message: message,
+    newAvailability: newAvailability,
+    notice: notice,
   );
 }
 

@@ -96,7 +96,7 @@ void main() {
 
     expect(settings.id, 1);
     expect(settings.profile, 'standard');
-    expect(settings.forceRevisionOnly, 1);
+    expect(settings.forceRevisionOnly, 0);
     expect(settings.dailyMinutesDefault, 45);
     expect(settings.maxNewPagesPerDay, 1);
     expect(settings.maxNewUnitsPerDay, 8);

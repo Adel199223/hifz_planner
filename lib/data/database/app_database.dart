@@ -801,7 +801,7 @@ class AppDatabase extends _$AppDatabase {
       AppSettingsCompanion.insert(
         id: const Value(1),
         profile: 'standard',
-        forceRevisionOnly: 1,
+        forceRevisionOnly: 0,
         dailyMinutesDefault: 45,
         maxNewPagesPerDay: 1,
         maxNewUnitsPerDay: 8,

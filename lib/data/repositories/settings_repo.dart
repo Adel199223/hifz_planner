@@ -1,11 +1,23 @@
 import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
+import '../services/onboarding_defaults.dart';
+import '../services/scheduling/beginner_plan_binding.dart';
 import '../services/scheduling/planning_projection_engine.dart';
 import '../services/scheduling/scheduling_preferences_codec.dart';
 import '../time/local_day_time.dart';
 
 typedef AppSettingsData = AppSetting;
+
+enum StarterPlanHealth {
+  healthy,
+  needsStructuredPrefsRepair,
+  needsLegacyStarterTrapRepair,
+}
+
+extension StarterPlanHealthX on StarterPlanHealth {
+  bool get needsRepair => this != StarterPlanHealth.healthy;
+}
 
 class SettingsRepo {
   SettingsRepo(this._db);
@@ -96,16 +108,202 @@ class SettingsRepo {
     return _projectionEngine.overridesFromSettings(settings);
   }
 
+  BeginnerPlanBinding beginnerPlanBindingFromSettings(AppSettingsData settings) {
+    return BeginnerPlanBinding.fromSettings(
+      settings: settings,
+      projectionEngine: _projectionEngine,
+    );
+  }
+
+  bool hasStructuredSchedulingPreferences(AppSettingsData settings) {
+    final raw = settings.schedulingPrefsJson;
+    return raw != null && raw.trim().isNotEmpty;
+  }
+
+  StarterPlanHealth assessStarterPlanHealth(AppSettingsData settings) {
+    if (!hasStructuredSchedulingPreferences(settings)) {
+      return StarterPlanHealth.needsStructuredPrefsRepair;
+    }
+    if (_looksLikeLegacyStarterTrap(settings)) {
+      return StarterPlanHealth.needsLegacyStarterTrapRepair;
+    }
+    return StarterPlanHealth.healthy;
+  }
+
+  bool shouldPlanCoerceRevisionOnlyOff(AppSettingsData settings) {
+    return _looksLikeLegacyStarterTrap(settings);
+  }
+
   Future<bool> saveSchedulingPreferences({
     required SchedulingPreferencesV1 preferences,
     SchedulingOverridesV1 overrides = SchedulingOverridesV1.empty,
+    StarterPlanSource starterPlanSource = StarterPlanSource.userSaved,
     int? updatedAtDay,
   }) {
     return updateSettings(
-      schedulingPrefsJson: _projectionEngine.encodePreferences(preferences),
+      schedulingPrefsJson: _projectionEngine.encodePreferences(
+        preferences.copyWith(starterPlanSource: starterPlanSource),
+      ),
       schedulingOverridesJson: _projectionEngine.encodeOverrides(overrides),
       updatedAtDay: updatedAtDay,
     );
+  }
+
+  Future<bool> saveBeginnerPlan({
+    required BeginnerPlanBinding binding,
+    required SchedulingOverridesV1 overrides,
+    StarterPlanSource starterPlanSource = StarterPlanSource.userSaved,
+    String? profile,
+    int? forceRevisionOnly,
+    int? maxNewPagesPerDay,
+    int? maxNewUnitsPerDay,
+    double? avgNewMinutesPerAyah,
+    double? avgReviewMinutesPerAyah,
+    int? requirePageMetadata,
+    int? updatedAtDay,
+  }) {
+    return updateSettings(
+      profile: profile,
+      forceRevisionOnly: forceRevisionOnly,
+      dailyMinutesDefault: binding.dailyMinutesDefault,
+      minutesByWeekdayJson: binding.legacyWeekdayJson,
+      maxNewPagesPerDay: maxNewPagesPerDay,
+      maxNewUnitsPerDay: maxNewUnitsPerDay,
+      avgNewMinutesPerAyah: avgNewMinutesPerAyah,
+      avgReviewMinutesPerAyah: avgReviewMinutesPerAyah,
+      requirePageMetadata: requirePageMetadata,
+      schedulingPrefsJson: _projectionEngine.encodePreferences(
+        binding.preferences.copyWith(starterPlanSource: starterPlanSource),
+      ),
+      schedulingOverridesJson: _projectionEngine.encodeOverrides(overrides),
+      updatedAtDay: updatedAtDay,
+    );
+  }
+
+  Future<bool> ensureExistingUnitsRepairPlan({
+    int? todayDayOverride,
+    int? updatedAtDay,
+  }) async {
+    final settings = await getSettings(todayDayOverride: todayDayOverride);
+    final starterPlanHealth = assessStarterPlanHealth(settings);
+    if (starterPlanHealth == StarterPlanHealth.healthy) {
+      return false;
+    }
+
+    var binding = beginnerPlanBindingFromSettings(settings);
+    if (binding.weeklyMinutes <= 0 || binding.dailyMinutesDefault <= 0) {
+      binding = BeginnerPlanBinding.fromWeekdayMinutes(
+        weekdayMinutesByKey: splitWeeklyMinutesEvenly(
+          SchedulingPreferencesV1.defaults.minutesPerWeekDefault,
+        ),
+        basePreferences: SchedulingPreferencesV1.defaults,
+      );
+    }
+    final overrides = await getSchedulingOverrides(
+      todayDayOverride: todayDayOverride,
+    );
+    final normalizedProfile = settings.profile.trim().isEmpty
+        ? 'standard'
+        : settings.profile.trim();
+    final clearsLegacyTrap = _looksLikeLegacyStarterTrap(settings);
+
+    return saveBeginnerPlan(
+      binding: binding,
+      overrides: overrides,
+      starterPlanSource: StarterPlanSource.guidedSetupNormalized,
+      profile: normalizedProfile,
+      forceRevisionOnly: clearsLegacyTrap ? 0 : settings.forceRevisionOnly,
+      maxNewPagesPerDay: settings.maxNewPagesPerDay,
+      maxNewUnitsPerDay: settings.maxNewUnitsPerDay,
+      avgNewMinutesPerAyah: settings.avgNewMinutesPerAyah,
+      avgReviewMinutesPerAyah: settings.avgReviewMinutesPerAyah,
+      requirePageMetadata: settings.requirePageMetadata,
+      updatedAtDay: updatedAtDay,
+    );
+  }
+
+  Future<bool> ensureZeroUnitStarterPlan({
+    int? todayDayOverride,
+    int? updatedAtDay,
+  }) async {
+    final settings = await getSettings(todayDayOverride: todayDayOverride);
+    final hasStructuredPrefs = hasStructuredSchedulingPreferences(settings);
+    var binding = beginnerPlanBindingFromSettings(settings);
+    if (binding.weeklyMinutes <= 0 || binding.dailyMinutesDefault <= 0) {
+      binding = BeginnerPlanBinding.fromWeekdayMinutes(
+        weekdayMinutesByKey: splitWeeklyMinutesEvenly(
+          SchedulingPreferencesV1.defaults.minutesPerWeekDefault,
+        ),
+        basePreferences: SchedulingPreferencesV1.defaults,
+      );
+    }
+
+    final preferences = binding.preferences.copyWith(
+      revisionOnlyWeekdays: const <int>{},
+    );
+    final overrides = await getSchedulingOverrides(
+      todayDayOverride: todayDayOverride,
+    );
+    final normalizedProfile = settings.profile.trim().isEmpty
+        ? 'standard'
+        : settings.profile;
+    const normalizedMaxNewPages = 1;
+    const normalizedMaxNewUnits = 1;
+    final needsNormalization = !hasStructuredPrefs ||
+        binding.weeklyMinutes <= 0 ||
+        binding.dailyMinutesDefault <= 0 ||
+        settings.forceRevisionOnly == 1 ||
+        settings.maxNewPagesPerDay != normalizedMaxNewPages ||
+        settings.maxNewUnitsPerDay != normalizedMaxNewUnits ||
+        settings.profile.trim().isEmpty ||
+        preferences.revisionOnlyWeekdays.isNotEmpty;
+
+    if (!needsNormalization) {
+      return false;
+    }
+
+    return saveBeginnerPlan(
+      binding: binding.copyWith(preferences: preferences),
+      overrides: overrides,
+      starterPlanSource: StarterPlanSource.guidedSetupNormalized,
+      profile: normalizedProfile,
+      forceRevisionOnly: 0,
+      maxNewPagesPerDay: normalizedMaxNewPages,
+      maxNewUnitsPerDay: normalizedMaxNewUnits,
+      avgNewMinutesPerAyah: settings.avgNewMinutesPerAyah > 0
+          ? settings.avgNewMinutesPerAyah
+          : 2.0,
+      avgReviewMinutesPerAyah: settings.avgReviewMinutesPerAyah > 0
+          ? settings.avgReviewMinutesPerAyah
+          : 0.8,
+      requirePageMetadata: settings.requirePageMetadata,
+      updatedAtDay: updatedAtDay,
+    );
+  }
+
+  bool _looksLikeLegacyStarterTrap(AppSettingsData settings) {
+    final normalizedProfile = settings.profile.trim().isEmpty
+        ? 'standard'
+        : settings.profile.trim();
+    final preferences = _projectionEngine.preferencesFromSettings(settings);
+    final overrides = _projectionEngine.overridesFromSettings(settings);
+    if (preferences.starterPlanSource != StarterPlanSource.legacyUnknown) {
+      return false;
+    }
+    final matchesDefaultStarterSchedule = preferences
+            .copyWith(starterPlanSource: StarterPlanSource.legacyUnknown)
+            .encode() ==
+        SchedulingPreferencesV1.defaults.encode();
+
+    // Treat starter-plan health as a structural plan-shape question.
+    // Calibration or metadata drift should not hide the legacy revision-only
+    // starter trap for existing learners.
+    return normalizedProfile == 'standard' &&
+        settings.forceRevisionOnly == 1 &&
+        settings.maxNewPagesPerDay == 1 &&
+        settings.maxNewUnitsPerDay == 8 &&
+        matchesDefaultStarterSchedule &&
+        overrides.overridesByDay.isEmpty;
   }
 
   Future<void> upsertPendingCalibrationUpdate({

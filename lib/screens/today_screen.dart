@@ -9,6 +9,7 @@ import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/services/daily_planner.dart';
 import '../data/services/review_completion_service.dart';
+import '../data/services/solo_setup_flow.dart';
 import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
 import '../l10n/app_strings.dart';
@@ -24,10 +25,14 @@ class TodayScreen extends ConsumerStatefulWidget {
 class _TodayScreenState extends ConsumerState<TodayScreen> {
   bool _isLoading = true;
   bool _isSeedingDebugUnit = false;
+  bool _isRunningGuidedSetup = false;
   bool _allowStage4NewOverride = false;
-  bool _hasAnyMemUnits = false;
+  bool _zeroUnitFirstRunMode = false;
   String? _errorMessage;
   TodayPlan? _plan;
+  double? _guidedSetupProgressFraction;
+  GuidedSetupStepKind? _guidedSetupStep;
+  String? _guidedSetupCompanionRoute;
   List<Stage4DueItem> _remainingStage4Due = const <Stage4DueItem>[];
   List<PlannedReviewRow> _remainingReviews = const <PlannedReviewRow>[];
   List<MemUnitData> _remainingNewUnits = const <MemUnitData>[];
@@ -50,26 +55,24 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final todayDay = localDayIndex(DateTime.now().toLocal());
 
     try {
+      final setupReadiness = await ref
+          .read(guidedSetupFlowServiceProvider)
+          .load(todayDayOverride: todayDay);
       final planner = ref.read(dailyPlannerProvider);
-      final memUnitRepo = ref.read(memUnitRepoProvider);
-      final results = await Future.wait<Object?>([
-        planner.planToday(
-          todayDay: todayDay,
-          allowStage4Override: _allowStage4NewOverride,
-        ),
-        memUnitRepo.hasAnyUnits(),
-      ]);
-      final plan = results[0]! as TodayPlan;
-      final hasAnyMemUnits = results[1]! as bool;
+      final plan = await planner.planToday(
+        todayDay: todayDay,
+        allowStage4Override: _allowStage4NewOverride,
+        materializeNewUnits: setupReadiness.hasAnyMemUnits,
+      );
       if (!mounted) {
         return;
       }
       setState(() {
         _plan = plan;
-        _hasAnyMemUnits = hasAnyMemUnits;
         _remainingStage4Due = List<Stage4DueItem>.from(plan.plannedStage4Due);
         _remainingReviews = List<PlannedReviewRow>.from(plan.plannedReviews);
         _remainingNewUnits = List<MemUnitData>.from(plan.plannedNewUnits);
+        _zeroUnitFirstRunMode = !setupReadiness.hasAnyMemUnits;
         _isLoading = false;
       });
     } catch (_) {
@@ -262,6 +265,236 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     }
     messenger.showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _runGuidedSetup() async {
+    if (_isRunningGuidedSetup || _isSeedingDebugUnit) {
+      return;
+    }
+
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+    setState(() {
+      _isRunningGuidedSetup = true;
+      _guidedSetupCompanionRoute = null;
+      _guidedSetupProgressFraction = null;
+      _guidedSetupStep = null;
+    });
+
+    try {
+      final outcome = await ref.read(guidedSetupFlowServiceProvider).run(
+            onProgress: (progress) {
+              if (!mounted) {
+                return;
+              }
+              setState(() {
+                _guidedSetupStep = progress.step;
+                _guidedSetupProgressFraction = progress.fraction;
+              });
+            },
+          );
+
+      ref.invalidate(quranDataReadinessProvider);
+      ref.invalidate(soloSetupReadinessProvider);
+      final keepFocusedHandoff =
+          _zeroUnitFirstRunMode && outcome.companionRoute != null;
+      if (!keepFocusedHandoff) {
+        await _loadTodayPlan();
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      final message = outcome.companionRoute != null
+          ? strings.guidedSetupStarterUnitReady
+          : outcome.readiness.needsGuidedSetup
+              ? strings.guidedSetupNeedsAttention
+              : strings.guidedSetupComplete;
+      setState(() {
+        _guidedSetupCompanionRoute = outcome.companionRoute;
+        _guidedSetupStep = GuidedSetupStepKind.complete;
+        _guidedSetupProgressFraction = 1;
+        if (keepFocusedHandoff) {
+          _zeroUnitFirstRunMode = true;
+        } else {
+          _zeroUnitFirstRunMode = !outcome.readiness.hasAnyMemUnits;
+        }
+      });
+      _showSnackBar(message);
+    } catch (_) {
+      if (mounted) {
+        _showSnackBar(strings.guidedSetupFailed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRunningGuidedSetup = false;
+        });
+      }
+    }
+  }
+
+  String _guidedSetupStepLabel(
+    AppStrings strings,
+    GuidedSetupProgress progress,
+  ) {
+    return switch (progress.step) {
+      GuidedSetupStepKind.importText => strings.guidedSetupStepImportText(
+          progress.processed,
+          progress.total,
+        ),
+      GuidedSetupStepKind.importPageMetadata =>
+        strings.guidedSetupStepImportPageMetadata(
+          progress.processed,
+          progress.total,
+        ),
+      GuidedSetupStepKind.saveStarterPlan => strings.guidedSetupStepSaveStarterPlan,
+      GuidedSetupStepKind.createStarterUnit =>
+        strings.guidedSetupStepCreateStarterUnit,
+      GuidedSetupStepKind.complete => strings.guidedSetupStepComplete,
+    };
+  }
+
+  String _guidedSetupSummary(
+    AppStrings strings,
+    SoloSetupReadiness readiness,
+  ) {
+    return strings.guidedSetupMissingSummary(
+      needsTextImport: readiness.quranData.needsTextImport,
+      needsPageMetadataImport: readiness.quranData.needsPageMetadataImport,
+      needsStarterPlan: readiness.needsStarterPlanRepair,
+      needsStarterUnit: !readiness.hasAnyMemUnits,
+    );
+  }
+
+  String? _planNoticeText(AppStrings strings, TodayPlan plan) {
+    return switch (plan.notice) {
+      TodayPlanNotice.noStudySessions => strings.todayPlanNoticeNoStudySessions,
+      TodayPlanNotice.holiday => strings.todayPlanNoticeHoliday,
+      TodayPlanNotice.finishSetup => strings.todayPlanNoticeFinishSetup,
+      null => null,
+    };
+  }
+
+  Widget _buildStorageWarningCard(
+    AppStrings strings,
+    AsyncValue<dynamic> storageStatus,
+  ) {
+    return storageStatus.when(
+      data: (value) {
+        final warning = strings.storageStatusWarning(value);
+        if (warning == null || value.isPersistent || !value.isWeb) {
+          return const SizedBox.shrink();
+        }
+        return Card(
+          key: const ValueKey('today_storage_warning'),
+          child: Semantics(
+            container: true,
+            label: strings.todayStorageWarningSemanticsLabel,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.todayStorageWarningTitle,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(warning),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (error, stackTrace) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildGuidedSetupCard(
+    AppStrings strings,
+    AsyncValue<SoloSetupReadiness> readiness,
+  ) {
+    return readiness.when(
+      data: (value) {
+        if (!value.needsGuidedSetup && _guidedSetupCompanionRoute == null) {
+          return const SizedBox.shrink();
+        }
+        return Card(
+          key: const ValueKey('today_guided_setup_card'),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  strings.guidedSetupTitle,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _guidedSetupCompanionRoute != null
+                      ? strings.guidedSetupStarterUnitReady
+                      : _guidedSetupSummary(strings, value),
+                  key: const ValueKey('today_guided_setup_message'),
+                ),
+                if (_isRunningGuidedSetup ||
+                    _guidedSetupProgressFraction != null) ...[
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: _guidedSetupProgressFraction,
+                  ),
+                ],
+                if (_guidedSetupStep != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _guidedSetupStepLabel(
+                      strings,
+                      GuidedSetupProgress(
+                        step: _guidedSetupStep!,
+                        processed: ((_guidedSetupProgressFraction ?? 0) * 100)
+                            .round(),
+                        total: _guidedSetupProgressFraction == null ? 0 : 100,
+                      ),
+                    ),
+                    key: const ValueKey('today_guided_setup_status'),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                if (_guidedSetupCompanionRoute != null)
+                  FilledButton.icon(
+                    key: const ValueKey('today_open_companion_after_setup'),
+                    onPressed: () {
+                      context.go(_guidedSetupCompanionRoute!);
+                    },
+                    icon: const Icon(Icons.play_circle_outline),
+                    label: Text(strings.guidedSetupOpenCompanionAction),
+                  )
+                else
+                  FilledButton.icon(
+                    key: const ValueKey('today_guided_setup_button'),
+                    onPressed: (_isRunningGuidedSetup || _isSeedingDebugUnit)
+                        ? null
+                        : _runGuidedSetup,
+                    icon: const Icon(Icons.auto_fix_high_outlined),
+                    label: Text(strings.guidedSetupAction),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => Card(
+        key: const ValueKey('today_guided_setup_card'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(strings.guidedSetupInProgress),
+        ),
+      ),
+      error: (error, stackTrace) => const SizedBox.shrink(),
     );
   }
 
@@ -646,10 +879,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 plan.stage4QualitySnapshot.maintainedCount,
               ),
             ),
-            if (plan.stage4CatchUpMessage != null) ...[
+            if (plan.showStage4CatchUpMessage) ...[
               const SizedBox(height: 8),
               Text(
-                plan.stage4CatchUpMessage!,
+                strings.todayStage4CatchUpMessage,
                 key: const ValueKey('today_stage4_catchup_message'),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.error,
@@ -793,16 +1026,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Widget _buildNewMemorizationSection(AppStrings strings, TodayPath path) {
-    final readiness = ref.watch(quranDataReadinessProvider).asData?.value;
-    final plan = _plan;
-    final canGenerateStarterUnit = !_hasAnyMemUnits &&
-        plan != null &&
-        (readiness?.hasTextData ?? false) &&
-        plan.message != TodayPath.metadataBlockedMessage &&
-        _remainingReviews.isEmpty &&
-        _remainingStage4Due.isEmpty &&
-        _remainingNewUnits.isEmpty;
-
     return Card(
       key: const ValueKey('today_new_section'),
       child: Padding(
@@ -824,19 +1047,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   _isSeedingDebugUnit
                       ? 'Debug: Generating...'
                       : 'Debug: Generate test new unit',
-                ),
-              ),
-            ],
-            if (canGenerateStarterUnit) ...[
-              const SizedBox(height: 10),
-              FilledButton.icon(
-                key: const ValueKey('today_generate_starter_unit_button'),
-                onPressed: _isSeedingDebugUnit ? null : _generateStarterUnit,
-                icon: const Icon(Icons.auto_awesome_outlined),
-                label: Text(
-                  _isSeedingDebugUnit
-                      ? 'Preparing first unit...'
-                      : 'Generate first memorization unit',
                 ),
               ),
             ],
@@ -866,6 +1076,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       return;
     }
 
+    // Debug-only seeding helper. Release-visible first-run onboarding is owned
+    // by the guided setup flow above, not by this shortcut.
     setState(() {
       _isSeedingDebugUnit = true;
     });
@@ -951,83 +1163,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       _showSnackBar('Debug: Added one test new memorization unit.');
     } catch (error) {
       _showSnackBar('Debug: Failed to add test unit ($error).');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSeedingDebugUnit = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _generateStarterUnit() async {
-    if (_isSeedingDebugUnit) {
-      return;
-    }
-
-    final plan = _plan;
-    if (plan == null) {
-      return;
-    }
-
-    setState(() {
-      _isSeedingDebugUnit = true;
-    });
-
-    final todayDay = localDayIndex(DateTime.now().toLocal());
-
-    try {
-      final result =
-          await ref.read(dailyPlannerProvider).createStarterUnitForToday(
-                todayDay: todayDay,
-                plan: plan,
-              );
-
-      if (!mounted) {
-        return;
-      }
-
-      switch (result.status) {
-        case StarterUnitCreationStatus.created:
-          final createdUnit = result.createdUnit;
-          if (createdUnit == null) {
-            _showSnackBar('Could not prepare the first memorization unit.');
-            break;
-          }
-
-          final updatedNewUnits = <MemUnitData>[
-            ..._remainingNewUnits,
-            createdUnit,
-          ];
-          setState(() {
-            _hasAnyMemUnits = true;
-            _remainingNewUnits = updatedNewUnits;
-            _plan = plan.copyWith(
-              plannedNewUnits: updatedNewUnits,
-              minutesPlannedNew: result.minutesPlannedNew,
-              sessions: result.sessions,
-              revisionOnly: false,
-              message: null,
-            );
-          });
-          _showSnackBar('First memorization unit ready.');
-        case StarterUnitCreationStatus.unavailable:
-          _showSnackBar(
-            'No memorization unit is available from the current position.',
-          );
-        case StarterUnitCreationStatus.alreadyInitialized:
-        case StarterUnitCreationStatus.blockedByMetadata:
-          setState(() {
-            _hasAnyMemUnits =
-                result.status == StarterUnitCreationStatus.alreadyInitialized ||
-                    _hasAnyMemUnits;
-          });
-          _showSnackBar('Could not prepare the first memorization unit.');
-      }
-    } catch (_) {
-      if (mounted) {
-        _showSnackBar('Could not prepare the first memorization unit.');
-      }
     } finally {
       if (mounted) {
         setState(() {
@@ -1140,6 +1275,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   Widget build(BuildContext context) {
     final prefs = ref.watch(appPreferencesProvider);
     final strings = AppStrings.of(prefs.language);
+    final storageStatus = ref.watch(databaseStorageStatusProvider);
+    final setupReadiness = ref.watch(soloSetupReadinessProvider);
 
     if (_isLoading) {
       return const SafeArea(
@@ -1182,6 +1319,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             remainingReviews: _remainingReviews,
             remainingNewUnits: _remainingNewUnits,
           );
+    final showNormalPlanSections =
+        plan != null && path != null && !_zeroUnitFirstRunMode;
+    final storageWarningCard = _buildStorageWarningCard(strings, storageStatus);
+    final guidedSetupCard = _buildGuidedSetupCard(strings, setupReadiness);
 
     return SafeArea(
       key: const ValueKey('today_screen_root'),
@@ -1195,14 +1336,22 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
-            if (plan != null && path != null) ...[
+            storageWarningCard,
+            if (storageWarningCard is! SizedBox) ...[
+              const SizedBox(height: 12),
+            ],
+            guidedSetupCard,
+            if (guidedSetupCard is! SizedBox) ...[
+              const SizedBox(height: 12),
+            ],
+            if (plan != null && path != null && !_zeroUnitFirstRunMode) ...[
               _buildNextStepCard(strings, path),
               const SizedBox(height: 12),
               _buildPathModeCard(strings, plan, path),
               const SizedBox(height: 12),
             ],
-            _buildStage4DueSection(strings),
-            if (plan != null && path != null) ...[
+            if (showNormalPlanSections) _buildStage4DueSection(strings),
+            if (plan != null && path != null && !_zeroUnitFirstRunMode) ...[
               const SizedBox(height: 16),
               _buildReviewSection(strings, path),
               const SizedBox(height: 16),
@@ -1253,10 +1402,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            if (plan.message != null) ...[
+            if (_planNoticeText(strings, plan) != null) ...[
               const SizedBox(height: 6),
               Text(
-                plan.message!,
+                _planNoticeText(strings, plan)!,
                 key: const ValueKey('today_plan_message'),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.error,

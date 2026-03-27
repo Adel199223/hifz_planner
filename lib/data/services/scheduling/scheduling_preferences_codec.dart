@@ -40,6 +40,25 @@ enum TimingStrategy {
   }
 }
 
+enum StarterPlanSource {
+  legacyUnknown(code: 'legacy_unknown'),
+  guidedSetupNormalized(code: 'guided_setup_normalized'),
+  userSaved(code: 'user_saved');
+
+  const StarterPlanSource({required this.code});
+
+  final String code;
+
+  static StarterPlanSource fromCode(String? code) {
+    for (final value in values) {
+      if (value.code == code) {
+        return value;
+      }
+    }
+    return StarterPlanSource.legacyUnknown;
+  }
+}
+
 class TimeWindow {
   const TimeWindow({
     required this.startMinute,
@@ -236,6 +255,7 @@ class SchedulingOverridesV1 {
 class SchedulingPreferencesV1 {
   const SchedulingPreferencesV1({
     this.version = 1,
+    this.starterPlanSource = StarterPlanSource.legacyUnknown,
     this.sessionsPerDay = 2,
     this.exactTimesEnabled = false,
     this.sessionATimeMinute,
@@ -261,6 +281,7 @@ class SchedulingPreferencesV1 {
   });
 
   final int version;
+  final StarterPlanSource starterPlanSource;
   final int sessionsPerDay;
   final bool exactTimesEnabled;
   final int? sessionATimeMinute;
@@ -279,6 +300,7 @@ class SchedulingPreferencesV1 {
   static const SchedulingPreferencesV1 defaults = SchedulingPreferencesV1();
 
   SchedulingPreferencesV1 copyWith({
+    StarterPlanSource? starterPlanSource,
     int? sessionsPerDay,
     bool? exactTimesEnabled,
     int? sessionATimeMinute,
@@ -296,6 +318,7 @@ class SchedulingPreferencesV1 {
   }) {
     return SchedulingPreferencesV1(
       version: version,
+      starterPlanSource: starterPlanSource ?? this.starterPlanSource,
       sessionsPerDay: sessionsPerDay ?? this.sessionsPerDay,
       exactTimesEnabled: exactTimesEnabled ?? this.exactTimesEnabled,
       sessionATimeMinute: sessionATimeMinute ?? this.sessionATimeMinute,
@@ -330,6 +353,7 @@ class SchedulingPreferencesV1 {
 
     return <String, Object?>{
       'version': version,
+      'starterPlanSource': starterPlanSource.code,
       'sessionsPerDay': sessionsPerDay,
       'exactTimesEnabled': exactTimesEnabled,
       'sessionATimeMinute': sessionATimeMinute,
@@ -363,6 +387,8 @@ class SchedulingPreferencesV1 {
       final sessionsPerDay = (decoded['sessionsPerDay'] is num)
           ? (decoded['sessionsPerDay'] as num).toInt().clamp(1, 2)
           : defaults.sessionsPerDay;
+      final starterPlanSource =
+          StarterPlanSource.fromCode(decoded['starterPlanSource'] as String?);
       final exactTimesEnabled = decoded['exactTimesEnabled'] is bool
           ? decoded['exactTimesEnabled'] as bool
           : defaults.exactTimesEnabled;
@@ -400,6 +426,7 @@ class SchedulingPreferencesV1 {
           : defaults.flexOutsideWindows;
 
       return SchedulingPreferencesV1(
+        starterPlanSource: starterPlanSource,
         sessionsPerDay: sessionsPerDay,
         exactTimesEnabled: exactTimesEnabled,
         sessionATimeMinute: sessionATimeMinute,

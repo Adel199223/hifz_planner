@@ -6,20 +6,29 @@ enum DatabaseStorageHealth {
   transient,
 }
 
+enum DatabaseStorageKind {
+  nativePersistent,
+  webInitializing,
+  opfsShared,
+  opfs,
+  indexedDbShared,
+  indexedDbFallback,
+  inMemory,
+  other,
+}
+
 class DatabaseStorageStatus {
   const DatabaseStorageStatus({
-    required this.label,
-    required this.details,
+    required this.kind,
     required this.health,
     required this.isWeb,
-    this.warningMessage,
+    this.implementationName,
     this.missingFeatures = const <String>{},
   });
 
   factory DatabaseStorageStatus.nativePersistent() {
     return const DatabaseStorageStatus(
-      label: 'Local SQLite',
-      details: 'Persistent local database storage is active.',
+      kind: DatabaseStorageKind.nativePersistent,
       health: DatabaseStorageHealth.persistent,
       isWeb: false,
     );
@@ -27,8 +36,7 @@ class DatabaseStorageStatus {
 
   factory DatabaseStorageStatus.webInitializing() {
     return const DatabaseStorageStatus(
-      label: 'Browser storage',
-      details: 'Checking the best available browser storage mode...',
+      kind: DatabaseStorageKind.webInitializing,
       health: DatabaseStorageHealth.degraded,
       isWeb: true,
     );
@@ -36,78 +44,66 @@ class DatabaseStorageStatus {
 
   factory DatabaseStorageStatus.fromWasmResult(WasmDatabaseResult result) {
     final implName = result.chosenImplementation.name;
-    final missing = result.missingFeatures.map((feature) => feature.name).toSet();
+    final missing =
+        result.missingFeatures.map((feature) => feature.name).toSet();
 
     switch (implName) {
       case 'opfsShared':
         return DatabaseStorageStatus(
-          label: 'Browser storage (OPFS shared)',
-          details: _details('Persistent browser storage with shared-worker support.', missing),
+          kind: DatabaseStorageKind.opfsShared,
           health: DatabaseStorageHealth.persistent,
           isWeb: true,
+          implementationName: implName,
           missingFeatures: missing,
         );
       case 'opfsLocks':
         return DatabaseStorageStatus(
-          label: 'Browser storage (OPFS)',
-          details: _details('Persistent browser storage is active.', missing),
+          kind: DatabaseStorageKind.opfs,
           health: DatabaseStorageHealth.persistent,
           isWeb: true,
+          implementationName: implName,
           missingFeatures: missing,
         );
       case 'sharedIndexedDb':
         return DatabaseStorageStatus(
-          label: 'Browser storage (IndexedDB shared)',
-          details: _details('Persistent browser storage is active in IndexedDB.', missing),
+          kind: DatabaseStorageKind.indexedDbShared,
           health: DatabaseStorageHealth.persistent,
           isWeb: true,
+          implementationName: implName,
           missingFeatures: missing,
         );
       case 'unsafeIndexedDb':
         return DatabaseStorageStatus(
-          label: 'Browser storage (IndexedDB fallback)',
-          details: _details('Persistent browser storage is available in a weaker fallback mode.', missing),
+          kind: DatabaseStorageKind.indexedDbFallback,
           health: DatabaseStorageHealth.degraded,
           isWeb: true,
-          warningMessage: 'Browser storage is using a weaker IndexedDB fallback. Data should persist, but multi-tab safety is reduced.',
+          implementationName: implName,
           missingFeatures: missing,
         );
       case 'inMemory':
         return DatabaseStorageStatus(
-          label: 'Browser storage (memory only)',
-          details: _details('The browser could only open an in-memory database for this session.', missing),
+          kind: DatabaseStorageKind.inMemory,
           health: DatabaseStorageHealth.transient,
           isWeb: true,
-          warningMessage: 'Browser storage fell back to memory only. Data will be lost after refresh or tab close.',
+          implementationName: implName,
           missingFeatures: missing,
         );
       default:
         return DatabaseStorageStatus(
-          label: 'Browser storage',
-          details: _details('Browser storage opened with ${result.chosenImplementation.name}.', missing),
+          kind: DatabaseStorageKind.other,
           health: DatabaseStorageHealth.degraded,
           isWeb: true,
-          warningMessage: missing.isEmpty
-              ? null
-              : 'Browser storage is missing some features: ${missing.join(', ')}.',
+          implementationName: implName,
           missingFeatures: missing,
         );
     }
   }
 
-  final String label;
-  final String details;
+  final DatabaseStorageKind kind;
   final DatabaseStorageHealth health;
   final bool isWeb;
-  final String? warningMessage;
+  final String? implementationName;
   final Set<String> missingFeatures;
 
   bool get isPersistent => health == DatabaseStorageHealth.persistent;
-
-  static String _details(String base, Set<String> missing) {
-    if (missing.isEmpty) {
-      return base;
-    }
-    return '$base Missing browser features: ${missing.join(', ')}.';
-  }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../app/app_preferences.dart';
 import '../data/database/database_storage_status.dart';
 import '../data/providers/database_providers.dart';
+import '../data/services/solo_setup_flow.dart';
 import '../l10n/app_strings.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -15,8 +17,12 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isImporting = false;
+  bool _isRunningGuidedSetup = false;
   double? _progressFraction;
+  double? _guidedSetupProgressFraction;
   String? _progressDetails;
+  GuidedSetupStepKind? _guidedSetupStep;
+  String? _guidedSetupCompanionRoute;
   String _statusMessage = '';
 
   @override
@@ -28,7 +34,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _runTextImport() async {
-    if (_isImporting) {
+    if (_isImporting || _isRunningGuidedSetup) {
       return;
     }
 
@@ -46,11 +52,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final result = await importer.importFromAsset(
         force: false,
         onProgress: (progress) {
+          final phaseLabel = strings.quranTextImportPhaseLabel(progress.phase);
           _updateProgress(
             fraction: progress.total > 0 ? progress.fraction : null,
-            details:
-                '${progress.phase}: ${progress.processed}/${progress.total}',
-            statusMessage: progress.message,
+            details: strings.importProgressDetails(
+              phaseLabel,
+              progress.processed,
+              progress.total,
+            ),
+            statusMessage: phaseLabel,
           );
         },
       );
@@ -75,7 +85,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _runPageMetadataImport() async {
-    if (_isImporting) {
+    if (_isImporting || _isRunningGuidedSetup) {
       return;
     }
 
@@ -96,11 +106,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final importer = ref.read(pageMetadataImporterServiceProvider);
       final result = await importer.importFromAsset(
         onProgress: (progress) {
+          final phaseLabel = strings.pageMetadataImportPhaseLabel(
+            progress.phase,
+          );
           _updateProgress(
             fraction: progress.total > 0 ? progress.fraction : null,
-            details:
-                '${progress.phase}: ${progress.processed}/${progress.total}',
-            statusMessage: progress.message,
+            details: strings.importProgressDetails(
+              phaseLabel,
+              progress.processed,
+              progress.total,
+            ),
+            statusMessage: phaseLabel,
           );
         },
       );
@@ -121,6 +137,69 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _completeImport(strings.pageMetadataImportFailed(_formatError(error)));
     } finally {
       _finishImport();
+    }
+  }
+
+  Future<void> _runGuidedSetup() async {
+    if (_isImporting || _isRunningGuidedSetup) {
+      return;
+    }
+
+    final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+    setState(() {
+      _isRunningGuidedSetup = true;
+      _guidedSetupCompanionRoute = null;
+      _guidedSetupProgressFraction = null;
+      _guidedSetupStep = null;
+      _statusMessage = strings.guidedSetupInProgress;
+    });
+
+    try {
+      final outcome = await ref.read(guidedSetupFlowServiceProvider).run(
+            onProgress: (progress) {
+              if (!mounted) {
+                return;
+              }
+              setState(() {
+                _guidedSetupStep = progress.step;
+                _guidedSetupProgressFraction = progress.fraction;
+                _statusMessage = _guidedSetupStepLabel(strings, progress);
+              });
+            },
+          );
+
+      if (!mounted) {
+        return;
+      }
+
+      ref.invalidate(quranDataReadinessProvider);
+      ref.invalidate(soloSetupReadinessProvider);
+
+      final message = outcome.companionRoute != null
+          ? strings.guidedSetupStarterUnitReady
+          : outcome.readiness.needsGuidedSetup
+              ? strings.guidedSetupNeedsAttention
+              : strings.guidedSetupComplete;
+
+      setState(() {
+        _guidedSetupCompanionRoute = outcome.companionRoute;
+        _guidedSetupStep = GuidedSetupStepKind.complete;
+        _guidedSetupProgressFraction = 1;
+        _statusMessage = message;
+      });
+
+      _showStatusMessage(message);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showStatusMessage(strings.guidedSetupFailed);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRunningGuidedSetup = false;
+        });
+      }
     }
   }
 
@@ -168,6 +247,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       statusMessage: message,
     );
     ref.invalidate(quranDataReadinessProvider);
+    ref.invalidate(soloSetupReadinessProvider);
     _showStatusMessage(message);
   }
 
@@ -203,16 +283,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return error.toString();
   }
 
+  String _guidedSetupStepLabel(
+    AppStrings strings,
+    GuidedSetupProgress progress,
+  ) {
+    return switch (progress.step) {
+      GuidedSetupStepKind.importText => strings.guidedSetupStepImportText(
+          progress.processed,
+          progress.total,
+        ),
+      GuidedSetupStepKind.importPageMetadata =>
+        strings.guidedSetupStepImportPageMetadata(
+          progress.processed,
+          progress.total,
+        ),
+      GuidedSetupStepKind.saveStarterPlan => strings.guidedSetupStepSaveStarterPlan,
+      GuidedSetupStepKind.createStarterUnit =>
+        strings.guidedSetupStepCreateStarterUnit,
+      GuidedSetupStepKind.complete => strings.guidedSetupStepComplete,
+    };
+  }
+
+  String _guidedSetupSummary(
+    AppStrings strings,
+    SoloSetupReadiness readiness,
+  ) {
+    return strings.guidedSetupMissingSummary(
+      needsTextImport: readiness.quranData.needsTextImport,
+      needsPageMetadataImport: readiness.quranData.needsPageMetadataImport,
+      needsStarterPlan: readiness.needsStarterPlanRepair,
+      needsStarterUnit: !readiness.hasAnyMemUnits,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final prefs = ref.watch(appPreferencesProvider);
     final strings = AppStrings.of(prefs.language);
     final storageStatus = ref.watch(databaseStorageStatusProvider);
     final readiness = ref.watch(quranDataReadinessProvider);
+    final setupReadiness = ref.watch(soloSetupReadinessProvider);
 
     return Semantics(
       container: true,
-      label: 'Settings screen',
+      label: strings.settingsScreenSemanticsLabel,
       child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -226,63 +340,129 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: 16),
               _SettingsStatusCard(
                 key: const ValueKey('settings_storage_status_card'),
-                title: 'Storage status',
+                title: strings.storageStatusTitle,
                 child: storageStatus.when(
+                  data: (value) {
+                    final warning = strings.storageStatusWarning(value);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          strings.storageStatusLabel(value),
+                          key: const ValueKey('settings_storage_status_label'),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(strings.storageStatusDetails(value)),
+                        if (warning != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            warning,
+                            key: const ValueKey('settings_storage_warning'),
+                            style: TextStyle(
+                              color: value.health ==
+                                      DatabaseStorageHealth.transient
+                                  ? Theme.of(context).colorScheme.error
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                  loading: () => Text(strings.checkingBrowserStorage),
+                  error: (error, stackTrace) => Text(error.toString()),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _SettingsStatusCard(
+                key: const ValueKey('settings_guided_setup_card'),
+                title: strings.guidedSetupTitle,
+                child: setupReadiness.when(
                   data: (value) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        value.label,
-                        key: const ValueKey('settings_storage_status_label'),
-                        style: Theme.of(context).textTheme.titleMedium,
+                        _guidedSetupCompanionRoute != null
+                            ? strings.guidedSetupStarterUnitReady
+                            : _guidedSetupSummary(strings, value),
                       ),
-                      const SizedBox(height: 8),
-                      Text(value.details),
-                      if (value.warningMessage != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          value.warningMessage!,
-                          key: const ValueKey('settings_storage_warning'),
-                          style: TextStyle(
-                            color: value.health ==
-                                    DatabaseStorageHealth.transient
-                                ? Theme.of(context).colorScheme.error
-                                : Theme.of(context).colorScheme.primary,
-                          ),
+                      if (_isRunningGuidedSetup ||
+                          _guidedSetupProgressFraction != null) ...[
+                        const SizedBox(height: 12),
+                        LinearProgressIndicator(
+                          value: _guidedSetupProgressFraction,
                         ),
                       ],
+                      if (_guidedSetupStep != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _guidedSetupStepLabel(
+                            strings,
+                            GuidedSetupProgress(
+                              step: _guidedSetupStep!,
+                              processed:
+                                  ((_guidedSetupProgressFraction ?? 0) * 100)
+                                      .round(),
+                              total: _guidedSetupProgressFraction == null
+                                  ? 0
+                                  : 100,
+                            ),
+                          ),
+                          key: const ValueKey('settings_guided_setup_status'),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      if (_guidedSetupCompanionRoute != null)
+                        FilledButton.icon(
+                          key: const ValueKey(
+                            'settings_guided_setup_open_companion',
+                          ),
+                          onPressed: () {
+                            context.go(_guidedSetupCompanionRoute!);
+                          },
+                          icon: const Icon(Icons.play_circle_outline),
+                          label: Text(strings.guidedSetupOpenCompanionAction),
+                        )
+                      else
+                        FilledButton.icon(
+                          key: const ValueKey('settings_guided_setup_button'),
+                          onPressed: (_isImporting || _isRunningGuidedSetup)
+                              ? null
+                              : _runGuidedSetup,
+                          icon: const Icon(Icons.auto_fix_high_outlined),
+                          label: Text(strings.guidedSetupAction),
+                        ),
                     ],
                   ),
-                  loading: () => Text(
-                    DatabaseStorageStatus.webInitializing().details,
-                  ),
+                  loading: () => Text(strings.guidedSetupInProgress),
                   error: (error, stackTrace) => Text(error.toString()),
                 ),
               ),
               const SizedBox(height: 12),
               _SettingsStatusCard(
                 key: const ValueKey('settings_quran_data_status_card'),
-                title: 'Quran data',
+                title: strings.quranDataStatusTitle,
                 child: readiness.when(
                   data: (value) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         value.needsAnySetup
-                            ? strings.readyToImportBundledQuranAssets
-                            : strings.pageMetadataAlreadyUpToDate,
+                            ? strings.quranDataNeedsSetupSummary
+                            : strings.quranDataReadySummary,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         value.needsTextImport
-                            ? strings.importQuranText
-                            : strings.alreadyImported,
+                            ? strings.quranTextMissing
+                            : strings.quranTextReady,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         value.needsPageMetadataImport
-                            ? strings.importPageMetadata
-                            : strings.pageMetadataAlreadyUpToDate,
+                            ? strings.pageMetadataMissing
+                            : strings.pageMetadataReady,
                       ),
                     ],
                   ),
@@ -297,7 +477,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 children: [
                   FilledButton.icon(
                     key: const ValueKey('settings_import_quran_text_button'),
-                    onPressed: _isImporting ? null : _runTextImport,
+                    onPressed: (_isImporting || _isRunningGuidedSetup)
+                        ? null
+                        : _runTextImport,
                     icon: const Icon(Icons.download),
                     label: Text(strings.importQuranText),
                   ),
@@ -305,7 +487,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     key: const ValueKey(
                       'settings_import_page_metadata_button',
                     ),
-                    onPressed: _isImporting ? null : _runPageMetadataImport,
+                    onPressed: (_isImporting || _isRunningGuidedSetup)
+                        ? null
+                        : _runPageMetadataImport,
                     icon: const Icon(Icons.menu_book_outlined),
                     label: Text(strings.importPageMetadata),
                   ),

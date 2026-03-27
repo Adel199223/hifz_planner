@@ -7,6 +7,7 @@ import '../data/providers/database_providers.dart';
 import '../data/services/calibration_service.dart';
 import '../data/services/forecast_simulation_service.dart';
 import '../data/services/onboarding_defaults.dart';
+import '../data/services/scheduling/beginner_plan_binding.dart';
 import '../data/services/scheduling/scheduling_preferences_codec.dart';
 import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
@@ -34,7 +35,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
   };
   OnboardingFluency _fluency = OnboardingFluency.developing;
   String _profile = 'standard';
-  bool _forceRevisionOnly = true;
+  bool _forceRevisionOnly = false;
   final _maxNewPagesController = TextEditingController(text: '1');
   final _maxNewUnitsController = TextEditingController(text: '8');
 
@@ -137,6 +138,75 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     };
   }
 
+  BeginnerPlanBinding _beginnerBindingFromInputs({
+    required _TimeInputMode sourceMode,
+    SchedulingPreferencesV1? basePreferences,
+  }) {
+    final weekdayMinutes = sourceMode == _TimeInputMode.weekly
+        ? splitWeeklyMinutesEvenly(
+            (int.tryParse(_weeklyMinutesController.text.trim()) ?? 0)
+                .clamp(0, 1000000),
+          )
+        : <String, int>{
+            for (final key in onboardingWeekdayKeys)
+              key: int.tryParse(_weekdayControllers[key]!.text.trim()) ?? 0,
+          };
+    return BeginnerPlanBinding.fromWeekdayMinutes(
+      weekdayMinutesByKey: weekdayMinutes,
+      basePreferences: basePreferences ?? _schedulingPreferences,
+    );
+  }
+
+  void _setControllerTextIfNeeded(
+    TextEditingController controller,
+    String nextValue,
+  ) {
+    if (controller.text == nextValue) {
+      return;
+    }
+    controller.value = controller.value.copyWith(
+      text: nextValue,
+      selection: TextSelection.collapsed(offset: nextValue.length),
+      composing: TextRange.empty,
+    );
+  }
+
+  void _applyBeginnerBinding(BeginnerPlanBinding binding) {
+    _setControllerTextIfNeeded(
+      _weeklyMinutesController,
+      binding.weeklyMinutes.toString(),
+    );
+    for (final key in onboardingWeekdayKeys) {
+      _setControllerTextIfNeeded(
+        _weekdayControllers[key]!,
+        (binding.weekdayMinutesByKey[key] ?? 0).toString(),
+      );
+    }
+    _setControllerTextIfNeeded(
+      _minutesPerDayController,
+      binding.dailyMinutesDefault.toString(),
+    );
+    _setControllerTextIfNeeded(
+      _minutesPerWeekController,
+      binding.weeklyMinutes.toString(),
+    );
+    _schedulingPreferences = binding.preferences;
+  }
+
+  void _syncBeginnerDraft({
+    required _TimeInputMode sourceMode,
+    bool refreshWeeklyPlan = true,
+  }) {
+    final binding = _beginnerBindingFromInputs(sourceMode: sourceMode);
+    setState(() {
+      _timeInputMode = sourceMode;
+      _applyBeginnerBinding(binding);
+    });
+    if (refreshWeeklyPlan) {
+      Future<void>.microtask(_refreshWeeklyPlan);
+    }
+  }
+
   void _onFluencyChanged(OnboardingFluency value) {
     setState(() {
       _fluency = value;
@@ -185,26 +255,26 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
     try {
       final settingsRepo = ref.read(settingsRepoProvider);
       final progressRepo = ref.read(progressRepoProvider);
-      final projectionEngine = ref.read(planningProjectionEngineProvider);
+      final beginnerBinding =
+          _beginnerBindingFromInputs(sourceMode: _timeInputMode);
 
-      final weekdayJson = encodeWeekdayMinutesJson(weekdayMinutes);
-      final dailyDefault = deriveDailyDefault(weekdayMinutes);
+      setState(() {
+        _applyBeginnerBinding(beginnerBinding);
+      });
 
-      await settingsRepo.updateSettings(
+      await settingsRepo.saveBeginnerPlan(
+        binding: beginnerBinding,
+        overrides: _schedulingOverrides,
+        starterPlanSource: StarterPlanSource.userSaved,
         profile: _profile,
         forceRevisionOnly: _forceRevisionOnly ? 1 : 0,
-        dailyMinutesDefault: dailyDefault,
-        minutesByWeekdayJson: weekdayJson,
         maxNewPagesPerDay: maxNewPages,
         maxNewUnitsPerDay: maxNewUnits,
         avgNewMinutesPerAyah: avgNew,
         avgReviewMinutesPerAyah: avgReview,
         requirePageMetadata: _requirePageMetadata ? 1 : 0,
-        schedulingPrefsJson:
-            projectionEngine.encodePreferences(_schedulingPreferences),
-        schedulingOverridesJson:
-            projectionEngine.encodeOverrides(_schedulingOverrides),
       );
+      ref.invalidate(soloSetupReadinessProvider);
       await progressRepo.getCursor();
       await _refreshWeeklyPlan();
 
@@ -373,26 +443,29 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
       _weeklyPlanError = null;
     });
     try {
-      final settings = await ref.read(settingsRepoProvider).getSettings();
-      final projectionEngine = ref.read(planningProjectionEngineProvider);
-      final preferences = projectionEngine.preferencesFromSettings(settings);
-      final overrides = projectionEngine.overridesFromSettings(settings);
-      final weekdayMinutes = settings.minutesByWeekdayJson == null
-          ? splitWeeklyMinutesEvenly(settings.dailyMinutesDefault * 7)
-          : decodeWeekdayMinutesJson(settings.minutesByWeekdayJson!);
-      final weeklyMinutes = weekdayMinutes.values.fold<int>(0, (sum, value) => sum + value);
+      final settingsRepo = ref.read(settingsRepoProvider);
+      final settings = await settingsRepo.getSettings();
+      final beginnerBinding =
+          settingsRepo.beginnerPlanBindingFromSettings(settings);
+      final overrides = await settingsRepo.getSchedulingOverrides();
+      final weekdayMinutes = beginnerBinding.weekdayMinutesByKey;
+      final distinctMinuteValues = weekdayMinutes.values.toSet();
       if (!mounted) {
         return;
       }
 
       setState(() {
         _profile = settings.profile;
-        _forceRevisionOnly = settings.forceRevisionOnly == 1;
+        _forceRevisionOnly = settingsRepo.shouldPlanCoerceRevisionOnlyOff(
+              settings,
+            )
+            ? false
+            : settings.forceRevisionOnly == 1;
         _requirePageMetadata = settings.requirePageMetadata == 1;
-        _weeklyMinutesController.text = weeklyMinutes.toString();
-        for (final key in onboardingWeekdayKeys) {
-          _weekdayControllers[key]!.text = (weekdayMinutes[key] ?? 0).toString();
-        }
+        _timeInputMode = distinctMinuteValues.length <= 1
+            ? _TimeInputMode.weekly
+            : _TimeInputMode.weekday;
+        _applyBeginnerBinding(beginnerBinding);
         _maxNewPagesController.text = settings.maxNewPagesPerDay.toString();
         _maxNewUnitsController.text = settings.maxNewUnitsPerDay.toString();
         _avgNewMinutesController.text =
@@ -401,12 +474,7 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             settings.avgReviewMinutesPerAyah.toStringAsFixed(1);
         _avgNewDirty = false;
         _avgReviewDirty = false;
-        _schedulingPreferences = preferences;
         _schedulingOverrides = overrides;
-        _minutesPerDayController.text =
-            preferences.minutesPerDayDefault.toString();
-        _minutesPerWeekController.text =
-            preferences.minutesPerWeekDefault.toString();
         _isLoadingScheduling = false;
       });
       await _refreshWeeklyPlan();
@@ -463,8 +531,12 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
   }
 
   void _updateSchedulingPreferences(SchedulingPreferencesV1 next) {
+    final beginnerBinding = _beginnerBindingFromInputs(
+      sourceMode: _timeInputMode,
+      basePreferences: next,
+    );
     setState(() {
-      _schedulingPreferences = next;
+      _applyBeginnerBinding(beginnerBinding);
     });
     Future<void>.microtask(_refreshWeeklyPlan);
   }
@@ -851,53 +923,25 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           TextField(
             key: const ValueKey('plan_scheduling_minutes_per_day'),
             controller: _minutesPerDayController,
+            readOnly: true,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               labelText: strings.minutesPerDayLabel,
+              helperText: strings.advancedMinutesDerivedFromBeginnerPlan,
             ),
-            onChanged: (value) {
-              final parsed = int.tryParse(value);
-              if (parsed == null) {
-                return;
-              }
-              _updateSchedulingPreferences(
-                _schedulingPreferences.copyWith(
-                  minutesPerDayDefault: parsed,
-                  minutesByWeekday: {
-                    for (final weekday in const [
-                      DateTime.monday,
-                      DateTime.tuesday,
-                      DateTime.wednesday,
-                      DateTime.thursday,
-                      DateTime.friday,
-                      DateTime.saturday,
-                      DateTime.sunday,
-                    ])
-                      weekday: parsed,
-                  },
-                ),
-              );
-            },
           ),
           const SizedBox(height: 8),
           TextField(
             key: const ValueKey('plan_scheduling_minutes_per_week'),
             controller: _minutesPerWeekController,
+            readOnly: true,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               labelText: strings.minutesPerWeekLabel,
+              helperText: strings.advancedMinutesDerivedFromBeginnerPlan,
             ),
-            onChanged: (value) {
-              final parsed = int.tryParse(value);
-              if (parsed == null) {
-                return;
-              }
-              _updateSchedulingPreferences(
-                _schedulingPreferences.copyWith(minutesPerWeekDefault: parsed),
-              );
-            },
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<TimingStrategy>(
@@ -1559,9 +1603,10 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
           ],
           selected: {_timeInputMode},
           onSelectionChanged: (selection) {
-            setState(() {
-              _timeInputMode = selection.first;
-            });
+            _syncBeginnerDraft(
+              sourceMode: selection.first,
+              refreshWeeklyPlan: false,
+            );
           },
         ),
         const SizedBox(height: 8),
@@ -1571,7 +1616,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
             controller: _weeklyMinutesController,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => _syncBeginnerDraft(
+              sourceMode: _TimeInputMode.weekly,
+            ),
             decoration: InputDecoration(
               labelText: strings.weeklyMinutes,
             ),
@@ -1589,7 +1636,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
                     controller: _weekdayControllers[key],
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: (_) => setState(() {}),
+                    onChanged: (_) => _syncBeginnerDraft(
+                      sourceMode: _TimeInputMode.weekday,
+                    ),
                     decoration: InputDecoration(
                       labelText: key.toUpperCase(),
                     ),

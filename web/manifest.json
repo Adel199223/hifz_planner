@@ -1,11 +1,11 @@
 {
-    "name": "hifz_planner",
-    "short_name": "hifz_planner",
+    "name": "Adaptive Hifz",
+    "short_name": "Adaptive Hifz",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "A calm solo-first Quran memorization companion with adaptive review, reader support, and guided daily practice.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

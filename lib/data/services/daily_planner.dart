@@ -15,6 +15,20 @@ import 'new_unit_generator.dart';
 
 const Object _todayPlanUnset = Object();
 
+enum TodayNewAvailability {
+  available,
+  blockedStage4,
+  blockedSetup,
+  blockedReviewHealth,
+  noneAvailable,
+}
+
+enum TodayPlanNotice {
+  noStudySessions,
+  holiday,
+  finishSetup,
+}
+
 class TodayPlan {
   const TodayPlan({
     required this.plannedReviews,
@@ -25,11 +39,12 @@ class TodayPlan {
     required this.minutesPlannedNew,
     required this.stage4BlocksNewByDefault,
     required this.stage4QualitySnapshot,
-    this.stage4CatchUpMessage,
+    required this.newAvailability,
+    this.showStage4CatchUpMessage = false,
     this.sessions = const <PlannedSession>[],
     this.reviewPressure = 0,
     this.recoveryMode = false,
-    this.message,
+    this.notice,
   });
 
   final List<PlannedReviewRow> plannedReviews;
@@ -39,12 +54,13 @@ class TodayPlan {
   final double minutesPlannedReviews;
   final double minutesPlannedNew;
   final bool stage4BlocksNewByDefault;
-  final String? stage4CatchUpMessage;
   final Stage4QualitySnapshot stage4QualitySnapshot;
+  final TodayNewAvailability newAvailability;
+  final bool showStage4CatchUpMessage;
   final List<PlannedSession> sessions;
   final double reviewPressure;
   final bool recoveryMode;
-  final String? message;
+  final TodayPlanNotice? notice;
 
   TodayPlan copyWith({
     List<PlannedReviewRow>? plannedReviews,
@@ -55,11 +71,12 @@ class TodayPlan {
     double? minutesPlannedNew,
     bool? stage4BlocksNewByDefault,
     Stage4QualitySnapshot? stage4QualitySnapshot,
-    Object? stage4CatchUpMessage = _todayPlanUnset,
+    TodayNewAvailability? newAvailability,
+    bool? showStage4CatchUpMessage,
     List<PlannedSession>? sessions,
     double? reviewPressure,
     bool? recoveryMode,
-    Object? message = _todayPlanUnset,
+    Object? notice = _todayPlanUnset,
   }) {
     return TodayPlan(
       plannedReviews: plannedReviews ?? this.plannedReviews,
@@ -73,15 +90,14 @@ class TodayPlan {
           stage4BlocksNewByDefault ?? this.stage4BlocksNewByDefault,
       stage4QualitySnapshot:
           stage4QualitySnapshot ?? this.stage4QualitySnapshot,
-      stage4CatchUpMessage: identical(stage4CatchUpMessage, _todayPlanUnset)
-          ? this.stage4CatchUpMessage
-          : stage4CatchUpMessage as String?,
+      newAvailability: newAvailability ?? this.newAvailability,
+      showStage4CatchUpMessage:
+          showStage4CatchUpMessage ?? this.showStage4CatchUpMessage,
       sessions: sessions ?? this.sessions,
       reviewPressure: reviewPressure ?? this.reviewPressure,
       recoveryMode: recoveryMode ?? this.recoveryMode,
-      message: identical(message, _todayPlanUnset)
-          ? this.message
-          : message as String?,
+      notice:
+          identical(notice, _todayPlanUnset) ? this.notice : notice as TodayPlanNotice?,
     );
   }
 }
@@ -183,6 +199,7 @@ class DailyPlanner {
   Future<TodayPlan> planToday({
     required int todayDay,
     bool allowStage4Override = false,
+    bool materializeNewUnits = true,
   }) {
     return _db.transaction(() async {
       final settings =
@@ -199,9 +216,6 @@ class DailyPlanner {
       final stage4QualitySnapshot = await _buildStage4QualitySnapshot();
       final mandatoryStage4DueExists =
           stage4DueItems.any((item) => item.mandatory);
-      final stage4CatchUpMessage = mandatoryStage4DueExists
-          ? 'Delayed stability checks are due. Complete Stage-4 first.'
-          : null;
 
       final sortedDueUnits = [...dueUnits]..sort(
           (a, b) => _compareDueRows(
@@ -252,12 +266,15 @@ class DailyPlanner {
           minutesPlannedNew: 0,
           stage4BlocksNewByDefault:
               mandatoryStage4DueExists && !allowStage4Override,
-          stage4CatchUpMessage: stage4CatchUpMessage,
-          stage4QualitySnapshot: stage4QualitySnapshot,
+        stage4QualitySnapshot: stage4QualitySnapshot,
+        newAvailability: mandatoryStage4DueExists && !allowStage4Override
+              ? TodayNewAvailability.blockedStage4
+              : TodayNewAvailability.noneAvailable,
+        showStage4CatchUpMessage: mandatoryStage4DueExists,
           sessions: todaySchedule?.sessions ?? const <PlannedSession>[],
-          message: todaySchedule?.skipDay == true
-              ? 'Day marked as holiday'
-              : 'No study sessions planned for today',
+          notice: todaySchedule?.skipDay == true
+              ? TodayPlanNotice.holiday
+              : TodayPlanNotice.noStudySessions,
         );
       }
 
@@ -308,7 +325,7 @@ class DailyPlanner {
 
       var plannedNewUnits = <MemUnitData>[];
       var minutesPlannedNew = 0.0;
-      String? message;
+      TodayPlanNotice? notice;
 
       if (!effectiveRevisionOnly) {
         final metadataBlocked = await _isMetadataBlocked(
@@ -316,8 +333,8 @@ class DailyPlanner {
           cursor: cursor,
         );
         if (metadataBlocked) {
-          message = 'Import page metadata first';
-        } else {
+          notice = TodayPlanNotice.finishSetup;
+        } else if (materializeNewUnits) {
           final remainingNewMinutes = math.max(
             0.0,
             math.min(
@@ -354,6 +371,19 @@ class DailyPlanner {
         revisionOnly: effectiveRevisionOnly,
       );
 
+      final TodayNewAvailability newAvailability;
+      if (stage4BlocksNew) {
+        newAvailability = TodayNewAvailability.blockedStage4;
+      } else if (notice == TodayPlanNotice.finishSetup) {
+        newAvailability = TodayNewAvailability.blockedSetup;
+      } else if (effectiveRevisionOnly) {
+        newAvailability = TodayNewAvailability.blockedReviewHealth;
+      } else if (plannedNewUnits.isNotEmpty) {
+        newAvailability = TodayNewAvailability.available;
+      } else {
+        newAvailability = TodayNewAvailability.noneAvailable;
+      }
+
       return TodayPlan(
         plannedReviews: plannedReviews,
         plannedNewUnits: plannedNewUnits,
@@ -362,12 +392,13 @@ class DailyPlanner {
         minutesPlannedReviews: minutesPlannedReviews,
         minutesPlannedNew: minutesPlannedNew,
         stage4BlocksNewByDefault: stage4BlocksNew,
-        stage4CatchUpMessage: stage4CatchUpMessage,
         stage4QualitySnapshot: stage4QualitySnapshot,
+        newAvailability: newAvailability,
+        showStage4CatchUpMessage: mandatoryStage4DueExists,
         sessions: syncedSessions,
         reviewPressure: allocation.reviewPressure,
         recoveryMode: allocation.recoveryMode,
-        message: message,
+        notice: notice,
       );
     });
   }

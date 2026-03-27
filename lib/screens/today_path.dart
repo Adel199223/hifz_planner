@@ -71,8 +71,6 @@ class TodayPath {
 
   static const double protectReviewPressureThreshold = 0.9;
   static const double weakSpotThreshold = 0.35;
-  static const String metadataBlockedMessage = 'Import page metadata first';
-
   final TodayPathMode mode;
   final TodayNewState newState;
   final PlannedReviewRow? warmUp;
@@ -169,6 +167,7 @@ class TodayPath {
       return TodayPathMode.recovery;
     }
     if (plan.stage4BlocksNewByDefault ||
+        plan.newAvailability == TodayNewAvailability.blockedReviewHealth ||
         plan.reviewPressure > protectReviewPressureThreshold ||
         plan.revisionOnly) {
       return TodayPathMode.protect;
@@ -180,20 +179,15 @@ class TodayPath {
     required TodayPlan plan,
     required List<MemUnitData> remainingNewUnits,
   }) {
-    if (plan.stage4BlocksNewByDefault) {
-      return TodayNewState.lockedStage4;
-    }
-    if (plan.revisionOnly ||
-        plan.recoveryMode ||
-        plan.reviewPressure > protectReviewPressureThreshold) {
-      return TodayNewState.lockedReviewHealth;
-    }
-    if (plan.message == metadataBlockedMessage) {
-      return TodayNewState.lockedSetup;
-    }
-    if (remainingNewUnits.isNotEmpty) {
-      return TodayNewState.unlocked;
-    }
-    return TodayNewState.noneAvailable;
+    return switch (plan.newAvailability) {
+      TodayNewAvailability.available => remainingNewUnits.isNotEmpty
+          ? TodayNewState.unlocked
+          : TodayNewState.noneAvailable,
+      TodayNewAvailability.blockedStage4 => TodayNewState.lockedStage4,
+      TodayNewAvailability.blockedSetup => TodayNewState.lockedSetup,
+      TodayNewAvailability.blockedReviewHealth =>
+        TodayNewState.lockedReviewHealth,
+      TodayNewAvailability.noneAvailable => TodayNewState.noneAvailable,
+    };
   }
 }
