@@ -275,6 +275,7 @@ Execution order is designed to protect retention quality:
 - some rows can show a short plain-language reason when Today is surfacing them early
 - supports immediate scheduler updates based on your quality
 - same review can also be saved from the Companion review summary if you open it there first
+- lower scheduled-review grades can open an optional repair prompt; dismissing it cancels the save, while `Skip` keeps the default low-grade repair mapping
 - when two due items are similarly urgent, weaker recent Companion retention can move one earlier in the list
 
 ### Optional new section

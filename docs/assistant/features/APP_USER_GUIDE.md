@@ -139,6 +139,7 @@ Then it guides you through:
 - review work grouped into warm-up / lock-in, weak spots, recent review, and maintenance review
 - optional new memorization when it is unlocked
 - a guided setup path when you have imported the Quran data but have not created any memorization units yet
+- on lower scheduled-review grades, an optional repair prompt can appear; dismissing it cancels the save, while `Skip` keeps the default grade-based repair mapping
 
 If required Quran data is still missing, Today and Settings now share one guided setup path:
 - import the bundled Quran text first

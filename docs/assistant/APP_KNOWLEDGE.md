@@ -188,6 +188,9 @@ Current adaptive queue truth to preserve:
 - durable per-unit adaptive memory now lives on `companion_lifecycle_state`
 - scheduled review grading now updates weak-spot pressure and recent struggle state
 - mature legacy/schedule-only units are no longer treated as perpetually new when schedule truth shows they are already stable enough
+- Error-Aware Repair V1 reuses `last_error_type` for optional low-grade repair tagging (`hesitation`, `wrong_recall`, `weak_lock_in`, `similar_confusion`) instead of adding schema
+- dismissing the low-grade repair-tag sheet now cancels save; only explicit `Skip` or an explicit tag choice persists the review
+- Today can now explain weak spots more specifically when `last_error_type` is present
 - browser/web validation for this phase remains `flutter build web` plus Playwright smoke
 - Drift/build_runner regeneration for the generated lifecycle surface remains tooling debt; runtime schema repair and custom SQL remain the intentional bridge in this environment
 

@@ -506,6 +506,9 @@ Current capabilities:
 - Persist durable adaptive memory on `companion_lifecycle_state` (`weak_spot_score`, `recent_struggle_count`, nullable `last_error_type`)
 - Update weak-spot pressure and recent struggle state from scheduled review grading
 - Let mature legacy/schedule-only units adopt stable queue behavior instead of looking perpetually brand-new when schedule truth already shows maturity
+- Let low-grade review flows optionally tag the repair need as hesitation, wrong recall, weak lock-in, or similar-verse confusion without adding a heavy form
+- Treat dismiss / barrier tap / drag-down / back on that repair-tag sheet as cancel, so only explicit `Skip` or an explicit tag choice saves the low-grade review
+- Render more specific weak-spot reason text on Today when `last_error_type` is available
 - Save grades (`q=5/4/3/2/0`) through shared `ReviewCompletionService`, with plain solo-learner labels in the UI
 - "Open in Reader" deep-link with page mode + verse range highlight params
 - "Open Companion Chain" action for review/new rows

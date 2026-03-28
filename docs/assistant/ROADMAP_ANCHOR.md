@@ -38,6 +38,7 @@ Wave 0 status:
 Current continuity ExecPlans:
 - `docs/assistant/exec_plans/active/2026-03-25_wave1_guided_daily_hifz_path.md`
 - `docs/assistant/exec_plans/active/2026-03-28_adaptive_queue_v1.md`
+- `docs/assistant/exec_plans/active/2026-03-28_error_aware_repair_v1.md`
 
 Wave 1 status on the current feature branch:
 - Today now leads with one obvious next action
@@ -45,6 +46,7 @@ Wave 1 status on the current feature branch:
 - Today now consumes planner-assigned adaptive buckets directly and groups work into warm-up / lock-in, weak spots, recent review, maintenance review, and optional new
 - durable adaptive memory now lives on `companion_lifecycle_state`, and scheduled review grading updates weak-spot pressure and recent struggle state
 - mature legacy/schedule-only units no longer stay stuck looking perpetually new when schedule truth already shows they are stable enough
+- Error-Aware Repair V1 now adds optional low-grade repair tagging, dismiss-cancels-save protection on the repair sheet, and more specific weak-spot explanation on top of that adaptive baseline, without reopening schema work
 - scheduler, DB schema, reader, and companion route structure remain intact
 - browser-first stabilization is complete enough for continuity:
   - guided setup is the truthful zero-unit first-run path on Today and Settings
@@ -59,6 +61,7 @@ The next milestone should shift toward:
 
 Practical meaning:
 - deepen adaptive memorization truth and progression quality instead of doing more web plumbing
+- Error-Aware Repair V1 is implemented enough for continuity; the next wave should move beyond thin repair-tagging toward stronger memorization-engine quality
 - keep the current web target as a supported platform surface, not the center of gravity
 - preserve reader/audio/local-first strengths while improving memorization progression and review quality
 
