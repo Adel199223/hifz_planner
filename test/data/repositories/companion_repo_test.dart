@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/repositories/companion_repo.dart';
+import 'package:hifz_planner/data/services/adaptive_queue_policy.dart';
 import 'package:hifz_planner/data/services/companion/companion_models.dart';
 
 void main() {
@@ -300,6 +301,71 @@ void main() {
     final due = await repo.getDueLifecycleStates(todayDay: 105);
     expect(due.map((row) => row.unitId).toSet(), contains(unitIdA));
     expect(due.map((row) => row.unitId).toSet(), isNot(contains(unitIdB)));
+  });
+
+  test('getAdaptiveStatesByUnitIds keeps lastErrorType null for healthy rows',
+      () async {
+    final unitId = await createUnit();
+
+    await repo.writeAdaptiveState(
+      unitId: unitId,
+      weakSpotScore: 0.15,
+      recentStruggleCount: 0,
+      lastErrorType: null,
+      updatedAtDay: 105,
+      updatedAtSeconds: 450,
+    );
+
+    final states = await repo.getAdaptiveStatesByUnitIds(<int>[unitId]);
+
+    expect(states[unitId], isNotNull);
+    expect(states[unitId]!.weakSpotScore, 0.15);
+    expect(states[unitId]!.recentStruggleCount, 0);
+    expect(states[unitId]!.lastErrorType, isNull);
+  });
+
+  test('getAdaptiveStatesByUnitIds decodes hesitation lastErrorType',
+      () async {
+    final unitId = await createUnit();
+
+    await repo.writeAdaptiveState(
+      unitId: unitId,
+      weakSpotScore: 0.45,
+      recentStruggleCount: 1,
+      lastErrorType: AdaptiveLastErrorType.hesitation.dbValue,
+      updatedAtDay: 106,
+      updatedAtSeconds: 500,
+    );
+
+    final states = await repo.getAdaptiveStatesByUnitIds(<int>[unitId]);
+
+    expect(states[unitId], isNotNull);
+    expect(
+      states[unitId]!.lastErrorType,
+      AdaptiveLastErrorType.hesitation,
+    );
+  });
+
+  test('getAdaptiveStatesByUnitIds decodes wrongRecall lastErrorType',
+      () async {
+    final unitId = await createUnit();
+
+    await repo.writeAdaptiveState(
+      unitId: unitId,
+      weakSpotScore: 0.7,
+      recentStruggleCount: 2,
+      lastErrorType: AdaptiveLastErrorType.wrongRecall.dbValue,
+      updatedAtDay: 107,
+      updatedAtSeconds: 550,
+    );
+
+    final states = await repo.getAdaptiveStatesByUnitIds(<int>[unitId]);
+
+    expect(states[unitId], isNotNull);
+    expect(
+      states[unitId]!.lastErrorType,
+      AdaptiveLastErrorType.wrongRecall,
+    );
   });
 
   test('persists stage-4 session outcome and telemetry', () async {

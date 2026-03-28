@@ -4,6 +4,7 @@ import '../database/app_database.dart';
 import '../repositories/companion_repo.dart';
 import '../repositories/review_log_repo.dart';
 import '../repositories/schedule_repo.dart';
+import 'adaptive_queue_policy.dart';
 
 enum ReviewLifecycleTransition {
   unchanged,
@@ -44,6 +45,7 @@ class ReviewCompletionService {
   final ReviewLogRepo _reviewLogRepo;
   final ScheduleRepo _scheduleRepo;
   final CompanionRepo _companionRepo;
+  static const AdaptiveQueuePolicy _adaptiveQueuePolicy = AdaptiveQueuePolicy();
 
   Future<ReviewCompletionResult> completeScheduledReview({
     required int unitId,
@@ -71,19 +73,47 @@ class ReviewCompletionService {
       if (!scheduleUpdated) {
         throw StateError('Schedule state not found for unit $unitId');
       }
+      final updatedSchedule = await _scheduleRepo.getScheduleState(unitId);
+      if (updatedSchedule == null) {
+        throw StateError('Updated schedule state not found for unit $unitId');
+      }
 
       final lifecycle = await _companionRepo.getLifecycleState(unitId);
-      final lifecycleTierBefore = lifecycle?.lifecycleTier;
-      final lifecycleTierAfter = _resolveLifecycleTierAfterReview(
-        lifecycleTierBefore,
-        gradeQ,
+      final adaptiveStates =
+          await _companionRepo.getAdaptiveStatesByUnitIds(<int>[unitId]);
+      final adaptiveState =
+          adaptiveStates[unitId] ?? const AdaptiveUnitMemoryState();
+      final adaptiveUpdate = _adaptiveQueuePolicy.applyReviewGrade(
+        state: adaptiveState,
+        gradeQ: gradeQ,
       );
+      final lifecycleTierBefore = lifecycle?.lifecycleTier;
+      final lifecycleTierAfter =
+          _adaptiveQueuePolicy.hasRealCompanionHistory(lifecycle)
+              ? _resolveLifecycleTierAfterReview(
+                  lifecycleTierBefore,
+                  gradeQ,
+                )
+              : _adaptiveQueuePolicy.adoptedLifecycleTierAfterScheduledReview(
+                  updatedSchedule: updatedSchedule,
+                  gradeQ: gradeQ,
+                  existingLifecycle: lifecycle,
+                );
       final lifecycleTransition = _resolveLifecycleTransition(
         before: lifecycleTierBefore,
         after: lifecycleTierAfter,
       );
 
-      if (lifecycle != null && lifecycleTierAfter != lifecycleTierBefore) {
+      if (lifecycle != null) {
+        await _companionRepo.upsertLifecycleState(
+          unitId: unitId,
+          lifecycleTier: lifecycleTierAfter != lifecycleTierBefore
+              ? Value(lifecycleTierAfter!)
+              : const Value.absent(),
+          updatedAtDay: completedDay,
+          updatedAtSeconds: completedSeconds,
+        );
+      } else {
         await _companionRepo.upsertLifecycleState(
           unitId: unitId,
           lifecycleTier: Value(lifecycleTierAfter!),
@@ -91,6 +121,16 @@ class ReviewCompletionService {
           updatedAtSeconds: completedSeconds,
         );
       }
+      await _companionRepo.writeAdaptiveState(
+        unitId: unitId,
+        weakSpotScore: adaptiveUpdate.weakSpotScore,
+        recentStruggleCount: adaptiveUpdate.recentStruggleCount,
+        lastErrorType: _companionRepo.encodeAdaptiveLastErrorType(
+          adaptiveUpdate.lastErrorType,
+        ),
+        updatedAtDay: completedDay,
+        updatedAtSeconds: completedSeconds,
+      );
 
       return ReviewCompletionResult(
         scheduleUpdated: scheduleUpdated,

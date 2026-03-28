@@ -9,11 +9,13 @@ import '../repositories/progress_repo.dart';
 import '../repositories/quran_repo.dart';
 import '../repositories/schedule_repo.dart';
 import '../repositories/settings_repo.dart';
+import 'adaptive_queue_policy.dart';
 import 'scheduling/planning_projection_engine.dart';
 import 'scheduling/weekly_plan_generator.dart';
 import 'new_unit_generator.dart';
 
 const Object _todayPlanUnset = Object();
+const double _weakSpotReinforcementThreshold = 0.35;
 
 enum TodayNewAvailability {
   available,
@@ -27,6 +29,15 @@ enum TodayPlanNotice {
   noStudySessions,
   holiday,
   finishSetup,
+}
+
+enum AdaptiveQueueBucket { lockIn, weakSpot, recentReview, maintenance }
+
+enum AdaptiveReviewReason {
+  needsLockIn,
+  shakyRecently,
+  recentCheckIn,
+  maintenanceDue,
 }
 
 class TodayPlan {
@@ -96,8 +107,9 @@ class TodayPlan {
       sessions: sessions ?? this.sessions,
       reviewPressure: reviewPressure ?? this.reviewPressure,
       recoveryMode: recoveryMode ?? this.recoveryMode,
-      notice:
-          identical(notice, _todayPlanUnset) ? this.notice : notice as TodayPlanNotice?,
+      notice: identical(notice, _todayPlanUnset)
+          ? this.notice
+          : notice as TodayPlanNotice?,
     );
   }
 }
@@ -108,12 +120,16 @@ class PlannedReviewRow {
     required this.schedule,
     required this.lifecycleTier,
     required this.reinforcementWeight,
+    required this.bucket,
+    required this.reason,
   });
 
   final MemUnitData unit;
   final ScheduleStateData schedule;
   final String lifecycleTier;
   final double reinforcementWeight;
+  final AdaptiveQueueBucket bucket;
+  final AdaptiveReviewReason reason;
 }
 
 class Stage4DueItem {
@@ -195,6 +211,7 @@ class DailyPlanner {
   final CompanionRepo _companionRepo;
   final NewUnitGenerator _newUnitGenerator;
   final PlanningProjectionEngine _projectionEngine;
+  static const AdaptiveQueuePolicy _adaptiveQueuePolicy = AdaptiveQueuePolicy();
 
   Future<TodayPlan> planToday({
     required int todayDay,
@@ -206,11 +223,23 @@ class DailyPlanner {
           await _settingsRepo.getSettings(todayDayOverride: todayDay);
       final cursor = await _progressRepo.getCursor();
       final dueUnits = await _scheduleRepo.getDueUnits(todayDay);
-      final lifecycleTierByUnitId = await _loadLifecycleTierByUnitId(
+      final lifecycleStateByUnitId =
+          await _companionRepo.getLifecycleStatesByUnitIds(
+        dueUnits.map((row) => row.unit.id),
+      );
+      final adaptiveStateByUnitId =
+          await _companionRepo.getAdaptiveStatesByUnitIds(
         dueUnits.map((row) => row.unit.id),
       );
       final reinforcementByUnitId = await _loadReinforcementProfileByUnitId(
         dueUnits.map((row) => row.unit.id),
+      );
+      final reviewClassificationByUnitId = _buildReviewClassificationByUnitId(
+        dueUnits: dueUnits,
+        todayDay: todayDay,
+        lifecycleStateByUnitId: lifecycleStateByUnitId,
+        adaptiveStateByUnitId: adaptiveStateByUnitId,
+        reinforcementByUnitId: reinforcementByUnitId,
       );
       final stage4DueItems = await _buildStage4DueItems(todayDay: todayDay);
       final stage4QualitySnapshot = await _buildStage4QualitySnapshot();
@@ -222,8 +251,9 @@ class DailyPlanner {
             a,
             b,
             todayDay,
-            lifecycleTierByUnitId,
+            lifecycleStateByUnitId,
             reinforcementByUnitId,
+            reviewClassificationByUnitId,
           ),
         );
       final reviewMinutesByUnitId = await _estimateReviewMinutesByUnitId(
@@ -266,11 +296,11 @@ class DailyPlanner {
           minutesPlannedNew: 0,
           stage4BlocksNewByDefault:
               mandatoryStage4DueExists && !allowStage4Override,
-        stage4QualitySnapshot: stage4QualitySnapshot,
-        newAvailability: mandatoryStage4DueExists && !allowStage4Override
+          stage4QualitySnapshot: stage4QualitySnapshot,
+          newAvailability: mandatoryStage4DueExists && !allowStage4Override
               ? TodayNewAvailability.blockedStage4
               : TodayNewAvailability.noneAvailable,
-        showStage4CatchUpMessage: mandatoryStage4DueExists,
+          showStage4CatchUpMessage: mandatoryStage4DueExists,
           sessions: todaySchedule?.sessions ?? const <PlannedSession>[],
           notice: todaySchedule?.skipDay == true
               ? TodayPlanNotice.holiday
@@ -278,11 +308,26 @@ class DailyPlanner {
         );
       }
 
-      final dueReviewMinutes = _weightedReviewDemandMinutes(
+      final baseDueReviewMinutes = _weightedReviewDemandMinutes(
         dueRows: sortedDueUnits,
         reviewMinutesByUnitId: reviewMinutesByUnitId,
         reinforcementByUnitId: reinforcementByUnitId,
       );
+      final lockInMinutes = _bucketReviewMinutes(
+        dueRows: sortedDueUnits,
+        reviewMinutesByUnitId: reviewMinutesByUnitId,
+        reviewClassificationByUnitId: reviewClassificationByUnitId,
+        bucket: AdaptiveQueueBucket.lockIn,
+      );
+      final weakSpotMinutes = _bucketReviewMinutes(
+        dueRows: sortedDueUnits,
+        reviewMinutesByUnitId: reviewMinutesByUnitId,
+        reviewClassificationByUnitId: reviewClassificationByUnitId,
+        bucket: AdaptiveQueueBucket.weakSpot,
+      );
+      final adaptiveDebtMinutes =
+          (weakSpotMinutes * 0.5) + (lockInMinutes * 0.25);
+      final dueReviewMinutes = baseDueReviewMinutes + adaptiveDebtMinutes;
       final allocation = _projectionEngine.allocateDailyContent(
         dailyMinutes: dailyMinutes,
         dueReviewMinutes: dueReviewMinutes,
@@ -307,12 +352,15 @@ class DailyPlanner {
           PlannedReviewRow(
             unit: dueRow.unit,
             schedule: dueRow.schedule,
-            lifecycleTier: _resolveLifecycleTier(
+            lifecycleTier: _resolveEffectiveLifecycleTier(
               dueRow.unit.id,
-              lifecycleTierByUnitId,
+              dueRow.schedule,
+              lifecycleStateByUnitId,
             ),
             reinforcementWeight:
                 reinforcementByUnitId[dueRow.unit.id]?.weight ?? 0.0,
+            bucket: reviewClassificationByUnitId[dueRow.unit.id]!.bucket,
+            reason: reviewClassificationByUnitId[dueRow.unit.id]!.reason,
           ),
         );
         minutesPlannedReviews += estimated;
@@ -470,9 +518,23 @@ class DailyPlanner {
     DueUnitRow a,
     DueUnitRow b,
     int todayDay,
-    Map<int, String> lifecycleTierByUnitId,
+    Map<int, CompanionLifecycleStateData> lifecycleStateByUnitId,
     Map<int, _UnitReinforcementProfile> reinforcementByUnitId,
+    Map<int, _AdaptiveReviewClassification> reviewClassificationByUnitId,
   ) {
+    final bucketCompare = _bucketSortRank(
+      reviewClassificationByUnitId[a.unit.id]?.bucket ??
+          AdaptiveQueueBucket.maintenance,
+    ).compareTo(
+      _bucketSortRank(
+        reviewClassificationByUnitId[b.unit.id]?.bucket ??
+            AdaptiveQueueBucket.maintenance,
+      ),
+    );
+    if (bucketCompare != 0) {
+      return bucketCompare;
+    }
+
     final overdueA = todayDay - a.schedule.dueDay;
     final overdueB = todayDay - b.schedule.dueDay;
     final weightA = reinforcementByUnitId[a.unit.id]?.weight ?? 0.0;
@@ -495,10 +557,18 @@ class DailyPlanner {
     }
 
     final lifecycleCompare = _lifecycleSortRank(
-      _resolveLifecycleTier(a.unit.id, lifecycleTierByUnitId),
+      _resolveEffectiveLifecycleTier(
+        a.unit.id,
+        a.schedule,
+        lifecycleStateByUnitId,
+      ),
     ).compareTo(
       _lifecycleSortRank(
-        _resolveLifecycleTier(b.unit.id, lifecycleTierByUnitId),
+        _resolveEffectiveLifecycleTier(
+          b.unit.id,
+          b.schedule,
+          lifecycleStateByUnitId,
+        ),
       ),
     );
     if (lifecycleCompare != 0) {
@@ -545,27 +615,15 @@ class DailyPlanner {
     };
   }
 
-  Future<Map<int, String>> _loadLifecycleTierByUnitId(
-    Iterable<int> unitIds,
-  ) async {
-    final ids = unitIds.toSet().toList(growable: false);
-    if (ids.isEmpty) {
-      return const <int, String>{};
-    }
-
-    final rows = await (_db.select(_db.companionLifecycleState)
-          ..where((tbl) => tbl.unitId.isIn(ids)))
-        .get();
-    return <int, String>{
-      for (final row in rows) row.unitId: row.lifecycleTier,
-    };
-  }
-
-  String _resolveLifecycleTier(
+  String _resolveEffectiveLifecycleTier(
     int unitId,
-    Map<int, String> lifecycleTierByUnitId,
+    ScheduleStateData schedule,
+    Map<int, CompanionLifecycleStateData> lifecycleStateByUnitId,
   ) {
-    return lifecycleTierByUnitId[unitId] ?? 'emerging';
+    return _adaptiveQueuePolicy.effectiveLifecycleTierForQueue(
+      schedule: schedule,
+      lifecycle: lifecycleStateByUnitId[unitId],
+    );
   }
 
   int _lifecycleSortRank(String lifecycleTier) {
@@ -576,6 +634,87 @@ class DailyPlanner {
       'maintained' => 3,
       _ => 0,
     };
+  }
+
+  int _bucketSortRank(AdaptiveQueueBucket bucket) {
+    return switch (bucket) {
+      AdaptiveQueueBucket.lockIn => 0,
+      AdaptiveQueueBucket.weakSpot => 1,
+      AdaptiveQueueBucket.recentReview => 2,
+      AdaptiveQueueBucket.maintenance => 3,
+    };
+  }
+
+  Map<int, _AdaptiveReviewClassification> _buildReviewClassificationByUnitId({
+    required List<DueUnitRow> dueUnits,
+    required int todayDay,
+    required Map<int, CompanionLifecycleStateData> lifecycleStateByUnitId,
+    required Map<int, AdaptiveUnitMemoryState> adaptiveStateByUnitId,
+    required Map<int, _UnitReinforcementProfile> reinforcementByUnitId,
+  }) {
+    final classifications = <int, _AdaptiveReviewClassification>{};
+    for (final dueRow in dueUnits) {
+      final lifecycle = lifecycleStateByUnitId[dueRow.unit.id];
+      final adaptiveState = adaptiveStateByUnitId[dueRow.unit.id] ??
+          const AdaptiveUnitMemoryState();
+      classifications[dueRow.unit.id] = _classifyDueRow(
+        dueRow: dueRow,
+        todayDay: todayDay,
+        lifecycle: lifecycle,
+        adaptiveState: adaptiveState,
+        reinforcementProfile: reinforcementByUnitId[dueRow.unit.id] ??
+            const _UnitReinforcementProfile(),
+      );
+    }
+    return classifications;
+  }
+
+  _AdaptiveReviewClassification _classifyDueRow({
+    required DueUnitRow dueRow,
+    required int todayDay,
+    required CompanionLifecycleStateData? lifecycle,
+    required AdaptiveUnitMemoryState adaptiveState,
+    required _UnitReinforcementProfile reinforcementProfile,
+  }) {
+    final lifecycleTier = _adaptiveQueuePolicy.effectiveLifecycleTierForQueue(
+      schedule: dueRow.schedule,
+      lifecycle: lifecycle,
+    );
+    if (lifecycleTier == 'emerging' ||
+        lifecycleTier == 'ready' ||
+        _adaptiveQueuePolicy.scheduleLooksStarterLevel(dueRow.schedule)) {
+      return const _AdaptiveReviewClassification(
+        bucket: AdaptiveQueueBucket.lockIn,
+        reason: AdaptiveReviewReason.needsLockIn,
+      );
+    }
+
+    final lastGradeQ = dueRow.schedule.lastGradeQ;
+    final unstableRecently = adaptiveState.weakSpotScore >= 0.45 ||
+        adaptiveState.recentStruggleCount >= 2 ||
+        (lastGradeQ != null && lastGradeQ <= 2) ||
+        reinforcementProfile.weight >= _weakSpotReinforcementThreshold;
+    if (unstableRecently) {
+      return const _AdaptiveReviewClassification(
+        bucket: AdaptiveQueueBucket.weakSpot,
+        reason: AdaptiveReviewReason.shakyRecently,
+      );
+    }
+
+    final lastReviewDay = dueRow.schedule.lastReviewDay;
+    final isRecentReview = dueRow.schedule.intervalDays <= 7 ||
+        (lastReviewDay != null && lastReviewDay >= todayDay - 3);
+    if (isRecentReview) {
+      return const _AdaptiveReviewClassification(
+        bucket: AdaptiveQueueBucket.recentReview,
+        reason: AdaptiveReviewReason.recentCheckIn,
+      );
+    }
+
+    return const _AdaptiveReviewClassification(
+      bucket: AdaptiveQueueBucket.maintenance,
+      reason: AdaptiveReviewReason.maintenanceDue,
+    );
   }
 
   _UnitReinforcementProfile _buildReinforcementProfile(
@@ -832,6 +971,24 @@ class DailyPlanner {
     return total;
   }
 
+  double _bucketReviewMinutes({
+    required List<DueUnitRow> dueRows,
+    required Map<int, double> reviewMinutesByUnitId,
+    required Map<int, _AdaptiveReviewClassification>
+        reviewClassificationByUnitId,
+    required AdaptiveQueueBucket bucket,
+  }) {
+    var total = 0.0;
+    for (final dueRow in dueRows) {
+      final classification = reviewClassificationByUnitId[dueRow.unit.id];
+      if (classification?.bucket != bucket) {
+        continue;
+      }
+      total += reviewMinutesByUnitId[dueRow.unit.id] ?? 0.0;
+    }
+    return total;
+  }
+
   Future<int> _estimateAyahCount(MemUnitData unit) async {
     final startSurah = unit.startSurah;
     final startAyah = unit.startAyah;
@@ -1001,4 +1158,14 @@ class _UnitReinforcementProfile {
   final double weight;
 
   double get demandMultiplier => 1.0 + weight;
+}
+
+class _AdaptiveReviewClassification {
+  const _AdaptiveReviewClassification({
+    required this.bucket,
+    required this.reason,
+  });
+
+  final AdaptiveQueueBucket bucket;
+  final AdaptiveReviewReason reason;
 }

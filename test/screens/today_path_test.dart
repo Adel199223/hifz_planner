@@ -89,74 +89,112 @@ void main() {
     expect(path.optionalNew.map((unit) => unit.id), <int>[40]);
   });
 
-  test('splits reviews into warm-up, due review, and weak spots', () {
+  test('groups reviews by planner-assigned adaptive buckets', () {
     final path = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: <PlannedReviewRow>[
-        _review(1, reinforcementWeight: 0.62),
-        _review(2, reinforcementWeight: 0.22),
-        _review(3, reinforcementWeight: 0.18),
-        _review(4, reinforcementWeight: 0.44),
+        _review(1,
+            bucket: AdaptiveQueueBucket.lockIn,
+            reason: AdaptiveReviewReason.needsLockIn),
+        _review(2,
+            bucket: AdaptiveQueueBucket.weakSpot,
+            reason: AdaptiveReviewReason.shakyRecently),
+        _review(3,
+            bucket: AdaptiveQueueBucket.recentReview,
+            reason: AdaptiveReviewReason.recentCheckIn),
+        _review(4,
+            bucket: AdaptiveQueueBucket.maintenance,
+            reason: AdaptiveReviewReason.maintenanceDue),
       ],
       remainingNewUnits: const <MemUnitData>[],
     );
 
-    expect(path.warmUp?.unit.id, 2);
-    expect(path.dueReviews.map((row) => row.unit.id).toList(), <int>[3]);
-    expect(path.weakSpots.map((row) => row.unit.id).toList(), <int>[1, 4]);
+    expect(path.lockInReviews.map((row) => row.unit.id).toList(), <int>[1]);
+    expect(path.weakSpots.map((row) => row.unit.id).toList(), <int>[2]);
+    expect(path.recentReviews.map((row) => row.unit.id).toList(), <int>[3]);
+    expect(
+      path.maintenanceReviews.map((row) => row.unit.id).toList(),
+      <int>[4],
+    );
+    expect(path.warmUp?.unit.id, 1);
   });
 
   test(
-      'next step prioritizes mandatory stage-4, review, weak spot, new, then resume',
+      'next step prioritizes mandatory stage-4, lock-in, weak spot, recent review, maintenance, new, then resume',
       () {
     final stage4Path = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: <Stage4DueItem>[_stage4Due(30)],
       remainingReviews: <PlannedReviewRow>[
-        _review(1, reinforcementWeight: 0.2)
+        _review(1,
+            bucket: AdaptiveQueueBucket.lockIn,
+            reason: AdaptiveReviewReason.needsLockIn),
       ],
       remainingNewUnits: <MemUnitData>[_unit(31)],
     );
     expect(stage4Path.nextStep.kind, TodayNextStepKind.stage4Due);
 
-    final reviewPath = TodayPath.from(
+    final lockInPath = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: <PlannedReviewRow>[
-        _review(2, reinforcementWeight: 0.2)
+        _review(2,
+            bucket: AdaptiveQueueBucket.lockIn,
+            reason: AdaptiveReviewReason.needsLockIn),
+        _review(3,
+            bucket: AdaptiveQueueBucket.weakSpot,
+            reason: AdaptiveReviewReason.shakyRecently),
       ],
       remainingNewUnits: <MemUnitData>[_unit(32)],
     );
-    expect(reviewPath.nextStep.kind, TodayNextStepKind.dueReview);
-    expect(reviewPath.nextStep.reviewRow?.unit.id, 2);
+    expect(lockInPath.nextStep.kind, TodayNextStepKind.dueReview);
+    expect(lockInPath.nextStep.reviewRow?.unit.id, 2);
 
     final weakSpotPath = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: <PlannedReviewRow>[
-        _review(3, reinforcementWeight: 0.7)
+        _review(4,
+            bucket: AdaptiveQueueBucket.weakSpot,
+            reason: AdaptiveReviewReason.shakyRecently),
       ],
       remainingNewUnits: <MemUnitData>[_unit(33)],
     );
-    expect(weakSpotPath.nextStep.kind, TodayNextStepKind.dueReview);
+    expect(weakSpotPath.nextStep.kind, TodayNextStepKind.weakSpot);
+    expect(weakSpotPath.nextStep.reviewRow?.unit.id, 4);
 
-    final onlyWeakSpotsPath = TodayPath.from(
+    final recentPath = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: <PlannedReviewRow>[
-        _review(4, reinforcementWeight: 0.7),
-        _review(5, reinforcementWeight: 0.8),
+        _review(5,
+            bucket: AdaptiveQueueBucket.recentReview,
+            reason: AdaptiveReviewReason.recentCheckIn),
       ],
-      remainingNewUnits: const <MemUnitData>[],
+      remainingNewUnits: <MemUnitData>[_unit(34)],
     );
-    expect(onlyWeakSpotsPath.nextStep.kind, TodayNextStepKind.dueReview);
+    expect(recentPath.nextStep.kind, TodayNextStepKind.dueReview);
+    expect(recentPath.nextStep.reviewRow?.unit.id, 5);
+
+    final maintenancePath = TodayPath.from(
+      plan: _plan(),
+      remainingStage4Due: const <Stage4DueItem>[],
+      remainingReviews: <PlannedReviewRow>[
+        _review(6,
+            bucket: AdaptiveQueueBucket.maintenance,
+            reason: AdaptiveReviewReason.maintenanceDue),
+      ],
+      remainingNewUnits: <MemUnitData>[_unit(35)],
+    );
+    expect(maintenancePath.nextStep.kind, TodayNextStepKind.dueReview);
+    expect(maintenancePath.nextStep.reviewRow?.unit.id, 6);
 
     final newPath = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: const <PlannedReviewRow>[],
-      remainingNewUnits: <MemUnitData>[_unit(34)],
+      remainingNewUnits: <MemUnitData>[_unit(36)],
     );
     expect(newPath.nextStep.kind, TodayNextStepKind.newUnit);
 
@@ -195,20 +233,29 @@ TodayPlan _plan({
   );
 }
 
-PlannedReviewRow _review(int id, {required double reinforcementWeight}) {
+PlannedReviewRow _review(
+  int id, {
+  required AdaptiveQueueBucket bucket,
+  required AdaptiveReviewReason reason,
+  double reinforcementWeight = 0.0,
+}) {
   return PlannedReviewRow(
     unit: _unit(id),
     schedule: ScheduleStateData(
       unitId: id,
       ef: 2.5,
-      reps: 0,
-      intervalDays: 0,
+      reps: 3,
+      intervalDays: 10,
       dueDay: 100,
+      lastReviewDay: 95,
+      lastGradeQ: 4,
       lapseCount: 0,
       isSuspended: 0,
     ),
-    lifecycleTier: 'ready',
+    lifecycleTier: 'stable',
     reinforcementWeight: reinforcementWeight,
+    bucket: bucket,
+    reason: reason,
   );
 }
 

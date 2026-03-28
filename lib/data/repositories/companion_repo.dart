@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
+import '../services/adaptive_queue_policy.dart';
 import '../services/companion/companion_models.dart' as companion_models;
 import '../time/local_day_time.dart';
 
@@ -227,8 +228,8 @@ class CompanionRepo {
 
     return companion_models.CompanionUnitState(
       unitId: created.unitId,
-      unlockedStage:
-          companion_models.CompanionStage.fromStageNumber(created.unlockedStage),
+      unlockedStage: companion_models.CompanionStage.fromStageNumber(
+          created.unlockedStage),
       updatedAtDay: created.updatedAtDay,
       updatedAtSeconds: created.updatedAtSeconds,
     );
@@ -282,7 +283,8 @@ class CompanionRepo {
         );
   }
 
-  Future<List<CompanionStageEventData>> getStageEventsForSession(int sessionId) {
+  Future<List<CompanionStageEventData>> getStageEventsForSession(
+      int sessionId) {
     return (_db.select(_db.companionStageEvent)
           ..where((tbl) => tbl.sessionId.equals(sessionId))
           ..orderBy([
@@ -304,6 +306,102 @@ class CompanionRepo {
           ..where((tbl) => tbl.unitId.equals(unitId))
           ..limit(1))
         .getSingleOrNull();
+  }
+
+  Future<Map<int, CompanionLifecycleStateData>> getLifecycleStatesByUnitIds(
+    Iterable<int> unitIds,
+  ) async {
+    final ids = unitIds.toSet().toList(growable: false);
+    if (ids.isEmpty) {
+      return const <int, CompanionLifecycleStateData>{};
+    }
+
+    final rows = await (_db.select(_db.companionLifecycleState)
+          ..where((tbl) => tbl.unitId.isIn(ids)))
+        .get();
+    return <int, CompanionLifecycleStateData>{
+      for (final row in rows) row.unitId: row,
+    };
+  }
+
+  Future<Map<int, AdaptiveUnitMemoryState>> getAdaptiveStatesByUnitIds(
+    Iterable<int> unitIds,
+  ) async {
+    final ids = unitIds.toSet().toList(growable: false);
+    if (ids.isEmpty) {
+      return const <int, AdaptiveUnitMemoryState>{};
+    }
+
+    final placeholders = List<String>.filled(ids.length, '?').join(', ');
+    final rows = await _db.customSelect(
+      '''
+      SELECT
+        unit_id,
+        weak_spot_score,
+        recent_struggle_count,
+        last_error_type
+      FROM companion_lifecycle_state
+      WHERE unit_id IN ($placeholders)
+      ''',
+      variables: [
+        for (final id in ids) Variable<int>(id),
+      ],
+      readsFrom: {_db.companionLifecycleState},
+    ).get();
+
+    return <int, AdaptiveUnitMemoryState>{
+      for (final row in rows)
+        row.read<int>('unit_id'): AdaptiveUnitMemoryState(
+          weakSpotScore: row.read<num>('weak_spot_score').toDouble(),
+          recentStruggleCount: row.read<int>('recent_struggle_count'),
+          lastErrorType: AdaptiveLastErrorType.fromDbValue(
+            row.read<String?>('last_error_type'),
+          ),
+        ),
+    };
+  }
+
+  String? encodeAdaptiveLastErrorType(AdaptiveLastErrorType? type) {
+    return type?.dbValue;
+  }
+
+  Future<void> writeAdaptiveState({
+    required int unitId,
+    required double weakSpotScore,
+    required int recentStruggleCount,
+    required String? lastErrorType,
+    required int updatedAtDay,
+    required int updatedAtSeconds,
+    String seedLifecycleTier = 'ready',
+  }) async {
+    await _db.customStatement(
+      '''
+      INSERT INTO companion_lifecycle_state (
+        unit_id,
+        lifecycle_tier,
+        weak_spot_score,
+        recent_struggle_count,
+        last_error_type,
+        updated_at_day,
+        updated_at_seconds
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(unit_id) DO UPDATE SET
+        weak_spot_score = excluded.weak_spot_score,
+        recent_struggle_count = excluded.recent_struggle_count,
+        last_error_type = excluded.last_error_type,
+        updated_at_day = excluded.updated_at_day,
+        updated_at_seconds = excluded.updated_at_seconds
+      ''',
+      <Object?>[
+        unitId,
+        seedLifecycleTier,
+        weakSpotScore,
+        recentStruggleCount,
+        lastErrorType,
+        updatedAtDay,
+        updatedAtSeconds,
+      ],
+    );
   }
 
   Future<void> upsertLifecycleState({
@@ -372,14 +470,15 @@ class CompanionRepo {
   Future<List<CompanionLifecycleStateData>> getDueLifecycleStates({
     required int todayDay,
   }) {
-    final pendingOrDue = _db.companionLifecycleState.stage4Status.equals('due') |
-        _db.companionLifecycleState.stage4Status.equals('pending') |
-        _db.companionLifecycleState.stage4Status.equals('partial') |
-        _db.companionLifecycleState.stage4Status.equals('failed');
-    final nextDayDue = _db.companionLifecycleState.stage4NextDayDueDay
-            .isNotNull() &
-        _db.companionLifecycleState.stage4NextDayDueDay
-            .isSmallerOrEqualValue(todayDay);
+    final pendingOrDue =
+        _db.companionLifecycleState.stage4Status.equals('due') |
+            _db.companionLifecycleState.stage4Status.equals('pending') |
+            _db.companionLifecycleState.stage4Status.equals('partial') |
+            _db.companionLifecycleState.stage4Status.equals('failed');
+    final nextDayDue =
+        _db.companionLifecycleState.stage4NextDayDueDay.isNotNull() &
+            _db.companionLifecycleState.stage4NextDayDueDay
+                .isSmallerOrEqualValue(todayDay);
     final retryDue = _db.companionLifecycleState.stage4RetryDueDay.isNotNull() &
         _db.companionLifecycleState.stage4RetryDueDay
             .isSmallerOrEqualValue(todayDay);
@@ -389,7 +488,8 @@ class CompanionRepo {
                 .isSmallerOrEqualValue(todayDay);
 
     return (_db.select(_db.companionLifecycleState)
-          ..where((tbl) => pendingOrDue & (nextDayDue | retryDue | preSleepDue)))
+          ..where(
+              (tbl) => pendingOrDue & (nextDayDue | retryDue | preSleepDue)))
         .get();
   }
 

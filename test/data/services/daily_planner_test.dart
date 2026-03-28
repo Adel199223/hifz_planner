@@ -335,6 +335,231 @@ void main() {
     );
   });
 
+  test(
+      'classifies reviews into lock-in, weak spot, recent review, and maintenance',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 100,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    final lockInUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'bucket-lockin',
+      dueDay: todayDay - 1,
+      reps: 0,
+      intervalDays: 0,
+      lapseCount: 0,
+    );
+    final weakSpotUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'bucket-weak',
+      dueDay: todayDay - 1,
+      reps: 3,
+      intervalDays: 10,
+      lapseCount: 0,
+      lastReviewDay: todayDay - 10,
+      lastGradeQ: 4,
+    );
+    final recentUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'bucket-recent',
+      dueDay: todayDay - 1,
+      reps: 3,
+      intervalDays: 5,
+      lapseCount: 0,
+      lastReviewDay: todayDay - 2,
+      lastGradeQ: 4,
+    );
+    final maintenanceUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'bucket-maintenance',
+      dueDay: todayDay - 1,
+      reps: 4,
+      intervalDays: 14,
+      lapseCount: 0,
+      lastReviewDay: todayDay - 12,
+      lastGradeQ: 4,
+    );
+
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: lockInUnitId,
+      lifecycleTier: 'ready',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: weakSpotUnitId,
+      lifecycleTier: 'stable',
+      weakSpotScore: 0.60,
+      recentStruggleCount: 2,
+      lastErrorType: 'hesitation',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: recentUnitId,
+      lifecycleTier: 'stable',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: maintenanceUnitId,
+      lifecycleTier: 'maintained',
+    );
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+
+    expect(
+      plan.plannedReviews.map((row) => row.unit.unitKey).take(4).toList(),
+      <String>[
+        'bucket-lockin',
+        'bucket-weak',
+        'bucket-recent',
+        'bucket-maintenance',
+      ],
+    );
+    expect(
+      plan.plannedReviews.map((row) => row.bucket).take(4).toList(),
+      <AdaptiveQueueBucket>[
+        AdaptiveQueueBucket.lockIn,
+        AdaptiveQueueBucket.weakSpot,
+        AdaptiveQueueBucket.recentReview,
+        AdaptiveQueueBucket.maintenance,
+      ],
+    );
+    expect(
+      plan.plannedReviews.map((row) => row.reason).take(4).toList(),
+      <AdaptiveReviewReason>[
+        AdaptiveReviewReason.needsLockIn,
+        AdaptiveReviewReason.shakyRecently,
+        AdaptiveReviewReason.recentCheckIn,
+        AdaptiveReviewReason.maintenanceDue,
+      ],
+    );
+  });
+
+  test('mature schedule-only units without lifecycle do not fall into lock-in',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 100,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    final unitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'legacy-mature-no-lifecycle',
+      dueDay: todayDay - 1,
+      reps: 3,
+      intervalDays: 10,
+      lapseCount: 0,
+      lastReviewDay: todayDay - 10,
+      lastGradeQ: 4,
+    );
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+    final row =
+        plan.plannedReviews.singleWhere((item) => item.unit.id == unitId);
+
+    expect(row.lifecycleTier, 'stable');
+    expect(row.bucket, isNot(AdaptiveQueueBucket.lockIn));
+    expect(row.bucket, AdaptiveQueueBucket.maintenance);
+  });
+
+  test('fake-ready legacy rows without stage4 history do not fall into lock-in',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 100,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    final unitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'legacy-fake-ready-no-history',
+      dueDay: todayDay - 1,
+      reps: 3,
+      intervalDays: 10,
+      lapseCount: 0,
+      lastReviewDay: todayDay - 10,
+      lastGradeQ: 4,
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: unitId,
+      lifecycleTier: 'ready',
+      stage4Status: 'none',
+      stage4LastCompletedDay: null,
+    );
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+    final row =
+        plan.plannedReviews.singleWhere((item) => item.unit.id == unitId);
+
+    expect(row.lifecycleTier, 'stable');
+    expect(row.bucket, isNot(AdaptiveQueueBucket.lockIn));
+    expect(row.bucket, AdaptiveQueueBucket.maintenance);
+  });
+
+  test('true new no-lifecycle units still classify as lock-in', () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 100,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 0,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    final unitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'true-new-no-lifecycle',
+      dueDay: todayDay - 1,
+      reps: 0,
+      intervalDays: 0,
+      lapseCount: 0,
+    );
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+    final row =
+        plan.plannedReviews.singleWhere((item) => item.unit.id == unitId);
+
+    expect(row.lifecycleTier, 'emerging');
+    expect(row.bucket, AdaptiveQueueBucket.lockIn);
+  });
+
   test('recovery mode expands review capacity and suspends new when overloaded',
       () async {
     const todayDay = 100;
@@ -479,6 +704,76 @@ void main() {
     if (weakPlan.plannedNewUnits.isNotEmpty) {
       expect(weakPlan.newAvailability, TodayNewAvailability.available);
     }
+  });
+
+  test('durable weak spots add adaptive debt and reduce new allocation',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 10,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 5,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+
+    final dueUnitIds = <int>[];
+    for (var i = 0; i < 4; i++) {
+      dueUnitIds.add(
+        await _seedDueUnit(
+          memUnitRepo,
+          db,
+          unitKey: 'adaptive-debt-$i',
+          dueDay: todayDay - 1,
+          reps: 3,
+          intervalDays: 10,
+          lapseCount: 0,
+          startAyah: i + 1,
+          endAyah: i + 1,
+          lastReviewDay: todayDay - 8,
+          lastGradeQ: 4,
+        ),
+      );
+      await _seedLifecycleState(
+        companionRepo,
+        unitId: dueUnitIds.last,
+        lifecycleTier: 'stable',
+      );
+    }
+
+    final baselinePlan = await dailyPlanner.planToday(todayDay: todayDay);
+
+    for (final unitId in dueUnitIds) {
+      await _seedLifecycleState(
+        companionRepo,
+        unitId: unitId,
+        lifecycleTier: 'stable',
+        weakSpotScore: 0.55,
+        recentStruggleCount: 2,
+        lastErrorType: 'hesitation',
+      );
+    }
+
+    final weakSpotPlan = await dailyPlanner.planToday(todayDay: todayDay);
+
+    expect(
+      weakSpotPlan.reviewPressure,
+      greaterThan(baselinePlan.reviewPressure),
+    );
+    expect(
+      weakSpotPlan.minutesPlannedNew,
+      lessThanOrEqualTo(baselinePlan.minutesPlannedNew),
+    );
+    expect(
+      weakSpotPlan.plannedReviews.every(
+        (row) => row.bucket == AdaptiveQueueBucket.weakSpot,
+      ),
+      isTrue,
+    );
   });
 
   test('metadata guard blocks new units when cursor ayah page metadata missing',
@@ -631,7 +926,8 @@ void main() {
     expect(plan.stage4QualitySnapshot.stableCount, 0);
   });
 
-  test('non-materializing planToday previews zero-unit days without side effects',
+  test(
+      'non-materializing planToday previews zero-unit days without side effects',
       () async {
     const todayDay = 100;
     await _configureSettings(
@@ -843,9 +1139,12 @@ Future<int> _seedDueUnit(
   required String unitKey,
   required int dueDay,
   required int reps,
+  int? intervalDays,
   required int lapseCount,
   int startAyah = 1,
   int endAyah = 1,
+  int? lastReviewDay,
+  int? lastGradeQ,
 }) async {
   final unitId = await memUnitRepo.create(
     MemUnitCompanion.insert(
@@ -865,8 +1164,10 @@ Future<int> _seedDueUnit(
           unitId: Value(unitId),
           ef: 2.5,
           reps: reps,
-          intervalDays: reps == 0 ? 0 : 1,
+          intervalDays: intervalDays ?? (reps == 0 ? 0 : 1),
           dueDay: dueDay,
+          lastReviewDay: Value(lastReviewDay),
+          lastGradeQ: Value(lastGradeQ),
           lapseCount: lapseCount,
         ),
       );
@@ -877,13 +1178,28 @@ Future<void> _seedLifecycleState(
   CompanionRepo companionRepo, {
   required int unitId,
   required String lifecycleTier,
-}) {
-  return companionRepo.upsertLifecycleState(
+  double weakSpotScore = 0.0,
+  int recentStruggleCount = 0,
+  String? lastErrorType,
+  String stage4Status = 'passed',
+  int? stage4LastCompletedDay = 100,
+}) async {
+  await companionRepo.upsertLifecycleState(
     unitId: unitId,
     lifecycleTier: Value(lifecycleTier),
-    stage4Status: const Value('passed'),
+    stage4Status: Value(stage4Status),
+    stage4LastCompletedDay: Value(stage4LastCompletedDay),
     updatedAtDay: 100,
     updatedAtSeconds: 100,
+  );
+  await companionRepo.writeAdaptiveState(
+    unitId: unitId,
+    weakSpotScore: weakSpotScore,
+    recentStruggleCount: recentStruggleCount,
+    lastErrorType: lastErrorType,
+    updatedAtDay: 100,
+    updatedAtSeconds: 100,
+    seedLifecycleTier: lifecycleTier,
   );
 }
 

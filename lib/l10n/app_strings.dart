@@ -458,6 +458,7 @@ class AppStrings {
     }
     return guidedSetupComplete;
   }
+
   String guidedSetupStepImportText(int processed, int total) =>
       _progressStepText(
         key: 'guided_setup_step_import_text',
@@ -529,6 +530,7 @@ class AppStrings {
       _ => _t('quran_text_import_phase_default', "Importing Qur'an text..."),
     };
   }
+
   String pageMetadataImportPhaseLabel(String phase) {
     return switch (phase) {
       'loading' => _t(
@@ -547,9 +549,11 @@ class AppStrings {
           'page_metadata_import_phase_completed',
           'Page metadata import complete.',
         ),
-      _ => _t('page_metadata_import_phase_default', 'Importing page metadata...'),
+      _ =>
+        _t('page_metadata_import_phase_default', 'Importing page metadata...'),
     };
   }
+
   String importProgressDetails(String phaseLabel, int processed, int total) {
     if (total <= 0) {
       return phaseLabel;
@@ -566,6 +570,7 @@ class AppStrings {
       },
     );
   }
+
   String storageStatusLabel(DatabaseStorageStatus status) {
     return switch (status.kind) {
       DatabaseStorageKind.nativePersistent => _t(
@@ -602,6 +607,7 @@ class AppStrings {
         ),
     };
   }
+
   String storageStatusDetails(DatabaseStorageStatus status) {
     return switch (status.kind) {
       DatabaseStorageKind.nativePersistent => _t(
@@ -640,6 +646,7 @@ class AppStrings {
         ),
     };
   }
+
   String? storageStatusWarning(DatabaseStorageStatus status) {
     return switch (status.kind) {
       DatabaseStorageKind.indexedDbFallback => _t(
@@ -653,6 +660,7 @@ class AppStrings {
       _ => null,
     };
   }
+
   String get todayStorageWarningTitle => _t(
         'today_storage_warning_title',
         'Storage note',
@@ -665,11 +673,18 @@ class AppStrings {
   String get todayTitle => _t('today_title', 'Today');
   String get todayReviewQueueTitle =>
       _t('today_review_queue_title', 'Review Path');
-  String get warmUpSectionTitle => _t('warm_up_section_title', 'Warm-up');
+  String get warmUpSectionTitle =>
+      _t('warm_up_section_title', 'Warm-up / lock-in');
   String get dueReviewSectionTitle =>
       _t('due_review_section_title', 'Due review');
   String get weakSpotsSectionTitle =>
       _t('weak_spots_section_title', 'Weak spots');
+  String get recentReviewSectionTitle =>
+      _t('recent_review_section_title', 'Recent review');
+  String get maintenanceReviewSectionTitle => _t(
+        'maintenance_review_section_title',
+        'Maintenance review',
+      );
   String get optionalNewSectionTitle => _t(
         'optional_new_section_title',
         'Optional new memorization',
@@ -719,6 +734,22 @@ class AppStrings {
   String get todayNewNoneAvailableMessage => _t(
         'today_new_none_available_message',
         'New memorization is open, but nothing new is queued right now.',
+      );
+  String get adaptiveReviewReasonNeedsLockIn => _t(
+        'adaptive_review_reason_needs_lock_in',
+        'This one needs lock-in before adding more new work.',
+      );
+  String get adaptiveReviewReasonShakyRecently => _t(
+        'adaptive_review_reason_shaky_recently',
+        'This one came back because it was shaky recently.',
+      );
+  String get adaptiveReviewReasonRecentCheckIn => _t(
+        'adaptive_review_reason_recent_check_in',
+        'This one is back for a short recent review.',
+      );
+  String get adaptiveReviewReasonMaintenanceDue => _t(
+        'adaptive_review_reason_maintenance_due',
+        'This one is due to keep older memorization stable.',
       );
   String get todayNextStepResumeBody => _t(
         'today_next_step_resume_body',
@@ -895,6 +926,7 @@ class AppStrings {
       },
     );
   }
+
   String get lifecycleTierMaintained =>
       _t('lifecycle_tier_maintained', 'Maintained');
   String lifecycleTierLabel(String tier) {

@@ -13,7 +13,13 @@ enum TodayNewState {
   noneAvailable,
 }
 
-enum TodayQueueSectionKind { warmUp, dueReview, weakSpots, optionalNew }
+enum TodayQueueSectionKind {
+  lockIn,
+  weakSpots,
+  recentReview,
+  maintenanceReview,
+  optionalNew,
+}
 
 class TodayNextStep {
   const TodayNextStep._({
@@ -62,33 +68,38 @@ class TodayPath {
   const TodayPath({
     required this.mode,
     required this.newState,
-    required this.warmUp,
-    required this.dueReviews,
+    required this.lockInReviews,
     required this.weakSpots,
+    required this.recentReviews,
+    required this.maintenanceReviews,
     required this.optionalNew,
     required this.nextStep,
   });
 
   static const double protectReviewPressureThreshold = 0.9;
-  static const double weakSpotThreshold = 0.35;
+
   final TodayPathMode mode;
   final TodayNewState newState;
-  final PlannedReviewRow? warmUp;
-  final List<PlannedReviewRow> dueReviews;
+  final List<PlannedReviewRow> lockInReviews;
   final List<PlannedReviewRow> weakSpots;
+  final List<PlannedReviewRow> recentReviews;
+  final List<PlannedReviewRow> maintenanceReviews;
   final List<MemUnitData> optionalNew;
   final TodayNextStep nextStep;
 
   bool get newUnlocked => newState == TodayNewState.unlocked;
 
+  PlannedReviewRow? get warmUp =>
+      lockInReviews.isEmpty ? null : lockInReviews.first;
+
   bool isWarmUpReview(PlannedReviewRow? row) {
-    if (row == null || warmUp == null) {
+    if (row == null) {
       return false;
     }
-    return row.unit.id == warmUp!.unit.id;
+    return row.bucket == AdaptiveQueueBucket.lockIn;
   }
 
-  factory TodayPath.from({
+  static TodayPath from({
     required TodayPlan plan,
     required List<Stage4DueItem> remainingStage4Due,
     required List<PlannedReviewRow> remainingReviews,
@@ -100,27 +111,25 @@ class TodayPath {
       remainingNewUnits: remainingNewUnits,
     );
 
-    PlannedReviewRow? warmUp;
-    for (final row in remainingReviews) {
-      if (row.reinforcementWeight < weakSpotThreshold) {
-        warmUp = row;
-        break;
-      }
-    }
-    warmUp ??= remainingReviews.isEmpty ? null : remainingReviews.first;
-
-    final warmUpUnitId = warmUp?.unit.id;
+    final lockInReviews = <PlannedReviewRow>[];
     final weakSpots = <PlannedReviewRow>[];
-    final dueReviews = <PlannedReviewRow>[];
+    final recentReviews = <PlannedReviewRow>[];
+    final maintenanceReviews = <PlannedReviewRow>[];
 
     for (final row in remainingReviews) {
-      if (row.unit.id == warmUpUnitId) {
-        continue;
-      }
-      if (row.reinforcementWeight >= weakSpotThreshold) {
-        weakSpots.add(row);
-      } else {
-        dueReviews.add(row);
+      switch (row.bucket) {
+        case AdaptiveQueueBucket.lockIn:
+          lockInReviews.add(row);
+          break;
+        case AdaptiveQueueBucket.weakSpot:
+          weakSpots.add(row);
+          break;
+        case AdaptiveQueueBucket.recentReview:
+          recentReviews.add(row);
+          break;
+        case AdaptiveQueueBucket.maintenance:
+          maintenanceReviews.add(row);
+          break;
       }
     }
 
@@ -136,15 +145,17 @@ class TodayPath {
       }
     }
 
-    final reviewLead = warmUp ?? (dueReviews.isEmpty ? null : dueReviews.first);
-
     final TodayNextStep nextStep;
     if (mandatoryStage4 != null) {
       nextStep = TodayNextStep.stage4Due(mandatoryStage4);
-    } else if (reviewLead != null) {
-      nextStep = TodayNextStep.dueReview(reviewLead);
+    } else if (lockInReviews.isNotEmpty) {
+      nextStep = TodayNextStep.dueReview(lockInReviews.first);
     } else if (weakSpots.isNotEmpty) {
       nextStep = TodayNextStep.weakSpot(weakSpots.first);
+    } else if (recentReviews.isNotEmpty) {
+      nextStep = TodayNextStep.dueReview(recentReviews.first);
+    } else if (maintenanceReviews.isNotEmpty) {
+      nextStep = TodayNextStep.dueReview(maintenanceReviews.first);
     } else if (optionalNew.isNotEmpty) {
       nextStep = TodayNextStep.newUnit(optionalNew.first);
     } else {
@@ -154,9 +165,11 @@ class TodayPath {
     return TodayPath(
       mode: mode,
       newState: newState,
-      warmUp: warmUp,
-      dueReviews: List<PlannedReviewRow>.unmodifiable(dueReviews),
+      lockInReviews: List<PlannedReviewRow>.unmodifiable(lockInReviews),
       weakSpots: List<PlannedReviewRow>.unmodifiable(weakSpots),
+      recentReviews: List<PlannedReviewRow>.unmodifiable(recentReviews),
+      maintenanceReviews:
+          List<PlannedReviewRow>.unmodifiable(maintenanceReviews),
       optionalNew: optionalNew,
       nextStep: nextStep,
     );

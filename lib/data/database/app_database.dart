@@ -536,14 +536,12 @@ class CompanionLifecycleState extends Table {
         ),
       )();
 
-  TextColumn get stage4Status => text()
-      .named('stage4_status')
-      .withDefault(const Constant('none'))
-      .check(
-        const CustomExpression<bool>(
-          "stage4_status IN ('none', 'pending', 'due', 'in_progress', 'passed', 'partial', 'failed', 'needs_reinforcement')",
-        ),
-      )();
+  TextColumn get stage4Status =>
+      text().named('stage4_status').withDefault(const Constant('none')).check(
+            const CustomExpression<bool>(
+              "stage4_status IN ('none', 'pending', 'due', 'in_progress', 'passed', 'partial', 'failed', 'needs_reinforcement')",
+            ),
+          )();
 
   IntColumn get stage4PreSleepDueDay =>
       integer().named('stage4_pre_sleep_due_day').nullable()();
@@ -557,7 +555,8 @@ class CompanionLifecycleState extends Table {
   TextColumn get stage4UnresolvedTargetsJson =>
       text().named('stage4_unresolved_targets_json').nullable()();
 
-  TextColumn get stage4RiskJson => text().named('stage4_risk_json').nullable()();
+  TextColumn get stage4RiskJson =>
+      text().named('stage4_risk_json').nullable()();
 
   TextColumn get stage4StrengtheningRoute =>
       text().named('stage4_strengthening_route').nullable().check(
@@ -566,7 +565,8 @@ class CompanionLifecycleState extends Table {
             ),
           )();
 
-  TextColumn get stage4LastOutcome => text().named('stage4_last_outcome').nullable().check(
+  TextColumn get stage4LastOutcome =>
+      text().named('stage4_last_outcome').nullable().check(
             const CustomExpression<bool>(
               "stage4_last_outcome IS NULL OR stage4_last_outcome IN ('pass', 'partial', 'fail', 'abandoned')",
             ),
@@ -586,6 +586,19 @@ class CompanionLifecycleState extends Table {
 
   IntColumn get newOverrideCount =>
       integer().named('new_override_count').withDefault(const Constant(0))();
+
+  RealColumn get weakSpotScore =>
+      real().named('weak_spot_score').withDefault(const Constant(0.0))();
+
+  IntColumn get recentStruggleCount =>
+      integer().named('recent_struggle_count').withDefault(const Constant(0))();
+
+  TextColumn get lastErrorType =>
+      text().named('last_error_type').nullable().check(
+            const CustomExpression<bool>(
+              "last_error_type IS NULL OR last_error_type IN ('wrong_recall', 'hesitation', 'weak_lock_in', 'similar_confusion')",
+            ),
+          )();
 
   IntColumn get updatedAtDay => integer().named('updated_at_day')();
 
@@ -626,7 +639,8 @@ class CompanionStage4Session extends Table {
 
   IntColumn get startedDay => integer().named('started_day')();
 
-  IntColumn get startedSeconds => integer().named('started_seconds').nullable()();
+  IntColumn get startedSeconds =>
+      integer().named('started_seconds').nullable()();
 
   IntColumn get endedDay => integer().named('ended_day').nullable()();
 
@@ -692,12 +706,13 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openAppDatabaseConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
+          await _ensureCompanionLifecycleAdaptiveColumns();
           await _createMemorizationIndexes();
           await _createCalibrationIndexes();
           await _createCompanionIndexes();
@@ -783,6 +798,9 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(companionLifecycleState);
             await m.createTable(companionStage4Session);
           }
+          if (from < 8) {
+            await _ensureCompanionLifecycleAdaptiveColumns();
+          }
           await _createMemorizationIndexes();
           await _createCalibrationIndexes();
           await _createCompanionIndexes();
@@ -790,6 +808,7 @@ class AppDatabase extends _$AppDatabase {
         },
         beforeOpen: (OpeningDetails details) async {
           await customStatement('PRAGMA foreign_keys = ON;');
+          await _ensureCompanionLifecycleAdaptiveColumns();
           await ensureSingletonRows();
         },
       );
@@ -821,6 +840,39 @@ class AppDatabase extends _$AppDatabase {
       ),
       mode: InsertMode.insertOrIgnore,
     );
+  }
+
+  Future<void> _ensureCompanionLifecycleAdaptiveColumns() async {
+    final columnNames = await _getTableColumnNames('companion_lifecycle_state');
+    if (columnNames.isEmpty) {
+      return;
+    }
+
+    if (!columnNames.contains('weak_spot_score')) {
+      await customStatement(
+        'ALTER TABLE companion_lifecycle_state '
+        'ADD COLUMN weak_spot_score REAL NOT NULL DEFAULT 0.0',
+      );
+    }
+    if (!columnNames.contains('recent_struggle_count')) {
+      await customStatement(
+        'ALTER TABLE companion_lifecycle_state '
+        'ADD COLUMN recent_struggle_count INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    if (!columnNames.contains('last_error_type')) {
+      await customStatement(
+        'ALTER TABLE companion_lifecycle_state '
+        'ADD COLUMN last_error_type TEXT '
+        'CHECK (last_error_type IS NULL OR last_error_type IN '
+        "('wrong_recall', 'hesitation', 'weak_lock_in', 'similar_confusion'))",
+      );
+    }
+  }
+
+  Future<Set<String>> _getTableColumnNames(String tableName) async {
+    final rows = await customSelect("PRAGMA table_info('$tableName')").get();
+    return rows.map((row) => row.read<String>('name')).toSet();
   }
 
   Future<void> _createMemorizationIndexes() async {
@@ -896,5 +948,3 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 }
-
-

@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/database/database_storage_status.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
+import 'package:hifz_planner/data/repositories/companion_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
 import 'package:hifz_planner/data/services/scheduling/scheduling_preferences_codec.dart';
 import 'package:hifz_planner/data/time/local_day_time.dart';
@@ -286,7 +287,8 @@ void main() {
 
     await _pumpToday(tester, container);
 
-    expect(find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_next_step_card')), findsNothing);
     expect(find.byKey(const ValueKey('today_path_mode_card')), findsNothing);
     expect(find.byKey(const ValueKey('today_stage4_section')), findsNothing);
@@ -587,6 +589,57 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Stable'), findsOneWidget);
+  });
+
+  testWidgets('weak spot review rows show a calm plain-language reason',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(
+      db,
+      todayDay: todayDay,
+      reps: 3,
+      intervalDays: 10,
+      lastReviewDay: todayDay - 10,
+      lastGradeQ: 4,
+    );
+    await _insertLifecycleState(
+      db,
+      unitId: dueUnitId,
+      lifecycleTier: 'stable',
+      todayDay: todayDay,
+      weakSpotScore: 0.6,
+      recentStruggleCount: 2,
+      lastErrorType: 'hesitation',
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.byKey(ValueKey('today_review_reason_$dueUnitId')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('This one came back because it was shaky recently.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -1033,7 +1086,8 @@ void main() {
     );
   });
 
-  testWidgets('manual plan save clears stale guided setup repair state on Today',
+  testWidgets(
+      'manual plan save clears stale guided setup repair state on Today',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
@@ -1072,7 +1126,8 @@ void main() {
     );
     addTearDown(readinessSubscription.close);
 
-    final staleReadiness = await container.read(soloSetupReadinessProvider.future);
+    final staleReadiness =
+        await container.read(soloSetupReadinessProvider.future);
     expect(staleReadiness.needsStarterPlanRepair, isTrue);
 
     await _pumpPlanWithContainer(tester, container);
@@ -1138,7 +1193,8 @@ void main() {
 
     await _pumpToday(tester, container);
 
-    expect(find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_next_step_card')), findsOneWidget);
     expect(find.byKey(const ValueKey('today_reviews_section')), findsOneWidget);
   });
@@ -1170,14 +1226,16 @@ void main() {
 
     await _pumpToday(tester, container);
 
-    expect(find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('today_guided_setup_button')),
       findsOneWidget,
     );
   });
 
-  testWidgets('shows guided setup CTA and storage warning on transient web storage',
+  testWidgets(
+      'shows guided setup CTA and storage warning on transient web storage',
       (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
@@ -1204,8 +1262,10 @@ void main() {
     await _pumpToday(tester, container);
 
     expect(find.byKey(const ValueKey('today_storage_warning')), findsOneWidget);
-    expect(find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
-    expect(find.byKey(const ValueKey('today_guided_setup_button')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('today_guided_setup_card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('today_guided_setup_button')),
+        findsOneWidget);
     expect(find.byKey(const ValueKey('today_next_step_card')), findsNothing);
     expect(find.byKey(const ValueKey('today_reviews_section')), findsNothing);
   });
@@ -1287,21 +1347,36 @@ Future<void> _insertLifecycleState(
   required int unitId,
   required String lifecycleTier,
   required int todayDay,
-}) {
-  return db.into(db.companionLifecycleState).insert(
-        CompanionLifecycleStateCompanion.insert(
-          unitId: Value(unitId),
-          lifecycleTier: Value(lifecycleTier),
-          stage4Status: const Value('passed'),
-          updatedAtDay: todayDay,
-          updatedAtSeconds: 100,
-        ),
-      );
+  double weakSpotScore = 0.0,
+  int recentStruggleCount = 0,
+  String? lastErrorType,
+}) async {
+  final companionRepo = CompanionRepo(db);
+  await companionRepo.upsertLifecycleState(
+    unitId: unitId,
+    lifecycleTier: Value(lifecycleTier),
+    stage4Status: const Value('passed'),
+    updatedAtDay: todayDay,
+    updatedAtSeconds: 100,
+  );
+  await companionRepo.writeAdaptiveState(
+    unitId: unitId,
+    weakSpotScore: weakSpotScore,
+    recentStruggleCount: recentStruggleCount,
+    lastErrorType: lastErrorType,
+    updatedAtDay: todayDay,
+    updatedAtSeconds: 100,
+    seedLifecycleTier: lifecycleTier,
+  );
 }
 
 Future<int> _insertDueReviewUnit(
   AppDatabase db, {
   required int todayDay,
+  int reps = 0,
+  int intervalDays = 0,
+  int? lastReviewDay,
+  int? lastGradeQ,
 }) async {
   final unitId = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
@@ -1321,9 +1396,11 @@ Future<int> _insertDueReviewUnit(
         ScheduleStateCompanion.insert(
           unitId: Value(unitId),
           ef: 2.5,
-          reps: 0,
-          intervalDays: 0,
+          reps: reps,
+          intervalDays: intervalDays,
           dueDay: todayDay - 1,
+          lastReviewDay: Value(lastReviewDay),
+          lastGradeQ: Value(lastGradeQ),
           lapseCount: 0,
         ),
       );
@@ -1390,8 +1467,10 @@ Future<void> _pumpToday(
         .byKey(const ValueKey('today_guided_setup_card'))
         .evaluate()
         .isNotEmpty;
-    final hasNextStep =
-        find.byKey(const ValueKey('today_next_step_card')).evaluate().isNotEmpty;
+    final hasNextStep = find
+        .byKey(const ValueKey('today_next_step_card'))
+        .evaluate()
+        .isNotEmpty;
     final hasError =
         find.byKey(const ValueKey('today_error')).evaluate().isNotEmpty;
     if (hasGuidedSetup || hasNextStep || hasError) {

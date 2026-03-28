@@ -283,16 +283,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
     try {
       final outcome = await ref.read(guidedSetupFlowServiceProvider).run(
-            onProgress: (progress) {
-              if (!mounted) {
-                return;
-              }
-              setState(() {
-                _guidedSetupStep = progress.step;
-                _guidedSetupProgressFraction = progress.fraction;
-              });
-            },
-          );
+        onProgress: (progress) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _guidedSetupStep = progress.step;
+            _guidedSetupProgressFraction = progress.fraction;
+          });
+        },
+      );
 
       ref.invalidate(quranDataReadinessProvider);
       ref.invalidate(soloSetupReadinessProvider);
@@ -349,7 +349,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           progress.processed,
           progress.total,
         ),
-      GuidedSetupStepKind.saveStarterPlan => strings.guidedSetupStepSaveStarterPlan,
+      GuidedSetupStepKind.saveStarterPlan =>
+        strings.guidedSetupStepSaveStarterPlan,
       GuidedSetupStepKind.createStarterUnit =>
         strings.guidedSetupStepCreateStarterUnit,
       GuidedSetupStepKind.complete => strings.guidedSetupStepComplete,
@@ -455,8 +456,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                       strings,
                       GuidedSetupProgress(
                         step: _guidedSetupStep!,
-                        processed: ((_guidedSetupProgressFraction ?? 0) * 100)
-                            .round(),
+                        processed:
+                            ((_guidedSetupProgressFraction ?? 0) * 100).round(),
                         total: _guidedSetupProgressFraction == null ? 0 : 100,
                       ),
                     ),
@@ -593,13 +594,40 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     };
   }
 
+  String _reviewReasonText(
+    AppStrings strings,
+    AdaptiveReviewReason reason,
+  ) {
+    return switch (reason) {
+      AdaptiveReviewReason.needsLockIn =>
+        strings.adaptiveReviewReasonNeedsLockIn,
+      AdaptiveReviewReason.shakyRecently =>
+        strings.adaptiveReviewReasonShakyRecently,
+      AdaptiveReviewReason.recentCheckIn =>
+        strings.adaptiveReviewReasonRecentCheckIn,
+      AdaptiveReviewReason.maintenanceDue =>
+        strings.adaptiveReviewReasonMaintenanceDue,
+    };
+  }
+
+  String _reviewSectionLabel(
+    AppStrings strings,
+    PlannedReviewRow reviewRow,
+  ) {
+    return switch (reviewRow.bucket) {
+      AdaptiveQueueBucket.lockIn => strings.warmUpSectionTitle,
+      AdaptiveQueueBucket.weakSpot => strings.weakSpotsSectionTitle,
+      AdaptiveQueueBucket.recentReview => strings.recentReviewSectionTitle,
+      AdaptiveQueueBucket.maintenance => strings.maintenanceReviewSectionTitle,
+    };
+  }
+
   String _nextStepLabel(AppStrings strings, TodayPath path) {
     final nextStep = path.nextStep;
     return switch (nextStep.kind) {
       TodayNextStepKind.stage4Due => strings.stage4DueSectionTitle,
-      TodayNextStepKind.dueReview => path.isWarmUpReview(nextStep.reviewRow)
-          ? strings.warmUpSectionTitle
-          : strings.dueReviewSectionTitle,
+      TodayNextStepKind.dueReview =>
+        _reviewSectionLabel(strings, nextStep.reviewRow!),
       TodayNextStepKind.weakSpot => strings.weakSpotsSectionTitle,
       TodayNextStepKind.newUnit => strings.optionalNewSectionTitle,
       TodayNextStepKind.resume => strings.myQuranResumeTitle,
@@ -671,6 +699,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               ),
               const SizedBox(height: 4),
               Text(_formatRange(nextStep.reviewRow!.unit, strings)),
+              const SizedBox(height: 4),
+              Text(
+                _reviewReasonText(strings, nextStep.reviewRow!.reason),
+              ),
               const SizedBox(height: 12),
             ] else if (nextStep.newUnit != null) ...[
               Text(
@@ -758,9 +790,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   }
 
   Widget _buildReviewSection(AppStrings strings, TodayPath path) {
-    final hasReviews = path.warmUp != null ||
-        path.dueReviews.isNotEmpty ||
-        path.weakSpots.isNotEmpty;
+    final hasReviews = path.lockInReviews.isNotEmpty ||
+        path.weakSpots.isNotEmpty ||
+        path.recentReviews.isNotEmpty ||
+        path.maintenanceReviews.isNotEmpty;
 
     return Card(
       key: const ValueKey('today_reviews_section'),
@@ -777,30 +810,42 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             if (!hasReviews)
               Text(strings.noPlannedReviewsLeft)
             else ...[
-              if (path.warmUp != null)
+              if (path.lockInReviews.isNotEmpty)
                 _buildReviewSubsection(
                   strings: strings,
                   keyName: 'today_warmup_section',
                   title: strings.warmUpSectionTitle,
-                  rows: <PlannedReviewRow>[path.warmUp!],
+                  rows: path.lockInReviews,
                 ),
-              if (path.dueReviews.isNotEmpty) ...[
-                if (path.warmUp != null) const SizedBox(height: 16),
-                _buildReviewSubsection(
-                  strings: strings,
-                  keyName: 'today_due_review_section',
-                  title: strings.dueReviewSectionTitle,
-                  rows: path.dueReviews,
-                ),
-              ],
               if (path.weakSpots.isNotEmpty) ...[
-                if (path.warmUp != null || path.dueReviews.isNotEmpty)
-                  const SizedBox(height: 16),
+                if (path.lockInReviews.isNotEmpty) const SizedBox(height: 16),
                 _buildReviewSubsection(
                   strings: strings,
                   keyName: 'today_weak_spots_section',
                   title: strings.weakSpotsSectionTitle,
                   rows: path.weakSpots,
+                ),
+              ],
+              if (path.recentReviews.isNotEmpty) ...[
+                if (path.lockInReviews.isNotEmpty || path.weakSpots.isNotEmpty)
+                  const SizedBox(height: 16),
+                _buildReviewSubsection(
+                  strings: strings,
+                  keyName: 'today_recent_review_section',
+                  title: strings.recentReviewSectionTitle,
+                  rows: path.recentReviews,
+                ),
+              ],
+              if (path.maintenanceReviews.isNotEmpty) ...[
+                if (path.lockInReviews.isNotEmpty ||
+                    path.weakSpots.isNotEmpty ||
+                    path.recentReviews.isNotEmpty)
+                  const SizedBox(height: 16),
+                _buildReviewSubsection(
+                  strings: strings,
+                  keyName: 'today_maintenance_review_section',
+                  title: strings.maintenanceReviewSectionTitle,
+                  rows: path.maintenanceReviews,
                 ),
               ],
             ],
@@ -984,6 +1029,11 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               unitId: unitId,
               lifecycleTier: reviewRow.lifecycleTier,
               strings: strings,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _reviewReasonText(strings, reviewRow.reason),
+              key: ValueKey('today_review_reason_$unitId'),
             ),
             const SizedBox(height: 6),
             Text(strings.dueDayLabel(reviewRow.schedule.dueDay)),

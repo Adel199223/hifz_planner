@@ -45,6 +45,13 @@ class ScheduleRepo {
         .toList();
   }
 
+  Future<ScheduleStateData?> getScheduleState(int unitId) {
+    return (_db.select(_db.scheduleState)
+          ..where((tbl) => tbl.unitId.equals(unitId))
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
   Future<void> upsertInitialStateForNewUnit({
     required int unitId,
     required int dueDay,

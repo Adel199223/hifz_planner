@@ -16,6 +16,8 @@ void main() {
   });
 
   test('creates all core and memorization tables', () async {
+    expect(db.schemaVersion, 8);
+
     final result = await db.customSelect('''
       SELECT name FROM sqlite_master
       WHERE type = 'table'
@@ -147,17 +149,16 @@ void main() {
     );
     expect(indexNames.contains('idx_companion_step_proficiency_unit'), isTrue);
     expect(indexNames.contains('idx_companion_unit_state_unit_id'), isTrue);
-    expect(
-        indexNames.contains('idx_companion_stage_event_session_created'), isTrue);
+    expect(indexNames.contains('idx_companion_stage_event_session_created'),
+        isTrue);
     expect(indexNames.contains('idx_companion_lifecycle_state_stage4_next_due'),
         isTrue);
-    expect(indexNames.contains('idx_companion_lifecycle_state_stage4_retry_due'),
-        isTrue);
     expect(
-        indexNames.contains('idx_companion_stage4_session_unit_started_day'),
+        indexNames.contains('idx_companion_lifecycle_state_stage4_retry_due'),
         isTrue);
-    expect(
-        indexNames.contains('idx_companion_stage4_session_chain_session'),
+    expect(indexNames.contains('idx_companion_stage4_session_unit_started_day'),
+        isTrue);
+    expect(indexNames.contains('idx_companion_stage4_session_chain_session'),
         isTrue);
   });
 
@@ -214,6 +215,9 @@ void main() {
     expect(lifecycleNames.contains('stage4_retry_due_day'), isTrue);
     expect(lifecycleNames.contains('stage4_unresolved_targets_json'), isTrue);
     expect(lifecycleNames.contains('new_override_count'), isTrue);
+    expect(lifecycleNames.contains('weak_spot_score'), isTrue);
+    expect(lifecycleNames.contains('recent_struggle_count'), isTrue);
+    expect(lifecycleNames.contains('last_error_type'), isTrue);
 
     final sessionRows = await db
         .customSelect("PRAGMA table_info('companion_stage4_session')")
