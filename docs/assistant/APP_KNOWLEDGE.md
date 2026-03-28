@@ -16,7 +16,7 @@ Recommended starting points:
 - `AGENTS.md` (compatibility shim)
 - `agent.md` (primary runbook)
 - `docs/assistant/ROADMAP_ANCHOR.md` (active Adaptive Hifz Path continuity and next-milestone handoff)
-- `docs/assistant/exec_plans/active/2026-03-25_wave1_guided_daily_hifz_path.md` (active Wave 1 Today-path implementation handoff)
+- `docs/assistant/exec_plans/completed/2026-03-28_similar_verse_rescue_v1.md` (completed Similar-Verse Rescue V1 closeout record)
 - `docs/strategy/adaptive-hifz-path-solo-master-plan.md` (active product direction)
 - `docs/roadmap/adaptive-hifz-path-solo-roadmap.md` (active roadmap)
 - `docs/assistant/HARNESS_PROFILE.json` (bootstrap profile source of truth when bootstrap harness work is in scope)
@@ -191,6 +191,7 @@ Current adaptive queue truth to preserve:
 - Error-Aware Repair V1 reuses `last_error_type` for optional low-grade repair tagging (`hesitation`, `wrong_recall`, `weak_lock_in`, `similar_confusion`) instead of adding schema
 - dismissing the low-grade repair-tag sheet now cancels save; only explicit `Skip` or an explicit tag choice persists the review
 - Today can now explain weak spots more specifically when `last_error_type` is present
+- Similar-Verse Rescue V1 now gives `similar_confusion` rows a dedicated rescue route, a conservative local candidate finder over memorized units, a dedicated Similar Verses section on Today, and shell-coherent rescue rendering across narrow, medium, and wide layouts
 - browser/web validation for this phase remains `flutter build web` plus Playwright smoke
 - Drift/build_runner regeneration for the generated lifecycle surface remains tooling debt; runtime schema repair and custom SQL remain the intentional bridge in this environment
 

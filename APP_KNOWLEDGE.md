@@ -147,6 +147,7 @@ Defined in `lib/app/router.dart`:
 - `/quran-radio`
 - `/reciters`
 - `/today`
+- `/similar-verses/rescue`
 - `/companion/chain`
 - `/settings`
 - `/about`
@@ -160,6 +161,14 @@ Defined in `lib/app/router.dart`:
 `/companion/chain` query params:
 - `unitId` (required)
 - `mode` (`new`, `review`, or `stage4`, defaults to review if omitted)
+
+`/similar-verses/rescue` query params:
+- `unitId` (required)
+
+Current memorization-engine continuity note:
+- Similar-Verse Rescue V1 now gives `similar_confusion` weak spots a dedicated rescue surface instead of leaving them as a generic weak-spot label only.
+- Today can now surface those rows in a dedicated Similar Verses section, and Companion review flow can route back into the same rescue screen when `similar_confusion` is the current repair truth.
+- The rescue route now behaves coherently inside the shared app shell across narrow, medium, and wide layouts, without nested page chrome.
 
 ### Global Preferences (persisted)
 - Language options (fully wired for app UI strings):

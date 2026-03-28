@@ -40,6 +40,9 @@ Current continuity ExecPlans:
 - `docs/assistant/exec_plans/active/2026-03-28_adaptive_queue_v1.md`
 - `docs/assistant/exec_plans/active/2026-03-28_error_aware_repair_v1.md`
 
+Recent completed closeout record:
+- `docs/assistant/exec_plans/completed/2026-03-28_similar_verse_rescue_v1.md`
+
 Wave 1 status on the current feature branch:
 - Today now leads with one obvious next action
 - Today now shows a path mode (`green`, `protect`, `recovery`) and clearer new-lock messaging
@@ -47,6 +50,7 @@ Wave 1 status on the current feature branch:
 - durable adaptive memory now lives on `companion_lifecycle_state`, and scheduled review grading updates weak-spot pressure and recent struggle state
 - mature legacy/schedule-only units no longer stay stuck looking perpetually new when schedule truth already shows they are stable enough
 - Error-Aware Repair V1 now adds optional low-grade repair tagging, dismiss-cancels-save protection on the repair sheet, and more specific weak-spot explanation on top of that adaptive baseline, without reopening schema work
+- Similar-Verse Rescue V1 is now closed enough for continuity on the current branch: it adds a dedicated Similar Verses section on Today, a conservative local candidate finder over memorized units, and a focused rescue screen / companion follow-up action for `similar_confusion`, with shell-coherent rescue rendering across narrow, medium, and wide layouts, without reopening schema or planner architecture
 - scheduler, DB schema, reader, and companion route structure remain intact
 - browser-first stabilization is complete enough for continuity:
   - guided setup is the truthful zero-unit first-run path on Today and Settings
@@ -61,7 +65,7 @@ The next milestone should shift toward:
 
 Practical meaning:
 - deepen adaptive memorization truth and progression quality instead of doing more web plumbing
-- Error-Aware Repair V1 is implemented enough for continuity; the next wave should move beyond thin repair-tagging toward stronger memorization-engine quality
+- Similar-Verse Rescue V1 is now closed enough for continuity; the next wave should deepen memorization-engine quality beyond thin tagging and first-pass rescue, not reopen schema or web-plumbing work
 - keep the current web target as a supported platform surface, not the center of gravity
 - preserve reader/audio/local-first strengths while improving memorization progression and review quality
 
