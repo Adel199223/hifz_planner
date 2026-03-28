@@ -255,6 +255,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     return '/companion/chain?unitId=$unitId&mode=review';
   }
 
+  String _buildSimilarVerseRescueRoute(int unitId) {
+    return '/similar-verses/rescue?unitId=$unitId';
+  }
+
   String _buildNewRoute(int unitId) {
     return '/companion/chain?unitId=$unitId&mode=new';
   }
@@ -667,6 +671,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       TodayNextStepKind.stage4Due => strings.stage4DueSectionTitle,
       TodayNextStepKind.dueReview =>
         _reviewSectionLabel(strings, nextStep.reviewRow!),
+      TodayNextStepKind.similarVerseRescue =>
+        strings.similarVersesSectionTitle,
       TodayNextStepKind.weakSpot => strings.weakSpotsSectionTitle,
       TodayNextStepKind.newUnit => strings.optionalNewSectionTitle,
       TodayNextStepKind.resume => strings.myQuranResumeTitle,
@@ -679,6 +685,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       TodayNextStepKind.stage4Due => _stage4RouteForItem(nextStep.stage4Item!),
       TodayNextStepKind.dueReview =>
         _buildReviewRoute(nextStep.reviewRow!.unit.id),
+      TodayNextStepKind.similarVerseRescue =>
+        _buildSimilarVerseRescueRoute(nextStep.reviewRow!.unit.id),
       TodayNextStepKind.weakSpot =>
         _buildReviewRoute(nextStep.reviewRow!.unit.id),
       TodayNextStepKind.newUnit => _buildNewRoute(nextStep.newUnit!.id),
@@ -689,6 +697,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   String _nextStepActionLabel(AppStrings strings, TodayPath path) {
     return switch (path.nextStep.kind) {
       TodayNextStepKind.stage4Due => strings.stage4OpenAction,
+      TodayNextStepKind.similarVerseRescue =>
+        strings.openSimilarVerseRescue,
       TodayNextStepKind.resume => strings.resume,
       _ => strings.openCompanionChain,
     };
@@ -830,6 +840,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   Widget _buildReviewSection(AppStrings strings, TodayPath path) {
     final hasReviews = path.lockInReviews.isNotEmpty ||
+        path.similarVerseRepairs.isNotEmpty ||
         path.weakSpots.isNotEmpty ||
         path.recentReviews.isNotEmpty ||
         path.maintenanceReviews.isNotEmpty;
@@ -856,8 +867,19 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   title: strings.warmUpSectionTitle,
                   rows: path.lockInReviews,
                 ),
-              if (path.weakSpots.isNotEmpty) ...[
+              if (path.similarVerseRepairs.isNotEmpty) ...[
                 if (path.lockInReviews.isNotEmpty) const SizedBox(height: 16),
+                _buildReviewSubsection(
+                  strings: strings,
+                  keyName: 'today_similar_verses_section',
+                  title: strings.similarVersesSectionTitle,
+                  rows: path.similarVerseRepairs,
+                ),
+              ],
+              if (path.weakSpots.isNotEmpty) ...[
+                if (path.lockInReviews.isNotEmpty ||
+                    path.similarVerseRepairs.isNotEmpty)
+                  const SizedBox(height: 16),
                 _buildReviewSubsection(
                   strings: strings,
                   keyName: 'today_weak_spots_section',
@@ -866,7 +888,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 ),
               ],
               if (path.recentReviews.isNotEmpty) ...[
-                if (path.lockInReviews.isNotEmpty || path.weakSpots.isNotEmpty)
+                if (path.lockInReviews.isNotEmpty ||
+                    path.similarVerseRepairs.isNotEmpty ||
+                    path.weakSpots.isNotEmpty)
                   const SizedBox(height: 16),
                 _buildReviewSubsection(
                   strings: strings,
@@ -877,6 +901,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               ],
               if (path.maintenanceReviews.isNotEmpty) ...[
                 if (path.lockInReviews.isNotEmpty ||
+                    path.similarVerseRepairs.isNotEmpty ||
                     path.weakSpots.isNotEmpty ||
                     path.recentReviews.isNotEmpty)
                   const SizedBox(height: 16),
@@ -1081,6 +1106,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
+                if (reviewRow.lastErrorType ==
+                    AdaptiveLastErrorType.similarConfusion)
+                  OutlinedButton(
+                    key: ValueKey('today_open_similar_verse_rescue_$unitId'),
+                    onPressed: () {
+                      context.go(_buildSimilarVerseRescueRoute(unitId));
+                    },
+                    child: Text(strings.openSimilarVerseRescue),
+                  ),
                 OutlinedButton(
                   key: ValueKey('today_open_companion_review_$unitId'),
                   onPressed: () {

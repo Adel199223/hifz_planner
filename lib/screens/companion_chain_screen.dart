@@ -48,6 +48,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
   bool _isSavingReviewGrade = false;
   bool _reviewGradeSaved = false;
   ReviewCompletionResult? _reviewCompletionResult;
+  AdaptiveLastErrorType? _currentAdaptiveLastErrorType;
   bool _tajweedEnabled = true;
   String? _lastAutoRecitedVerseKey;
   String? _selectedAutoCheckOptionId;
@@ -81,10 +82,12 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       _wordRenderDataByVerseKey.clear();
       _meaningCueByVerseKey.clear();
       _meaningCuePendingVerseKeys.clear();
+      _currentAdaptiveLastErrorType = null;
     });
 
     try {
       final memUnitRepo = ref.read(memUnitRepoProvider);
+      final companionRepo = ref.read(companionRepoProvider);
       final quranRepo = ref.read(quranRepoProvider);
       final tajweedService = ref.read(tajweedTagsServiceProvider);
 
@@ -120,6 +123,9 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         endSurah: endSurah,
         endAyah: endAyah,
       );
+      final adaptiveState =
+          (await companionRepo.getAdaptiveStatesByUnitIds(<int>[widget.unitId]))[
+              widget.unitId];
       if (ayahs.isEmpty) {
         throw StateError('No ayahs found for this unit.');
       }
@@ -150,6 +156,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         _isSavingReviewGrade = false;
         _reviewGradeSaved = false;
         _reviewCompletionResult = null;
+        _currentAdaptiveLastErrorType = adaptiveState?.lastErrorType;
         _syncAutoCheckSelection(state);
       });
       unawaited(_loadVerseSupportData(ayahs));
@@ -462,6 +469,8 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         _isSavingReviewGrade = false;
         _reviewGradeSaved = result.scheduleUpdated;
         _reviewCompletionResult = result;
+        _currentAdaptiveLastErrorType =
+            _resolvedErrorTypeAfterSave(gradeQ, taggedErrorType);
       });
       _showSnackBar(_reviewCompletionMessage(result));
     } catch (_) {
@@ -483,6 +492,24 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
       _CompanionReviewGradeOption(label: _strings.gradeVeryHard, q: 2),
       _CompanionReviewGradeOption(label: _strings.gradeFail, q: 0),
     ];
+  }
+
+  AdaptiveLastErrorType? _resolvedErrorTypeAfterSave(
+    int gradeQ,
+    AdaptiveLastErrorType? taggedErrorType,
+  ) {
+    return switch (gradeQ) {
+      2 => taggedErrorType ?? AdaptiveLastErrorType.hesitation,
+      0 => taggedErrorType ?? AdaptiveLastErrorType.wrongRecall,
+      _ => null,
+    };
+  }
+
+  bool get _showSimilarVerseRescueAction =>
+      _currentAdaptiveLastErrorType == AdaptiveLastErrorType.similarConfusion;
+
+  String _buildSimilarVerseRescueRoute() {
+    return '/similar-verses/rescue?unitId=${widget.unitId}';
   }
 
   String _reviewCompletionMessage(ReviewCompletionResult result) {
@@ -2125,6 +2152,16 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
             ),
             if (showReviewGradeFlow) ...[
               const SizedBox(height: 12),
+              if (_showSimilarVerseRescueAction) ...[
+                OutlinedButton(
+                  key: const ValueKey(
+                    'companion_open_similar_verse_rescue_button',
+                  ),
+                  onPressed: () => context.go(_buildSimilarVerseRescueRoute()),
+                  child: Text(_strings.openSimilarVerseRescue),
+                ),
+                const SizedBox(height: 12),
+              ],
               if (_reviewGradeSaved) ...[
                 Text(
                   _strings.companionReviewSavedToSchedule,

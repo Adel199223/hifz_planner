@@ -14,6 +14,7 @@ import '../screens/quran_radio_screen.dart';
 import '../screens/reader_screen.dart';
 import '../screens/reciters_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/similar_verse_repair_screen.dart';
 import '../screens/today_screen.dart';
 import 'navigation_shell.dart';
 
@@ -103,6 +104,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/today',
             builder: (context, state) => const TodayScreen(),
+          ),
+          GoRoute(
+            path: '/similar-verses/rescue',
+            builder: (context, state) {
+              final parsedUnitId = int.tryParse(
+                state.uri.queryParameters['unitId'] ?? '',
+              );
+              final unitId = parsedUnitId != null && parsedUnitId > 0
+                  ? parsedUnitId
+                  : null;
+              return SimilarVerseRepairScreen(unitId: unitId);
+            },
           ),
           GoRoute(
             path: '/companion/chain',

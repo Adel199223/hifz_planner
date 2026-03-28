@@ -29,6 +29,7 @@ import '../services/quran_text_importer_service.dart';
 import '../services/qurancom_api.dart';
 import '../services/qurancom_chapters_service.dart';
 import '../services/review_completion_service.dart';
+import '../services/similar_verse_candidate_service.dart';
 import '../services/solo_setup_flow.dart';
 import '../services/scheduling/planning_projection_engine.dart';
 import '../services/surah_metadata_service.dart';
@@ -141,6 +142,13 @@ final reviewCompletionServiceProvider =
     companionRepo,
   );
 });
+
+final similarVerseCandidateServiceProvider =
+    Provider<SimilarVerseCandidateService>((ref) {
+      final memUnitRepo = ref.watch(memUnitRepoProvider);
+      final quranRepo = ref.watch(quranRepoProvider);
+      return SimilarVerseCandidateService(memUnitRepo, quranRepo);
+    });
 
 final myQuranOverviewServiceProvider = Provider<MyQuranOverviewService>((ref) {
   final db = ref.watch(appDatabaseProvider);

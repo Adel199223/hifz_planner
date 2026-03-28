@@ -692,6 +692,155 @@ void main() {
     );
   });
 
+  testWidgets(
+      'similar-confusion weak spots render in the Similar Verses section with a rescue action',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final similarUnitId = await _insertDueReviewUnit(
+      db,
+      todayDay: todayDay,
+      reps: 3,
+      intervalDays: 10,
+      lastReviewDay: todayDay - 10,
+      lastGradeQ: 4,
+      startAyah: 1,
+      endAyah: 1,
+    );
+    final genericWeakSpotUnitId = await _insertDueReviewUnit(
+      db,
+      todayDay: todayDay,
+      reps: 3,
+      intervalDays: 10,
+      lastReviewDay: todayDay - 10,
+      lastGradeQ: 4,
+      startAyah: 2,
+      endAyah: 2,
+    );
+    await _insertLifecycleState(
+      db,
+      unitId: similarUnitId,
+      lifecycleTier: 'stable',
+      todayDay: todayDay,
+      weakSpotScore: 0.6,
+      recentStruggleCount: 2,
+      lastErrorType: 'similar_confusion',
+    );
+    await _insertLifecycleState(
+      db,
+      unitId: genericWeakSpotUnitId,
+      lifecycleTier: 'stable',
+      todayDay: todayDay,
+      weakSpotScore: 0.6,
+      recentStruggleCount: 1,
+      lastErrorType: 'hesitation',
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.byKey(const ValueKey('today_similar_verses_section')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(ValueKey('today_open_similar_verse_rescue_$similarUnitId')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        ValueKey('today_open_similar_verse_rescue_$genericWeakSpotUnitId'),
+      ),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('today_weak_spots_section')), findsOneWidget);
+  });
+
+  testWidgets('next step opens similar-verse rescue when it is the top repair',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final similarUnitId = await _insertDueReviewUnit(
+      db,
+      todayDay: todayDay,
+      reps: 3,
+      intervalDays: 10,
+      lastReviewDay: todayDay - 10,
+      lastGradeQ: 4,
+      startAyah: 1,
+      endAyah: 1,
+    );
+    await _insertLifecycleState(
+      db,
+      unitId: similarUnitId,
+      lifecycleTier: 'stable',
+      todayDay: todayDay,
+      weakSpotScore: 0.6,
+      recentStruggleCount: 2,
+      lastErrorType: 'similar_confusion',
+    );
+
+    final router = _buildTodayRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_next_step_card')),
+    );
+
+    final nextStepButton = find.byKey(
+      const ValueKey('today_next_step_button_similarVerseRescue'),
+    );
+    await pumpUntilFound(tester, nextStepButton);
+    await _tapVisible(tester, nextStepButton);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('similar_verse_repair_screen')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('weak lock-in reason text renders for weak spots', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     final container = ProviderContainer(
@@ -1630,16 +1779,19 @@ Future<int> _insertDueReviewUnit(
   int intervalDays = 0,
   int? lastReviewDay,
   int? lastGradeQ,
+  int startAyah = 1,
+  int endAyah = 1,
+  String? unitKey,
 }) async {
   final unitId = await db.into(db.memUnit).insert(
         MemUnitCompanion.insert(
           kind: 'ayah_range',
           pageMadina: const Value(1),
           startSurah: const Value(1),
-          startAyah: const Value(1),
+          startAyah: Value(startAyah),
           endSurah: const Value(1),
-          endAyah: const Value(1),
-          unitKey: 'due-review-$todayDay',
+          endAyah: Value(endAyah),
+          unitKey: unitKey ?? 'due-review-$todayDay-$startAyah-$endAyah',
           createdAtDay: todayDay,
           updatedAtDay: todayDay,
         ),

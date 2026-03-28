@@ -64,17 +64,19 @@ class _AppNavigationShellState extends ConsumerState<AppNavigationShell> {
     required AppStrings strings,
     required int fallbackIndex,
   }) {
+    final resolvedLocation = Uri.tryParse(location)?.path ?? location;
     for (final destination in destinations) {
-      if (destination.path == location) {
+      if (destination.path == resolvedLocation) {
         return destination.label;
       }
     }
 
-    return switch (location) {
+    return switch (resolvedLocation) {
       '/learn' => strings.learn,
       '/my-quran' => strings.myQuran,
       '/quran-radio' => strings.quranRadio,
       '/reciters' => strings.reciters,
+      '/similar-verses/rescue' => strings.similarVerseRescueTitle,
       '/companion/chain' => strings.companionProgressiveRevealTitle,
       _ => destinations[fallbackIndex].label,
     };

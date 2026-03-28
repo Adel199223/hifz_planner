@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
+import 'package:hifz_planner/data/services/adaptive_queue_policy.dart';
 import 'package:hifz_planner/data/services/daily_planner.dart';
 import 'package:hifz_planner/screens/today_path.dart';
 
@@ -120,8 +121,36 @@ void main() {
     expect(path.warmUp?.unit.id, 1);
   });
 
+  test('splits similar-confusion weak spots into similar-verse repairs', () {
+    final path = TodayPath.from(
+      plan: _plan(),
+      remainingStage4Due: const <Stage4DueItem>[],
+      remainingReviews: <PlannedReviewRow>[
+        _review(
+          2,
+          bucket: AdaptiveQueueBucket.weakSpot,
+          reason: AdaptiveReviewReason.shakyRecently,
+          lastErrorType: AdaptiveLastErrorType.similarConfusion,
+        ),
+        _review(
+          3,
+          bucket: AdaptiveQueueBucket.weakSpot,
+          reason: AdaptiveReviewReason.shakyRecently,
+          lastErrorType: AdaptiveLastErrorType.hesitation,
+        ),
+      ],
+      remainingNewUnits: const <MemUnitData>[],
+    );
+
+    expect(
+      path.similarVerseRepairs.map((row) => row.unit.id).toList(),
+      <int>[2],
+    );
+    expect(path.genericWeakSpots.map((row) => row.unit.id).toList(), <int>[3]);
+  });
+
   test(
-      'next step prioritizes mandatory stage-4, lock-in, weak spot, recent review, maintenance, new, then resume',
+      'next step prioritizes mandatory stage-4, lock-in, similar-verse rescue, weak spot, recent review, maintenance, new, then resume',
       () {
     final stage4Path = TodayPath.from(
       plan: _plan(),
@@ -151,50 +180,75 @@ void main() {
     expect(lockInPath.nextStep.kind, TodayNextStepKind.dueReview);
     expect(lockInPath.nextStep.reviewRow?.unit.id, 2);
 
+    final similarVersePath = TodayPath.from(
+      plan: _plan(),
+      remainingStage4Due: const <Stage4DueItem>[],
+      remainingReviews: <PlannedReviewRow>[
+        _review(
+          4,
+          bucket: AdaptiveQueueBucket.weakSpot,
+          reason: AdaptiveReviewReason.shakyRecently,
+          lastErrorType: AdaptiveLastErrorType.similarConfusion,
+        ),
+        _review(
+          5,
+          bucket: AdaptiveQueueBucket.weakSpot,
+          reason: AdaptiveReviewReason.shakyRecently,
+          lastErrorType: AdaptiveLastErrorType.hesitation,
+        ),
+      ],
+      remainingNewUnits: <MemUnitData>[_unit(33)],
+    );
+    expect(
+      similarVersePath.nextStep.kind,
+      TodayNextStepKind.similarVerseRescue,
+    );
+    expect(similarVersePath.nextStep.reviewRow?.unit.id, 4);
+
     final weakSpotPath = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: <PlannedReviewRow>[
-        _review(4,
+        _review(6,
             bucket: AdaptiveQueueBucket.weakSpot,
             reason: AdaptiveReviewReason.shakyRecently),
       ],
-      remainingNewUnits: <MemUnitData>[_unit(33)],
+      remainingNewUnits: <MemUnitData>[_unit(34)],
     );
     expect(weakSpotPath.nextStep.kind, TodayNextStepKind.weakSpot);
-    expect(weakSpotPath.nextStep.reviewRow?.unit.id, 4);
+    expect(weakSpotPath.nextStep.reviewRow?.unit.id, 6);
 
     final recentPath = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: <PlannedReviewRow>[
-        _review(5,
+        _review(7,
             bucket: AdaptiveQueueBucket.recentReview,
             reason: AdaptiveReviewReason.recentCheckIn),
       ],
-      remainingNewUnits: <MemUnitData>[_unit(34)],
+      remainingNewUnits: <MemUnitData>[_unit(35)],
     );
     expect(recentPath.nextStep.kind, TodayNextStepKind.dueReview);
-    expect(recentPath.nextStep.reviewRow?.unit.id, 5);
+    expect(recentPath.nextStep.reviewRow?.unit.id, 7);
 
     final maintenancePath = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: <PlannedReviewRow>[
-        _review(6,
+        _review(8,
             bucket: AdaptiveQueueBucket.maintenance,
             reason: AdaptiveReviewReason.maintenanceDue),
       ],
-      remainingNewUnits: <MemUnitData>[_unit(35)],
+      remainingNewUnits: <MemUnitData>[_unit(36)],
     );
     expect(maintenancePath.nextStep.kind, TodayNextStepKind.dueReview);
-    expect(maintenancePath.nextStep.reviewRow?.unit.id, 6);
+    expect(maintenancePath.nextStep.reviewRow?.unit.id, 8);
 
     final newPath = TodayPath.from(
       plan: _plan(),
       remainingStage4Due: const <Stage4DueItem>[],
       remainingReviews: const <PlannedReviewRow>[],
-      remainingNewUnits: <MemUnitData>[_unit(36)],
+      remainingNewUnits: <MemUnitData>[_unit(37)],
     );
     expect(newPath.nextStep.kind, TodayNextStepKind.newUnit);
 
@@ -238,6 +292,7 @@ PlannedReviewRow _review(
   required AdaptiveQueueBucket bucket,
   required AdaptiveReviewReason reason,
   double reinforcementWeight = 0.0,
+  AdaptiveLastErrorType? lastErrorType,
 }) {
   return PlannedReviewRow(
     unit: _unit(id),
@@ -256,6 +311,7 @@ PlannedReviewRow _review(
     reinforcementWeight: reinforcementWeight,
     bucket: bucket,
     reason: reason,
+    lastErrorType: lastErrorType,
   );
 }
 

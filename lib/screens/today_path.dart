@@ -1,9 +1,17 @@
 import '../data/database/app_database.dart';
+import '../data/services/adaptive_queue_policy.dart';
 import '../data/services/daily_planner.dart';
 
 enum TodayPathMode { green, protect, recovery }
 
-enum TodayNextStepKind { stage4Due, dueReview, weakSpot, newUnit, resume }
+enum TodayNextStepKind {
+  stage4Due,
+  dueReview,
+  similarVerseRescue,
+  weakSpot,
+  newUnit,
+  resume,
+}
 
 enum TodayNewState {
   unlocked,
@@ -15,6 +23,7 @@ enum TodayNewState {
 
 enum TodayQueueSectionKind {
   lockIn,
+  similarVerses,
   weakSpots,
   recentReview,
   maintenanceReview,
@@ -47,6 +56,12 @@ class TodayNextStep {
           reviewRow: row,
         );
 
+  const TodayNextStep.similarVerseRescue(PlannedReviewRow row)
+      : this._(
+          kind: TodayNextStepKind.similarVerseRescue,
+          reviewRow: row,
+        );
+
   const TodayNextStep.newUnit(MemUnitData unit)
       : this._(
           kind: TodayNextStepKind.newUnit,
@@ -69,6 +84,7 @@ class TodayPath {
     required this.mode,
     required this.newState,
     required this.lockInReviews,
+    required this.similarVerseRepairs,
     required this.weakSpots,
     required this.recentReviews,
     required this.maintenanceReviews,
@@ -81,6 +97,7 @@ class TodayPath {
   final TodayPathMode mode;
   final TodayNewState newState;
   final List<PlannedReviewRow> lockInReviews;
+  final List<PlannedReviewRow> similarVerseRepairs;
   final List<PlannedReviewRow> weakSpots;
   final List<PlannedReviewRow> recentReviews;
   final List<PlannedReviewRow> maintenanceReviews;
@@ -91,6 +108,8 @@ class TodayPath {
 
   PlannedReviewRow? get warmUp =>
       lockInReviews.isEmpty ? null : lockInReviews.first;
+
+  List<PlannedReviewRow> get genericWeakSpots => weakSpots;
 
   bool isWarmUpReview(PlannedReviewRow? row) {
     if (row == null) {
@@ -112,6 +131,7 @@ class TodayPath {
     );
 
     final lockInReviews = <PlannedReviewRow>[];
+    final similarVerseRepairs = <PlannedReviewRow>[];
     final weakSpots = <PlannedReviewRow>[];
     final recentReviews = <PlannedReviewRow>[];
     final maintenanceReviews = <PlannedReviewRow>[];
@@ -122,7 +142,11 @@ class TodayPath {
           lockInReviews.add(row);
           break;
         case AdaptiveQueueBucket.weakSpot:
-          weakSpots.add(row);
+          if (row.lastErrorType == AdaptiveLastErrorType.similarConfusion) {
+            similarVerseRepairs.add(row);
+          } else {
+            weakSpots.add(row);
+          }
           break;
         case AdaptiveQueueBucket.recentReview:
           recentReviews.add(row);
@@ -150,6 +174,8 @@ class TodayPath {
       nextStep = TodayNextStep.stage4Due(mandatoryStage4);
     } else if (lockInReviews.isNotEmpty) {
       nextStep = TodayNextStep.dueReview(lockInReviews.first);
+    } else if (similarVerseRepairs.isNotEmpty) {
+      nextStep = TodayNextStep.similarVerseRescue(similarVerseRepairs.first);
     } else if (weakSpots.isNotEmpty) {
       nextStep = TodayNextStep.weakSpot(weakSpots.first);
     } else if (recentReviews.isNotEmpty) {
@@ -166,6 +192,8 @@ class TodayPath {
       mode: mode,
       newState: newState,
       lockInReviews: List<PlannedReviewRow>.unmodifiable(lockInReviews),
+      similarVerseRepairs:
+          List<PlannedReviewRow>.unmodifiable(similarVerseRepairs),
       weakSpots: List<PlannedReviewRow>.unmodifiable(weakSpots),
       recentReviews: List<PlannedReviewRow>.unmodifiable(recentReviews),
       maintenanceReviews:

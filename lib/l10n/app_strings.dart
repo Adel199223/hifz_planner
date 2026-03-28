@@ -679,6 +679,8 @@ class AppStrings {
       _t('due_review_section_title', 'Due review');
   String get weakSpotsSectionTitle =>
       _t('weak_spots_section_title', 'Weak spots');
+  String get similarVersesSectionTitle =>
+      _t('similar_verses_section_title', 'Similar verses');
   String get recentReviewSectionTitle =>
       _t('recent_review_section_title', 'Recent review');
   String get maintenanceReviewSectionTitle => _t(
@@ -795,6 +797,70 @@ class AppStrings {
         'review_error_tag_skip',
         'Skip',
       );
+  String get similarVerseRescueTitle => _t(
+        'similar_verse_rescue_title',
+        'Similar-Verse Rescue',
+      );
+  String get similarVerseRescueBody => _t(
+        'similar_verse_rescue_body',
+        'Compare this unit with the verse it may be getting mixed with. If the match looks weak, treat this as a clue, not a verdict.',
+      );
+  String get similarVerseCurrentUnitTitle => _t(
+        'similar_verse_current_unit_title',
+        'Current unit',
+      );
+  String get similarVerseCandidatesTitle => _t(
+        'similar_verse_candidates_title',
+        'Likely confusing verses',
+      );
+  String get similarVerseNoCandidateTitle => _t(
+        'similar_verse_no_candidate_title',
+        'No strong similar match yet',
+      );
+  String get similarVerseNoCandidateBody => _t(
+        'similar_verse_no_candidate_body',
+        'I could not find a strong similar-verse match from your memorized units yet. You can still open the current unit in Reader and compare manually.',
+      );
+  String get similarVerseRescueInvalidBody => _t(
+        'similar_verse_rescue_invalid_body',
+        'This rescue view could not load a valid memorization unit.',
+      );
+  String get failedToLoadSimilarVerseRescue => _t(
+        'failed_to_load_similar_verse_rescue',
+        'Failed to load similar-verse rescue.',
+      );
+  String get similarVerseNearbyPage => _t(
+        'similar_verse_nearby_page',
+        'Nearby page',
+      );
+  String similarVerseDifferenceCueOpening(
+    String currentToken,
+    String candidateToken,
+  ) =>
+      _fmt(
+        _t(
+          'similar_verse_difference_cue_opening',
+          'They begin similarly, then split around "{current}" / "{candidate}".',
+        ),
+        <String, Object>{
+          'current': currentToken,
+          'candidate': candidateToken,
+        },
+      );
+  String similarVerseDifferenceCueEnding(
+    String currentToken,
+    String candidateToken,
+  ) =>
+      _fmt(
+        _t(
+          'similar_verse_difference_cue_ending',
+          'The ending is similar, but the lead-in changes around "{current}" / "{candidate}".',
+        ),
+        <String, Object>{
+          'current': currentToken,
+          'candidate': candidateToken,
+        },
+      );
   String get todayNextStepResumeBody => _t(
         'today_next_step_resume_body',
         'Open My Quran to resume your next target.',
@@ -812,6 +878,8 @@ class AppStrings {
   String get openInReader => _t('open_in_reader', 'Open in Reader');
   String get openCompanionChain =>
       _t('open_companion_chain', 'Open Companion Chain');
+  String get openSimilarVerseRescue =>
+      _t('open_similar_verse_rescue', 'Open Similar-Verse Rescue');
   String get stage4DueSectionTitle => _t(
         'stage4_due_section_title',
         'Stage 4 - Delayed Consolidation',

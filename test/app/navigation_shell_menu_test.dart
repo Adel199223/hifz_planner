@@ -1,11 +1,15 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hifz_planner/app/app_preferences.dart';
+import 'package:hifz_planner/app/router.dart';
 import 'package:hifz_planner/app/app_preferences_store.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
+import 'package:hifz_planner/l10n/app_language.dart';
+import 'package:hifz_planner/l10n/app_strings.dart';
 import 'package:hifz_planner/main.dart';
 
 import '../helpers/pump_until_found.dart';
@@ -159,6 +163,137 @@ void main() {
         of: find.byType(AppBar),
         matching: find.text('Reciters'),
       ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('narrow rescue route uses shell title and avoids nested scaffold',
+      (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(720, 900));
+
+    final fakeStore = _FakeAppPreferencesStore();
+    final container = _createContainer(fakeStore);
+    addTearDown(container.dispose);
+    final unitId =
+        await _seedSimilarVerseRescueRouteData(container.read(appDatabaseProvider));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const HifzPlannerApp(),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_screen_root')),
+    );
+
+    final router = container.read(appRouterProvider);
+    final strings = AppStrings.of(AppLanguage.english);
+
+    router.go('/similar-verses/rescue?unitId=$unitId');
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('similar_verse_repair_screen')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Scaffold), findsOneWidget);
+    expect(find.byKey(const ValueKey('similar_verse_target_card')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text(strings.similarVerseRescueTitle),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('invalid rescue route stays in shell with honest body content',
+      (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(720, 900));
+
+    final fakeStore = _FakeAppPreferencesStore();
+    final container = _createContainer(fakeStore);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const HifzPlannerApp(),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_screen_root')),
+    );
+
+    final router = container.read(appRouterProvider);
+    final strings = AppStrings.of(AppLanguage.english);
+
+    router.go('/similar-verses/rescue?unitId=bad');
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('similar_verse_repair_invalid')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Scaffold), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text(strings.similarVerseRescueTitle),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('medium rescue route uses one shell scaffold and visible body title',
+      (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+
+    final fakeStore = _FakeAppPreferencesStore();
+    final container = _createContainer(fakeStore);
+    addTearDown(container.dispose);
+    final unitId = await _seedSimilarVerseRescueRouteData(
+      container.read(appDatabaseProvider),
+    );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const HifzPlannerApp(),
+      ),
+    );
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('today_screen_root')),
+    );
+
+    final router = container.read(appRouterProvider);
+    final strings = AppStrings.of(AppLanguage.english);
+
+    router.go('/similar-verses/rescue?unitId=$unitId');
+    await tester.pump();
+    await pumpUntilFound(
+      tester,
+      find.byKey(const ValueKey('similar_verse_repair_screen')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Scaffold), findsOneWidget);
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.text(strings.similarVerseRescueTitle), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('similar_verse_target_card')),
       findsOneWidget,
     );
   });
@@ -435,6 +570,30 @@ Future<void> _seedReaderAyahs(AppDatabase db) async {
       ],
     );
   });
+}
+
+Future<int> _seedSimilarVerseRescueRouteData(AppDatabase db) async {
+  await db.into(db.ayah).insert(
+        AyahCompanion.insert(
+          surah: 2,
+          ayah: 1,
+          textUthmani: 'الم ذلك الكتاب لا ريب فيه هدى للمتقين',
+          pageMadina: const Value(2),
+        ),
+      );
+  return db.into(db.memUnit).insert(
+        MemUnitCompanion.insert(
+          kind: 'ayah_range',
+          pageMadina: const Value(2),
+          startSurah: const Value(2),
+          startAyah: const Value(1),
+          endSurah: const Value(2),
+          endAyah: const Value(1),
+          unitKey: 'shell-similar-verse-target',
+          createdAtDay: 100,
+          updatedAtDay: 100,
+        ),
+      );
 }
 
 ProviderContainer _createContainer(_FakeAppPreferencesStore fakeStore) {

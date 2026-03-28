@@ -849,6 +849,10 @@ void main() {
 
     expect(find.byKey(const ValueKey('companion_review_saved_message')),
         findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('companion_open_similar_verse_rescue_button')),
+      findsOneWidget,
+    );
 
     final adaptiveState =
         (await CompanionRepo(db).getAdaptiveStatesByUnitIds(<int>[unitId]))[
@@ -857,6 +861,48 @@ void main() {
     expect(
       adaptiveState!.lastErrorType,
       AdaptiveLastErrorType.similarConfusion,
+    );
+  });
+
+  testWidgets(
+      'review summary shows similar-verse rescue action when adaptive state is similar confusion',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-review-similar-rescue',
+    );
+    await seedReviewSchedule(db, unitId: unitId);
+    await seedLifecycle(
+      db,
+      unitId: unitId,
+      lifecycleTier: 'stable',
+    );
+    await CompanionRepo(db).writeAdaptiveState(
+      unitId: unitId,
+      weakSpotScore: 0.7,
+      recentStruggleCount: 2,
+      lastErrorType: AdaptiveLastErrorType.similarConfusion.dbValue,
+      updatedAtDay: 100,
+      updatedAtSeconds: 100,
+    );
+
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.review,
+    );
+
+    await completeSingleVerseReview(tester);
+
+    expect(
+      find.byKey(const ValueKey('companion_open_similar_verse_rescue_button')),
+      findsOneWidget,
     );
   });
 
