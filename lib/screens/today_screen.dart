@@ -8,11 +8,13 @@ import '../app/app_preferences.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
 import '../data/services/daily_planner.dart';
+import '../data/services/adaptive_queue_policy.dart';
 import '../data/services/review_completion_service.dart';
 import '../data/services/solo_setup_flow.dart';
 import '../data/services/scheduling/weekly_plan_generator.dart';
 import '../data/time/local_day_time.dart';
 import '../l10n/app_strings.dart';
+import 'review_error_tag_sheet.dart';
 import 'today_path.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
@@ -157,8 +159,29 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     required int unitId,
     required int gradeQ,
     required VoidCallback onSuccessRemove,
+    bool allowRepairTagPrompt = true,
   }) async {
     final strings = AppStrings.of(ref.read(appPreferencesProvider).language);
+    AdaptiveLastErrorType? taggedErrorType;
+    if (allowRepairTagPrompt && (gradeQ == 2 || gradeQ == 0)) {
+      final repairTagResult = await showReviewErrorTagSheet(
+        context: context,
+        strings: strings,
+      );
+      if (!mounted) {
+        return;
+      }
+      switch (repairTagResult.action) {
+        case ReviewErrorTagSheetAction.cancel:
+          return;
+        case ReviewErrorTagSheetAction.skip:
+          taggedErrorType = null;
+          break;
+        case ReviewErrorTagSheetAction.tagged:
+          taggedErrorType = repairTagResult.taggedErrorType;
+          break;
+      }
+    }
 
     if (_busyUnitIds.contains(unitId)) {
       return;
@@ -180,6 +203,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             gradeQ: gradeQ,
             completedDay: tsDay,
             completedSeconds: tsSeconds,
+            taggedErrorType: taggedErrorType,
           );
 
       if (!mounted) {
@@ -596,9 +620,24 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   String _reviewReasonText(
     AppStrings strings,
-    AdaptiveReviewReason reason,
+    PlannedReviewRow reviewRow,
   ) {
-    return switch (reason) {
+    if (reviewRow.bucket == AdaptiveQueueBucket.weakSpot) {
+      switch (reviewRow.lastErrorType) {
+        case AdaptiveLastErrorType.hesitation:
+          return strings.adaptiveReviewReasonHesitation;
+        case AdaptiveLastErrorType.wrongRecall:
+          return strings.adaptiveReviewReasonWrongRecall;
+        case AdaptiveLastErrorType.weakLockIn:
+          return strings.adaptiveReviewReasonWeakLockIn;
+        case AdaptiveLastErrorType.similarConfusion:
+          return strings.adaptiveReviewReasonSimilarConfusion;
+        case null:
+          break;
+      }
+    }
+
+    return switch (reviewRow.reason) {
       AdaptiveReviewReason.needsLockIn =>
         strings.adaptiveReviewReasonNeedsLockIn,
       AdaptiveReviewReason.shakyRecently =>
@@ -701,7 +740,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               Text(_formatRange(nextStep.reviewRow!.unit, strings)),
               const SizedBox(height: 4),
               Text(
-                _reviewReasonText(strings, nextStep.reviewRow!.reason),
+                _reviewReasonText(strings, nextStep.reviewRow!),
               ),
               const SizedBox(height: 12),
             ] else if (nextStep.newUnit != null) ...[
@@ -1032,7 +1071,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              _reviewReasonText(strings, reviewRow.reason),
+              _reviewReasonText(strings, reviewRow),
               key: ValueKey('today_review_reason_$unitId'),
             ),
             const SizedBox(height: 6),
@@ -1312,6 +1351,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   onSuccessRemove: () {
                     _remainingNewUnits.removeWhere((row) => row.id == unitId);
                   },
+                  allowRepairTagPrompt: false,
                 );
               },
             ),

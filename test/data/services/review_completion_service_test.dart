@@ -352,6 +352,89 @@ void main() {
     expect(adaptiveState.lastErrorType, AdaptiveLastErrorType.wrongRecall);
   });
 
+  test('q2 can store explicit similar-verse confusion', () async {
+    final unitId = await _seedReviewUnit(
+      db,
+      unitKey: 'adaptive-q2-similar-confusion',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: unitId,
+      lifecycleTier: 'ready',
+      weakSpotScore: 0.10,
+      recentStruggleCount: 0,
+    );
+
+    await reviewCompletionService.completeScheduledReview(
+      unitId: unitId,
+      gradeQ: 2,
+      taggedErrorType: AdaptiveLastErrorType.similarConfusion,
+      completedDay: 100,
+      completedSeconds: 670,
+    );
+
+    final adaptiveState =
+        (await companionRepo.getAdaptiveStatesByUnitIds(<int>[unitId]))[unitId];
+    expect(adaptiveState, isNotNull);
+    expect(adaptiveState!.lastErrorType,
+        AdaptiveLastErrorType.similarConfusion);
+  });
+
+  test('q2 can store explicit weak lock-in', () async {
+    final unitId = await _seedReviewUnit(
+      db,
+      unitKey: 'adaptive-q2-weak-lock-in',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: unitId,
+      lifecycleTier: 'ready',
+      weakSpotScore: 0.10,
+      recentStruggleCount: 0,
+    );
+
+    await reviewCompletionService.completeScheduledReview(
+      unitId: unitId,
+      gradeQ: 2,
+      taggedErrorType: AdaptiveLastErrorType.weakLockIn,
+      completedDay: 100,
+      completedSeconds: 675,
+    );
+
+    final adaptiveState =
+        (await companionRepo.getAdaptiveStatesByUnitIds(<int>[unitId]))[unitId];
+    expect(adaptiveState, isNotNull);
+    expect(adaptiveState!.lastErrorType, AdaptiveLastErrorType.weakLockIn);
+  });
+
+  test('q0 can store explicit similar-verse confusion', () async {
+    final unitId = await _seedReviewUnit(
+      db,
+      unitKey: 'adaptive-q0-similar-confusion',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: unitId,
+      lifecycleTier: 'ready',
+      weakSpotScore: 0.60,
+      recentStruggleCount: 1,
+    );
+
+    await reviewCompletionService.completeScheduledReview(
+      unitId: unitId,
+      gradeQ: 0,
+      taggedErrorType: AdaptiveLastErrorType.similarConfusion,
+      completedDay: 100,
+      completedSeconds: 678,
+    );
+
+    final adaptiveState =
+        (await companionRepo.getAdaptiveStatesByUnitIds(<int>[unitId]))[unitId];
+    expect(adaptiveState, isNotNull);
+    expect(adaptiveState!.lastErrorType,
+        AdaptiveLastErrorType.similarConfusion);
+  });
+
   test('first-time q3 review seeds a ready lifecycle row for adaptive state',
       () async {
     final unitId = await _seedReviewUnit(db, unitKey: 'adaptive-first-q3');

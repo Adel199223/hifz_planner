@@ -122,6 +122,7 @@ class PlannedReviewRow {
     required this.reinforcementWeight,
     required this.bucket,
     required this.reason,
+    this.lastErrorType,
   });
 
   final MemUnitData unit;
@@ -130,6 +131,7 @@ class PlannedReviewRow {
   final double reinforcementWeight;
   final AdaptiveQueueBucket bucket;
   final AdaptiveReviewReason reason;
+  final AdaptiveLastErrorType? lastErrorType;
 }
 
 class Stage4DueItem {
@@ -252,6 +254,7 @@ class DailyPlanner {
             b,
             todayDay,
             lifecycleStateByUnitId,
+            adaptiveStateByUnitId,
             reinforcementByUnitId,
             reviewClassificationByUnitId,
           ),
@@ -361,6 +364,7 @@ class DailyPlanner {
                 reinforcementByUnitId[dueRow.unit.id]?.weight ?? 0.0,
             bucket: reviewClassificationByUnitId[dueRow.unit.id]!.bucket,
             reason: reviewClassificationByUnitId[dueRow.unit.id]!.reason,
+            lastErrorType: adaptiveStateByUnitId[dueRow.unit.id]?.lastErrorType,
           ),
         );
         minutesPlannedReviews += estimated;
@@ -519,20 +523,43 @@ class DailyPlanner {
     DueUnitRow b,
     int todayDay,
     Map<int, CompanionLifecycleStateData> lifecycleStateByUnitId,
+    Map<int, AdaptiveUnitMemoryState> adaptiveStateByUnitId,
     Map<int, _UnitReinforcementProfile> reinforcementByUnitId,
     Map<int, _AdaptiveReviewClassification> reviewClassificationByUnitId,
   ) {
+    final bucketA = reviewClassificationByUnitId[a.unit.id]?.bucket ??
+        AdaptiveQueueBucket.maintenance;
+    final bucketB = reviewClassificationByUnitId[b.unit.id]?.bucket ??
+        AdaptiveQueueBucket.maintenance;
     final bucketCompare = _bucketSortRank(
-      reviewClassificationByUnitId[a.unit.id]?.bucket ??
-          AdaptiveQueueBucket.maintenance,
+      bucketA,
     ).compareTo(
       _bucketSortRank(
-        reviewClassificationByUnitId[b.unit.id]?.bucket ??
-            AdaptiveQueueBucket.maintenance,
+        bucketB,
       ),
     );
     if (bucketCompare != 0) {
       return bucketCompare;
+    }
+
+    if (bucketA == AdaptiveQueueBucket.weakSpot &&
+        bucketB == AdaptiveQueueBucket.weakSpot) {
+      final weakSpotPriorityCompare = _adaptiveQueuePolicy
+          .weakSpotPriorityRank(
+            schedule: a.schedule,
+            state: adaptiveStateByUnitId[a.unit.id] ??
+                const AdaptiveUnitMemoryState(),
+          )
+          .compareTo(
+            _adaptiveQueuePolicy.weakSpotPriorityRank(
+              schedule: b.schedule,
+              state: adaptiveStateByUnitId[b.unit.id] ??
+                  const AdaptiveUnitMemoryState(),
+            ),
+          );
+      if (weakSpotPriorityCompare != 0) {
+        return weakSpotPriorityCompare;
+      }
     }
 
     final overdueA = todayDay - a.schedule.dueDay;

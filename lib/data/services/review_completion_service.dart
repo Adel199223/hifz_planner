@@ -52,6 +52,7 @@ class ReviewCompletionService {
     required int gradeQ,
     required int completedDay,
     required int completedSeconds,
+    AdaptiveLastErrorType? taggedErrorType,
     int? durationSeconds,
     int? mistakesCount,
   }) {
@@ -86,6 +87,7 @@ class ReviewCompletionService {
       final adaptiveUpdate = _adaptiveQueuePolicy.applyReviewGrade(
         state: adaptiveState,
         gradeQ: gradeQ,
+        taggedErrorType: taggedErrorType,
       );
       final lifecycleTierBefore = lifecycle?.lifecycleTier;
       final lifecycleTierAfter =

@@ -107,6 +107,7 @@ class AdaptiveQueuePolicy {
   AdaptiveQueueUpdate applyReviewGrade({
     required AdaptiveUnitMemoryState state,
     required int gradeQ,
+    AdaptiveLastErrorType? taggedErrorType,
   }) {
     return switch (gradeQ) {
       5 => AdaptiveQueueUpdate(
@@ -130,13 +131,13 @@ class AdaptiveQueuePolicy {
           weakSpotScore: _clampWeakSpotScore(state.weakSpotScore + 0.20),
           recentStruggleCount:
               _clampStruggleCount(state.recentStruggleCount + 1),
-          lastErrorType: AdaptiveLastErrorType.hesitation,
+          lastErrorType: taggedErrorType ?? AdaptiveLastErrorType.hesitation,
         ),
       0 => AdaptiveQueueUpdate(
           weakSpotScore: _clampWeakSpotScore(state.weakSpotScore + 0.35),
           recentStruggleCount:
               _clampStruggleCount(state.recentStruggleCount + 2),
-          lastErrorType: AdaptiveLastErrorType.wrongRecall,
+          lastErrorType: taggedErrorType ?? AdaptiveLastErrorType.wrongRecall,
         ),
       _ => throw ArgumentError.value(
           gradeQ,
@@ -149,4 +150,29 @@ class AdaptiveQueuePolicy {
   double _clampWeakSpotScore(double value) => value.clamp(0.0, 1.0).toDouble();
 
   int _clampStruggleCount(int value) => value < 0 ? 0 : value;
+
+  int weakSpotPriorityRank({
+    required ScheduleStateData schedule,
+    required AdaptiveUnitMemoryState state,
+  }) {
+    final lastErrorType = state.lastErrorType;
+    if (lastErrorType == AdaptiveLastErrorType.similarConfusion) {
+      return 0;
+    }
+    if (lastErrorType == AdaptiveLastErrorType.wrongRecall &&
+        state.recentStruggleCount >= 2) {
+      return 1;
+    }
+    if (lastErrorType == AdaptiveLastErrorType.weakLockIn &&
+        (schedule.intervalDays <= 3 || schedule.reps <= 2)) {
+      return 2;
+    }
+    if (lastErrorType == AdaptiveLastErrorType.wrongRecall) {
+      return 3;
+    }
+    if (lastErrorType == AdaptiveLastErrorType.hesitation) {
+      return 4;
+    }
+    return 5;
+  }
 }

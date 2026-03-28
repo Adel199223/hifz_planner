@@ -10,8 +10,10 @@ import 'package:hifz_planner/app/app_preferences.dart';
 import 'package:hifz_planner/app/app_preferences_store.dart';
 import 'package:hifz_planner/data/database/app_database.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
+import 'package:hifz_planner/data/repositories/companion_repo.dart';
 import 'package:hifz_planner/data/services/ayah_audio_service.dart';
 import 'package:hifz_planner/data/services/ayah_audio_source.dart';
+import 'package:hifz_planner/data/services/adaptive_queue_policy.dart';
 import 'package:hifz_planner/data/services/companion/companion_models.dart';
 import 'package:hifz_planner/data/services/companion/verse_evaluator.dart';
 import 'package:hifz_planner/data/services/qurancom_api.dart';
@@ -802,6 +804,142 @@ void main() {
         .getSingle();
     expect(lifecycle.lifecycleTier, 'stable');
     expect(lifecycle.stage4Status, 'passed');
+  });
+
+  testWidgets(
+      'review completion summary can save explicit similar-verse confusion for q2',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-review-grade-similar-confusion',
+    );
+    await seedReviewSchedule(db, unitId: unitId);
+    await seedLifecycle(
+      db,
+      unitId: unitId,
+      lifecycleTier: 'stable',
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.review,
+    );
+
+    await completeSingleVerseReview(tester);
+
+    final gradeButton = find.byKey(const ValueKey('companion_review_grade_2'));
+    await tester.ensureVisible(gradeButton);
+    await tester.tap(gradeButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('review_error_tag_sheet')), findsOneWidget);
+
+    final similarConfusionOption = find.byKey(
+      const ValueKey('review_error_tag_option_similar_confusion'),
+    );
+    await tester.ensureVisible(similarConfusionOption);
+    await tester.tap(similarConfusionOption);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('companion_review_saved_message')),
+        findsOneWidget);
+
+    final adaptiveState =
+        (await CompanionRepo(db).getAdaptiveStatesByUnitIds(<int>[unitId]))[
+            unitId];
+    expect(adaptiveState, isNotNull);
+    expect(
+      adaptiveState!.lastErrorType,
+      AdaptiveLastErrorType.similarConfusion,
+    );
+  });
+
+  testWidgets('review summary dismiss cancels q2 save without writing review',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final unitId = await seedUnitAndAyah(
+      db,
+      unitKey: 'companion-review-dismiss-cancel',
+    );
+    await seedReviewSchedule(db, unitId: unitId);
+    await seedLifecycle(
+      db,
+      unitId: unitId,
+      lifecycleTier: 'stable',
+    );
+    final container = buildContainer(db);
+    addTearDown(container.dispose);
+    registerTestCleanup(tester);
+
+    await pumpScreen(
+      tester,
+      container,
+      unitId: unitId,
+      mode: CompanionLaunchMode.review,
+    );
+
+    await completeSingleVerseReview(tester);
+
+    final reviewLogCountBefore = await db.select(db.reviewLog).get().then(
+          (rows) => rows.where((row) => row.unitId == unitId).length,
+        );
+    final adaptiveStateBefore =
+        (await CompanionRepo(db).getAdaptiveStatesByUnitIds(<int>[unitId]))[
+            unitId];
+    final scheduleBefore = await (db.select(db.scheduleState)
+          ..where((tbl) => tbl.unitId.equals(unitId)))
+        .getSingle();
+
+    final gradeButton = find.byKey(const ValueKey('companion_review_grade_2'));
+    await tester.ensureVisible(gradeButton);
+    await tester.tap(gradeButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('review_error_tag_sheet')), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('companion_review_saved_message')),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('review_error_tag_sheet')), findsNothing);
+
+    final adaptiveStateAfter =
+        (await CompanionRepo(db).getAdaptiveStatesByUnitIds(<int>[unitId]))[
+            unitId];
+    expect(
+      adaptiveStateAfter?.lastErrorType,
+      adaptiveStateBefore?.lastErrorType,
+    );
+    expect(
+      adaptiveStateAfter?.recentStruggleCount,
+      adaptiveStateBefore?.recentStruggleCount,
+    );
+    expect(
+      adaptiveStateAfter?.weakSpotScore,
+      adaptiveStateBefore?.weakSpotScore,
+    );
+
+    final reviewLogCountAfter = await db.select(db.reviewLog).get().then(
+          (rows) => rows.where((row) => row.unitId == unitId).length,
+        );
+    expect(reviewLogCountAfter, reviewLogCountBefore);
+
+    final scheduleAfter = await (db.select(db.scheduleState)
+          ..where((tbl) => tbl.unitId.equals(unitId)))
+        .getSingle();
+    expect(scheduleAfter.lastGradeQ, scheduleBefore.lastGradeQ);
+    expect(scheduleAfter.lastReviewDay, scheduleBefore.lastReviewDay);
+    expect(scheduleAfter.reps, scheduleBefore.reps);
+    expect(scheduleAfter.intervalDays, scheduleBefore.intervalDays);
   });
 
   testWidgets('Stage-4 failure enters correction flow and requires correction',

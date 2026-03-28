@@ -743,6 +743,22 @@ class AppStrings {
         'adaptive_review_reason_shaky_recently',
         'This one came back because it was shaky recently.',
       );
+  String get adaptiveReviewReasonHesitation => _t(
+        'adaptive_review_reason_hesitation',
+        'This one came back because it felt uncertain recently.',
+      );
+  String get adaptiveReviewReasonWrongRecall => _t(
+        'adaptive_review_reason_wrong_recall',
+        'This one came back because the recall broke down recently.',
+      );
+  String get adaptiveReviewReasonWeakLockIn => _t(
+        'adaptive_review_reason_weak_lock_in',
+        'This one still needs lock-in before it will stay steady.',
+      );
+  String get adaptiveReviewReasonSimilarConfusion => _t(
+        'adaptive_review_reason_similar_confusion',
+        'This one came back because it got mixed with a similar verse.',
+      );
   String get adaptiveReviewReasonRecentCheckIn => _t(
         'adaptive_review_reason_recent_check_in',
         'This one is back for a short recent review.',
@@ -750,6 +766,34 @@ class AppStrings {
   String get adaptiveReviewReasonMaintenanceDue => _t(
         'adaptive_review_reason_maintenance_due',
         'This one is due to keep older memorization stable.',
+      );
+  String get reviewErrorTagTitle => _t(
+        'review_error_tag_title',
+        'What best describes what happened?',
+      );
+  String get reviewErrorTagBody => _t(
+        'review_error_tag_body',
+        'If you want, mark the kind of repair this needs. You can skip this.',
+      );
+  String get reviewErrorTagHesitation => _t(
+        'review_error_tag_hesitation',
+        'I hesitated',
+      );
+  String get reviewErrorTagSimilarConfusion => _t(
+        'review_error_tag_similar_confusion',
+        'I mixed it with a similar verse',
+      );
+  String get reviewErrorTagWeakLockIn => _t(
+        'review_error_tag_weak_lock_in',
+        'It still isn’t locked in',
+      );
+  String get reviewErrorTagWrongRecall => _t(
+        'review_error_tag_wrong_recall',
+        'I recalled it wrong',
+      );
+  String get reviewErrorTagSkip => _t(
+        'review_error_tag_skip',
+        'Skip',
       );
   String get todayNextStepResumeBody => _t(
         'today_next_step_resume_body',

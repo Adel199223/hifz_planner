@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../app/app_preferences.dart';
 import '../data/database/app_database.dart';
 import '../data/providers/database_providers.dart';
+import '../data/services/adaptive_queue_policy.dart';
 import '../data/services/ayah_audio_service.dart';
 import '../data/services/companion/companion_models.dart';
 import '../data/services/companion/meaning_cue_service.dart';
@@ -18,6 +19,7 @@ import '../data/time/local_day_time.dart';
 import '../data/services/quran_wording.dart';
 import '../data/services/qurancom_api.dart';
 import '../l10n/app_strings.dart';
+import 'review_error_tag_sheet.dart';
 import '../ui/quran/arabic_ayah_text.dart';
 import '../ui/quran/quran_word_wrap.dart';
 import '../ui/qcf/qcf_font_manager.dart';
@@ -412,6 +414,26 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
         _reviewGradeSaved) {
       return;
     }
+    AdaptiveLastErrorType? taggedErrorType;
+    if (gradeQ == 2 || gradeQ == 0) {
+      final repairTagResult = await showReviewErrorTagSheet(
+        context: context,
+        strings: _strings,
+      );
+      if (!mounted) {
+        return;
+      }
+      switch (repairTagResult.action) {
+        case ReviewErrorTagSheetAction.cancel:
+          return;
+        case ReviewErrorTagSheetAction.skip:
+          taggedErrorType = null;
+          break;
+        case ReviewErrorTagSheetAction.tagged:
+          taggedErrorType = repairTagResult.taggedErrorType;
+          break;
+      }
+    }
 
     final nowLocal = DateTime.now().toLocal();
     final completedDay = localDayIndex(nowLocal);
@@ -429,6 +451,7 @@ class _CompanionChainScreenState extends ConsumerState<CompanionChainScreen> {
             gradeQ: gradeQ,
             completedDay: completedDay,
             completedSeconds: completedSeconds,
+            taggedErrorType: taggedErrorType,
           );
 
       if (!mounted) {

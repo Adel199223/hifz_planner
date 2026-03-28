@@ -11,6 +11,7 @@ import 'package:hifz_planner/data/database/database_storage_status.dart';
 import 'package:hifz_planner/data/providers/database_providers.dart';
 import 'package:hifz_planner/data/repositories/companion_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
+import 'package:hifz_planner/data/services/adaptive_queue_policy.dart';
 import 'package:hifz_planner/data/services/scheduling/scheduling_preferences_codec.dart';
 import 'package:hifz_planner/data/time/local_day_time.dart';
 import 'package:hifz_planner/screens/plan_screen.dart';
@@ -639,6 +640,258 @@ void main() {
     expect(
       find.text('This one came back because it was shaky recently.'),
       findsOneWidget,
+    );
+  });
+
+  testWidgets('similar-verse confusion reason text renders for weak spots',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(
+      db,
+      todayDay: todayDay,
+      reps: 3,
+      intervalDays: 10,
+      lastReviewDay: todayDay - 10,
+      lastGradeQ: 4,
+    );
+    await _insertLifecycleState(
+      db,
+      unitId: dueUnitId,
+      lifecycleTier: 'stable',
+      todayDay: todayDay,
+      weakSpotScore: 0.6,
+      recentStruggleCount: 2,
+      lastErrorType: 'similar_confusion',
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.text(
+        'This one came back because it got mixed with a similar verse.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('weak lock-in reason text renders for weak spots', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 1,
+    );
+    final dueUnitId = await _insertDueReviewUnit(
+      db,
+      todayDay: todayDay,
+      reps: 2,
+      intervalDays: 3,
+      lastReviewDay: todayDay - 1,
+      lastGradeQ: 4,
+    );
+    await _insertLifecycleState(
+      db,
+      unitId: dueUnitId,
+      lifecycleTier: 'stable',
+      todayDay: todayDay,
+      weakSpotScore: 0.6,
+      recentStruggleCount: 1,
+      lastErrorType: 'weak_lock_in',
+    );
+
+    await _pumpToday(tester, container);
+
+    expect(
+      find.text('This one still needs lock-in before it will stay steady.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('today q2 skip keeps the default hesitation tag', (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 2,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+
+    await _pumpToday(tester, container);
+    final gradeButton = find.byKey(
+      ValueKey('today_review_grade_${dueUnitId}_q2'),
+    );
+    await pumpUntilFound(tester, gradeButton);
+
+    await _tapVisible(tester, gradeButton);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('review_error_tag_sheet')), findsOneWidget);
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('review_error_tag_skip')),
+    );
+
+    final adaptiveState =
+        (await CompanionRepo(db).getAdaptiveStatesByUnitIds(<int>[dueUnitId]))[
+            dueUnitId];
+    expect(adaptiveState, isNotNull);
+    expect(adaptiveState!.lastErrorType, AdaptiveLastErrorType.hesitation);
+  });
+
+  testWidgets('today q2 dismiss cancels save without mutating review state',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 2,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+
+    await _pumpToday(tester, container);
+    final gradeButton = find.byKey(
+      ValueKey('today_review_grade_${dueUnitId}_q2'),
+    );
+    await pumpUntilFound(tester, gradeButton);
+
+    final reviewLogCountBefore = await db.select(db.reviewLog).get().then(
+          (rows) => rows.where((row) => row.unitId == dueUnitId).length,
+        );
+    final scheduleBefore = await (db.select(db.scheduleState)
+          ..where((tbl) => tbl.unitId.equals(dueUnitId)))
+        .getSingle();
+
+    await _tapVisible(tester, gradeButton);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('review_error_tag_sheet')), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(ValueKey('today_review_row_$dueUnitId')), findsOneWidget);
+    expect(find.byKey(const ValueKey('review_error_tag_sheet')), findsNothing);
+
+    final adaptiveState =
+        (await CompanionRepo(db).getAdaptiveStatesByUnitIds(<int>[dueUnitId]))[
+            dueUnitId];
+    expect(adaptiveState, isNull);
+
+    final reviewLogCountAfter = await db.select(db.reviewLog).get().then(
+          (rows) => rows.where((row) => row.unitId == dueUnitId).length,
+        );
+    expect(reviewLogCountAfter, reviewLogCountBefore);
+
+    final scheduleAfter = await (db.select(db.scheduleState)
+          ..where((tbl) => tbl.unitId.equals(dueUnitId)))
+        .getSingle();
+    expect(scheduleAfter.lastGradeQ, scheduleBefore.lastGradeQ);
+    expect(scheduleAfter.lastReviewDay, scheduleBefore.lastReviewDay);
+    expect(scheduleAfter.reps, scheduleBefore.reps);
+    expect(scheduleAfter.intervalDays, scheduleBefore.intervalDays);
+  });
+
+  testWidgets('today q2 can persist explicit similar-verse confusion',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final container = ProviderContainer(
+      overrides: [
+        appDatabaseProvider.overrideWith((ref) {
+          ref.onDispose(db.close);
+          return db;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    _registerTestCleanup(tester);
+    final todayDay = localDayIndex(DateTime.now().toLocal());
+
+    await _seedAyahs(db, withPageMetadata: true);
+    await _configurePlannerSettings(
+      db,
+      requirePageMetadata: false,
+      maxNewUnitsPerDay: 2,
+    );
+    final dueUnitId = await _insertDueReviewUnit(db, todayDay: todayDay);
+
+    await _pumpToday(tester, container);
+    final gradeButton = find.byKey(
+      ValueKey('today_review_grade_${dueUnitId}_q2'),
+    );
+    await pumpUntilFound(tester, gradeButton);
+
+    await _tapVisible(tester, gradeButton);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('review_error_tag_sheet')), findsOneWidget);
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('review_error_tag_option_similar_confusion')),
+    );
+
+    final adaptiveState =
+        (await CompanionRepo(db).getAdaptiveStatesByUnitIds(<int>[dueUnitId]))[
+            dueUnitId];
+    expect(adaptiveState, isNotNull);
+    expect(
+      adaptiveState!.lastErrorType,
+      AdaptiveLastErrorType.similarConfusion,
     );
   });
 

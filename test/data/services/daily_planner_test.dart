@@ -9,6 +9,7 @@ import 'package:hifz_planner/data/repositories/quran_repo.dart';
 import 'package:hifz_planner/data/repositories/review_log_repo.dart';
 import 'package:hifz_planner/data/repositories/schedule_repo.dart';
 import 'package:hifz_planner/data/repositories/settings_repo.dart';
+import 'package:hifz_planner/data/services/adaptive_queue_policy.dart';
 import 'package:hifz_planner/data/services/daily_planner.dart';
 import 'package:hifz_planner/data/services/new_unit_generator.dart';
 import 'package:hifz_planner/data/services/review_completion_service.dart';
@@ -447,6 +448,10 @@ void main() {
         AdaptiveReviewReason.maintenanceDue,
       ],
     );
+    expect(
+      plan.plannedReviews[1].lastErrorType,
+      AdaptiveLastErrorType.hesitation,
+    );
   });
 
   test('mature schedule-only units without lifecycle do not fall into lock-in',
@@ -801,6 +806,134 @@ void main() {
     expect(plan.minutesPlannedNew, 0);
     expect(plan.notice, TodayPlanNotice.finishSetup);
     expect(plan.newAvailability, TodayNewAvailability.blockedSetup);
+  });
+
+  test(
+      'weak spot ordering surfaces similar confusion, repeated wrong recall, and fresh weak lock-in before hesitation',
+      () async {
+    const todayDay = 100;
+    await _configureSettings(
+      settingsRepo,
+      profile: 'standard',
+      forceRevisionOnly: 0,
+      dailyMinutesDefault: 60,
+      maxNewPagesPerDay: 5,
+      maxNewUnitsPerDay: 5,
+      avgNewMinutesPerAyah: 1.0,
+      avgReviewMinutesPerAyah: 1.0,
+      requirePageMetadata: 0,
+    );
+    await _seedAyahs(db);
+
+    final hesitationUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'weak-hesitation',
+      dueDay: todayDay - 1,
+      reps: 3,
+      lapseCount: 0,
+      lastGradeQ: 4,
+      lastReviewDay: todayDay - 4,
+      intervalDays: 4,
+      startAyah: 50,
+      endAyah: 50,
+    );
+    final similarConfusionUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'weak-similar',
+      dueDay: todayDay - 1,
+      reps: 3,
+      lapseCount: 0,
+      lastGradeQ: 4,
+      lastReviewDay: todayDay - 4,
+      intervalDays: 4,
+      startAyah: 51,
+      endAyah: 51,
+    );
+    final repeatedWrongRecallUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'weak-wrong-repeat',
+      dueDay: todayDay - 1,
+      reps: 3,
+      lapseCount: 0,
+      lastGradeQ: 4,
+      lastReviewDay: todayDay - 4,
+      intervalDays: 4,
+      startAyah: 52,
+      endAyah: 52,
+    );
+    final weakLockInUnitId = await _seedDueUnit(
+      memUnitRepo,
+      db,
+      unitKey: 'weak-lock-in',
+      dueDay: todayDay - 1,
+      reps: 2,
+      lapseCount: 0,
+      lastGradeQ: 4,
+      lastReviewDay: todayDay - 1,
+      intervalDays: 3,
+      startAyah: 53,
+      endAyah: 53,
+    );
+
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: hesitationUnitId,
+      lifecycleTier: 'stable',
+      weakSpotScore: 0.55,
+      recentStruggleCount: 1,
+      lastErrorType: 'hesitation',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: similarConfusionUnitId,
+      lifecycleTier: 'stable',
+      weakSpotScore: 0.55,
+      recentStruggleCount: 1,
+      lastErrorType: 'similar_confusion',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: repeatedWrongRecallUnitId,
+      lifecycleTier: 'stable',
+      weakSpotScore: 0.55,
+      recentStruggleCount: 2,
+      lastErrorType: 'wrong_recall',
+    );
+    await _seedLifecycleState(
+      companionRepo,
+      unitId: weakLockInUnitId,
+      lifecycleTier: 'stable',
+      weakSpotScore: 0.55,
+      recentStruggleCount: 1,
+      lastErrorType: 'weak_lock_in',
+    );
+
+    final plan = await dailyPlanner.planToday(todayDay: todayDay);
+    final weakSpotRows = plan.plannedReviews
+        .where((row) => row.bucket == AdaptiveQueueBucket.weakSpot)
+        .toList();
+
+    expect(
+      weakSpotRows.map((row) => row.unit.unitKey).toList(),
+      <String>[
+        'weak-similar',
+        'weak-wrong-repeat',
+        'weak-lock-in',
+        'weak-hesitation',
+      ],
+    );
+    expect(
+      weakSpotRows.map((row) => row.lastErrorType).toList(),
+      <AdaptiveLastErrorType?>[
+        AdaptiveLastErrorType.similarConfusion,
+        AdaptiveLastErrorType.wrongRecall,
+        AdaptiveLastErrorType.weakLockIn,
+        AdaptiveLastErrorType.hesitation,
+      ],
+    );
   });
 
   test('metadata guard blocks when next-20 page coverage is below 90%',
