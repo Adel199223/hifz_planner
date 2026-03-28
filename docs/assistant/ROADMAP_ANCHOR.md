@@ -28,37 +28,44 @@ Primary product docs:
 
 ## Current Roadmap State
 
-As of 2026-03-25, the roadmap reset has moved from documentation-only into active Wave 1 implementation.
+As of 2026-03-28, the roadmap reset has moved past the browser-first stabilization pass. Adaptive Queue V1 is now implemented in source and closed enough for continuity.
 
 Wave 0 status:
 - product-reset docs imported into top-level `docs/`
 - repo entrypoints updated to reflect the new center of gravity
 - treat Wave 0 as complete enough for continuity purposes
 
-Current continuity ExecPlan:
+Current continuity ExecPlans:
 - `docs/assistant/exec_plans/active/2026-03-25_wave1_guided_daily_hifz_path.md`
+- `docs/assistant/exec_plans/active/2026-03-28_adaptive_queue_v1.md`
 
 Wave 1 status on the current feature branch:
 - Today now leads with one obvious next action
 - Today now shows a path mode (`green`, `protect`, `recovery`) and clearer new-lock messaging
-- Today now groups work into warm-up, due review, weak spots, and optional new
+- Today now consumes planner-assigned adaptive buckets directly and groups work into warm-up / lock-in, weak spots, recent review, maintenance review, and optional new
+- durable adaptive memory now lives on `companion_lifecycle_state`, and scheduled review grading updates weak-spot pressure and recent struggle state
+- mature legacy/schedule-only units no longer stay stuck looking perpetually new when schedule truth already shows they are stable enough
 - scheduler, DB schema, reader, and companion route structure remain intact
+- browser-first stabilization is complete enough for continuity:
+  - guided setup is the truthful zero-unit first-run path on Today and Settings
+  - starter-plan repair is intent-safe
+  - Plan no longer defaults fresh or repair-needed learners into revision-only
+  - Playwright smoke is the browser validation path for this phase
 
-## Next Milestone
+## Next Milestone Direction
 
-The next implementation milestone is:
-- **Wave 1 - Guided daily path hardening and merge readiness**
+The next milestone should shift toward:
+- **strengthening the memorization engine itself**
 
 Practical meaning:
-- re-run targeted Today/planner validation once the local Flutter toolchain is stable
-- verify the guided path flow end-to-end on Today
-- keep the existing scheduler, DB contracts, and companion routes intact while landing the new surface
-- after Wave 1 is stable, move to deeper adaptive queue tuning and weak-spot refinement in Wave 2
+- deepen adaptive memorization truth and progression quality instead of doing more web plumbing
+- keep the current web target as a supported platform surface, not the center of gravity
+- preserve reader/audio/local-first strengths while improving memorization progression and review quality
 
-Recommended Wave 1 starting files:
+Recommended next-step memorization-engine files:
 - `lib/screens/today_screen.dart`
 - `lib/data/services/daily_planner.dart`
-- `lib/screens/companion_chain_screen.dart`
+- `lib/data/services/review_completion_service.dart`
 - `lib/data/database/app_database.dart`
 - `lib/data/repositories/companion_repo.dart`
 
@@ -78,8 +85,8 @@ Status:
 2. Open this file.
 3. Open `docs/strategy/adaptive-hifz-path-solo-master-plan.md`.
 4. Open `docs/roadmap/adaptive-hifz-path-solo-roadmap.md`.
-5. Open `docs/assistant/exec_plans/active/2026-03-25_wave1_guided_daily_hifz_path.md`.
-6. For Wave 1 follow-up work, start with `lib/screens/today_screen.dart`, `lib/screens/today_path.dart`, and `lib/data/services/daily_planner.dart`.
+5. Open `docs/assistant/exec_plans/active/2026-03-28_adaptive_queue_v1.md`.
+6. For post-queue memorization-engine follow-up work, start with `lib/data/services/review_completion_service.dart`, `lib/data/services/daily_planner.dart`, `lib/screens/today_path.dart`, and `lib/screens/today_screen.dart`.
 
 ## Code Anchors
 
@@ -95,20 +102,17 @@ Status:
 
 ## Web V1 Continuity Update (2026-03-26)
 
-A serious web implementation pass is now active.
+The browser-first stabilization pass is complete enough for continuity.
 
 Active continuity ExecPlan:
 - `docs/assistant/exec_plans/active/2026-03-26_web_adaptive_hifz_v1.md`
 - `docs/assistant/exec_plans/active/2026-03-26_review_followups_web_v1.md`
 
-Current milestone overlay:
+Continuity overlay:
 - keep the Adaptive Hifz Path product direction unchanged
-- treat browser-first web support as the active platform milestone that strengthens Today, Reader, Companion, Plan, My Quran, and Settings
-- preserve native Windows behavior while tightening platform seams
+- keep the real web target intact as a supported platform surface
+- preserve native Windows behavior while the next milestone shifts back to product truth instead of platform plumbing
 
-Immediate next checks:
-- finish browser smoke validation in Chromium, especially guided setup completion and storage-gated persistence checks
-- confirm `flutter build web` output and Drift web storage behavior
-- keep Today, Plan, and Settings aligned with the typed planner/storage truth added in the browser-first follow-up pass
-- keep zero-unit Today aligned with the new non-materializing first-run preview so guided setup remains the sole release-visible creator of the first memorization unit
-- keep docs and harness profile aligned with the new web surface
+Known continuity caveats:
+- local `flutter test` execution is still blocked in this environment by the native-assets `objective_c` `hook.dill` failure
+- `flutter build web` still succeeds with the known non-fatal warnings about the missing `CupertinoIcons` font asset and the Drift wasm dry run

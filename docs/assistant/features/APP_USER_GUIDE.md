@@ -136,7 +136,7 @@ Today now leads with:
 
 Then it guides you through:
 - delayed consolidation checks
-- review work grouped into warm-up, due review, and weak spots
+- review work grouped into warm-up / lock-in, weak spots, recent review, and maintenance review
 - optional new memorization when it is unlocked
 - a guided setup path when you have imported the Quran data but have not created any memorization units yet
 
@@ -148,6 +148,8 @@ If required Quran data is still missing, Today and Settings now share one guided
 - prepare the first memorization unit
 
 If review pressure is high but the planner still allows some new work, Today shows a reduced/protected state instead of pretending new memorization is fully broken or fully locked.
+
+Some review rows can also include a short calm reason line, such as when something is coming back because it looked shaky recently or still needs lock-in before more new work.
 
 This screen is intentionally action-oriented: less setup, more execution.
 

@@ -497,11 +497,15 @@ Current capabilities:
 - Build today plan from scheduler/planner
 - Derive a guided Today path with one top "next best step" action
 - Derive a user-facing path mode (`green`, `protect`, `recovery`) and explain whether new memorization is unlocked or paused
-- Group the day into warm-up, due review, weak spots, and optional new memorization sections
+- Consume planner-assigned adaptive buckets directly instead of inventing weak spots in the Today surface
+- Group the day into warm-up / lock-in, weak spots, recent review, maintenance review, and optional new memorization sections
 - Render dedicated Stage-4 delayed-consolidation due items with urgency metadata
 - Render planned reviews with lifecycle tier badges and overdue-first ordering, with weaker Companion retention lifting units earlier when due pressure is equal or close
 - Render sessionized day blocks (timed or untimed) with recovery signal inside a calmer summary card
 - Increase review pressure and reduce new allocation sooner when existing Companion proficiency data shows weak retention
+- Persist durable adaptive memory on `companion_lifecycle_state` (`weak_spot_score`, `recent_struggle_count`, nullable `last_error_type`)
+- Update weak-spot pressure and recent struggle state from scheduled review grading
+- Let mature legacy/schedule-only units adopt stable queue behavior instead of looking perpetually brand-new when schedule truth already shows maturity
 - Save grades (`q=5/4/3/2/0`) through shared `ReviewCompletionService`, with plain solo-learner labels in the UI
 - "Open in Reader" deep-link with page mode + verse range highlight params
 - "Open Companion Chain" action for review/new rows

@@ -182,6 +182,15 @@ Current browser-first truth to preserve:
 - Plan beginner setup now writes legacy minute fields and structured scheduler prefs from one coherent source of truth
 - Plan no longer defaults fresh or repair-needed learners into revision-only in the UI; it only coerces revision-only off for the true legacy default trap, while intentional user-owned or structurally custom legacy revision-only plans stay intact
 
+Current adaptive queue truth to preserve:
+- Adaptive Queue V1 is now implemented in source on top of the existing planner/companion stack
+- Today consumes planner-assigned adaptive buckets directly: `lockIn`, `weakSpot`, `recentReview`, and `maintenance`
+- durable per-unit adaptive memory now lives on `companion_lifecycle_state`
+- scheduled review grading now updates weak-spot pressure and recent struggle state
+- mature legacy/schedule-only units are no longer treated as perpetually new when schedule truth shows they are already stable enough
+- browser/web validation for this phase remains `flutter build web` plus Playwright smoke
+- Drift/build_runner regeneration for the generated lifecycle surface remains tooling debt; runtime schema repair and custom SQL remain the intentional bridge in this environment
+
 Current local validation caveats:
 - local `flutter test` execution is still blocked by the native-assets `objective_c` `hook.dill` failure in this environment
 - `flutter build web` still succeeds with non-fatal warnings about the missing `CupertinoIcons` font asset and the Drift wasm dry run (`Bad state: No definition of type Stream`)

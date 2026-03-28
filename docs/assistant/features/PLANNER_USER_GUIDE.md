@@ -266,11 +266,13 @@ Execution order is designed to protect retention quality:
 - shows delayed consolidation items (especially mandatory next-day checks)
 - these are high priority because they verify durability after delay
 
-### Warm-up / due review / weak spots sections
-- review rows are now grouped into a calmer queue instead of feeling like one flat dashboard list
-- warm-up gives you an easier review entry point when one is available
-- due review holds the remaining priority review work
-- weak spots pulls out higher-risk review items so they are easier to notice
+### Warm-up / lock-in / weak spots / recent review / maintenance review sections
+- review rows are now grouped into a calmer adaptive queue instead of feeling like one flat dashboard list
+- warm-up / lock-in gives you an easier review entry point and protects newly fragile material before adding more new work
+- weak spots pulls out items that have looked shaky recently so they are easier to notice
+- recent review holds fresher follow-up checks
+- maintenance review holds older stability checks that are still due
+- some rows can show a short plain-language reason when Today is surfacing them early
 - supports immediate scheduler updates based on your quality
 - same review can also be saved from the Companion review summary if you open it there first
 - when two due items are similarly urgent, weaker recent Companion retention can move one earlier in the list
